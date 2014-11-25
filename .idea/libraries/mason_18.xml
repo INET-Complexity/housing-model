@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="mason.18">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/libs/mason.18.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
