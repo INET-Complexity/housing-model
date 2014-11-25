@@ -12,11 +12,70 @@ import java.util.Random;
  *
  **********************************************/
 public class Household implements IHouseOwner {
+
+	/////////////////////////////////////////////////////////////////////////////////
+	static public class Config {
+
+		/////////////////////////////////////////////////////////////////////////////////
+		static public class ConsumptionEqn {
+			public double ALPHA = 0.2; // propensity to consume income
+			public double BETA = 0.01; // propensity to consume liquid wealth
+			
+			public double desiredConsumption(double disposableIncome, double bankBalance) {
+				if(disposableIncome > 0.0) {
+					return(ALPHA*disposableIncome + BETA*bankBalance);
+				} else {
+					return(BETA*Math.max(bankBalance + disposableIncome,0.0));
+				}
+			}
+		}
+
+		/////////////////////////////////////////////////////////////////////////////////
+		static public class PurchaseEqn {
+			static public double A = 0.01;			// sensitivity to house price appreciation
+			static public double EPSILON = 0.3; 	// S.D. of noise
+			static public double SIGMA = 4.5*12.0;	// scale
+
+			public double desiredPrice(double monthlyIncome, double hpa) {
+				return(SIGMA*monthlyIncome*Math.exp(EPSILON*rand.nextGaussian())/(1.0 - A*hpa));
+			}
+		}
+
+		/////////////////////////////////////////////////////////////////////////////////
+		static public class SaleEqn {
+			static public double C = 0.095;	// initial markup from average price
+			static public double D = 0.001;		// Size of Days-on-market effect
+			static public double E = 0.05; 	// SD of noise
+			public double desiredPrice(double pbar, double d, double principal) {
+				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*rand.nextGaussian();
+				return(Math.max(Math.exp(exponent), principal));
+			}
+
+		}
+		
+		// ---- Parameters
+		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
+		public PurchaseEqn		purchaseEqn = new PurchaseEqn();
+		public SaleEqn			saleEqn = new SaleEqn();
+		public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
+		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
+		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
+		public double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost		
+
+		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
+		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
+		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
+	}
 		
 	/********************************************************
 	 * Constructor.
 	 ********************************************************/
 	public Household() {
+		this(new Household.Config());
+	}
+	
+	public Household(Household.Config c) {
+		config = c;
 		bank = HousingMarketTest.bank;
 		houseMarket = HousingMarketTest.housingMarket;
 		rentalMarket = HousingMarketTest.rentalMarket;
@@ -36,9 +95,10 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	public void preHouseSaleStep() {
 		double disposableIncome;
-		double consumption;
 		
-		disposableIncome = monthlyIncome - Government.incomeTaxDue(monthlyIncome*12)/12.0 - Government.class1NICsDue(monthlyIncome*12)/12.0;
+		disposableIncome = monthlyIncome 
+				- HousingMarketTest.government.incomeTaxDue(monthlyIncome*12)/12.0 
+				- HousingMarketTest.government.class1NICsDue(monthlyIncome*12)/12.0;
 
 		// ---- Pay rent/mortgage(s)
 		Iterator<Map.Entry<House,MortgageApproval> > mapIt = housePayments.entrySet().iterator();
@@ -49,7 +109,7 @@ public class Household implements IHouseOwner {
 				disposableIncome -= payment.getValue().makeMonthlyPayment();					
 				if(isCollectingRentFrom(payment.getKey())) {
 					// profit from rent collection
-					disposableIncome += payment.getValue().monthlyPayment*(1.0+RENT_PROFIT_MARGIN);
+					disposableIncome += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
 				}
 				if(payment.getValue().nPayments == 0) { // do paid-off stuff
 					if(payment.getKey().owner != this) { // renting
@@ -65,26 +125,21 @@ public class Household implements IHouseOwner {
 		}
 		
 		// --- consume
-		consumption = ALPHA*Math.max(disposableIncome,0.0);
-		if(disposableIncome > 0.0) {
-			consumption += BETA*bankBalance;
-		} else {
-			if(bankBalance + disposableIncome < 0.0) {
-				// bankrupt behaviour
-				System.out.println("Household gone bankrupt!");
-				System.out.println("...Houses = "+housePayments.size());
-				int i = 0;
-				for(House h : housePayments.keySet()) {
-					if(h.resident == null) ++i;
-				}
-				System.out.println("...Empty = "+i);
-				
-				// TODO: cash injection for now...
-				bankBalance = 1 - disposableIncome;
+		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
+		
+		if(bankBalance < 0.0) {
+			// bankrupt behaviour
+			System.out.println("Household gone bankrupt!");
+			System.out.println("...Houses = "+housePayments.size());
+			int i = 0;
+			for(House h : housePayments.keySet()) {
+				if(h.resident == null) ++i;
 			}
-			consumption += BETA*(bankBalance + disposableIncome);
+			System.out.println("...Empty = "+i);
+				
+			// TODO: cash injection for now...
+			bankBalance = 1.0;
 		}
-		bankBalance += disposableIncome - consumption;
 		
 		makeHousingDecision();
 	}
@@ -124,7 +179,11 @@ public class Household implements IHouseOwner {
 						houseMarket.removeOffer(h);
 					}
 				} else if(decideToSellHouse(h)) { // put house on market
-					houseMarket.offer(h, desiredHouseSalePrice(h));
+					houseMarket.offer(h, config.saleEqn.desiredPrice(
+							houseMarket.averageSalePrice[h.quality],
+							houseMarket.averageDaysOnMarket,
+							housePayments.get(h).principal
+					));
 				}
 			}
 		}
@@ -207,7 +266,7 @@ public class Household implements IHouseOwner {
 		if(!housePayments.containsKey(h)) {
 			System.out.println("I don't own this house: strange");
 		}
-		rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+RENT_PROFIT_MARGIN));
+		rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN));
 	}
 
 
@@ -241,7 +300,7 @@ public class Household implements IHouseOwner {
 	 * given that it can afford a mortgage.
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
-		double desiredPrice = desiredHousePurchasePrice();
+		double desiredPrice = config.purchaseEqn.desiredPrice(monthlyIncome, houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
@@ -263,16 +322,16 @@ public class Household implements IHouseOwner {
 	protected void decideToBuyFirstHome() {
 		double costOfHouse;
 		double costOfRent;
-		double p = desiredHousePurchasePrice();
+		double p = config.purchaseEqn.desiredPrice(monthlyIncome, houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(p <= maxMortgage) {
-			costOfHouse = p*(1.0-Bank.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
+			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
 			if(home != null) {
 				costOfRent = housePayments.get(home).monthlyPayment*12;
 			} else {
 				costOfRent = rentalMarket.averageSalePrice[0];
 			}
-			if(Math.random() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent + COST_OF_RENTING - costOfHouse)))) {
+			if(Math.random() < 1.0/(1.0 + Math.exp(-config.FTB_K*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
 				houseMarket.bid(this, p);
 			}
 		}
@@ -283,26 +342,28 @@ public class Household implements IHouseOwner {
 	 * 
 	 * @return The desired price.
 	 ********************************************************/
-	public double desiredHousePurchasePrice() {
-		final double h = 0.4;//38.8;
-		final double g = 1.0;//0.56;
-		final double a = 0.01;//0.16;//0.16;
-		final double tau = 0.02;
-		final double c = 0.03;
-		double epsilon;
+//	public double desiredHousePurchasePrice() {
+//		final double h = 0.4;//38.8;
+//		final double g = 1.0;//0.56;
+//		final double a = 0.01;//0.16;//0.16;
+//		final double tau = 0.02;
+//		final double c = 0.03;
+//		double epsilon;
 		
-		epsilon = Math.exp(0.46*rand.nextGaussian() - 0.13);
+//		epsilon = Math.exp(0.46*rand.nextGaussian() - 0.13);
+
+		//		return(epsilon * h * Math.pow(monthlyIncome*12, g)/
+//		(tau + c + bank.loanToValue(this,true)*bank.mortgageInterestRate() - a*houseMarket.housePriceAppreciation()));
 		
-		return(4.5*monthlyIncome*12.0*Math.exp(0.3*rand.nextGaussian())/(1.0 - a*houseMarket.housePriceAppreciation()));
-//		return(epsilon * h * Math.pow(monthlyIncome*12, g)/
-//				(tau + c + bank.loanToValue(this,true)*bank.mortgageInterestRate() - a*houseMarket.housePriceAppreciation()));
-	}
+//		return(config.purchaseEqn.SIGMA*monthlyIncome*12.0*Math.exp(config.purchaseEqn.EPSILON*rand.nextGaussian())/
+//				(1.0 - config.purchaseEqn.A*houseMarket.housePriceAppreciation()));
+//	}
 	
 	/********************************************************
 	 * Decide whether to sell ones own house.
 	 ********************************************************/
 	private boolean decideToSellHouse(House h) {
-		if(Math.random() < P_SELL) return(true);
+		if(Math.random() < Config.P_SELL) return(true);
 		return false;
 	}
 
@@ -310,7 +371,7 @@ public class Household implements IHouseOwner {
 	 * Decide the initial list price if this household was to put
 	 * its own home on the market.
 	 ********************************************************/
-	public double desiredHouseSalePrice(House house) {
+//	public double desiredHouseSalePrice(House house) {
 		/**	Original version (Axtell):	
 		double exponent = 
 				0.22
@@ -319,13 +380,13 @@ public class Household implements IHouseOwner {
 				- 0.01*Math.log(houseMarket.averageDaysOnMarket + 1)
 				+ 0.01*rand.nextGaussian();
 				**/
-		double exponent = 
-				0.095
-				+ Math.log(houseMarket.averageSalePrice[house.quality])
-				- 0.001*Math.log((houseMarket.averageDaysOnMarket + 1.0)/31.0)
-				+ 0.05*rand.nextGaussian();
-		return(Math.max(Math.exp(exponent), housePayments.get(house).principal));
-	}
+//		double exponent = 
+//				0.095
+//				+ Math.log(houseMarket.averageSalePrice[house.quality])
+//				- 0.01*Math.log((houseMarket.averageDaysOnMarket + 1.0)/31.0)
+//				+ 0.05*rand.nextGaussian();
+//		return(Math.max(Math.exp(exponent), housePayments.get(house).principal));
+//	}
 
 	
 	/********************************************************
@@ -336,7 +397,7 @@ public class Household implements IHouseOwner {
 	 * @param sale The HouseSaleRecord of the house that is on the market.
 	 ********************************************************/
 	protected double rethinkHouseSalePrice(HouseSaleRecord sale) {
-		return(sale.currentPrice * HOUSE_SALE_PRICE_DISCOUNT);
+		return(sale.currentPrice * config.HOUSE_SALE_PRICE_DISCOUNT);
 	}
 
 	
@@ -356,7 +417,7 @@ public class Household implements IHouseOwner {
 			double yield;
 			mortgage = bank.requestLoan(this, price, false);
 			
-			yield = (mortgage.monthlyPayment*12*RENT_PROFIT_MARGIN + houseMarket.housePriceAppreciation()*price)/
+			yield = (mortgage.monthlyPayment*12*config.RENT_PROFIT_MARGIN + houseMarket.housePriceAppreciation()*price)/
 					mortgage.downPayment;
 			
 			if(Math.random() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
@@ -401,7 +462,7 @@ public class Household implements IHouseOwner {
 		double di = monthlyIncome;
 		for(Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
 			if(isCollectingRentFrom(payment.getKey())) {
-				di += payment.getValue().monthlyPayment*RENT_PROFIT_MARGIN;
+				di += payment.getValue().monthlyPayment*config.RENT_PROFIT_MARGIN;
 			} else {
 				di -= payment.getValue().monthlyPayment;
 			}
@@ -413,7 +474,7 @@ public class Household implements IHouseOwner {
 	}
 	
 	static public double randomInitialAnnuallIncome() {
-		return(Math.exp(INCOME_LOG_MEDIAN+INCOME_SHAPE*rand.nextGaussian()));
+		return(Math.exp(Config.INCOME_LOG_MEDIAN+Config.INCOME_SHAPE*rand.nextGaussian()));
 	}
 	
 	public double grossAnnualIncome() {
@@ -422,7 +483,7 @@ public class Household implements IHouseOwner {
 		for(Map.Entry<House,MortgageApproval> payment : housePayments.entrySet()) {
 			if(isCollectingRentFrom(payment.getKey())) {
 				// profit from rent collection
-				income += payment.getValue().monthlyPayment*(1.0+RENT_PROFIT_MARGIN);
+				income += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
 			}
 		}
 		income *=12.0;
@@ -432,7 +493,7 @@ public class Household implements IHouseOwner {
 
 	///////////////////////////////////////////////
 	
-
+	Household.Config	config;
 	HouseSaleMarket		houseMarket;
 	HouseRentalMarket	rentalMarket;
 	
@@ -445,16 +506,17 @@ public class Household implements IHouseOwner {
 	protected static Random rand = new Random();
 	
 	// ---- Parameters
-	protected static final double ALPHA = 0.2;
-	protected static final double BETA = 0.01;
-	protected static final double RENT_PROFIT_MARGIN = 0.0;
-	protected static final double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
-	protected static final double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
-	protected static final double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
-	protected static final double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
-	protected static final double COST_OF_RENTING = 600; // Annual psychological cost of renting
-	protected static final double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost
-	
+	/**
+	public double ALPHA = 0.2; // propensity to consume income
+	public double BETA = 0.01; // propensity to consume liquid wealth
+	public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
+	public double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
+	public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
+	public double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
+	public double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
+	public double COST_OF_RENTING = 600; // Annual psychological cost of renting
+	public double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost
+	**/
 //	protected static final double INCOME_LOG_95_PERCENTILE = Math.log(66200); // One-tailed percentile. Source: O.N.S. 2011/2012
 //	protected static final double INCOME_SHAPE = (INCOME_LOG_95_PERCENTILE-INCOME_LOG_MEDIAN)/1.64; // Shape parameter of lognormal distribution
 	

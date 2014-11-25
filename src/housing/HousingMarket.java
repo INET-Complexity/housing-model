@@ -22,7 +22,7 @@ public class HousingMarket {
 	public HousingMarket() {
 		int i;
 		
-		for(i = 0; i<House.N_QUALITY; ++i) {
+		for(i = 0; i<House.Config.N_QUALITY; ++i) {
 			averageSalePrice[i] = referencePrice(i);
 		}
 		housePriceIndex = 1.0;
@@ -71,6 +71,7 @@ public class HousingMarket {
 	 ******************************************/
 	public void bid(Household buyer, double price) {
 		buyers.add(new HouseBuyerRecord(buyer, price));
+		nBuyers += 1;
 	}
 
 	/**************************************************
@@ -91,6 +92,8 @@ public class HousingMarket {
 		HouseSaleRecord  seller;
 		HouseSaleRecord	 ceilingSeller = new HouseSaleRecord(new House(), 0.0);
 		nSales = 0;
+		nSellers = onMarket.size();
+		nBuyers = buyers.size();
 
 		// --- House Price Index stuff
 //		HPIAppreciation = F*HPIAppreciation + (1.0-F)*(housePriceIndex - lastHousePriceIndex);
@@ -99,7 +102,7 @@ public class HousingMarket {
 		for(Double price : averageSalePrice) {
 			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
 		}
-		housePriceIndex /= House.N_QUALITY*HPI_MEAN;
+		housePriceIndex /= House.Config.N_QUALITY*HPI_MEAN;
 		HPIAppreciation += (1.0-F)*housePriceIndex;
 		
 		// --- create set of sellers, sorted by quality then price
@@ -126,7 +129,7 @@ public class HousingMarket {
 		
 		while(!buyers.isEmpty()) {
 			buyer = buyers.poll();
-			ceilingSeller.quality = House.N_QUALITY;
+			ceilingSeller.quality = House.Config.N_QUALITY;
 			seller = sellers.lower(ceilingSeller); // cheapest seller at this quality
 			while(seller != null && 
 				(seller.currentPrice > buyer.price || seller.house.owner == buyer.buyer)) {
@@ -176,7 +179,7 @@ public class HousingMarket {
 	 * @param q quality of the house
 	************************************************/
 	static public double referencePrice(int q) {
-		return(listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.N_QUALITY));
+		return(listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY));
 	}
 	
 	protected Map<House, HouseSaleRecord> 	onMarket = new HashMap<House, HouseSaleRecord>();
@@ -185,11 +188,13 @@ public class HousingMarket {
 	// ---- statistics
 	public double averageSoldPriceToOLP;
 	public double averageDaysOnMarket;
-	public double averageSalePrice[] = new double[House.N_QUALITY];
+	public double averageSalePrice[] = new double[House.Config.N_QUALITY];
 	public double housePriceIndex;
 	public double lastHousePriceIndex;
 	public double HPIAppreciation;
 	public int    nSales;
+	public int    nBuyers;
+	public int    nSellers;
 	public static final double T = 200.0; // characteristic number of data-points over which to average market statistics
 	public static final double E = Math.exp(-1.0/T); // decay const for averaging
 	public static final double F = Math.exp(-1.0/12.0); // House Price Index appreciation decay const (in market clearings)
