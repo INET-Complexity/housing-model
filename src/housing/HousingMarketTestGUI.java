@@ -150,14 +150,17 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         	homelessData[1][i/50] = n/50.0;
         	rentingData[1][i/50] = r/50.0;
         }
+        housingChart.update();
 
         for(i=0; i<House.N_QUALITY; ++i) {
         	priceData[1][i] = HousingMarketTest.housingMarket.averageSalePrice[i];
         }
+        housePriceChart.update();
 
         for(i=0; i<HousingMarketTest.N-50; i+=50) {
         	bankBalData[1][i/50] = HousingMarketTest.households[i].bankBalance;
         }
+        bankBalanceChart.update();
 
     }
     
