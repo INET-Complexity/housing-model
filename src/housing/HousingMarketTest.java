@@ -1,14 +1,11 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
 import java.util.Random;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
-import createyourownmodels.MyModel;
-
 import sim.engine.SimState;
 import sim.engine.Steppable;
-import eu.crisis_economics.abm.simulation.Simulation;
 
 /**
  * Simulates the housing market.
@@ -17,7 +14,7 @@ import eu.crisis_economics.abm.simulation.Simulation;
  *
  */
 @SuppressWarnings("serial")
-public class HousingMarketTest extends Simulation implements Steppable {
+public class HousingMarketTest extends SimState implements Steppable {
 
 	public HousingMarketTest(long seed) {
 		super(seed);
@@ -92,14 +89,14 @@ public class HousingMarketTest extends Simulation implements Steppable {
 		LogNormalDistribution incomeDistribution;		// Annual household post-tax income
 		LogNormalDistribution buyToLetDistribution; 	// No. of houses owned by buy-to-let investors
 		
-		incomeDistribution 	  = new LogNormalDistribution(Household.INCOME_LOG_MEDIAN, Household.INCOME_SHAPE);
+		incomeDistribution 	  = new LogNormalDistribution(Household.Config.INCOME_LOG_MEDIAN, Household.Config.INCOME_SHAPE);
 //		residenceDistribution = new LogNormalDistribution(Math.log(190000), 0.568); // Source: ONS, Wealth in Great Britain wave 3
 		buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); 	// Source: ARLA report Q2 2014
 		grossFinancialWealth  = new LogNormalDistribution(Math.log(9500), 2.259); 	// Source: ONS Wealth in Great Britain table 5.8
 		
 		for(j = 0; j<Nh; ++j) { // setup houses
 			houses[j] = new House();
-			houses[j].quality = (int)(House.N_QUALITY*j*1.0/Nh); // roughly same number of houses in each quality band
+			houses[j].quality = (int)(House.Config.N_QUALITY*j*1.0/Nh); // roughly same number of houses in each quality band
 		}
 		
 		for(j = 0; j<N; ++j) { // setup households
@@ -120,8 +117,8 @@ public class HousingMarketTest extends Simulation implements Steppable {
 					households[j].housePayments.get(houses[i]).nPayments = 0;
 				} else {
 					// household is still paying off mortgage
-					p = (int)(Bank.N_PAYMENTS*Math.random()); // number of payments outstanding
-					price = HousingMarket.referencePrice(houses[i].quality)/(Math.pow(1.0+INFLATION,Math.floor((Bank.N_PAYMENTS-p)/12.0)));
+					p = (int)(bank.config.N_PAYMENTS*Math.random()); // number of payments outstanding
+					price = HousingMarket.referencePrice(houses[i].quality)/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0)));
 					if(price > bank.getMaxMortgage(households[j], true)) {
 						price = bank.getMaxMortgage(households[j], true);
 					}
@@ -140,10 +137,10 @@ public class HousingMarketTest extends Simulation implements Steppable {
 			while(n>0 && i>=0) {				
 				houses[i].owner = households[j];
 				houses[i].resident = null;
-				p = (int)(Bank.N_PAYMENTS*Math.random()); // number of payments outstanding
+				p = (int)(bank.config.N_PAYMENTS*Math.random()); // number of payments outstanding
 				price = Math.min(
 						HousingMarket.referencePrice(houses[i].quality)
-						/(Math.pow(1.0+INFLATION,Math.floor((Bank.N_PAYMENTS-p)/12.0))),
+						/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0))),
 						bank.getMaxMortgage(households[j], false)
 						);
 				households[j].completeHousePurchase(new HouseSaleRecord(houses[i], price));		
@@ -196,7 +193,7 @@ public class HousingMarketTest extends Simulation implements Steppable {
 	////////////////////////////////////////////////////////////////////////
 	static void printHousePriceDist() {
 		int j;
-		for(j = 0; j < House.N_QUALITY; ++j) {
+		for(j = 0; j < House.Config.N_QUALITY; ++j) {
 			System.out.println(j+" "+housingMarket.averageSalePrice[j]);
 		}
 	}
@@ -239,12 +236,41 @@ public class HousingMarketTest extends Simulation implements Steppable {
 	}
 
 	////////////////////////////////////////////////////////////////////////
+	// Getters/setters for the console
+	////////////////////////////////////////////////////////////////////////
+	
+	public double getPurchaseEqn_A() {
+		return(Household.Config.PurchaseEqn.A);
+	}
+
+	public void setPurchaseEqn_A(double x) {
+		Household.Config.PurchaseEqn.A = x;
+	}
+
+	public double getSaleEqn_D() {
+		return(Household.Config.SaleEqn.D);
+	}
+
+	public void setSaleEqn_D(double x) {
+		Household.Config.SaleEqn.D = x;
+	}
+
+	public double getBank_LTI() {
+		return(bank.config.LTI);
+	}
+
+	public void setBank_LTI(double x) {
+		bank.config.LTI = x;
+	}
+
+	////////////////////////////////////////////////////////////////////////
 
 	public static final int N = 5000; // number of households
 	public static final int Nh = 4100; // number of houses
 	public static final int N_STEPS = 1200; // timesteps
 
 	public static Bank 				bank = new Bank();
+	public static Government		government = new Government();
 	public static HouseSaleMarket 	housingMarket = new HouseSaleMarket();
 	public static HouseRentalMarket	rentalMarket = new HouseRentalMarket();
 	public static Household 		households[] = new Household[N];
