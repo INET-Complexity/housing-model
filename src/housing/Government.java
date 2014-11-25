@@ -1,4 +1,4 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
 /*****************************************
  * This class represents the government.

@@ -1,14 +1,11 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
 import java.util.Random;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
-import createyourownmodels.MyModel;
-
 import sim.engine.SimState;
 import sim.engine.Steppable;
-import eu.crisis_economics.abm.simulation.Simulation;
 
 /**
  * Simulates the housing market.
@@ -17,7 +14,7 @@ import eu.crisis_economics.abm.simulation.Simulation;
  *
  */
 @SuppressWarnings("serial")
-public class HousingMarketTest extends Simulation implements Steppable {
+public class HousingMarketTest extends SimState implements Steppable {
 
 	public HousingMarketTest(long seed) {
 		super(seed);

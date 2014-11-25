@@ -1,4 +1,4 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
 /***********************************************
  * Class that represents the market for houses for rent.

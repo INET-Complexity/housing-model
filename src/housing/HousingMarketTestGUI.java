@@ -1,27 +1,22 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.JTabbedPane;
 
 import org.jfree.chart.ChartUtilities;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 
 import sim.display.Console;
 import sim.display.Controller;
+import sim.display.GUIState;
 import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.util.media.chart.ChartGenerator;
 import sim.util.media.chart.ScatterPlotGenerator;
 import sim.util.media.chart.TimeSeriesChartGenerator;
-import eu.crisis_economics.abm.simulation.SimulationGui;
 
 /********************************************
  * Mason Graphic Interface for the housing market simulation.
@@ -30,7 +25,7 @@ import eu.crisis_economics.abm.simulation.SimulationGui;
  *
  ********************************************/
 @SuppressWarnings("serial")
-public class HousingMarketTestGUI extends SimulationGui implements Steppable {
+public class HousingMarketTestGUI extends GUIState implements Steppable {
 
     private javax.swing.JFrame myChartFrame;
     

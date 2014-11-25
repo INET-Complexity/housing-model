@@ -1,4 +1,4 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
 /*************************************************
  * This class represents a mortgage-lender (i.e. a bank or building society),
