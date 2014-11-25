@@ -1,4 +1,4 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
 /************************************************
  * Class representing a house.
@@ -9,11 +9,15 @@ package eu.crisis_economics.abm.markets.housing;
  ************************************************/
 public class House {
 	
+	static public class Config {
+		public static int N_QUALITY = 48; // number of quality bands		
+	}
+		
 	// placeholder
 	public String getUniqueName() {
 		return(Integer.toString(hashCode()));
 	}
-
+	
 	////////////////////////////////////////////////////////////////////////
 	/***
 	static public int randomInitialQuality() {
@@ -39,10 +43,9 @@ public class House {
 		if(quality < 0) quality = 0;
 	}
 	***/
-	
+		
 	public int 				quality;
 	public IHouseOwner  	owner;
 	public Household		resident;
 	
-	public static final int N_QUALITY = 48; // number of quality bands
 }

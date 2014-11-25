@@ -1,22 +1,50 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
 /*************************************************
  * This class represents a mortgage-lender (i.e. a bank or building society),
  * rather than a deposit holder. Its only function is to approve/decline
  * mortgage requests, so this is where mortgage-lending policy is encoded.
+ *  
  * 
  * @author daniel
  *
  *************************************************/
 public class Bank {
+
+	static public class Config {
+		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
+		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
+		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
+		public double PHI = 1.0/100.0;//1.0/8.0;//0.25; // minimum income-to-value (ITV) ratio
+		public double LTI = 4.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14 
+		public int    N_PAYMENTS = 12*25; // number of monthly repayments
+		public boolean RECORD_STATS = true; // record mortgage statistics?		
+		public double STATS_DECAY = 0.9; 	// Decay constant (per step) for exp averaging of stats
+		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
+	}
 	
 	/********************************
 	 * Constructor. This just sets up a few
 	 * pre-computed values.
 	 ********************************/
 	public Bank() {
+		this(new Bank.Config());
+		if(config.RECORD_STATS) {
+			for(int i=0; i<=100; ++i) { // set up x-values for distribution
+				ltv_distribution[0][i] = i/100.0;
+				itv_distribution[0][i] = i/100.0;
+				lti_distribution[0][i] = i/100.0;
+				ltv_distribution[1][i] = 0.0;
+				itv_distribution[1][i] = 0.0;
+				lti_distribution[1][i] = 0.0;
+			}
+		}
+	}
+	
+	public Bank(Bank.Config c) {
+		config = c;
 		double r = mortgageInterestRate()/12.0;
-		k = r/(1.0 - Math.pow(1.0+r, -N_PAYMENTS));
+		k = r/(1.0 - Math.pow(1.0+r, -config.N_PAYMENTS));
 	}
 	
 	/******************************
@@ -49,7 +77,7 @@ public class Bank {
 		double ltv_principal, pdi_principal, lti_principal;
 		
 		
-		if(housePrice > h.monthlyIncome*12.0/PHI) {
+		if(housePrice > h.monthlyIncome*12.0/config.PHI) {
 			System.out.println("Failed ITV constraint");
 			return(null); // ITV constraint not satisfied
 		}
@@ -57,7 +85,7 @@ public class Bank {
 		// --- calculate maximum allowable principal
 		ltv_principal = housePrice*loanToValue(h, isHome);
 		pdi_principal = Math.max(0.0,h.monthlyDisposableIncome())/monthlyPaymentFactor();
-		lti_principal = h.monthlyIncome*12.0*LTI;
+		lti_principal = h.monthlyIncome*12.0*config.LTI;
 		approval.principal = Math.min(ltv_principal, pdi_principal);
 		approval.principal = Math.min(approval.principal, lti_principal);
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();
@@ -74,18 +102,23 @@ public class Bank {
 		**/
 		approval.downPayment = housePrice - approval.principal;
 		if(h.bankBalance < approval.downPayment) {
-			System.out.println("Failed down-payment constraint");
+			System.out.println("Failed down-payment constraint: bank balance = "+h.bankBalance+" Downpayment = "+approval.downPayment);
 			return(null);
 		}
 		
-		approval.nPayments = N_PAYMENTS;
+		approval.nPayments = config.N_PAYMENTS;
 		approval.monthlyInterest = r;
 		
-		if(RECORD_STATS) {
+		if(config.RECORD_STATS) {
 			if(h.isFirstTimeBuyer()) {
-				affordability = AFFORDABILITY_DECAY*affordability + (1.0-AFFORDABILITY_DECAY)*approval.monthlyPayment/h.monthlyIncome;
+				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.monthlyIncome;
 			}
+			ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += 1.0-config.STATS_DECAY;
+			itv_distribution[1][(int)Math.min(100.0*h.monthlyIncome*12.0/housePrice,100.0)] += 1.0-config.STATS_DECAY;
+			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.monthlyIncome*12.0),100.0)] += 1.0-config.STATS_DECAY;
 		}
+		
+		
 		return(approval);
 	}
 
@@ -105,9 +138,9 @@ public class Bank {
 		double lti_max; // loan to income constraint
 		
 		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-		itv_max = h.monthlyIncome*12.0/PHI;
+		itv_max = h.monthlyIncome*12.0/config.PHI;
 		pdi_max = h.bankBalance + Math.max(0.0,h.monthlyDisposableIncome())/monthlyPaymentFactor();
-		lti_max = h.monthlyIncome*12*LTI/loanToValue(h,isHome);
+		lti_max = h.monthlyIncome*12*config.LTI/loanToValue(h,isHome);
 		
 		pdi_max = Math.min(pdi_max, ltv_max); // find minimum
 		pdi_max = Math.min(pdi_max, lti_max);
@@ -127,23 +160,20 @@ public class Bank {
 	public double loanToValue(Household h, boolean isHome) {
 		if(isHome) {
 			if(h.isFirstTimeBuyer()) {
-				return(1.0 - THETA_FTB);
+				return(1.0 - config.THETA_FTB);
 			}
-			return(1.0 - THETA_HOME);
+			return(1.0 - config.THETA_HOME);
 		}
-		return(1.0 - THETA_BTL);
+		return(1.0 - config.THETA_BTL);
 	}
+		
+	public Bank.Config config;
 	
-	public static final double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
-	public static final double THETA_HOME = 0.2; // home buyer haircut (LTV)
-	public static final double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
-	public static final double PHI = 1.0/100.0;//0.25; // minimum income-to-value (ITV) ratio
-	public static final double LTI = 6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14 
-	public static final int    N_PAYMENTS = 12*25; // number of monthly repayments
-	public boolean RECORD_STATS = true; // record mortgage statistics?
 	public double k; // principal to monthly payment factor
 	/** First time buyer affordability **/
-	public double affordability = 0.0; 
-	/** Decay constant for exponential averaging of affordability **/
-	public final double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 
+	public double affordability = 0.0;
+	public double [][] ltv_distribution = new double[2][101]; // index/100 = LTV
+	public double [][] itv_distribution = new double[2][101]; // index/100 = ITV
+	public double [][] lti_distribution = new double[2][101]; // index/10 = LTI
+	
 }

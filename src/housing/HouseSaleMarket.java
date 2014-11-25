@@ -1,4 +1,4 @@
-package eu.crisis_economics.abm.markets.housing;
+package housing;
 
 import java.util.ArrayList;
 import java.util.Iterator;
