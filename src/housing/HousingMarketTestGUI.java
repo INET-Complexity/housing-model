@@ -103,8 +103,8 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
 
         int i;
         for(i=0; i<House.Config.N_QUALITY; ++i) {
-        	priceData[0][i] = i;
-        	referencePriceData[0][i] = i;
+        	priceData[0][i] = HousingMarket.referencePrice(i);
+        	referencePriceData[0][i] = HousingMarket.referencePrice(i);
         	referencePriceData[1][i] = HousingMarket.referencePrice(i);
         }
         for(i = 0; i<HousingMarketTest.N-50; i += 50) {
@@ -184,7 +184,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         mortgagePhaseChart = new ScatterPlotGenerator();
         
         this.makeChartLabels(housingChart, "Housing stats", "Probability", "Household Income");
-        this.makeChartLabels(housePriceChart, "House prices", "Price", "Quality");
+        this.makeChartLabels(housePriceChart, "House prices", "Modelled Price", "Reference Price");
         this.makeChartLabels(bankBalanceChart, "Bank balances", "Balance", "Income");
         this.makeChartLabels(bidOfferChart, "Average Bid/Offer price", "Price", "Time");
         this.makeChartLabels(affordabilityChart, "FTB mortgage payment/income ratio", "Ratio", "Time");
