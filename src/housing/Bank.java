@@ -77,7 +77,7 @@ public class Bank {
 		double ltv_principal, pdi_principal, lti_principal;
 		
 		
-		if(housePrice > h.monthlyIncome*12.0/config.PHI) {
+		if(housePrice > h.annualPersonalIncome / config.PHI) {
 			System.out.println("Failed ITV constraint");
 			return(null); // ITV constraint not satisfied
 		}
@@ -85,7 +85,7 @@ public class Bank {
 		// --- calculate maximum allowable principal
 		ltv_principal = housePrice*loanToValue(h, isHome);
 		pdi_principal = Math.max(0.0,h.monthlyDisposableIncome())/monthlyPaymentFactor();
-		lti_principal = h.monthlyIncome*12.0*config.LTI;
+		lti_principal = h.annualPersonalIncome * config.LTI;
 		approval.principal = Math.min(ltv_principal, pdi_principal);
 		approval.principal = Math.min(approval.principal, lti_principal);
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();
@@ -111,11 +111,11 @@ public class Bank {
 		
 		if(config.RECORD_STATS) {
 			if(h.isFirstTimeBuyer()) {
-				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.monthlyIncome;
+				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.getMonthlyPersonalIncome();
 			}
 			ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += 1.0-config.STATS_DECAY;
-			itv_distribution[1][(int)Math.min(100.0*h.monthlyIncome*12.0/housePrice,100.0)] += 1.0-config.STATS_DECAY;
-			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.monthlyIncome*12.0),100.0)] += 1.0-config.STATS_DECAY;
+			itv_distribution[1][(int)Math.min(100.0*h.annualPersonalIncome / housePrice,100.0)] += 1.0-config.STATS_DECAY;
+			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.annualPersonalIncome),100.0)] += 1.0-config.STATS_DECAY;
 		}
 		
 		
@@ -138,9 +138,9 @@ public class Bank {
 		double lti_max; // loan to income constraint
 		
 		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-		itv_max = h.monthlyIncome*12.0/config.PHI;
+		itv_max = h.annualPersonalIncome / config.PHI;
 		pdi_max = h.bankBalance + Math.max(0.0,h.monthlyDisposableIncome())/monthlyPaymentFactor();
-		lti_max = h.monthlyIncome*12*config.LTI/loanToValue(h,isHome);
+		lti_max = h.annualPersonalIncome * config.LTI/loanToValue(h,isHome);
 		
 		pdi_max = Math.min(pdi_max, ltv_max); // find minimum
 		pdi_max = Math.min(pdi_max, lti_max);

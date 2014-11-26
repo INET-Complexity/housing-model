@@ -13,6 +13,9 @@ import java.util.Random;
  **********************************************/
 public class Household implements IHouseOwner {
 
+	protected double annualPersonalIncome;
+	protected double bankBalance;
+
 	/////////////////////////////////////////////////////////////////////////////////
 	static public class Config {
 
@@ -73,7 +76,7 @@ public class Household implements IHouseOwner {
 	public Household() {
 		this(new Household.Config());
 	}
-	
+
 	public Household(Household.Config c) {
 		config = c;
 		bank = HousingMarketTest.bank;
@@ -83,7 +86,49 @@ public class Household implements IHouseOwner {
 		bankBalance = 0.0;
 		isFirstTimeBuyer = true;
 	}
-	
+
+	/**
+	 * @return annual disposable (i.e., after tax) income
+	 */
+	public double getAnnualDisposableIncome() {
+		return annualPersonalIncome - getAnnualTotalTax();
+	}
+
+	/**
+	 * @return total annual income tax due
+	 */
+	public double getAnnualIncomeTax() {
+		return HousingMarketTest.government.incomeTaxDue(annualPersonalIncome);
+	}
+
+	/**
+	 * @return total annual national insurance contributions
+	 */
+	public double getAnnualNationalInsuranceTax() {
+		return HousingMarketTest.government.class1NICsDue(annualPersonalIncome);
+	}
+
+	/**
+	 * @return total annual taxes due
+	 */
+	public double getAnnualTotalTax() {
+		return getAnnualIncomeTax() + getAnnualNationalInsuranceTax();
+	}
+
+	/**
+	 * @return monthly disposable (i.e., after tax) income
+	 */
+	public double getMonthlyDisposableIncome() {
+		return getAnnualDisposableIncome() / 12.0;
+	}
+
+	/**
+	 * @return monthly personal (i.e., before tax) income
+	 */
+	public double getMonthlyPersonalIncome() {
+		return annualPersonalIncome / 12.0;
+	}
+
 	/////////////////////////////////////////////////////////
 	// House market behaviour
 	/////////////////////////////////////////////////////////
@@ -96,9 +141,7 @@ public class Household implements IHouseOwner {
 	public void preHouseSaleStep() {
 		double disposableIncome;
 		
-		disposableIncome = monthlyIncome 
-				- HousingMarketTest.government.incomeTaxDue(monthlyIncome*12)/12.0 
-				- HousingMarketTest.government.class1NICsDue(monthlyIncome*12)/12.0;
+		disposableIncome = getMonthlyDisposableIncome();
 
 		// ---- Pay rent/mortgage(s)
 		Iterator<Map.Entry<House,MortgageApproval> > mapIt = housePayments.entrySet().iterator();
@@ -219,7 +262,7 @@ public class Household implements IHouseOwner {
 			System.out.println("Can't afford to buy house: strange");
 			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.getMaxMortgage(this,home==null));
 			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+monthlyDisposableIncome());			
-			System.out.println("Annual income is "+monthlyIncome*12.0);			
+			System.out.println("Annual income is "+ getMonthlyPersonalIncome() *12.0);
 			if(isRenting()) System.out.println("Is renting");
 			if(isHomeowner()) System.out.println("Is homeowner");
 			if(isHomeless()) System.out.println("Is homeless");
@@ -300,7 +343,7 @@ public class Household implements IHouseOwner {
 	 * given that it can afford a mortgage.
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
-		double desiredPrice = config.purchaseEqn.desiredPrice(monthlyIncome, houseMarket.housePriceAppreciation());
+		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyPersonalIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
@@ -322,7 +365,7 @@ public class Household implements IHouseOwner {
 	protected void decideToBuyFirstHome() {
 		double costOfHouse;
 		double costOfRent;
-		double p = config.purchaseEqn.desiredPrice(monthlyIncome, houseMarket.housePriceAppreciation());
+		double p = config.purchaseEqn.desiredPrice(getMonthlyPersonalIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(p <= maxMortgage) {
 			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
@@ -352,10 +395,10 @@ public class Household implements IHouseOwner {
 		
 //		epsilon = Math.exp(0.46*rand.nextGaussian() - 0.13);
 
-		//		return(epsilon * h * Math.pow(monthlyIncome*12, g)/
+		//		return(epsilon * h * Math.pow(monthlyPersonalIncome*12, g)/
 //		(tau + c + bank.loanToValue(this,true)*bank.mortgageInterestRate() - a*houseMarket.housePriceAppreciation()));
 		
-//		return(config.purchaseEqn.SIGMA*monthlyIncome*12.0*Math.exp(config.purchaseEqn.EPSILON*rand.nextGaussian())/
+//		return(config.purchaseEqn.SIGMA*monthlyPersonalIncome*12.0*Math.exp(config.purchaseEqn.EPSILON*rand.nextGaussian())/
 //				(1.0 - config.purchaseEqn.A*houseMarket.housePriceAppreciation()));
 //	}
 	
@@ -405,7 +448,7 @@ public class Household implements IHouseOwner {
 	 * Decide how much to bid on the rental market
 	 ********************************************************/
 	public double desiredRent() {
-		return(0.3*monthlyIncome);
+		return(0.3* getMonthlyPersonalIncome());
 	}
 	
 	/********************************************************
@@ -457,9 +500,9 @@ public class Household implements IHouseOwner {
 	public boolean isCollectingRentFrom(House h) {
 		return(h.owner == this && h != home && h.resident != null);
 	}
-	
+
 	public double monthlyDisposableIncome() {
-		double di = monthlyIncome;
+		double di = getMonthlyPersonalIncome();
 		for(Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
 			if(isCollectingRentFrom(payment.getKey())) {
 				di += payment.getValue().monthlyPayment*config.RENT_PROFIT_MARGIN;
@@ -472,33 +515,13 @@ public class Household implements IHouseOwner {
 		
 		return(di);
 	}
-	
-	static public double randomInitialAnnuallIncome() {
-		return(Math.exp(Config.INCOME_LOG_MEDIAN+Config.INCOME_SHAPE*rand.nextGaussian()));
-	}
-	
-	public double grossAnnualIncome() {
-		// TODO: work out tax contributions
-		double income = monthlyIncome;
-		for(Map.Entry<House,MortgageApproval> payment : housePayments.entrySet()) {
-			if(isCollectingRentFrom(payment.getKey())) {
-				// profit from rent collection
-				income += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
-			}
-		}
-		income *=12.0;
-		
-		return(income);
-	}
 
 	///////////////////////////////////////////////
 	
 	Household.Config	config;
 	HouseSaleMarket		houseMarket;
 	HouseRentalMarket	rentalMarket;
-	
-	protected double 	bankBalance; // bank plus fund balance
-	protected double	monthlyIncome;		// monthly income
+
 	protected House		home; // current home
 	protected Map<House, MortgageApproval> 		housePayments = new HashMap<House, MortgageApproval>(); // houses owned
 	private boolean		isFirstTimeBuyer;
