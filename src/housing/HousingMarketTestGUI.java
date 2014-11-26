@@ -40,7 +40,8 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
 		housingChart,
 		housePriceChart,
 		bankBalanceChart,
-		mortgageStatsChart;
+		mortgageStatsChart,
+		mortgagePhaseChart;
     
     // Plottable data
     private XYSeries
@@ -97,7 +98,9 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         mortgageStatsChart.addSeries(HousingMarketTest.bank.itv_distribution,"Income To Value", null);
         mortgageStatsChart.addSeries(HousingMarketTest.bank.ltv_distribution,"Loan To Value", null);
         mortgageStatsChart.addSeries(HousingMarketTest.bank.lti_distribution,"Loan To Income/10", null);
-        
+
+        mortgagePhaseChart.addSeries(HousingMarketTest.bank.approved_mortgages,"Mortgage Phase Diagram", null);
+
         int i;
         for(i=0; i<House.Config.N_QUALITY; ++i) {
         	priceData[0][i] = i;
@@ -153,9 +156,9 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         for(i=0; i<HousingMarketTest.N-50; i+=50) {
         	bankBalData[1][i/50] = HousingMarketTest.households[i].bankBalance;
         }
-        bankBalanceChart.update();
-        
+        bankBalanceChart.update();        
         mortgageStatsChart.update();
+        mortgagePhaseChart.update();
         for(i=0; i<=100; ++i) {
 			HousingMarketTest.bank.ltv_distribution[1][i] *= HousingMarketTest.bank.config.STATS_DECAY;
 			HousingMarketTest.bank.itv_distribution[1][i] *= HousingMarketTest.bank.config.STATS_DECAY;
@@ -178,6 +181,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         housePriceChart = new ScatterPlotGenerator();
         bankBalanceChart = new ScatterPlotGenerator();
         mortgageStatsChart = new ScatterPlotGenerator();
+        mortgagePhaseChart = new ScatterPlotGenerator();
         
         this.makeChartLabels(housingChart, "Housing stats", "Probability", "Household Income");
         this.makeChartLabels(housePriceChart, "House prices", "Price", "Quality");
@@ -185,7 +189,10 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         this.makeChartLabels(bidOfferChart, "Average Bid/Offer price", "Price", "Time");
         this.makeChartLabels(affordabilityChart, "FTB mortgage payment/income ratio", "Ratio", "Time");
         this.makeChartLabels(mortgageStatsChart, "Mortgage stats", "Frequency", "Ratio");
+        this.makeChartLabels(mortgagePhaseChart, "Mortgage Phase", "Deposit/income", "Loan/income");
         
+        mortgagePhaseChart.setXAxisRange(0.0, 8.0);
+        mortgagePhaseChart.setYAxisRange(0.0, 8.0);
         controller.registerFrame(myChartFrame);
        
         // Create a tab interface
@@ -196,6 +203,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         newTabPane.addTab(bidOfferChart.getTitle(), bidOfferChart);
         newTabPane.addTab(affordabilityChart.getTitle(), affordabilityChart);
         newTabPane.addTab(mortgageStatsChart.getTitle(), mortgageStatsChart);
+        newTabPane.addTab(mortgagePhaseChart.getTitle(), mortgagePhaseChart);
 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Market Statistics","Time (years)","")
