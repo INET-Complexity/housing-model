@@ -28,6 +28,9 @@ public class Household implements IHouseOwner {
 					return(BETA*Math.max(bankBalance + disposableIncome,0.0));
 				}
 			}
+			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
+				return(0.1*(bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1)));
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +68,7 @@ public class Household implements IHouseOwner {
 		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
 		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
 		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
+		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
 	}
 		
 	/********************************************************
@@ -98,8 +102,12 @@ public class Household implements IHouseOwner {
 		
 		disposableIncome = monthlyIncome 
 				- HousingMarketTest.government.incomeTaxDue(monthlyIncome*12)/12.0 
-				- HousingMarketTest.government.class1NICsDue(monthlyIncome*12)/12.0;
+				- HousingMarketTest.government.class1NICsDue(monthlyIncome*12)/12.0
+				+ bankBalance*Config.RETURN_ON_FINANCIAL_WEALTH
+				- 0.8*Government.Config.INCOME_SUPPORT;
 
+//		System.out.println("income = "+monthlyIncome+" disposable = "+disposableIncome );
+		
 		// ---- Pay rent/mortgage(s)
 		Iterator<Map.Entry<House,MortgageApproval> > mapIt = housePayments.entrySet().iterator();
 		Map.Entry<House,MortgageApproval> payment;
@@ -125,7 +133,8 @@ public class Household implements IHouseOwner {
 		}
 		
 		// --- consume
-		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
+//		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
+		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
 		
 		if(bankBalance < 0.0) {
 			// bankrupt behaviour

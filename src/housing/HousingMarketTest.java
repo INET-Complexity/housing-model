@@ -82,7 +82,6 @@ public class HousingMarketTest extends SimState implements Steppable {
 		final double RENTERS = 0.32; // proportion of population who rent
 		final double OWNERS = 0.32;  // proportion of population outright home-owners (no mortgage)
 		final double INFLATION = 0.5; // average house-price inflation over last 25 years (not verified)
-		final double INCOME_SUPPORT = 113.7*52.0/12.0; // married couple lower earnings from income support Source: www.nidirect.gov.uk
 		
 		int i, j, p, n;
 		double price;
@@ -102,7 +101,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 		for(j = 0; j<N; ++j) { // setup households
 			households[j] = new Household();
 			households[j].monthlyIncome = incomeDistribution.inverseCumulativeProbability((j+0.5)/N)/12.0;
-			if(households[j].monthlyIncome < INCOME_SUPPORT) households[j].monthlyIncome = INCOME_SUPPORT;
+			if(households[j].monthlyIncome < Government.Config.INCOME_SUPPORT) households[j].monthlyIncome = Government.Config.INCOME_SUPPORT;
 			households[j].bankBalance = 1e8; // Interim value to ensure liquidity during initialisation of housing
 		}
 		
