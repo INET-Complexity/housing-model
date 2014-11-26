@@ -84,7 +84,7 @@ public class Bank {
 
 		// --- calculate maximum allowable principal
 		ltv_principal = housePrice*loanToValue(h, isHome);
-		pdi_principal = Math.max(0.0,h.monthlyDisposableIncome())/monthlyPaymentFactor();
+		pdi_principal = Math.max(0.0,h.monthlyPersonalDiscretionaryIncome())/monthlyPaymentFactor();
 		lti_principal = h.annualPersonalIncome * config.LTI;
 		approval.principal = Math.min(ltv_principal, pdi_principal);
 		approval.principal = Math.min(approval.principal, lti_principal);
@@ -93,7 +93,7 @@ public class Bank {
 		double pdi;
 		approval.principal = housePrice*loanToValue(h, isHome);
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();
-		pdi = Math.max(0.0,h.monthlyDisposableIncome());
+		pdi = Math.max(0.0,h.monthlyPersonalDiscretionaryIncome());
 		if(approval.monthlyPayment > pdi) {
 			// constrained by PDI constraint: increase downpayment
 			approval.principal = pdi/monthlyPaymentFactor();
@@ -139,7 +139,7 @@ public class Bank {
 		
 		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
 		itv_max = h.annualPersonalIncome / config.PHI;
-		pdi_max = h.bankBalance + Math.max(0.0,h.monthlyDisposableIncome())/monthlyPaymentFactor();
+		pdi_max = h.bankBalance + Math.max(0.0,h.monthlyPersonalDiscretionaryIncome())/monthlyPaymentFactor();
 		lti_max = h.annualPersonalIncome * config.LTI/loanToValue(h,isHome);
 		
 		pdi_max = Math.min(pdi_max, ltv_max); // find minimum

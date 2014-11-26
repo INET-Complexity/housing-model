@@ -90,8 +90,8 @@ public class Household implements IHouseOwner {
 	/**
 	 * @return annual disposable (i.e., after tax) income
 	 */
-	public double getAnnualDisposableIncome() {
-		return annualPersonalIncome - getAnnualTotalTax();
+	public double getAnnualPersonalDisposableIncome() {
+		return getAnnualTotalIncome() - getAnnualTotalTax();
 	}
 
 	/**
@@ -109,6 +109,13 @@ public class Household implements IHouseOwner {
 	}
 
 	/**
+	 * @return gross total annual income
+	 */
+	public double getAnnualTotalIncome() {
+		return 12.0 * getMonthlyTotalIncome();
+	}
+
+	/**
 	 * @return total annual taxes due
 	 */
 	public double getAnnualTotalTax() {
@@ -116,17 +123,57 @@ public class Household implements IHouseOwner {
 	}
 
 	/**
-	 * @return monthly disposable (i.e., after tax) income
+	 * @return discretionary income is disposable income less contractually obligated payments
 	 */
-	public double getMonthlyDisposableIncome() {
-		return getAnnualDisposableIncome() / 12.0;
+	public double monthlyPersonalDiscretionaryIncome() {
+		return getMonthlyPersonalDisposableIncome() - getTotalMonthlyObligations();
 	}
 
 	/**
-	 * @return monthly personal (i.e., before tax) income
+	 * @return gross monthly obligations consist of either rent or mortgage payments
+	 */
+	public double getTotalMonthlyObligations() {
+		double obligations = 0.0;
+		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			if (! isCollectingRentFrom(payment.getKey())) {
+				obligations += payment.getValue().monthlyPayment;
+			}
+		}
+		return obligations;
+	}
+
+	/**
+	 * @return monthly disposable (i.e., after tax) income
+	 */
+	public double getMonthlyPersonalDisposableIncome() {
+		return getAnnualPersonalDisposableIncome() / 12.0;
+	}
+
+	/**
+	 * @return gross monthly personal (i.e., before tax) income
 	 */
 	public double getMonthlyPersonalIncome() {
 		return annualPersonalIncome / 12.0;
+	}
+
+	/**
+	 * @return gross rental income will be zero for most households
+	 */
+	public double getMonthlyRentalIncome() {
+		double rentalIncome = 0.0;
+		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			if (isCollectingRentFrom(payment.getKey())) {
+				rentalIncome += payment.getValue().monthlyPayment * (1.0 + config.RENT_PROFIT_MARGIN);
+			}
+		}
+		return rentalIncome;
+	}
+
+	/**
+	 * @return gross monthly total income consists of personal income and any rental income
+	 */
+	public double getMonthlyTotalIncome() {
+		return getMonthlyPersonalIncome() + getMonthlyRentalIncome();
 	}
 
 	/////////////////////////////////////////////////////////
@@ -141,7 +188,7 @@ public class Household implements IHouseOwner {
 	public void preHouseSaleStep() {
 		double disposableIncome;
 		
-		disposableIncome = getMonthlyDisposableIncome();
+		disposableIncome = getMonthlyPersonalDisposableIncome();
 
 		// ---- Pay rent/mortgage(s)
 		Iterator<Map.Entry<House,MortgageApproval> > mapIt = housePayments.entrySet().iterator();
@@ -149,7 +196,7 @@ public class Household implements IHouseOwner {
 		while(mapIt.hasNext()) {
 			payment = mapIt.next();
 			if(payment.getValue().nPayments > 0) {
-				disposableIncome -= payment.getValue().makeMonthlyPayment();					
+				disposableIncome -= payment.getValue().makeMonthlyPayment();
 				if(isCollectingRentFrom(payment.getKey())) {
 					// profit from rent collection
 					disposableIncome += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
@@ -261,7 +308,7 @@ public class Household implements IHouseOwner {
 			// TODO: throw exception
 			System.out.println("Can't afford to buy house: strange");
 			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.getMaxMortgage(this,home==null));
-			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+monthlyDisposableIncome());			
+			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ monthlyPersonalDiscretionaryIncome());
 			System.out.println("Annual income is "+ getMonthlyPersonalIncome() *12.0);
 			if(isRenting()) System.out.println("Is renting");
 			if(isHomeowner()) System.out.println("Is homeowner");
@@ -499,21 +546,6 @@ public class Household implements IHouseOwner {
 	
 	public boolean isCollectingRentFrom(House h) {
 		return(h.owner == this && h != home && h.resident != null);
-	}
-
-	public double monthlyDisposableIncome() {
-		double di = getMonthlyPersonalIncome();
-		for(Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-			if(isCollectingRentFrom(payment.getKey())) {
-				di += payment.getValue().monthlyPayment*config.RENT_PROFIT_MARGIN;
-			} else {
-				di -= payment.getValue().monthlyPayment;
-			}
-
-		}
-//		if(!isHomeless()) di -= housePayments.get(home).monthlyPayment;
-		
-		return(di);
 	}
 
 	///////////////////////////////////////////////
