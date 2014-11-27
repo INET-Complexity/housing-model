@@ -144,9 +144,9 @@ public class Bank {
 		double lti_max; // loan to income constraint
 		
 		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-		itv_max = h.annualEmploymentIncome / config.PHI;
-		pdi_max = h.bankBalance + Math.max(0.0,h.getMonthlyDiscretionaryIncome())/monthlyPaymentFactor();
-		lti_max = h.annualEmploymentIncome * config.LTI/loanToValue(h,isHome);
+		itv_max = h.getAnnualDiscretionaryIncome() / config.PHI;
+		pdi_max = h.bankBalance + Math.max(0.0, h.getMonthlyDiscretionaryIncome())/monthlyPaymentFactor();
+		lti_max = h.getAnnualDiscretionaryIncome() * config.LTI/loanToValue(h,isHome);
 		
 		pdi_max = Math.min(pdi_max, ltv_max); // find minimum
 		pdi_max = Math.min(pdi_max, lti_max);
