@@ -174,9 +174,11 @@ public class Household implements IHouseOwner {
 	public double getMonthlyTotalInterestPayments() {
 		double totalInterestPayments = 0.0;
 		double interestPayment;
-		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-			interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
-			totalInterestPayments += interestPayment;
+		if (! isRenting()) {
+			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
+				totalInterestPayments += interestPayment;
+			}
 		}
 		return totalInterestPayments;
 	}
@@ -186,8 +188,10 @@ public class Household implements IHouseOwner {
 	 */
 	public double getMonthlyTotalMortgagePayments() {
 		double totalMortgagePayments = 0.0;
-		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-			totalMortgagePayments += payment.getValue().monthlyPayment;
+		if (! isRenting()) {
+			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+				totalMortgagePayments += payment.getValue().monthlyPayment;
+			}
 		}
 		return totalMortgagePayments;
 	}
@@ -198,10 +202,12 @@ public class Household implements IHouseOwner {
 	public double getMonthlyTotalPrincipalPayments() {
 		double totalPrincipalPayments = 0.0;
 		double interestPayment, mortgagePayment;
-		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-			mortgagePayment = payment.getValue().monthlyPayment;
-			interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
-			totalPrincipalPayments += mortgagePayment - interestPayment;
+		if (! isRenting()) {
+			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+				mortgagePayment = payment.getValue().monthlyPayment;
+				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
+				totalPrincipalPayments += mortgagePayment - interestPayment;
+			}
 		}
 		return totalPrincipalPayments;
 	}
