@@ -21,6 +21,7 @@ public class Bank {
 		public boolean RECORD_STATS = true; // record mortgage statistics?		
 		public double STATS_DECAY = 0.9; 	// Decay constant (per step) for exp averaging of stats
 		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
+		static public int ARCHIVE_LEN = 1000; // number of mortgage approvals to remember
 	}
 	
 	/********************************
@@ -116,6 +117,11 @@ public class Bank {
 			ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += 1.0-config.STATS_DECAY;
 			itv_distribution[1][(int)Math.min(100.0*h.annualEmploymentIncome / housePrice,100.0)] += 1.0-config.STATS_DECAY;
 			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.annualEmploymentIncome),100.0)] += 1.0-config.STATS_DECAY;
+			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.annualEmploymentIncome);
+			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.annualEmploymentIncome);
+			approved_mortgages_i += 1;
+			if(approved_mortgages_i == Config.ARCHIVE_LEN) approved_mortgages_i = 0;
+
 		}
 		
 		
@@ -175,5 +181,7 @@ public class Bank {
 	public double [][] ltv_distribution = new double[2][101]; // index/100 = LTV
 	public double [][] itv_distribution = new double[2][101]; // index/100 = ITV
 	public double [][] lti_distribution = new double[2][101]; // index/10 = LTI
+	public double [][] approved_mortgages = new double [2][Config.ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
+	public int approved_mortgages_i;
 	
 }
