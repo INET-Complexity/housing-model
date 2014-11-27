@@ -31,10 +31,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
 
     private javax.swing.JFrame myChartFrame;
     
-    // Chart generators 
-    private TimeSeriesChartGenerator
-        bidOfferChart,
-        affordabilityChart;
+    // Chart generators
 
 	ScatterPlotGenerator 
 		housingChart,
@@ -43,12 +40,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
 		mortgageStatsChart,
 		mortgagePhaseChart;
     
-    // Plottable data
-    private XYSeries
-        bidSeries,
-        offerSeries,
-        affordabilitySeries;
-    
+    // Plottable data    
     private double [][]    homelessData;
     private double [][]    rentingData;
     private double [][]    priceData;
@@ -72,12 +64,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         housingChart.removeAllSeries();
         housePriceChart.removeAllSeries();
         bankBalanceChart.removeAllSeries();
-        bidOfferChart.removeAllSeries();
-        affordabilityChart.removeAllSeries();
         
-        bidSeries = new XYSeries("Average bid price", false);
-        offerSeries = new XYSeries("Average offer price", false);
-        affordabilitySeries = new XYSeries("Average FTB mortgage/income ratio", false);
         homelessData = new double[2][HousingMarketTest.N/50];
         rentingData = new double[2][HousingMarketTest.N/50];
         priceData = new double[2][House.Config.N_QUALITY];
@@ -91,9 +78,6 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         housePriceChart.addSeries(referencePriceData, "Reference price", null);
         bankBalanceChart.addSeries(bankBalData, "Bank balance", null);
         bankBalanceChart.addSeries(referenceBankBalData, "Reference bank balance", null);
-        bidOfferChart.addSeries(bidSeries, null);        
-        bidOfferChart.addSeries(offerSeries, null);
-        affordabilityChart.addSeries(affordabilitySeries, null);
         
         mortgageStatsChart.addSeries(HousingMarketTest.bank.itv_distribution,"Income To Value", null);
         mortgageStatsChart.addSeries(HousingMarketTest.bank.ltv_distribution,"Loan To Value", null);
@@ -125,9 +109,6 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
     	int i, j, n, r;
         HousingMarketTest myModel = (HousingMarketTest)state;
         double t = myModel.schedule.getTime()/12.0;
-        bidSeries.add(t, HousingMarketTest.averageBidPrice,true);
-        offerSeries.add(t, HousingMarketTest.averageOfferPrice,true);
-        affordabilitySeries.add(t,HousingMarketTest.bank.affordability, true);
         
         for(TimeSeriesPlot plot : timeSeriesPlots) {
         	plot.recordValues(t);
@@ -175,8 +156,6 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         myChartFrame = new JFrame("My Graphs");
         
         // Create and label charts
-        bidOfferChart = new TimeSeriesChartGenerator();
-        affordabilityChart = new TimeSeriesChartGenerator();
         housingChart = new ScatterPlotGenerator();
         housePriceChart = new ScatterPlotGenerator();
         bankBalanceChart = new ScatterPlotGenerator();
@@ -186,8 +165,6 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         this.makeChartLabels(housingChart, "Housing stats", "Probability", "Household Income");
         this.makeChartLabels(housePriceChart, "House prices", "Modelled Price", "Reference Price");
         this.makeChartLabels(bankBalanceChart, "Bank balances", "Balance", "Income");
-        this.makeChartLabels(bidOfferChart, "Average Bid/Offer price", "Price", "Time");
-        this.makeChartLabels(affordabilityChart, "FTB mortgage payment/income ratio", "Ratio", "Time");
         this.makeChartLabels(mortgageStatsChart, "Mortgage stats", "Frequency", "Ratio");
         this.makeChartLabels(mortgagePhaseChart, "Mortgage Phase", "Deposit/income", "Loan/income");
         
@@ -200,8 +177,6 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         newTabPane.addTab(housingChart.getTitle(), housingChart);
         newTabPane.addTab(housePriceChart.getTitle(), housePriceChart);
         newTabPane.addTab(bankBalanceChart.getTitle(), bankBalanceChart);
-        newTabPane.addTab(bidOfferChart.getTitle(), bidOfferChart);
-        newTabPane.addTab(affordabilityChart.getTitle(), affordabilityChart);
         newTabPane.addTab(mortgageStatsChart.getTitle(), mortgageStatsChart);
         newTabPane.addTab(mortgagePhaseChart.getTitle(), mortgagePhaseChart);
 
@@ -221,13 +196,15 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         			.addVariable(HousingMarketTest.housingMarket,"nBuyers", "Buyers")
     	);
         
-        /**
+        timeSeriesPlots.add(
+        		new TimeSeriesPlot("FTB mortgage payment/income ratio","Time (years)","Ratio")
+        			.addVariable(HousingMarketTest.bank,"affordability", "Transactions")
+    	);
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Bid/Offer Prices","Time (years)","Price")
-        			.addVariable(HousingMarketTest,"averageBidPrice", "Average Bid Price")
-        			.addVariable(HousingMarketTest,"averageOfferPrice", "Average Offer Price")        			
+        			.addVariable(HousingMarketTest.housingMarket,"averageBidPrice", "Average Bid Price")
+        			.addVariable(HousingMarketTest.housingMarket,"averageOfferPrice", "Average Offer Price")        			
         );
-        **/
         
         for(TimeSeriesPlot plot : timeSeriesPlots) {
         	plot.addToPane(newTabPane);

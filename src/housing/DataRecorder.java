@@ -7,6 +7,9 @@ import org.jfree.data.xy.XYSeries;
 @SuppressWarnings("serial")
 public class DataRecorder extends XYSeries {
 	
+	static public int MAX_DATA_LEN = 400;	// Maximum number of data points to remember
+	static public int CHUNK_SIZE = 5;		// number of datapoints to delete at a time
+	
 	static interface Transform {
 		public double exec(double x);
 	}
@@ -38,6 +41,7 @@ public class DataRecorder extends XYSeries {
 			} else {
 				add(timestamp, transform.exec(field.getDouble(obj)) , true);				
 			}
+			if(getItemCount() > MAX_DATA_LEN) delete(0,CHUNK_SIZE);
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

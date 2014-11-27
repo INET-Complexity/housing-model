@@ -91,20 +91,9 @@ public class HousingMarket {
 		HouseBuyerRecord buyer;
 		HouseSaleRecord  seller;
 		HouseSaleRecord	 ceilingSeller = new HouseSaleRecord(new House(), 0.0);
-		nSales = 0;
-		nSellers = onMarket.size();
-		nBuyers = buyers.size();
 
-		// --- House Price Index stuff
-//		HPIAppreciation = F*HPIAppreciation + (1.0-F)*(housePriceIndex - lastHousePriceIndex);
-		HPIAppreciation = F*HPIAppreciation - (1.0-F)*housePriceIndex;
-		housePriceIndex = 0.0;
-		for(Double price : averageSalePrice) {
-			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
-		}
-		housePriceIndex /= House.Config.N_QUALITY*HPI_MEAN;
-		HPIAppreciation += (1.0-F)*housePriceIndex;
-		
+		recordMarketStats();
+
 		// --- create set of sellers, sorted by quality then price
 		// --- (TODO: better computational complexity with R-tree (or KD-tree))
 		// ---
@@ -112,20 +101,6 @@ public class HousingMarket {
 		for(HouseSaleRecord sale : onMarket.values()) {
 			sellers.add(sale);
 		}
-
-		/***
-		System.out.println("Sellers:");
-		for(HouseSaleRecord sale : sellers) {
-			System.out.println(sale.quality+" "+sale.currentPrice);
-		}
-		int i;
-		System.out.println("Cheapest sellers:");
-		for(i=0; i<House.MAX_QUALITY; ++i) {
-			ceilingSeller.quality = i;
-			seller = sellers.lower(ceilingSeller); // cheapest seller at this quality
-			if(seller != null) System.out.println(i+" "+seller.currentPrice+" "+seller.quality);			
-		}
-		***/
 		
 		while(!buyers.isEmpty()) {
 			buyer = buyers.poll();
@@ -182,12 +157,52 @@ public class HousingMarket {
 		return(listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY));
 	}
 	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	protected void recordMarketStats() {
+		nSales = 0;
+		nSellers = onMarket.size();
+		nBuyers = buyers.size();
+
+		// --- House Price Index stuff
+		// ---------------------------
+		HPIAppreciation = F*HPIAppreciation - (1.0-F)*housePriceIndex;
+		housePriceIndex = 0.0;
+		for(Double price : averageSalePrice) {
+			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
+		}
+		housePriceIndex /= House.Config.N_QUALITY*HPI_MEAN;
+		HPIAppreciation += (1.0-F)*housePriceIndex;
+
+		// -- Record average bid price
+		// ---------------------------
+		averageBidPrice = 0.0;
+		for(HouseBuyerRecord buyer : buyers) {
+			averageBidPrice += buyer.price;
+		}
+		if(buyers.size() > 0) averageBidPrice /= buyers.size();
+
+		// -- Record average offer price
+		// -----------------------------
+		averageOfferPrice = 0.0;
+		for(HouseSaleRecord sale : onMarket.values()) {
+			averageOfferPrice += sale.currentPrice;
+		}
+		if(onMarket.size() > 0) averageOfferPrice /= onMarket.size();
+	}
+
+	
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	protected Map<House, HouseSaleRecord> 	onMarket = new HashMap<House, HouseSaleRecord>();
 	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	
 	// ---- statistics
 	public double averageSoldPriceToOLP;
 	public double averageDaysOnMarket;
+	public double averageBidPrice;
+	public double averageOfferPrice;
 	public double averageSalePrice[] = new double[House.Config.N_QUALITY];
 	public double housePriceIndex;
 	public double lastHousePriceIndex;

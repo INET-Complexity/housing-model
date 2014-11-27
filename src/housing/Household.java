@@ -16,6 +16,21 @@ public class Household implements IHouseOwner {
 	/////////////////////////////////////////////////////////////////////////////////
 	static public class Config {
 
+		// ---- Parameters
+		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
+		public PurchaseEqn		purchaseEqn = new PurchaseEqn();
+		public SaleEqn			saleEqn = new SaleEqn();
+		public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
+		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
+		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
+		public double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost
+		public double DOWNPAYMENT_FRACTION = 0.1 + 0.01*(new Random()).nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
+
+		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
+		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
+		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
+		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
+
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class ConsumptionEqn {
 			public double ALPHA = 0.2; // propensity to consume income
@@ -29,7 +44,7 @@ public class Household implements IHouseOwner {
 				}
 			}
 			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
-				return(0.1*(bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1)));
+				return(0.1*(bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*rand.nextGaussian())));
 			}
 		}
 
@@ -47,7 +62,7 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
-			static public double D = 0.001;		// Size of Days-on-market effect
+			static public double D = 0.01;//0.001;		// Size of Days-on-market effect
 			static public double E = 0.05; 	// SD of noise
 			public double desiredPrice(double pbar, double d, double principal) {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*rand.nextGaussian();
@@ -56,19 +71,7 @@ public class Household implements IHouseOwner {
 
 		}
 		
-		// ---- Parameters
-		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
-		public PurchaseEqn		purchaseEqn = new PurchaseEqn();
-		public SaleEqn			saleEqn = new SaleEqn();
-		public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
-		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
-		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
-		public double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost		
-
-		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
-		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
-		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
-		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
+		protected static Random rand = new Random();
 	}
 		
 	/********************************************************
@@ -141,10 +144,10 @@ public class Household implements IHouseOwner {
 			System.out.println("Household gone bankrupt!");
 			System.out.println("...Houses = "+housePayments.size());
 			int i = 0;
-			for(House h : housePayments.keySet()) {
-				if(h.resident == null) ++i;
-			}
-			System.out.println("...Empty = "+i);
+//			for(House h : housePayments.keySet()) {
+//				if(h.resident == null) ++i;
+//			}
+//			System.out.println("...Empty = "+i);
 				
 			// TODO: cash injection for now...
 			bankBalance = 1.0;
@@ -222,7 +225,7 @@ public class Household implements IHouseOwner {
 			home.resident = null;
 			home = null;
 		}
-		MortgageApproval mortgage = bank.requestLoan(this, sale.currentPrice, home == null);
+		MortgageApproval mortgage = bank.requestLoan(this, sale.currentPrice, bankBalance*config.DOWNPAYMENT_FRACTION, home == null);
 		if(mortgage == null) {
 			// TODO: throw exception
 			System.out.println("Can't afford to buy house: strange");
@@ -424,7 +427,7 @@ public class Household implements IHouseOwner {
 		if(price <= bank.getMaxMortgage(this, false)) {
 			MortgageApproval mortgage;
 			double yield;
-			mortgage = bank.requestLoan(this, price, false);
+			mortgage = bank.requestLoan(this, price, bankBalance * config.DOWNPAYMENT_FRACTION, false);
 			
 			yield = (mortgage.monthlyPayment*12*config.RENT_PROFIT_MARGIN + houseMarket.housePriceAppreciation()*price)/
 					mortgage.downPayment;
@@ -512,6 +515,7 @@ public class Household implements IHouseOwner {
 	protected Map<House, MortgageApproval> 		housePayments = new HashMap<House, MortgageApproval>(); // houses owned
 	private boolean		isFirstTimeBuyer;
 	Bank				bank;
+	double				age;
 	protected static Random rand = new Random();
 	
 	// ---- Parameters

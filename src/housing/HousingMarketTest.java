@@ -32,7 +32,6 @@ public class HousingMarketTest extends SimState implements Steppable {
         if (schedule.getTime() >= N_STEPS) simulationStateNow.kill();
         
 		for(j = 0; j<N; ++j) households[j].preHouseSaleStep();
-		recordBidOffer(housingMarket);
 		housingMarket.clearMarket();
 		for(j = 0; j<N; ++j) households[j].preHouseLettingStep();
 		housingMarket.clearBuyToLetMarket();
@@ -215,24 +214,10 @@ public class HousingMarketTest extends SimState implements Steppable {
 	// Average bid and average offer prices
 	////////////////////////////////////////////////////////////////////////
 	static void printBidOffer(HousingMarket market) {
-		recordBidOffer(market);
-		System.out.println(t + "\t" + averageBidPrice + "\t" + averageOfferPrice
+		System.out.println(t + "\t" + housingMarket.averageBidPrice + "\t" + housingMarket.averageOfferPrice
 				+ "\t" + housingMarket.averageSoldPriceToOLP + "\t" + housingMarket.averageDaysOnMarket);		
 	}
 
-	static void recordBidOffer(HousingMarket market) {
-		averageBidPrice = 0.0;
-		for(HouseBuyerRecord buyer : market.buyers) {
-			averageBidPrice += buyer.price;
-		}
-		if(market.buyers.size() > 0) averageBidPrice /= market.buyers.size();
-
-		averageOfferPrice = 0.0;
-		for(HouseSaleRecord sale : market.onMarket.values()) {
-			averageOfferPrice += sale.currentPrice;
-		}
-		if(market.onMarket.size() > 0) averageOfferPrice /= market.onMarket.size();
-	}
 
 	////////////////////////////////////////////////////////////////////////
 	// Getters/setters for the console
@@ -266,7 +251,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 
 	public static final int N = 5000; // number of households
 	public static final int Nh = 4100; // number of houses
-	public static final int N_STEPS = 1200; // timesteps
+	public static final int N_STEPS = 2400; // timesteps
 
 	public static Bank 				bank = new Bank();
 	public static Government		government = new Government();
@@ -276,8 +261,6 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public static House 			houses[] = new House[Nh];
 	public static int 				t;
 	public static Random			rand = new Random();
-	public static double			averageBidPrice;
-	public static double			averageOfferPrice;
 	
 	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
 
