@@ -13,7 +13,7 @@ import java.util.Random;
  **********************************************/
 public class Household implements IHouseOwner {
 
-	protected double annualPersonalIncome;
+	protected double annualEmploymentIncome;
 	protected double bankBalance;
 
 	/////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ public class Household implements IHouseOwner {
 	/**
 	 * @return annual disposable (i.e., after tax) income
 	 */
-	public double getAnnualPersonalDisposableIncome() {
+	public double getAnnualDisposableIncome() {
 		return getAnnualTotalIncome() - getAnnualTotalTax();
 	}
 
@@ -98,14 +98,14 @@ public class Household implements IHouseOwner {
 	 * @return total annual income tax due
 	 */
 	public double getAnnualIncomeTax() {
-		return HousingMarketTest.government.incomeTaxDue(annualPersonalIncome);
+		return HousingMarketTest.government.incomeTaxDue(annualEmploymentIncome);
 	}
 
 	/**
 	 * @return total annual national insurance contributions
 	 */
 	public double getAnnualNationalInsuranceTax() {
-		return HousingMarketTest.government.class1NICsDue(annualPersonalIncome);
+		return HousingMarketTest.government.class1NICsDue(annualEmploymentIncome);
 	}
 
 	/**
@@ -123,57 +123,82 @@ public class Household implements IHouseOwner {
 	}
 
 	/**
-	 * @return discretionary income is disposable income less contractually obligated payments
+	 * @return discretionary income is disposable income less any mortgage payments
 	 */
-	public double monthlyPersonalDiscretionaryIncome() {
-		return getMonthlyPersonalDisposableIncome() - getTotalMonthlyObligations();
-	}
-
-	/**
-	 * @return gross monthly obligations consist of either rent or mortgage payments
-	 */
-	public double getTotalMonthlyObligations() {
-		double obligations = 0.0;
-		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-			if (! isCollectingRentFrom(payment.getKey())) {
-				obligations += payment.getValue().monthlyPayment;
-			}
-		}
-		return obligations;
+	public double getMonthlyDiscretionaryIncome() {
+		return getMonthlyDisposableIncome() - getMonthlyTotalMortgagePayments();
 	}
 
 	/**
 	 * @return monthly disposable (i.e., after tax) income
 	 */
-	public double getMonthlyPersonalDisposableIncome() {
-		return getAnnualPersonalDisposableIncome() / 12.0;
+	public double getMonthlyDisposableIncome() {
+		return getAnnualDisposableIncome() / 12.0;
 	}
 
 	/**
-	 * @return gross monthly personal (i.e., before tax) income
+	 * @return gross monthly employment (i.e., before tax) income
 	 */
-	public double getMonthlyPersonalIncome() {
-		return annualPersonalIncome / 12.0;
+	public double getMonthlyEmploymentIncome() {
+		return annualEmploymentIncome / 12.0;
 	}
 
 	/**
-	 * @return gross rental income will be zero for most households
+	 * @return gross property income will be zero for most households
 	 */
-	public double getMonthlyRentalIncome() {
-		double rentalIncome = 0.0;
+	public double getMonthlyPropertyIncome() {
+		double propertyIncome = 0.0;
 		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
 			if (isCollectingRentFrom(payment.getKey())) {
-				rentalIncome += payment.getValue().monthlyPayment * (1.0 + config.RENT_PROFIT_MARGIN);
+				propertyIncome += payment.getValue().monthlyPayment * (1.0 + config.RENT_PROFIT_MARGIN);
 			}
 		}
-		return rentalIncome;
+		return propertyIncome;
 	}
 
 	/**
-	 * @return gross monthly total income consists of personal income and any rental income
+	 * @return gross monthly total income consists of employment income and any property income
 	 */
 	public double getMonthlyTotalIncome() {
-		return getMonthlyPersonalIncome() + getMonthlyRentalIncome();
+		return getMonthlyEmploymentIncome() + getMonthlyPropertyIncome();
+	}
+
+	/**
+	 * @return monthly total monthly interest payments for all houses owned
+	 */
+	public double getMonthlyTotalInterestPayments() {
+		double totalInterestPayments = 0.0;
+		double interestPayment;
+		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
+			totalInterestPayments += interestPayment;
+		}
+		return totalInterestPayments;
+	}
+
+	/**
+	 * @return monthly total monthly mortgage payments for all houses owned
+	 */
+	public double getMonthlyTotalMortgagePayments() {
+		double totalMortgagePayments = 0.0;
+		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			totalMortgagePayments += payment.getValue().monthlyPayment;
+		}
+		return totalMortgagePayments;
+	}
+
+	/**
+	 * @return monthly total monthly principal payments for all houses owned
+	 */
+	public double getMonthlyTotalPrincipalPayments() {
+		double totalPrincipalPayments = 0.0;
+		double interestPayment, mortgagePayment;
+		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			mortgagePayment = payment.getValue().monthlyPayment;
+			interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
+			totalPrincipalPayments += mortgagePayment - interestPayment;
+		}
+		return totalPrincipalPayments;
 	}
 
 	/////////////////////////////////////////////////////////
@@ -188,7 +213,7 @@ public class Household implements IHouseOwner {
 	public void preHouseSaleStep() {
 		double disposableIncome;
 		
-		disposableIncome = getMonthlyPersonalDisposableIncome();
+		disposableIncome = getMonthlyDisposableIncome();
 
 		// ---- Pay rent/mortgage(s)
 		Iterator<Map.Entry<House,MortgageApproval> > mapIt = housePayments.entrySet().iterator();
@@ -308,8 +333,8 @@ public class Household implements IHouseOwner {
 			// TODO: throw exception
 			System.out.println("Can't afford to buy house: strange");
 			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.getMaxMortgage(this,home==null));
-			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ monthlyPersonalDiscretionaryIncome());
-			System.out.println("Annual income is "+ getMonthlyPersonalIncome() *12.0);
+			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyDiscretionaryIncome());
+			System.out.println("Annual income is "+ getMonthlyEmploymentIncome() *12.0);
 			if(isRenting()) System.out.println("Is renting");
 			if(isHomeowner()) System.out.println("Is homeowner");
 			if(isHomeless()) System.out.println("Is homeless");
@@ -369,7 +394,7 @@ public class Household implements IHouseOwner {
 		MortgageApproval rent = new MortgageApproval();
 		rent.downPayment = 0.0;
 		rent.monthlyPayment = sale.currentPrice;
-		rent.monthlyInterest = 0.0;
+		rent.monthlyInterestRate = 0.0;
 		rent.nPayments = (int)(12.0*Math.random()+1);
 		rent.principal = rent.monthlyPayment*rent.nPayments;
 		home = sale.house;
@@ -390,7 +415,7 @@ public class Household implements IHouseOwner {
 	 * given that it can afford a mortgage.
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
-		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyPersonalIncome(), houseMarket.housePriceAppreciation());
+		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
@@ -412,7 +437,7 @@ public class Household implements IHouseOwner {
 	protected void decideToBuyFirstHome() {
 		double costOfHouse;
 		double costOfRent;
-		double p = config.purchaseEqn.desiredPrice(getMonthlyPersonalIncome(), houseMarket.housePriceAppreciation());
+		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(p <= maxMortgage) {
 			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
@@ -495,7 +520,7 @@ public class Household implements IHouseOwner {
 	 * Decide how much to bid on the rental market
 	 ********************************************************/
 	public double desiredRent() {
-		return(0.3* getMonthlyPersonalIncome());
+		return(0.3* getMonthlyEmploymentIncome());
 	}
 	
 	/********************************************************

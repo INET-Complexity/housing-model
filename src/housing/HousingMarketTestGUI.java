@@ -105,10 +105,10 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         	referencePriceData[1][i] = HousingMarket.referencePrice(i);
         }
         for(i = 0; i<HousingMarketTest.N-50; i += 50) {
-        	homelessData[0][i/50] = HousingMarketTest.households[i].annualPersonalIncome;
-        	rentingData[0][i/50] = HousingMarketTest.households[i].annualPersonalIncome;
-        	bankBalData[0][i/50] = HousingMarketTest.households[i].annualPersonalIncome;
-        	referenceBankBalData[0][i/50] = HousingMarketTest.households[i].annualPersonalIncome;
+        	homelessData[0][i/50] = HousingMarketTest.households[i].annualEmploymentIncome;
+        	rentingData[0][i/50] = HousingMarketTest.households[i].annualEmploymentIncome;
+        	bankBalData[0][i/50] = HousingMarketTest.households[i].annualEmploymentIncome;
+        	referenceBankBalData[0][i/50] = HousingMarketTest.households[i].annualEmploymentIncome;
         	referenceBankBalData[1][i/50] = HousingMarketTest.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/HousingMarketTest.N);
         }
 
