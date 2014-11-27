@@ -6,11 +6,11 @@ package housing;
  * mortgage, and doubles up as a contract that represents the mortgage
  * itself.
  * 
- * @author daniel
+ * @author daniel, davidrpugh
  *
  ***************************************************/
 public class MortgageApproval {
-	
+
 	/********************************************
 	 * Updates internal variables to simulate a payment
 	 * being made (Does not move any assets from payer to payee).
@@ -20,7 +20,7 @@ public class MortgageApproval {
 	public double makeMonthlyPayment() {
 		if(nPayments == 0) return(0.0);
 		nPayments -= 1;
-		principal = principal*(1.0 + monthlyInterest) - monthlyPayment;
+		principal = principal*(1.0 + monthlyInterestRate) - monthlyPayment;
 		return(monthlyPayment);
 	}
 
@@ -46,6 +46,6 @@ public class MortgageApproval {
 	public int 		nPayments;
 	public double 	monthlyPayment;
 	public double	principal;
-	public double	monthlyInterest;
+	public double monthlyInterestRate;
 	public double	downPayment;
 }

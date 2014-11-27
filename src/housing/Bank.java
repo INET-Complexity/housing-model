@@ -6,7 +6,7 @@ package housing;
  * mortgage requests, so this is where mortgage-lending policy is encoded.
  *  
  * 
- * @author daniel
+ * @author daniel, davidrpugh
  *
  *************************************************/
 public class Bank {
@@ -78,15 +78,15 @@ public class Bank {
 		double ltv_principal, pdi_principal, lti_principal;
 		
 		
-		if(housePrice > h.monthlyIncome*12.0/config.PHI) {
+		if(housePrice > h.annualEmploymentIncome / config.PHI) {
 			System.out.println("Failed ITV constraint");
 			return(null); // ITV constraint not satisfied
 		}
 
 		// --- calculate maximum allowable principal
 		ltv_principal = housePrice*loanToValue(h, isHome);
-		pdi_principal = Math.max(0.0,h.monthlyDisposableIncome())/monthlyPaymentFactor();
-		lti_principal = h.monthlyIncome*12.0*config.LTI;
+		pdi_principal = Math.max(0.0,h.getMonthlyDiscretionaryIncome())/monthlyPaymentFactor();
+		lti_principal = h.annualEmploymentIncome * config.LTI;
 		approval.principal = Math.min(ltv_principal, pdi_principal);
 		approval.principal = Math.min(approval.principal, lti_principal);
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();
@@ -94,7 +94,7 @@ public class Bank {
 		double pdi;
 		approval.principal = housePrice*loanToValue(h, isHome);
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();
-		pdi = Math.max(0.0,h.monthlyDisposableIncome());
+		pdi = Math.max(0.0,h.monthlyPersonalDiscretionaryIncome());
 		if(approval.monthlyPayment > pdi) {
 			// constrained by PDI constraint: increase downpayment
 			approval.principal = pdi/monthlyPaymentFactor();
@@ -108,19 +108,20 @@ public class Bank {
 		}
 		
 		approval.nPayments = config.N_PAYMENTS;
-		approval.monthlyInterest = r;
+		approval.monthlyInterestRate = r;
 		
 		if(config.RECORD_STATS) {
 			if(h.isFirstTimeBuyer()) {
-				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.monthlyIncome;
+				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.getMonthlyEmploymentIncome();
 			}
 			ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += 1.0-config.STATS_DECAY;
-			itv_distribution[1][(int)Math.min(100.0*h.monthlyIncome*12.0/housePrice,100.0)] += 1.0-config.STATS_DECAY;
-			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.monthlyIncome*12.0),100.0)] += 1.0-config.STATS_DECAY;
-			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.monthlyIncome*12.0);
-			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.monthlyIncome*12.0);
+			itv_distribution[1][(int)Math.min(100.0*h.annualEmploymentIncome / housePrice,100.0)] += 1.0-config.STATS_DECAY;
+			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.annualEmploymentIncome),100.0)] += 1.0-config.STATS_DECAY;
+			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.annualEmploymentIncome);
+			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.annualEmploymentIncome);
 			approved_mortgages_i += 1;
 			if(approved_mortgages_i == Config.ARCHIVE_LEN) approved_mortgages_i = 0;
+
 		}
 		
 		
@@ -143,9 +144,9 @@ public class Bank {
 		double lti_max; // loan to income constraint
 		
 		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-		itv_max = h.monthlyIncome*12.0/config.PHI;
-		pdi_max = h.bankBalance + Math.max(0.0,h.monthlyDisposableIncome())/monthlyPaymentFactor();
-		lti_max = h.monthlyIncome*12*config.LTI/loanToValue(h,isHome);
+		itv_max = h.annualEmploymentIncome / config.PHI;
+		pdi_max = h.bankBalance + Math.max(0.0,h.getMonthlyDiscretionaryIncome())/monthlyPaymentFactor();
+		lti_max = h.annualEmploymentIncome * config.LTI/loanToValue(h,isHome);
 		
 		pdi_max = Math.min(pdi_max, ltv_max); // find minimum
 		pdi_max = Math.min(pdi_max, lti_max);

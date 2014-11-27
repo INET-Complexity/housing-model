@@ -82,7 +82,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 		final double RENTERS = 0.32; // proportion of population who rent
 		final double OWNERS = 0.32;  // proportion of population outright home-owners (no mortgage)
 		final double INFLATION = 0.5; // average house-price inflation over last 25 years (not verified)
-		final double INCOME_SUPPORT = 113.7*52.0/12.0; // married couple lower earnings from income support Source: www.nidirect.gov.uk
+		final double INCOME_SUPPORT = 113.7*52.0; // married couple lower earnings from income support Source: www.nidirect.gov.uk
 		
 		int i, j, p, n;
 		double price;
@@ -101,9 +101,11 @@ public class HousingMarketTest extends SimState implements Steppable {
 		
 		for(j = 0; j<N; ++j) { // setup households
 			households[j] = new Household();
-			households[j].monthlyIncome = incomeDistribution.inverseCumulativeProbability((j+0.5)/N)/12.0;
-			if(households[j].monthlyIncome < INCOME_SUPPORT) households[j].monthlyIncome = INCOME_SUPPORT;
+			households[j].annualEmploymentIncome = incomeDistribution.inverseCumulativeProbability((j+0.5)/N);
+			if(households[j].annualEmploymentIncome < INCOME_SUPPORT) households[j].annualEmploymentIncome = INCOME_SUPPORT;
 			households[j].bankBalance = 1e8; // Interim value to ensure liquidity during initialisation of housing
+			// System.out.println(households[j].annualEmploymentIncome);
+			// System.out.println(households[j].getMonthlyEmploymentIncome());
 		}
 		
 		i = Nh-1;
@@ -151,7 +153,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 
 		for(j = 0; j<N; ++j) { // setup financial wealth
 			households[j].bankBalance = grossFinancialWealth.inverseCumulativeProbability((j+0.5)/N);
-//			System.out.println(households[j].monthlyIncome*12+" "+households[j].bankBalance/households[j].monthlyIncome);
+//			System.out.println(households[j].monthlyPersonalIncome*12+" "+households[j].bankBalance/households[j].monthlyPersonalIncome);
 		}
 
 		
@@ -173,7 +175,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 					i += 1;
 				}
 			}
-			System.out.println(households[j].monthlyIncome + " " + i);
+			System.out.println(households[j].getMonthlyEmploymentIncome() + " " + i);
 		}
 	}
 	
@@ -184,7 +186,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 		int j;
 		for(j = 0; j<N; ++j) {
 			if(households[j].isHomeowner())
-				System.out.println(households[j].home.quality+" "+households[j].monthlyIncome);
+				System.out.println(households[j].home.quality+" "+households[j].getMonthlyEmploymentIncome());
 		}		
 	}
 	
