@@ -6,7 +6,7 @@ package housing;
  * mortgage requests, so this is where mortgage-lending policy is encoded.
  *  
  * 
- * @author daniel
+ * @author daniel, davidrpugh
  *
  *************************************************/
 public class Bank {

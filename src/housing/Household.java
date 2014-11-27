@@ -8,7 +8,7 @@ import java.util.Random;
  * This represents a household who receives an income, consumes,
  * saves and can buy/sell/let/invest-in houses.
  * 
- * @author daniel
+ * @author daniel, davidrpugh
  *
  **********************************************/
 public class Household implements IHouseOwner {
@@ -86,6 +86,11 @@ public class Household implements IHouseOwner {
 		bankBalance = 0.0;
 		isFirstTimeBuyer = true;
 	}
+
+	/**
+	 * @return annual disposable (i.e., after tax) income
+	 */
+	public double getAnnualDiscretionaryIncome() {return 12.0 * getMonthlyDiscretionaryIncome();}
 
 	/**
 	 * @return annual disposable (i.e., after tax) income

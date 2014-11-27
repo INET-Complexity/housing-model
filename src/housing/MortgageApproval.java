@@ -6,7 +6,7 @@ package housing;
  * mortgage, and doubles up as a contract that represents the mortgage
  * itself.
  * 
- * @author daniel
+ * @author daniel, davidrpugh
  *
  ***************************************************/
 public class MortgageApproval {
