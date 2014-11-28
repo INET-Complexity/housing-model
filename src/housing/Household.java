@@ -282,7 +282,7 @@ public class Household implements IHouseOwner {
 		if(isHomeless()) {
 			rentalMarket.bid(this, desiredRent());
 		} else if(housePayments.size() > 1) { // this is a buy-to-let investor
-			houseMarket.bid(this, bank.getMaxMortgage(this, false));
+			houseMarket.bid(this, bank.preApproveMortgage(this));
 		}
 	}
 	
@@ -315,7 +315,7 @@ public class Household implements IHouseOwner {
 		}
 		
 		// ---- try to buy house?
-		if(!isHomeowner()) {
+		if(!isHomeOwner()) {
 			decideToBuyFirstHome();
 		}
 	}
@@ -339,15 +339,15 @@ public class Household implements IHouseOwner {
 			home.resident = null;
 			home = null;
 		}
-		MortgageApproval mortgage = bank.requestLoan(this, sale.currentPrice, home == null);
+		MortgageApproval mortgage = bank.requestLoan(this, sale.currentPrice);
 		if(mortgage == null) {
 			// TODO: throw exception
 			System.out.println("Can't afford to buy house: strange");
-			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.getMaxMortgage(this,home==null));
+			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.preApproveMortgage(this));
 			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyDiscretionaryIncome());
 			System.out.println("Annual income is "+ getMonthlyEmploymentIncome() *12.0);
 			if(isRenting()) System.out.println("Is renting");
-			if(isHomeowner()) System.out.println("Is homeowner");
+			if(isHomeOwner()) System.out.println("Is homeowner");
 			if(isHomeless()) System.out.println("Is homeless");
 			if(isFirstTimeBuyer()) System.out.println("Is firsttimebuyer");
 		}
@@ -427,7 +427,7 @@ public class Household implements IHouseOwner {
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
 		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
-		double maxMortgage = bank.getMaxMortgage(this, true);
+		double maxMortgage = bank.preApproveMortgage(this);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
 				if(Math.random() < p) houseMarket.bid(this, desiredPrice);
@@ -449,7 +449,7 @@ public class Household implements IHouseOwner {
 		double costOfHouse;
 		double costOfRent;
 		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
-		double maxMortgage = bank.getMaxMortgage(this, true);
+		double maxMortgage = bank.preApproveMortgage(this);
 		if(p <= maxMortgage) {
 			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
 			if(home != null) {
@@ -538,10 +538,10 @@ public class Household implements IHouseOwner {
 	 * Decide whether to buy a house as a buy-to-let investment
 	 ********************************************************/
 	public boolean decideToBuyBuyToLet(House h, double price) {
-		if(price <= bank.getMaxMortgage(this, false)) {
+		if(price <= bank.preApproveMortgage(this)) {
 			MortgageApproval mortgage;
 			double yield;
-			mortgage = bank.requestLoan(this, price, false);
+			mortgage = bank.requestLoan(this, price);
 			
 			yield = (mortgage.monthlyPayment*12*config.RENT_PROFIT_MARGIN + houseMarket.housePriceAppreciation()*price)/
 					mortgage.downPayment;
@@ -558,14 +558,20 @@ public class Household implements IHouseOwner {
 	/////////////////////////////////////////////////////////
 
 
-	public boolean isHomeowner() {
-		if(home == null) return(false);
-		return(home.owner == this);
+	public boolean isHomeOwner() {
+		if (home == null) {
+			return false;
+		} else {
+			return home.owner == this;
+		}
 	}
 
 	public boolean isRenting() {
-		if(home == null) return(false);
-		return(home.owner != this);
+		if (home == null) {
+			return false;
+		} else {
+			return home.owner != this;
+		}
 	}
 
 	public boolean isHomeless() {

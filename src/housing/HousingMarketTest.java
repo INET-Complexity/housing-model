@@ -121,8 +121,8 @@ public class HousingMarketTest extends SimState implements Steppable {
 					// household is still paying off mortgage
 					p = (int)(bank.config.N_PAYMENTS*Math.random()); // number of payments outstanding
 					price = HousingMarket.referencePrice(houses[i].quality)/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0)));
-					if(price > bank.getMaxMortgage(households[j], true)) {
-						price = bank.getMaxMortgage(households[j], true);
+					if(price > bank.preApproveMortgage(households[j])) {
+						price = bank.preApproveMortgage(households[j]);
 					}
 					households[j].completeHousePurchase(new HouseSaleRecord(houses[i], price));
 					households[j].housePayments.get(houses[i]).nPayments = p;
@@ -134,7 +134,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 		while(i>=0) { // assign buyToLets
 			do {
 				j = (int)(Math.random()*N);
-			} while(!households[j].isHomeowner());
+			} while(!households[j].isHomeOwner());
 			n = (int)(buyToLetDistribution.sample() + 0.5); // number of houses owned
 			while(n>0 && i>=0) {				
 				houses[i].owner = households[j];
@@ -143,7 +143,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 				price = Math.min(
 						HousingMarket.referencePrice(houses[i].quality)
 						/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0))),
-						bank.getMaxMortgage(households[j], false)
+						bank.preApproveMortgage(households[j])
 						);
 				households[j].completeHousePurchase(new HouseSaleRecord(houses[i], price));		
 				--i;
@@ -185,7 +185,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 	static void printHomeQualityData() {
 		int j;
 		for(j = 0; j<N; ++j) {
-			if(households[j].isHomeowner())
+			if(households[j].isHomeOwner())
 				System.out.println(households[j].home.quality+" "+households[j].getMonthlyEmploymentIncome());
 		}		
 	}

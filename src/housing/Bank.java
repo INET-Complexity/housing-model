@@ -60,7 +60,7 @@ public class Bank {
 	 * Get the monthly payment on a mortgage as a fraction of the mortgage principle.
 	 * @return The monthly payment fraction.
 	 *******************************/
-	public double monthlyPaymentFactor() {
+	public double monthlyInterestFactor() {
 		return(k);
 	}
 
@@ -69,38 +69,27 @@ public class Bank {
 	 * 
 	 * @param h The household that is requesting the mortgage.
 	 * @param housePrice The price of the house that 'h' wants to buy
-	 * @param isHome true if 'h' plans to live in the house.
 	 * @return The MortgageApproval object, or NULL if the mortgage is declined
 	 ****************************/
-	public MortgageApproval requestLoan(Household h, double housePrice, boolean isHome) {
+	public MortgageApproval requestLoan(Household h, double housePrice) {
 		MortgageApproval approval = new MortgageApproval();
 		double r = mortgageInterestRate()/12.0; // monthly interest rate
 		double ltv_principal, pdi_principal, lti_principal;
 		
-		
-		if(housePrice > h.annualEmploymentIncome / config.PHI) {
+
+		if(housePrice > h.getAnnualDiscretionaryIncome() / config.PHI) {
 			System.out.println("Failed ITV constraint");
 			return(null); // ITV constraint not satisfied
 		}
 
 		// --- calculate maximum allowable principal
-		ltv_principal = housePrice*loanToValue(h, isHome);
-		pdi_principal = Math.max(0.0,h.getMonthlyDiscretionaryIncome())/monthlyPaymentFactor();
-		lti_principal = h.annualEmploymentIncome * config.LTI;
+		ltv_principal = housePrice*(1 - mortgageHaircut(h));
+		pdi_principal = Math.max(0.0,h.getMonthlyDiscretionaryIncome())/ monthlyInterestFactor();
+		lti_principal = h.getAnnualDiscretionaryIncome() * config.LTI;
 		approval.principal = Math.min(ltv_principal, pdi_principal);
 		approval.principal = Math.min(approval.principal, lti_principal);
-		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();
-		/**
-		double pdi;
-		approval.principal = housePrice*loanToValue(h, isHome);
-		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();
-		pdi = Math.max(0.0,h.monthlyPersonalDiscretionaryIncome());
-		if(approval.monthlyPayment > pdi) {
-			// constrained by PDI constraint: increase downpayment
-			approval.principal = pdi/monthlyPaymentFactor();
-			approval.monthlyPayment = pdi;
-		}
-		**/
+		approval.monthlyPayment = approval.principal* monthlyInterestFactor();
+
 		approval.downPayment = housePrice - approval.principal;
 		if(h.bankBalance < approval.downPayment) {
 			System.out.println("Failed down-payment constraint: bank balance = "+h.bankBalance+" Downpayment = "+approval.downPayment);
@@ -115,10 +104,10 @@ public class Bank {
 				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.getMonthlyEmploymentIncome();
 			}
 			ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += 1.0-config.STATS_DECAY;
-			itv_distribution[1][(int)Math.min(100.0*h.annualEmploymentIncome / housePrice,100.0)] += 1.0-config.STATS_DECAY;
-			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.annualEmploymentIncome),100.0)] += 1.0-config.STATS_DECAY;
-			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.annualEmploymentIncome);
-			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.annualEmploymentIncome);
+			itv_distribution[1][(int)Math.min(100.0*h.getAnnualDiscretionaryIncome() / housePrice,100.0)] += 1.0-config.STATS_DECAY;
+			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.getAnnualDiscretionaryIncome()),100.0)] += 1.0-config.STATS_DECAY;
+			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.getAnnualDiscretionaryIncome());
+			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.getAnnualDiscretionaryIncome());
 			approved_mortgages_i += 1;
 			if(approved_mortgages_i == Config.ARCHIVE_LEN) approved_mortgages_i = 0;
 
@@ -128,51 +117,73 @@ public class Bank {
 		return(approval);
 	}
 
-	/*****************************************
-	 * Find the maximum mortgage that this mortgage-lender will approve
-	 * to a household.
-	 * 
-	 * @param h The household who is applying for the mortgage
-	 * @param isHome true if 'h' plans to live in the house
-	 * @return The maximum value of house that this mortgage-lender is willing
-	 * to approve a mortgage for.
-	 ****************************************/
-	public double getMaxMortgage(Household h, boolean isHome) {
-		double ltv_max; // loan to value constraint
-		double itv_max; // income to value constraint
-		double pdi_max; // disposable income constraint
-		double lti_max; // loan to income constraint
-		
-		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-		itv_max = h.getAnnualDiscretionaryIncome() / config.PHI;
-		pdi_max = h.bankBalance + Math.max(0.0, h.getMonthlyDiscretionaryIncome())/monthlyPaymentFactor();
-		lti_max = h.getAnnualDiscretionaryIncome() * config.LTI/loanToValue(h,isHome);
-		
-		pdi_max = Math.min(pdi_max, ltv_max); // find minimum
-		pdi_max = Math.min(pdi_max, lti_max);
-		pdi_max = Math.min(pdi_max, itv_max);
-		pdi_max = Math.floor(pdi_max*100.0)/100.0; // round down to nearest penny
-		
-		return(pdi_max);
+	private boolean satisfiesLoanToValue(double downPayment,
+										 double housePrice,
+										 double haircut) {
+		return (downPayment / housePrice) >= haircut;
 	}
 
-	/**********************************************
-	 * Get the Loan-To-Value ratio applicable to a given household.
-	 * 
-	 * @param h The houshold that is applying for the mortgage
-	 * @param isHome true if 'h' plans to live in the house
-	 * @return The loan-to-value ratio applicable to the given household.
-	 *********************************************/
-	public double loanToValue(Household h, boolean isHome) {
-		if(isHome) {
-			if(h.isFirstTimeBuyer()) {
-				return(1.0 - config.THETA_FTB);
-			}
-			return(1.0 - config.THETA_HOME);
-		}
-		return(1.0 - config.THETA_BTL);
+	private boolean satisfiesIncomeToValue(double discretionaryIncome,
+										   double housePrice,
+										   double itvConstraint) {
+		return (discretionaryIncome / housePrice) >= itvConstraint;
 	}
-		
+
+	/**
+	 * Bank pre-approves each household for a mortgage under the assumption that
+	 * the household uses its entire liquid wealth as a down payment.
+	 *
+	 * @param household
+	 * @return The maximum allowable house price for a given household.
+	 */
+	public double preApproveMortgage(Household household) {
+		double maxHousePriceLTV; // loan to value
+		double maxHousePriceITV; // income to value
+		double maxHousePriceLTI; // loan to income
+		double maxHousePrice;
+
+		// maximum allowable house price under LTV constraint
+		double expectedDownPayment = household.bankBalance;
+		maxHousePriceLTV = expectedDownPayment / mortgageHaircut(household);
+
+		// maximum allowable house price under ITV constraint
+		double discretionaryIncome = household.getAnnualDiscretionaryIncome();
+		maxHousePriceITV = discretionaryIncome / config.PHI;
+
+		// maximum allowable house price under LTI constraint
+		double loanToValueRatio = 1 - mortgageHaircut(household);
+		maxHousePriceLTI = discretionaryIncome * config.LTI / loanToValueRatio;
+
+		// maximum allowable house price is min of the above max house prices
+		maxHousePrice = Math.min(maxHousePriceLTV, maxHousePriceITV);
+		maxHousePrice = Math.min(maxHousePrice, maxHousePriceLTI);
+
+		return maxHousePrice;
+	}
+
+	/**
+	 * The percentage of the purchase price that a household is expected to
+	 * contribute as a down payment. The mortgage "haircut" depends on whether
+	 * the household is a "first-time" buyer, a current homeowner, or a
+	 * "buy-to-let" property investor.
+	 *
+	 * @param household
+	 * @return The mortgage "haircut".
+	 */
+	private double mortgageHaircut(Household household) {
+		double haircut;
+
+		if (household.isFirstTimeBuyer()) {
+			haircut = config.THETA_FTB;
+		} else if (household.isHomeOwner()) {
+			haircut = config.THETA_HOME;
+		} else {
+			haircut = config.THETA_BTL;
+		}
+
+		return haircut;
+	}
+
 	public Bank.Config config;
 	
 	public double k; // principal to monthly payment factor
