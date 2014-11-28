@@ -116,16 +116,16 @@ public class HousingMarketTest extends SimState implements Steppable {
 				if(Math.random() < OWNERS/(1.0-RENTERS)) {
 					// household owns house outright
 					households[j].completeHousePurchase(new HouseSaleRecord(houses[i], 0));
-					households[j].housePayments.get(houses[i]).nPayments = 0;
+					households[j].housePayments.get(houses[i]).numberMonthlyPayments = 0;
 				} else {
 					// household is still paying off mortgage
-					p = (int)(bank.config.N_PAYMENTS*Math.random()); // number of payments outstanding
-					price = HousingMarket.referencePrice(houses[i].quality)/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0)));
+					p = (int)(bank.config.NUMBER_MONTHLY_PAYMENTS *Math.random()); // number of payments outstanding
+					price = HousingMarket.referencePrice(houses[i].quality)/(Math.pow(1.0+INFLATION,Math.floor((bank.config.NUMBER_MONTHLY_PAYMENTS -p)/12.0)));
 					if(price > bank.preApproveMortgage(households[j])) {
 						price = bank.preApproveMortgage(households[j]);
 					}
 					households[j].completeHousePurchase(new HouseSaleRecord(houses[i], price));
-					households[j].housePayments.get(houses[i]).nPayments = p;
+					households[j].housePayments.get(houses[i]).numberMonthlyPayments = p;
 				}
 				--i;
 			}
@@ -139,10 +139,10 @@ public class HousingMarketTest extends SimState implements Steppable {
 			while(n>0 && i>=0) {				
 				houses[i].owner = households[j];
 				houses[i].resident = null;
-				p = (int)(bank.config.N_PAYMENTS*Math.random()); // number of payments outstanding
+				p = (int)(bank.config.NUMBER_MONTHLY_PAYMENTS *Math.random()); // number of payments outstanding
 				price = Math.min(
 						HousingMarket.referencePrice(houses[i].quality)
-						/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0))),
+						/(Math.pow(1.0+INFLATION,Math.floor((bank.config.NUMBER_MONTHLY_PAYMENTS -p)/12.0))),
 						bank.preApproveMortgage(households[j])
 						);
 				households[j].completeHousePurchase(new HouseSaleRecord(houses[i], price));		
