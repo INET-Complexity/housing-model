@@ -153,7 +153,7 @@ public class Household implements IHouseOwner {
 	 */
 	public double getMonthlyPropertyIncome() {
 		double propertyIncome = 0.0;
-		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+		for (Map.Entry<House, FixedRateMortgage> payment : housePayments.entrySet()) {
 			if (isCollectingRentFrom(payment.getKey())) {
 				propertyIncome += payment.getValue().monthlyPayment * (1.0 + config.RENT_PROFIT_MARGIN);
 			}
@@ -175,7 +175,7 @@ public class Household implements IHouseOwner {
 		double totalInterestPayments = 0.0;
 		double interestPayment;
 		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			for (Map.Entry<House, FixedRateMortgage> payment : housePayments.entrySet()) {
 				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
 				totalInterestPayments += interestPayment;
 			}
@@ -189,7 +189,7 @@ public class Household implements IHouseOwner {
 	public double getMonthlyTotalMortgagePayments() {
 		double totalMortgagePayments = 0.0;
 		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			for (Map.Entry<House, FixedRateMortgage> payment : housePayments.entrySet()) {
 				totalMortgagePayments += payment.getValue().monthlyPayment;
 			}
 		}
@@ -203,7 +203,7 @@ public class Household implements IHouseOwner {
 		double totalPrincipalPayments = 0.0;
 		double interestPayment, mortgagePayment;
 		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			for (Map.Entry<House, FixedRateMortgage> payment : housePayments.entrySet()) {
 				mortgagePayment = payment.getValue().monthlyPayment;
 				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
 				totalPrincipalPayments += mortgagePayment - interestPayment;
@@ -227,17 +227,17 @@ public class Household implements IHouseOwner {
 		disposableIncome = getMonthlyDisposableIncome();
 
 		// ---- Pay rent/mortgage(s)
-		Iterator<Map.Entry<House,MortgageApproval> > mapIt = housePayments.entrySet().iterator();
-		Map.Entry<House,MortgageApproval> payment;
+		Iterator<Map.Entry<House, FixedRateMortgage> > mapIt = housePayments.entrySet().iterator();
+		Map.Entry<House, FixedRateMortgage> payment;
 		while(mapIt.hasNext()) {
 			payment = mapIt.next();
-			if(payment.getValue().nPayments > 0) {
+			if(payment.getValue().numberMonthlyPayments > 0) {
 				disposableIncome -= payment.getValue().makeMonthlyPayment();
 				if(isCollectingRentFrom(payment.getKey())) {
 					// profit from rent collection
 					disposableIncome += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
 				}
-				if(payment.getValue().nPayments == 0) { // do paid-off stuff
+				if(payment.getValue().numberMonthlyPayments == 0) { // do paid-off stuff
 					if(payment.getKey().owner != this) { // renting
 						payment.getKey().owner.endOfLettingAgreement(payment.getKey());
 						if(payment.getKey() == home) {
@@ -282,7 +282,7 @@ public class Household implements IHouseOwner {
 		if(isHomeless()) {
 			rentalMarket.bid(this, desiredRent());
 		} else if(housePayments.size() > 1) { // this is a buy-to-let investor
-			houseMarket.bid(this, bank.getMaxMortgage(this, false));
+			houseMarket.bid(this, bank.preApproveMortgage(this));
 		}
 	}
 	
@@ -315,7 +315,7 @@ public class Household implements IHouseOwner {
 		}
 		
 		// ---- try to buy house?
-		if(!isHomeowner()) {
+		if(!isHomeOwner()) {
 			decideToBuyFirstHome();
 		}
 	}
@@ -339,15 +339,15 @@ public class Household implements IHouseOwner {
 			home.resident = null;
 			home = null;
 		}
-		MortgageApproval mortgage = bank.requestLoan(this, sale.currentPrice, home == null);
+		FixedRateMortgage mortgage = bank.issueFixedRateMortgage(this, sale.currentPrice);
 		if(mortgage == null) {
 			// TODO: throw exception
 			System.out.println("Can't afford to buy house: strange");
-			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.getMaxMortgage(this,home==null));
+			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.preApproveMortgage(this));
 			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyDiscretionaryIncome());
 			System.out.println("Annual income is "+ getMonthlyEmploymentIncome() *12.0);
 			if(isRenting()) System.out.println("Is renting");
-			if(isHomeowner()) System.out.println("Is homeowner");
+			if(isHomeOwner()) System.out.println("Is homeowner");
 			if(isHomeless()) System.out.println("Is homeless");
 			if(isFirstTimeBuyer()) System.out.println("Is firsttimebuyer");
 		}
@@ -369,7 +369,7 @@ public class Household implements IHouseOwner {
 		double profit = sale.currentPrice - housePayments.get(sale.house).payoff(bankBalance+sale.currentPrice);
 		if(profit < 0) System.out.println("Strange: Profit is negative.");
 		bankBalance += profit;
-		if(housePayments.get(sale.house).nPayments == 0) {
+		if(housePayments.get(sale.house).numberMonthlyPayments == 0) {
 			housePayments.remove(sale.house);
 		}
 		if(sale.house == home) {
@@ -402,12 +402,12 @@ public class Household implements IHouseOwner {
 	 * payment contract. At present we use a MortgageApproval).
 	 ********************************************************/
 	public void completeHouseRental(HouseSaleRecord sale) {
-		MortgageApproval rent = new MortgageApproval();
+		FixedRateMortgage rent = new FixedRateMortgage();
 		rent.downPayment = 0.0;
 		rent.monthlyPayment = sale.currentPrice;
 		rent.monthlyInterestRate = 0.0;
-		rent.nPayments = (int)(12.0*Math.random()+1);
-		rent.principal = rent.monthlyPayment*rent.nPayments;
+		rent.numberMonthlyPayments = (int)(12.0*Math.random()+1);
+		rent.principal = rent.monthlyPayment*rent.numberMonthlyPayments;
 		home = sale.house;
 		sale.house.resident = this;
 		housePayments.put(home, rent);
@@ -427,7 +427,7 @@ public class Household implements IHouseOwner {
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
 		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
-		double maxMortgage = bank.getMaxMortgage(this, true);
+		double maxMortgage = bank.preApproveMortgage(this);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
 				if(Math.random() < p) houseMarket.bid(this, desiredPrice);
@@ -449,7 +449,7 @@ public class Household implements IHouseOwner {
 		double costOfHouse;
 		double costOfRent;
 		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
-		double maxMortgage = bank.getMaxMortgage(this, true);
+		double maxMortgage = bank.preApproveMortgage(this);
 		if(p <= maxMortgage) {
 			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
 			if(home != null) {
@@ -538,10 +538,10 @@ public class Household implements IHouseOwner {
 	 * Decide whether to buy a house as a buy-to-let investment
 	 ********************************************************/
 	public boolean decideToBuyBuyToLet(House h, double price) {
-		if(price <= bank.getMaxMortgage(this, false)) {
-			MortgageApproval mortgage;
+		if(price <= bank.preApproveMortgage(this)) {
+			FixedRateMortgage mortgage;
 			double yield;
-			mortgage = bank.requestLoan(this, price, false);
+			mortgage = bank.issueFixedRateMortgage(this, price);
 			
 			yield = (mortgage.monthlyPayment*12*config.RENT_PROFIT_MARGIN + houseMarket.housePriceAppreciation()*price)/
 					mortgage.downPayment;
@@ -558,14 +558,20 @@ public class Household implements IHouseOwner {
 	/////////////////////////////////////////////////////////
 
 
-	public boolean isHomeowner() {
-		if(home == null) return(false);
-		return(home.owner == this);
+	public boolean isHomeOwner() {
+		if (home == null) {
+			return false;
+		} else {
+			return home.owner == this;
+		}
 	}
 
 	public boolean isRenting() {
-		if(home == null) return(false);
-		return(home.owner != this);
+		if (home == null) {
+			return false;
+		} else {
+			return home.owner != this;
+		}
 	}
 
 	public boolean isHomeless() {
@@ -591,7 +597,7 @@ public class Household implements IHouseOwner {
 	HouseRentalMarket	rentalMarket;
 
 	protected House		home; // current home
-	protected Map<House, MortgageApproval> 		housePayments = new HashMap<House, MortgageApproval>(); // houses owned
+	protected Map<House, FixedRateMortgage> 		housePayments = new HashMap<House, FixedRateMortgage>(); // houses owned
 	private boolean		isFirstTimeBuyer;
 	Bank				bank;
 	protected static Random rand = new Random();

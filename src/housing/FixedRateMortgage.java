@@ -9,7 +9,19 @@ package housing;
  * @author daniel, davidrpugh
  *
  ***************************************************/
-public class MortgageApproval {
+public class FixedRateMortgage {
+
+	// Chosen by a bank
+	public int numberMonthlyPayments;
+	public double monthlyInterestRate;
+
+	// Chosen by household
+	public double downPayment;
+	public double principal;
+
+	// determined jointly by bank and household choices
+	public double monthlyPayment;
+
 
 	/********************************************
 	 * Updates internal variables to simulate a payment
@@ -18,9 +30,9 @@ public class MortgageApproval {
 	 * @return The amount of the payment
 	 ********************************************/
 	public double makeMonthlyPayment() {
-		if(nPayments == 0) return(0.0);
-		nPayments -= 1;
-		principal = principal*(1.0 + monthlyInterestRate) - monthlyPayment;
+		if(numberMonthlyPayments == 0) return(0.0);
+		numberMonthlyPayments -= 1;
+		principal = principal * (1.0 + monthlyInterestRate) - monthlyPayment;
 		return(monthlyPayment);
 	}
 
@@ -35,17 +47,12 @@ public class MortgageApproval {
 		if(amount >= principal) {
 			principal = 0.0;
 			monthlyPayment = 0.0;
-			nPayments = 0;
+			numberMonthlyPayments = 0;
 			return(principal);
 		}
 		monthlyPayment *= (principal-amount)/principal;
 		principal -= amount;
 		return(amount);
 	}
-	
-	public int 		nPayments;
-	public double 	monthlyPayment;
-	public double	principal;
-	public double monthlyInterestRate;
-	public double	downPayment;
+
 }
