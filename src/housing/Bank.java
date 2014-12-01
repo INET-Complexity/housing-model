@@ -57,23 +57,23 @@ public class Bank {
 	}
 
 	/*****************************
-	 * Use this to arrange a Mortgage and get a MortgageApproval object.
+	 * Use this to arrange a FixedRateMortgage object.
 	 * 
 	 * @param household The household that is requesting the mortgage.
-	 * @param housePrice The price of the house that 'h' wants to buy
-	 * @return The MortgageApproval object, or NULL if the mortgage is declined
+	 * @param housePrice The price of the house that 'household' wants to buy
+	 * @return The FixedRateMortgage object, or NULL if the mortgage is declined
 	 ****************************/
 	public FixedRateMortgage issueFixedRateMortgage(Household household, double housePrice) {
-		
+
 		double monthlyInterestRate = mortgageInterestRate() / 12.0;
 		int numberMonthlyPayments = config.NUMBER_MONTHLY_PAYMENTS;
 		double fixedRateInterestFactor = (monthlyInterestRate /
-				(1 - Math.pow(1 + monthlyInterestRate, -numberMonthlyPayments)));
+			(1 - Math.pow(1 + monthlyInterestRate, -numberMonthlyPayments)));
 
 		// create the new mortgage
 		FixedRateMortgage mortgage = new FixedRateMortgage();
 
-		// specify interest rate and duration
+		// specify mortgage interest rate and duration
 		mortgage.monthlyInterestRate = monthlyInterestRate;
 		mortgage.numberMonthlyPayments = numberMonthlyPayments;
 
@@ -106,12 +106,26 @@ public class Bank {
 		return mortgage;
 	}
 
+	/**
+	 * Check that mortgage satisfies the loan to value (LTV) constraint.
+	 *
+	 * @param household
+	 * @param principal
+	 * @param housePrice
+	 * @return true if mortgage satisfies LTV constraint, false otherwise.
+	 */
 	private boolean satisfiesLoanToValue(Household household,
 										 double principal,
 										 double housePrice) {
 		return (principal / housePrice) <= (1 - mortgageHaircut(household));
 	}
 
+	/**
+	 * Check that mortgage satisfies the income to value (ITV) constraint.
+	 * @param household
+	 * @param housePrice
+	 * @return true if the mortgage satisfies the constraint, false otherwise.
+	 */
 	private boolean satisfiesIncomeToValue(Household household,
 										   double housePrice) {
 		double discretionaryIncome = household.getAnnualDiscretionaryIncome();
