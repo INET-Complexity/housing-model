@@ -25,7 +25,7 @@ public class Household implements IHouseOwner {
 		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
 		public double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.01*(new Random()).nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
-
+		
 		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
 		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
 		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
@@ -44,14 +44,14 @@ public class Household implements IHouseOwner {
 				}
 			}
 			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
-				return(0.1*(bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*rand.nextGaussian())));
+				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*rand.nextGaussian())),0.0));
 			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class PurchaseEqn {
 			static public double A = 0.01;			// sensitivity to house price appreciation
-			static public double EPSILON = 0.3; 	// S.D. of noise
+			static public double EPSILON = 0.4;//0.3;// S.D. of noise
 			static public double SIGMA = 4.5*12.0;	// scale
 
 			public double desiredPrice(double monthlyIncome, double hpa) {
@@ -62,7 +62,7 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
-			static public double D = 0.01;//0.001;		// Size of Days-on-market effect
+			static public double D = 0.001;//0.001;		// Size of Days-on-market effect
 			static public double E = 0.05; 	// SD of noise
 			public double desiredPrice(double pbar, double d, double principal) {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*rand.nextGaussian();
@@ -71,6 +71,10 @@ public class Household implements IHouseOwner {
 
 		}
 		
+		public PurchaseEqn getPurcahseEqn() {
+			return(new PurchaseEqn());
+		}
+
 		protected static Random rand = new Random();
 	}
 		
@@ -138,12 +142,13 @@ public class Household implements IHouseOwner {
 		// --- consume
 //		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
 		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
+//		bankBalance += -config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
 		
 		if(bankBalance < 0.0) {
 			// bankrupt behaviour
 			System.out.println("Household gone bankrupt!");
 			System.out.println("...Houses = "+housePayments.size());
-			int i = 0;
+//			int i = 0;
 //			for(House h : housePayments.keySet()) {
 //				if(h.resident == null) ++i;
 //			}

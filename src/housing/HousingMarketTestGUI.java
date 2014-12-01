@@ -80,7 +80,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         bankBalanceChart.addSeries(referenceBankBalData, "Reference bank balance", null);
         
         mortgageStatsChart.addSeries(HousingMarketTest.bank.itv_distribution,"Income To Value", null);
-        mortgageStatsChart.addSeries(HousingMarketTest.bank.ltv_distribution,"Loan To Value", null);
+        mortgageStatsChart.addSeries(HousingMarketTest.bank.ltv_distribution,"Loan To Value (1/10 y-scale)", null);
         mortgageStatsChart.addSeries(HousingMarketTest.bank.lti_distribution,"Loan To Income/10", null);
 
         mortgagePhaseChart.addSeries(HousingMarketTest.bank.approved_mortgages,"Mortgage Phase Diagram", null);
@@ -181,7 +181,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         newTabPane.addTab(mortgagePhaseChart.getTitle(), mortgagePhaseChart);
 
         timeSeriesPlots.add(
-        		new TimeSeriesPlot("Market Statistics","Time (years)","")
+        		new TimeSeriesPlot("Market Statistics","Time (years)","Value")
         			.addVariable(HousingMarketTest.housingMarket,"housePriceIndex", "HPI")
         			.addVariable(HousingMarketTest.housingMarket,"averageSoldPriceToOLP", "Sold Price/List price")
         			.addVariable(HousingMarketTest.housingMarket,"averageDaysOnMarket", "Years on market", new DataRecorder.Transform() {
@@ -197,14 +197,15 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
     	);
         
         timeSeriesPlots.add(
-        		new TimeSeriesPlot("FTB mortgage payment/income ratio","Time (years)","Ratio")
-        			.addVariable(HousingMarketTest.bank,"affordability", "Transactions")
-    	);
-        timeSeriesPlots.add(
         		new TimeSeriesPlot("Bid/Offer Prices","Time (years)","Price")
         			.addVariable(HousingMarketTest.housingMarket,"averageBidPrice", "Average Bid Price")
         			.addVariable(HousingMarketTest.housingMarket,"averageOfferPrice", "Average Offer Price")        			
         );
+
+        timeSeriesPlots.add(
+        		new TimeSeriesPlot("Affordability","Time (years)","mortgage payment/income")
+        			.addVariable(HousingMarketTest.bank,"affordability", "Affordability")
+    	);
         
         for(TimeSeriesPlot plot : timeSeriesPlots) {
         	plot.addToPane(newTabPane);

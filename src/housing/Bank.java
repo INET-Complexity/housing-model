@@ -16,12 +16,20 @@ public class Bank {
 		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
 		public double PHI = 1.0/100.0;//1.0/8.0;//0.25; // minimum income-to-value (ITV) ratio
-		public double LTI = 4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14 
+		public double LTI = 8.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14 
 		public int    N_PAYMENTS = 12*25; // number of monthly repayments
 		public boolean RECORD_STATS = true; // record mortgage statistics?		
 		public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
 		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
 		static public int ARCHIVE_LEN = 1000; // number of mortgage approvals to remember
+
+		public double getLoanToIncome() {
+			return(LTI);
+		}		
+		public void setLoanToIncome(double x) {
+			LTI = x;
+		}
+
 	}
 	
 	/********************************
@@ -108,12 +116,14 @@ public class Bank {
 		approval.monthlyInterest = r;
 		
 		if(config.RECORD_STATS) {
-			if(h.isFirstTimeBuyer()) {
+			//if(h.isFirstTimeBuyer()) {
 				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.monthlyIncome;
+			//}
+			if(approval.principal > 1.0) {
+				ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-config.STATS_DECAY)/10.0;
+				itv_distribution[1][(int)Math.min(100.0*h.monthlyIncome*12.0/housePrice,100.0)] += 1.0-config.STATS_DECAY;
+				lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.monthlyIncome*12.0),100.0)] += 1.0-config.STATS_DECAY;
 			}
-			ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-config.STATS_DECAY)/10.0;
-			itv_distribution[1][(int)Math.min(100.0*h.monthlyIncome*12.0/housePrice,100.0)] += 1.0-config.STATS_DECAY;
-			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.monthlyIncome*12.0),100.0)] += 1.0-config.STATS_DECAY;
 			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.monthlyIncome*12.0);
 			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.monthlyIncome*12.0);
 			approved_mortgages_i += 1;
@@ -169,6 +179,8 @@ public class Bank {
 		return(1.0 - config.THETA_BTL);
 	}
 		
+
+	
 	public Bank.Config config;
 	
 	public double k; // principal to monthly payment factor

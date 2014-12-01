@@ -238,7 +238,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public void setSaleEqn_D(double x) {
 		Household.Config.SaleEqn.D = x;
 	}
-
+	
 	public double getBank_LTI() {
 		return(bank.config.LTI);
 	}
@@ -247,11 +247,28 @@ public class HousingMarketTest extends SimState implements Steppable {
 		bank.config.LTI = x;
 	}
 
+	/***
+	public double getHousehold_DownpaymentFraction() {
+		return(Household.Config.DOWNPAYMENT_FRACTION);
+	}
+
+	public void setHousehold_DownpaymentFraction(double x) {
+		Household.Config.DOWNPAYMENT_FRACTION = x;
+	}
+***/
+	public Bank.Config getBankConfig() {
+		return(bank.config);
+	}
+
+	public Household.Config getHouseholdConfig() {
+		return(new Household.Config());
+	}
+
 	////////////////////////////////////////////////////////////////////////
 
 	public static final int N = 5000; // number of households
 	public static final int Nh = 4100; // number of houses
-	public static final int N_STEPS = 2400; // timesteps
+	public static final int N_STEPS = 3000; // timesteps
 
 	public static Bank 				bank = new Bank();
 	public static Government		government = new Government();
