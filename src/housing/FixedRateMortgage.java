@@ -11,6 +11,18 @@ package housing;
  ***************************************************/
 public class FixedRateMortgage {
 
+	// Chosen by a bank
+	public int numberMonthlyPayments;
+	public double monthlyInterestRate;
+
+	// Chosen by household
+	public double downPayment;
+	public double principal;
+
+	// determined jointly by bank and household choices
+	public double monthlyPayment;
+
+
 	/********************************************
 	 * Updates internal variables to simulate a payment
 	 * being made (Does not move any assets from payer to payee).
@@ -20,7 +32,7 @@ public class FixedRateMortgage {
 	public double makeMonthlyPayment() {
 		if(numberMonthlyPayments == 0) return(0.0);
 		numberMonthlyPayments -= 1;
-		principal = principal*(1.0 + monthlyInterestRate) - monthlyPayment;
+		principal = principal * (1.0 + monthlyInterestRate) - monthlyPayment;
 		return(monthlyPayment);
 	}
 
@@ -42,10 +54,5 @@ public class FixedRateMortgage {
 		principal -= amount;
 		return(amount);
 	}
-	
-	public int numberMonthlyPayments;
-	public double monthlyPayment;
-	public double principal;
-	public double monthlyInterestRate;
-	public double downPayment;
+
 }
