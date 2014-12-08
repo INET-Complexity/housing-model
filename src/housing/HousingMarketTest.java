@@ -263,6 +263,10 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public Household.Config getHouseholdConfig() {
 		return(new Household.Config());
 	}
+	
+	public MarketStatistics getMarket_Statistics() {
+		return(marketStats);
+	}
 
 	////////////////////////////////////////////////////////////////////////
 
@@ -278,6 +282,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public static House 			houses[] = new House[Nh];
 	public static int 				t;
 	public static Random			rand = new Random();
+	public static MarketStatistics	marketStats = new MarketStatistics(housingMarket);
 	
 	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
 

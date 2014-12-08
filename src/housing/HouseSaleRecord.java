@@ -35,7 +35,11 @@ public class HouseSaleRecord implements Comparable<HouseSaleRecord> {
 	public void setPrice(double p) {
 		currentPrice = Math.round(p*100.0)/100.0; // round to nearest penny
 	}
-	
+
+//	public double doubleValue() {
+//		return(currentPrice);
+//	}
+
 	public House 	house;
 	public int		quality;
 	public double 	initialListedPrice;
