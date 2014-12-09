@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+
+import ec.util.MersenneTwisterFast;
 /**********************************************
  * This represents a household who receives an income, consumes,
  * saves and can buy/sell/let/invest-in houses.
@@ -79,9 +81,14 @@ public class Household implements IHouseOwner {
 
 	public Household(Household.Config c) {
 		config = c;
+		
+		// --- Placeholder for modular method of linking agents together.
 		bank = HousingMarketTest.bank;
 		houseMarket = HousingMarketTest.housingMarket;
 		rentalMarket = HousingMarketTest.rentalMarket;
+		government = HousingMarketTest.government;
+		rand = HousingMarketTest.rand;
+
 		home = null;
 		bankBalance = 0.0;
 		isFirstTimeBuyer = true;
@@ -406,7 +413,7 @@ public class Household implements IHouseOwner {
 		rent.downPayment = 0.0;
 		rent.monthlyPayment = sale.currentPrice;
 		rent.monthlyInterestRate = 0.0;
-		rent.numberMonthlyPayments = (int)(12.0*Math.random()+1);
+		rent.numberMonthlyPayments = (int)(12.0*rand.nextDouble()+1);
 		rent.principal = rent.monthlyPayment*rent.numberMonthlyPayments;
 		home = sale.house;
 		sale.house.resident = this;
@@ -430,7 +437,7 @@ public class Household implements IHouseOwner {
 		double maxMortgage = bank.preApproveMortgage(this);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
-				if(Math.random() < p) houseMarket.bid(this, desiredPrice);
+				if(rand.nextDouble() < p) houseMarket.bid(this, desiredPrice);
 			} else {
 				// no need to call random if p = 1.0
 				houseMarket.bid(this, desiredPrice);				
@@ -451,13 +458,13 @@ public class Household implements IHouseOwner {
 		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.preApproveMortgage(this);
 		if(p <= maxMortgage) {
-			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
+			costOfHouse = p*(1.0-bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
 			if(home != null) {
 				costOfRent = housePayments.get(home).monthlyPayment*12;
 			} else {
 				costOfRent = rentalMarket.averageSalePrice[0];
 			}
-			if(Math.random() < 1.0/(1.0 + Math.exp(-config.FTB_K*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
+			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(-config.FTB_K*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
 				houseMarket.bid(this, p);
 			}
 		}
@@ -489,7 +496,7 @@ public class Household implements IHouseOwner {
 	 * Decide whether to sell ones own house.
 	 ********************************************************/
 	private boolean decideToSellHouse(House h) {
-		if(Math.random() < Config.P_SELL) return(true);
+		if(rand.nextDouble() < Config.P_SELL) return(true);
 		return false;
 	}
 
@@ -546,7 +553,7 @@ public class Household implements IHouseOwner {
 			yield = (mortgage.monthlyPayment*12*config.RENT_PROFIT_MARGIN + houseMarket.housePriceAppreciation()*price)/
 					mortgage.downPayment;
 			
-			if(Math.random() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
+			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
 				return(true);
 			}
 		}
@@ -600,7 +607,9 @@ public class Household implements IHouseOwner {
 	protected Map<House, FixedRateMortgage> 		housePayments = new HashMap<House, FixedRateMortgage>(); // houses owned
 	private boolean		isFirstTimeBuyer;
 	Bank				bank;
-	protected static Random rand = new Random();
+	//static MersenneTwisterFast rand;
+	static Random rand;
+	Government			government;
 	
 	// ---- Parameters
 	/**

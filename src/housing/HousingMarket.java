@@ -95,6 +95,10 @@ public class HousingMarket {
 		nSellers = onMarket.size();
 		nBuyers = buyers.size();
 
+		//System.out.println("Buyers size1="+nBuyers);
+		//System.out.println("Sellers size1 ="+nSellers);
+
+		
 		// --- House Price Index stuff
 //		HPIAppreciation = F*HPIAppreciation + (1.0-F)*(housePriceIndex - lastHousePriceIndex);
 		HPIAppreciation = F*HPIAppreciation - (1.0-F)*housePriceIndex;

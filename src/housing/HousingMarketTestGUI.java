@@ -24,7 +24,18 @@ import sim.util.media.chart.TimeSeriesChartGenerator;
  * Mason Graphic Interface for the housing market simulation.
  * 
  * @author daniel
- *
+ * Rand = 0.6843622118093513
+*Rand2 = 0.3665393900910563
+*Rand3 = 0.7721390492167775
+*Rand = 0.4115646973804191
+*Rand2 = 0.15472914321141096
+*Rand3 = 0.7962263120955465
+*Rand = 0.325680276819477
+*Rand2 = 0.24368328313126486
+*Rand3 = 0.24831481611269468
+*Rand = 0.9043101312798465
+*Rand2 = 0.9814027188225003
+*Rand3 = 0.4833948577942482
  ********************************************/
 @SuppressWarnings("serial")
 public class HousingMarketTestGUI extends GUIState implements Steppable {
