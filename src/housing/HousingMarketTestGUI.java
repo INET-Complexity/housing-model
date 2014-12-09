@@ -18,7 +18,6 @@ import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.util.media.chart.ChartGenerator;
 import sim.util.media.chart.ScatterPlotGenerator;
-import sim.util.media.chart.TimeSeriesChartGenerator;
 
 /********************************************
  * Mason Graphic Interface for the housing market simulation.

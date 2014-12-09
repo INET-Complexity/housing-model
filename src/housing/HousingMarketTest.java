@@ -1,8 +1,9 @@
 package housing;
 
-import java.util.Random;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
+
+import ec.util.MersenneTwisterFast;
 
 import sim.engine.SimState;
 import sim.engine.Steppable;
@@ -45,6 +46,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 	
 	
 	////////////////////////////////////////////////////////////////////////
+/***
 	public static void main(String[] args) {
 
 		int j;
@@ -73,7 +75,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 		}
 		printHousePriceDist();
 	}
-	
+	***/
 	////////////////////////////////////////////////////////////////////////
 	// Initialisation
 	////////////////////////////////////////////////////////////////////////
@@ -106,16 +108,16 @@ public class HousingMarketTest extends SimState implements Steppable {
 		
 		i = Nh-1;
 		for(j = N-1; j>=0 && i > RENTERS*Nh; --j) { // assign houses to homeowners with sigma function probability
-			if(1.0/(1.0+Math.exp((j*1.0/N - RENTERS)/0.04)) < Math.random()) {
+			if(1.0/(1.0+Math.exp((j*1.0/N - RENTERS)/0.04)) < rand.nextDouble()) {
 				houses[i].owner = households[j];
 				houses[i].resident = households[j];
-				if(Math.random() < OWNERS/(1.0-RENTERS)) {
+				if(rand.nextDouble() < OWNERS/(1.0-RENTERS)) {
 					// household owns house outright
 					households[j].completeHousePurchase(new HouseSaleRecord(houses[i], 0));
 					households[j].housePayments.get(houses[i]).nPayments = 0;
 				} else {
 					// household is still paying off mortgage
-					p = (int)(bank.config.N_PAYMENTS*Math.random()); // number of payments outstanding
+					p = (int)(bank.config.N_PAYMENTS*rand.nextDouble()); // number of payments outstanding
 					price = HousingMarket.referencePrice(houses[i].quality)/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0)));
 					if(price > bank.getMaxMortgage(households[j], true)) {
 						price = bank.getMaxMortgage(households[j], true);
@@ -129,13 +131,14 @@ public class HousingMarketTest extends SimState implements Steppable {
 
 		while(i>=0) { // assign buyToLets
 			do {
-				j = (int)(Math.random()*N);
+				j = (int)(rand.nextDouble()*N);
 			} while(!households[j].isHomeowner());
-			n = (int)(buyToLetDistribution.sample() + 0.5); // number of houses owned
-			while(n>0 && i>=0) {				
+//			n = (int)(buyToLetDistribution.sample() + 0.5); // number of houses owned
+			n = (int)(Math.exp(rand.nextGaussian()*buyToLetDistribution.getShape() + buyToLetDistribution.getScale()) + 0.5); // number of houses owned
+			while(n>0 && i>=0) { 			
 				houses[i].owner = households[j];
 				houses[i].resident = null;
-				p = (int)(bank.config.N_PAYMENTS*Math.random()); // number of payments outstanding
+				p = (int)(bank.config.N_PAYMENTS*rand.nextDouble()); // number of payments outstanding
 				price = Math.min(
 						HousingMarket.referencePrice(houses[i].quality)
 						/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0))),
@@ -272,7 +275,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 
 	public static final int N = 5000; // number of households
 	public static final int Nh = 4100; // number of houses
-	public static final int N_STEPS = 3000; // timesteps
+	public static final int N_STEPS = 5000; // timesteps
 
 	public static Bank 				bank = new Bank();
 	public static Government		government = new Government();
@@ -281,7 +284,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public static Household 		households[] = new Household[N];
 	public static House 			houses[] = new House[Nh];
 	public static int 				t;
-	public static Random			rand = new Random();
+	public static MersenneTwisterFast			rand = new MersenneTwisterFast(1L);
 	public static MarketStatistics	marketStats = new MarketStatistics(housingMarket);
 	
 	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments

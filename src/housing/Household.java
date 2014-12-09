@@ -1,9 +1,10 @@
 package housing;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Random;
+import java.util.TreeMap;
+
+import ec.util.MersenneTwisterFast;
 /**********************************************
  * This represents a household who receives an income, consumes,
  * saves and can buy/sell/let/invest-in houses.
@@ -24,7 +25,7 @@ public class Household implements IHouseOwner {
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
 		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
 		public double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost
-		public double DOWNPAYMENT_FRACTION = 0.1 + 0.01*(new Random()).nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
+		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*HousingMarketTest.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 		
 		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
 		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
@@ -44,28 +45,28 @@ public class Household implements IHouseOwner {
 				}
 			}
 			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
-				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*rand.nextGaussian())),0.0));
+				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*HousingMarketTest.rand.nextGaussian())),0.0));
 			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class PurchaseEqn {
-			static public double A = 0.01;			// sensitivity to house price appreciation
-			static public double EPSILON = 0.4;//0.3;// S.D. of noise
-			static public double SIGMA = 4.5*12.0;	// scale
+			static public double A = 0.01;//0.01;			// sensitivity to house price appreciation
+			static public double EPSILON = 0.3;//0.365; // S.D. of noise
+			static public double SIGMA = 4.8*12.0;//4.5*12.0;	// scale
 
 			public double desiredPrice(double monthlyIncome, double hpa) {
-				return(SIGMA*monthlyIncome*Math.exp(EPSILON*rand.nextGaussian())/(1.0 - A*hpa));
+				return(SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa));
 			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
-			static public double D = 0.001;//0.001;		// Size of Days-on-market effect
-			static public double E = 0.05; 	// SD of noise
+			static public double D = 0.0011;//0.001;		// Size of Days-on-market effect
+			static public double E = 0.02; //0.05;	// SD of noise
 			public double desiredPrice(double pbar, double d, double principal) {
-				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*rand.nextGaussian();
+				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*HousingMarketTest.rand.nextGaussian();
 				return(Math.max(Math.exp(exponent), principal));
 			}
 
@@ -75,7 +76,6 @@ public class Household implements IHouseOwner {
 			return(new PurchaseEqn());
 		}
 
-		protected static Random rand = new Random();
 	}
 		
 	/********************************************************
@@ -90,9 +90,11 @@ public class Household implements IHouseOwner {
 		bank = HousingMarketTest.bank;
 		houseMarket = HousingMarketTest.housingMarket;
 		rentalMarket = HousingMarketTest.rentalMarket;
+		rand = HousingMarketTest.rand;
 		home = null;
 		bankBalance = 0.0;
 		isFirstTimeBuyer = true;
+		id = ++id_pool;
 	}
 	
 	/////////////////////////////////////////////////////////
@@ -297,7 +299,7 @@ public class Household implements IHouseOwner {
 		rent.downPayment = 0.0;
 		rent.monthlyPayment = sale.currentPrice;
 		rent.monthlyInterest = 0.0;
-		rent.nPayments = (int)(12.0*Math.random()+1);
+		rent.nPayments = (int)(12.0*rand.nextDouble()+1);
 		rent.principal = rent.monthlyPayment*rent.nPayments;
 		home = sale.house;
 		sale.house.resident = this;
@@ -321,7 +323,7 @@ public class Household implements IHouseOwner {
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
-				if(Math.random() < p) houseMarket.bid(this, desiredPrice);
+				if(rand.nextDouble() < p) houseMarket.bid(this, desiredPrice);
 			} else {
 				// no need to call random if p = 1.0
 				houseMarket.bid(this, desiredPrice);				
@@ -348,7 +350,7 @@ public class Household implements IHouseOwner {
 			} else {
 				costOfRent = rentalMarket.averageSalePrice[0];
 			}
-			if(Math.random() < 1.0/(1.0 + Math.exp(-config.FTB_K*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
+			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(-config.FTB_K*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
 				houseMarket.bid(this, p);
 			}
 		}
@@ -380,7 +382,7 @@ public class Household implements IHouseOwner {
 	 * Decide whether to sell ones own house.
 	 ********************************************************/
 	private boolean decideToSellHouse(House h) {
-		if(Math.random() < Config.P_SELL) return(true);
+		if(rand.nextDouble() < Config.P_SELL) return(true);
 		return false;
 	}
 
@@ -437,7 +439,7 @@ public class Household implements IHouseOwner {
 			yield = (mortgage.monthlyPayment*12*config.RENT_PROFIT_MARGIN + houseMarket.housePriceAppreciation()*price)/
 					mortgage.downPayment;
 			
-			if(Math.random() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
+			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
 				return(true);
 			}
 		}
@@ -491,7 +493,7 @@ public class Household implements IHouseOwner {
 	}
 	
 	static public double randomInitialAnnuallIncome() {
-		return(Math.exp(Config.INCOME_LOG_MEDIAN+Config.INCOME_SHAPE*rand.nextGaussian()));
+		return(Math.exp(Config.INCOME_LOG_MEDIAN+Config.INCOME_SHAPE*HousingMarketTest.rand.nextGaussian()));
 	}
 	
 	public double grossAnnualIncome() {
@@ -517,11 +519,14 @@ public class Household implements IHouseOwner {
 	protected double 	bankBalance; // bank plus fund balance
 	protected double	monthlyIncome;		// monthly income
 	protected House		home; // current home
-	protected Map<House, MortgageApproval> 		housePayments = new HashMap<House, MortgageApproval>(); // houses owned
+	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned
 	private boolean		isFirstTimeBuyer;
 	Bank				bank;
-	double				age;
-	protected static Random rand = new Random();
+	//double				age;
+	protected MersenneTwisterFast 	rand;
+	public int		 id;
+	static int		 id_pool;
+
 	
 	// ---- Parameters
 	/**

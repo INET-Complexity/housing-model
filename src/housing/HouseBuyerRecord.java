@@ -17,13 +17,15 @@ public class HouseBuyerRecord implements Comparable<HouseBuyerRecord> {
 	
 	@Override
 	public int compareTo(HouseBuyerRecord other) {
-		return((int)Math.signum(other.price - price));
+		double diff = other.price - price;
+		if(diff == 0.0) {
+			diff = other.buyer.id - buyer.id;
+		}
+		return((int)Math.signum(diff));
 	}
 
 	/////////////////////////////////////////////////////////////////
 	
 	public Household buyer; // Who wants to buy the house
 	public double    price; // how much he is willing to pay
-	
-	
 }

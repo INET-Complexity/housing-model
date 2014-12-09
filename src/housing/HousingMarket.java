@@ -1,8 +1,8 @@
 package housing;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
@@ -128,7 +128,9 @@ public class HousingMarket {
 	 **********************************************/
 	public void completeTransaction(HouseBuyerRecord b, HouseSaleRecord sale) {
 		// --- update sales statistics
-		averageSoldPriceToOLP = E*averageSoldPriceToOLP + (1.0-E)*sale.currentPrice/sale.initialListedPrice;
+		double initPrice = sale.initialListedPrice;
+		if(initPrice == 0.0) initPrice = 0.01;
+		averageSoldPriceToOLP = E*averageSoldPriceToOLP + (1.0-E)*sale.currentPrice/initPrice;
 		averageDaysOnMarket = E*averageDaysOnMarket + (1.0-E)*30*(HousingMarketTest.t - sale.tInitialListing);
 		averageSalePrice[sale.quality] = G*averageSalePrice[sale.quality] + (1.0-G)*sale.currentPrice;
 		nSales += 1;
@@ -195,7 +197,7 @@ public class HousingMarket {
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
-	protected Map<House, HouseSaleRecord> 	onMarket = new HashMap<House, HouseSaleRecord>();
+	protected Map<House, HouseSaleRecord> 	onMarket = new TreeMap<House, HouseSaleRecord>();
 	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	
 	// ---- statistics
