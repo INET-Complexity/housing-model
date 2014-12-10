@@ -15,8 +15,7 @@ public class Bank {
 		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
 		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
-		public double PHI = 1.0/100.0;//1.0/8.0;//0.25; // minimum income-to-value (ITV) ratio
-		public double LTI = 4.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14 
+		public double LTI = 4.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14
 		public int    N_PAYMENTS = 12*25; // number of monthly repayments
 		public boolean RECORD_STATS = true; // record mortgage statistics?		
 		public double STATS_DECAY = 0.9; 	// Decay constant (per step) for exp averaging of stats
@@ -76,12 +75,6 @@ public class Bank {
 		MortgageApproval approval = new MortgageApproval();
 		double r = mortgageInterestRate()/12.0; // monthly interest rate
 		double ltv_principal, pdi_principal, lti_principal;
-		
-		
-		if(housePrice > h.annualEmploymentIncome / config.PHI) {
-			System.out.println("Failed ITV constraint");
-			return(null); // ITV constraint not satisfied
-		}
 
 		// --- calculate maximum allowable principal
 		ltv_principal = housePrice*loanToValue(h, isHome);
@@ -144,13 +137,11 @@ public class Bank {
 		double lti_max; // loan to income constraint
 		
 		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-		itv_max = h.annualEmploymentIncome / config.PHI;
 		pdi_max = h.bankBalance + Math.max(0.0,h.getMonthlyDiscretionaryIncome())/monthlyPaymentFactor();
 		lti_max = h.annualEmploymentIncome * config.LTI/loanToValue(h,isHome);
 		
 		pdi_max = Math.min(pdi_max, ltv_max); // find minimum
 		pdi_max = Math.min(pdi_max, lti_max);
-		pdi_max = Math.min(pdi_max, itv_max);
 		pdi_max = Math.floor(pdi_max*100.0)/100.0; // round down to nearest penny
 		
 		return(pdi_max);
