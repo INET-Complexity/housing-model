@@ -33,6 +33,45 @@ public class Household implements IHouseOwner {
 			}
 		}
 
+		static public class ExpectationsRule {
+			public double GAMMA = 0.5; // "speed of adjustment" will be household specific
+			public double previousExpectation;
+
+			/**
+			 * Return the forecast error for a variable
+			 * @param currentValue
+			 * @return the forecast error
+			 */
+			public double forecastError(double currentValue) {
+				return currentValue - previousExpectation;
+			}
+
+			/**
+			 * Simple implementation of adaptive expectations
+			 * @param currentValue
+			 * @param previousExpectation
+			 * @return the new expected value
+			 */
+			public double adaptiveExpectations(double currentValue,
+											   double previousExpectation) {
+				double newExpectation = previousExpectation + GAMMA * forecastError(currentValue);
+				return newExpectation;
+			}
+
+			/**
+			 * Simple implementation of extrapolative expectations
+			 * @param currentValue
+			 * @param oldValue
+			 * @return the new expected value
+			 */
+			public double extrapolativeExpectations(double currentValue,
+											   		double oldValue) {
+				double newExpectation = GAMMA * currentValue + (1 - GAMMA) * oldValue;
+				return newExpectation;
+			}
+
+		}
+
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class PurchaseEqn {
 			static public double A = 0.01;			// sensitivity to house price appreciation
