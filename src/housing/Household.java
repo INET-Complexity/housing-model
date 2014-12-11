@@ -16,6 +16,8 @@ public class Household implements IHouseOwner {
 	protected double annualEmploymentIncome;
 	protected double bankBalance;
 
+	public double housePriceAppreciationForecastError;
+
 	/////////////////////////////////////////////////////////////////////////////////
 	static public class Config {
 
@@ -33,14 +35,56 @@ public class Household implements IHouseOwner {
 			}
 		}
 
-		/////////////////////////////////////////////////////////////////////////////////
-		static public class PurchaseEqn {
-			static public double A = 0.01;			// sensitivity to house price appreciation
-			static public double EPSILON = 0.3; 	// S.D. of noise
-			static public double SIGMA = 4.5*12.0;	// scale
+		static public class ExpectationsRule {
+			public double GAMMA = 0.5; // "speed of adjustment" will be household specific
 
-			public double desiredPrice(double monthlyIncome, double hpa) {
-				return(SIGMA*monthlyIncome*Math.exp(EPSILON*rand.nextGaussian())/(1.0 - A*hpa));
+			/**
+			 * Return the forecast error for a variable
+			 * @param currentValue: current value of the variable
+			 * @return the forecast error for the variable
+			 */
+			public double forecastError(double currentValue,
+										double previousExpectation) {
+				return currentValue - previousExpectation;
+			}
+
+			/**
+			 * Simple implementation of adaptive expectations
+			 * @param currentValue: current value of the variable
+			 * @param previousExpectation: the previous expected value of the variable
+			 * @return the new expected value
+			 */
+			public double adaptiveExpectations(double currentValue,
+											   double previousExpectation) {
+				double newExpectation = (previousExpectation +
+					GAMMA * forecastError(currentValue, previousExpectation));
+				return newExpectation;
+			}
+
+			/**
+			 * Simple implementation of extrapolative expectations
+			 * @param currentValue: the current value of the variable
+			 * @param previousValue: the previous value of the variables
+			 * @return the new expected value
+			 */
+			public double extrapolativeExpectations(double currentValue,
+											   		double previousValue) {
+				double newExpectation = GAMMA * currentValue + (1 - GAMMA) * previousValue;
+				return newExpectation;
+			}
+
+		}
+
+		/////////////////////////////////////////////////////////////////////////////////
+		static public class HousePriceBidRule {
+			static public double A = 0.01;  // sensitivity to house price appreciation
+			static public double EPSILON = 0.3;  // S.D. of noise
+			static public double SIGMA = 4.5 * 12.0;  // scale
+
+			public double desiredHousePrice(double monthlyIncome, double expectedHPA) {
+				double numerator = SIGMA * monthlyIncome * Math.exp(EPSILON * rand.nextGaussian());
+				double denominator = 1.0 - A * expectedHPA;
+				return numerator / denominator;
 			}
 		}
 
@@ -58,8 +102,10 @@ public class Household implements IHouseOwner {
 		
 		// ---- Parameters
 		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
-		public PurchaseEqn		purchaseEqn = new PurchaseEqn();
+		public HousePriceBidRule housePriceBidRule = new HousePriceBidRule();
 		public SaleEqn			saleEqn = new SaleEqn();
+		public ExpectationsRule expectationsRule = new ExpectationsRule();
+
 		public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
 		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
@@ -215,6 +261,12 @@ public class Household implements IHouseOwner {
 	/////////////////////////////////////////////////////////
 	// House market behaviour
 	/////////////////////////////////////////////////////////
+
+	// Household extrapolates HPA based on recent experience
+	private double expectedHousePriceAppreciation(double currentHPA, double oldHPA) {
+		// this.housePriceAppreciationForecastError = config.expectationsRule.forecastError(currentHPA, )
+		return config.expectationsRule.extrapolativeExpectations(currentHPA, oldHPA);
+	}
 
 	/********************************************************
 	 * First step in a time-step:
@@ -426,7 +478,7 @@ public class Household implements IHouseOwner {
 	 * given that it can afford a mortgage.
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
-		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double desiredPrice = config.housePriceBidRule.desiredHousePrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
@@ -448,7 +500,7 @@ public class Household implements IHouseOwner {
 	protected void decideToBuyFirstHome() {
 		double costOfHouse;
 		double costOfRent;
-		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double p = config.housePriceBidRule.desiredHousePrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(p <= maxMortgage) {
 			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
