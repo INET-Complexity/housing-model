@@ -35,7 +35,11 @@ public class HouseSaleRecord implements Comparable<HouseSaleRecord> {
 	public void setPrice(double p) {
 		currentPrice = Math.round(p*100.0)/100.0; // round to nearest penny
 	}
-	
+
+//	public double doubleValue() {
+//		return(currentPrice);
+//	}
+
 	public House 	house;
 	public int		quality;
 	public double 	initialListedPrice;
@@ -51,7 +55,7 @@ public class HouseSaleRecord implements Comparable<HouseSaleRecord> {
 		if(diff == 0.0) {
 			diff = o.currentPrice - currentPrice;
 			if(diff == 0.0) {
-				return(house.getUniqueName().compareTo(o.house.getUniqueName()));
+				diff = house.id - o.house.id;
 			}
 		}
 		return((int)Math.signum(diff));
@@ -64,7 +68,7 @@ public class HouseSaleRecord implements Comparable<HouseSaleRecord> {
 			if(diff == 0.0) {
 				diff = arg0.quality - arg1.quality;
 				if(diff == 0.0) {
-					return(arg0.house.getUniqueName().compareTo(arg1.house.getUniqueName()));
+					diff = arg0.house.id - arg1.house.id;
 				}
 			}
 			return((int)Math.signum(diff));

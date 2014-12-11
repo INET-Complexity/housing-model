@@ -15,7 +15,7 @@ public class Node {
 	public Node(Node [] children) {
 		subNodes = children;
 		
-		Object [] test = {2,3,"hello"};
+		//Object [] test = {2,3,"hello"};
 	}
 	
 	

@@ -9,7 +9,7 @@ import sim.util.media.chart.TimeSeriesChartGenerator;
 public class TimeSeriesPlot {
 	
 	public TimeSeriesPlot(String title, String xAxisLabel, String yAxisLabel) {
-		dataSeries = new ArrayList<DataRecorder>();
+		dataSeries = new ArrayList<DataRecorder>(4);
 		chart = new TimeSeriesChartGenerator();
 		
         chart.setTitle(title);

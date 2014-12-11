@@ -7,16 +7,20 @@ package housing;
  * @author daniel
  *
  ************************************************/
-public class House {
+public class House implements Comparable<House> {
 	
 	static public class Config {
 		public static int N_QUALITY = 48; // number of quality bands		
 	}
-		
-	// placeholder
-	public String getUniqueName() {
-		return(Integer.toString(hashCode()));
+	
+	public House() {
+		id = ++id_pool;		
 	}
+	
+	// placeholder
+//	public String getUniqueName() {
+//		return(Integer.toString(hashCode()));
+//	}
 	
 	////////////////////////////////////////////////////////////////////////
 	/***
@@ -47,5 +51,13 @@ public class House {
 	public int 				quality;
 	public IHouseOwner  	owner;
 	public Household		resident;
+	public int				id;
+	static int 				id_pool = 0;
+
+	
+	@Override
+	public int compareTo(House o) {
+		return((int)Math.signum(id-o.id));
+	}
 	
 }
