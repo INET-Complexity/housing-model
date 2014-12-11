@@ -242,11 +242,11 @@ public class HousingMarketTest extends SimState implements Steppable {
 	////////////////////////////////////////////////////////////////////////
 	
 	public double getPurchaseEqn_A() {
-		return(Household.Config.PurchaseEqn.A);
+		return(Household.Config.HousePriceBidRule.A);
 	}
 
 	public void setPurchaseEqn_A(double x) {
-		Household.Config.PurchaseEqn.A = x;
+		Household.Config.HousePriceBidRule.A = x;
 	}
 
 	public double getSaleEqn_D() {
