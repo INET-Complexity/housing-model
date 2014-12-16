@@ -11,7 +11,7 @@ package housing;
  *************************************************/
 public class Bank {
 
-	static public class Config {
+	static public class Config implements Configuration {
 		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
 		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)

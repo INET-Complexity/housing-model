@@ -477,7 +477,7 @@ public class Household implements IHouseOwner {
 			} else {
 				costOfRent = rentalMarket.averageSalePrice[0];
 			}
-			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(-config.FTB_K*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
+			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(-config.FTB_K*0.5*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
 				houseMarket.bid(this, p);
 			}
 		}

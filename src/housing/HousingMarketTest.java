@@ -1,6 +1,9 @@
 package housing;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
@@ -33,6 +36,7 @@ public class HousingMarketTest extends SimState implements Steppable {
         if (schedule.getTime() >= N_STEPS) simulationStateNow.kill();
         
 		for(j = 0; j<N; ++j) households[j].preHouseSaleStep();
+		marketStats.recordStats();
 		housingMarket.clearMarket();
 		for(j = 0; j<N; ++j) households[j].preHouseLettingStep();
 		housingMarket.clearBuyToLetMarket();
@@ -273,7 +277,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public MarketStatistics getMarket_Statistics() {
 		return(marketStats);
 	}
-
+	
 	////////////////////////////////////////////////////////////////////////
 
 	public static final int N = 5000; // number of households
