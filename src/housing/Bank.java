@@ -22,13 +22,46 @@ public class Bank {
 		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
 		static public int ARCHIVE_LEN = 1000; // number of mortgage approvals to remember
 
-		public double getLoanToIncome() {
+		//////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////
+		public double getLTI() {
 			return(LTI);
 		}		
-		public void setLoanToIncome(double x) {
+		public void setLTI(double x) {
 			LTI = x;
 		}
-
+		public double getTHETA_FTB() {
+			return THETA_FTB;
+		}
+		public void setTHETA_FTB(double tHETA_FTB) {
+			THETA_FTB = tHETA_FTB;
+		}
+		public double getTHETA_HOME() {
+			return THETA_HOME;
+		}
+		public void setTHETA_HOME(double tHETA_HOME) {
+			THETA_HOME = tHETA_HOME;
+		}
+		public double getTHETA_BTL() {
+			return THETA_BTL;
+		}
+		public void setTHETA_BTL(double tHETA_BTL) {
+			THETA_BTL = tHETA_BTL;
+		}
+		public int getN_PAYMENTS() {
+			return N_PAYMENTS;
+		}
+		public void setN_PAYMENTS(int n_PAYMENTS) {
+			N_PAYMENTS = n_PAYMENTS;
+		}
+		public double getAFFORDABILITY_DECAY() {
+			return AFFORDABILITY_DECAY;
+		}
+		public void setAFFORDABILITY_DECAY(double aFFORDABILITY_DECAY) {
+			AFFORDABILITY_DECAY = aFFORDABILITY_DECAY;
+		}
+		//////////////////////////////////////////////////////////////////////////////////////
+		//////////////////////////////////////////////////////////////////////////////////////
 	}
 	
 	/********************************

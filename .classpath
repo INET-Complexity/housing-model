@@ -4,10 +4,13 @@
 	<classpathentry excluding="src/" kind="src" path=""/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/home/daniel/git/CRISIS/lib/commons-math3-3.3.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/MASON"/>
-	<classpathentry kind="lib" path="/usr/share/java/j3dcore.jar"/>
-	<classpathentry kind="lib" path="/usr/share/java/j3dutils.jar"/>
-	<classpathentry kind="lib" path="/usr/share/java/jfreechart.jar"/>
 	<classpathentry kind="lib" path="/usr/share/java/vecmath.jar"/>
+	<classpathentry kind="lib" path="/home/daniel/git/libraries/mason.18.jar"/>
+	<classpathentry kind="lib" path="/home/daniel/git/libraries/jfreechart-1.0.17.jar"/>
+	<classpathentry kind="lib" path="/home/daniel/git/libraries/bsh-2.0b4.jar"/>
+	<classpathentry kind="lib" path="/home/daniel/git/libraries/itext-1.2.jar"/>
+	<classpathentry kind="lib" path="/home/daniel/git/libraries/jcommon-1.0.21.jar"/>
+	<classpathentry kind="lib" path="/home/daniel/git/libraries/jmf.jar"/>
+	<classpathentry kind="lib" path="/home/daniel/git/libraries/portfolio.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

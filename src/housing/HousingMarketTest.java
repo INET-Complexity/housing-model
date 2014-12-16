@@ -233,30 +233,6 @@ public class HousingMarketTest extends SimState implements Steppable {
 	// Getters/setters for the console
 	////////////////////////////////////////////////////////////////////////
 	
-	public double getPurchaseEqn_A() {
-		return(Household.Config.PurchaseEqn.A);
-	}
-
-	public void setPurchaseEqn_A(double x) {
-		Household.Config.PurchaseEqn.A = x;
-	}
-
-	public double getSaleEqn_D() {
-		return(Household.Config.SaleEqn.D);
-	}
-
-	public void setSaleEqn_D(double x) {
-		Household.Config.SaleEqn.D = x;
-	}
-	
-	public double getBank_LTI() {
-		return(bank.config.LTI);
-	}
-
-	public void setBank_LTI(double x) {
-		bank.config.LTI = x;
-	}
-
 	/***
 	public double getHousehold_DownpaymentFraction() {
 		return(Household.Config.DOWNPAYMENT_FRACTION);
@@ -266,18 +242,18 @@ public class HousingMarketTest extends SimState implements Steppable {
 		Household.Config.DOWNPAYMENT_FRACTION = x;
 	}
 ***/
-	public Bank.Config getBankConfig() {
+	public Bank.Config getBank_Configuration() {
 		return(bank.config);
 	}
 
-	public Household.Config getHouseholdConfig() {
+	public Household.Config getHousehold_Configuration() {
 		return(new Household.Config());
 	}
 	
 	public MarketStatistics getMarket_Statistics() {
 		return(marketStats);
 	}
-
+	
 	public HouseSaleMarket getHouseSaleMarket() {
 		return(housingMarket);
 	}

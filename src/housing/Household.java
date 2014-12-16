@@ -24,10 +24,10 @@ public class Household implements IHouseOwner {
 		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
 		public PurchaseEqn		purchaseEqn = new PurchaseEqn();
 		public SaleEqn			saleEqn = new SaleEqn();
-		public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
+		public RenterPurchaseDecision renterPurchaseDecision = new RenterPurchaseDecision();
+		public BuyToLetPurchaseDecision buyToLetPurchaseDecision = new BuyToLetPurchaseDecision();
+		public static double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
-		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
-		public double FTB_K = 1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*HousingMarketTest.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 		
 		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
@@ -50,6 +50,22 @@ public class Household implements IHouseOwner {
 			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
 				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*HousingMarketTest.rand.nextGaussian())),0.0));
 			}
+
+			public String toString() {return "Household Consumption Equation";}			
+			public String desALPHA() {return "Propensity to consume income";}
+			public String desBETA() {return "Propensity to consume wealth";}
+			public double getALPHA() {
+				return ALPHA;
+			}
+			public void setALPHA(double aLPHA) {
+				ALPHA = aLPHA;
+			}
+			public double getBETA() {
+				return BETA;
+			}
+			public void setBETA(double bETA) {
+				BETA = bETA;
+			}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -61,6 +77,31 @@ public class Household implements IHouseOwner {
 			public double desiredPrice(double monthlyIncome, double hpa) {
 				return(SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa));
 			}
+
+			public static double getA() {
+				return A;
+			}
+
+			public static void setA(double a) {
+				A = a;
+			}
+
+			public static double getEPSILON() {
+				return EPSILON;
+			}
+
+			public static void setEPSILON(double ePSILON) {
+				EPSILON = ePSILON;
+			}
+
+			public static double getSIGMA() {
+				return SIGMA;
+			}
+
+			public static void setSIGMA(double sIGMA) {
+				SIGMA = sIGMA;
+			}
+			
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -72,13 +113,152 @@ public class Household implements IHouseOwner {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*HousingMarketTest.rand.nextGaussian();
 				return(Math.max(Math.exp(exponent), principal));
 			}
+			public static double getC() {
+				return C;
+			}
+			public static void setC(double c) {
+				C = c;
+			}
+			public static double getD() {
+				return D;
+			}
+			public static void setD(double d) {
+				D = d;
+			}
+			public static double getE() {
+				return E;
+			}
+			public static void setE(double e) {
+				E = e;
+			}
 
 		}
 		
+		/////////////////////////////////////////////////////////////////////////////////
+		static public class RenterPurchaseDecision {
+			public double COST_OF_RENTING = 600; // Annual psychological cost of renting
+			public double FTB_K = 1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
+			
+			public boolean buy(double housePrice, double annualRent) {
+				double costOfHouse;
+				costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - 12.0*HousingMarketTest.housingMarket.housePriceAppreciation());
+				return(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
+			}			
+
+			public double getCOST_OF_RENTING() {
+				return COST_OF_RENTING;
+			}
+
+			public void setCOST_OF_RENTING(double cOST_OF_RENTING) {
+				COST_OF_RENTING = cOST_OF_RENTING;
+			}
+
+			public double getFTB_K() {
+				return FTB_K;
+			}
+
+			public void setFTB_K(double fTB_K) {
+				FTB_K = fTB_K;
+			}
+		}
+
+		/////////////////////////////////////////////////////////////////////////////////
+		static public class BuyToLetPurchaseDecision {
+			public boolean buy(double price, double monthlyPayment, double downPayment) {
+				double yield;
+				
+				yield = (monthlyPayment*12*Household.Config.RENT_PROFIT_MARGIN + HousingMarketTest.housingMarket.housePriceAppreciation()*price)/
+						downPayment;
+				
+				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
+					return(true);
+				}
+				return(false);
+			}
+		}
+		
+		/////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////
 		public PurchaseEqn getPurcahseEqn() {
 			return(new PurchaseEqn());
 		}
 
+		public ConsumptionEqn getConsumptionEqn() {
+			return consumptionEqn;
+		}
+
+		public void setConsumptionEqn(ConsumptionEqn consumptionEqn) {
+			this.consumptionEqn = consumptionEqn;
+		}
+
+		public PurchaseEqn getPurchaseEqn() {
+			return purchaseEqn;
+		}
+
+		public void setPurchaseEqn(PurchaseEqn purchaseEqn) {
+			this.purchaseEqn = purchaseEqn;
+		}
+
+		public SaleEqn getSaleEqn() {
+			return saleEqn;
+		}
+
+		public void setSaleEqn(SaleEqn saleEqn) {
+			this.saleEqn = saleEqn;
+		}
+
+		public RenterPurchaseDecision getRenterPurchaseDecision() {
+			return renterPurchaseDecision;
+		}
+
+		public void setRenterPurchaseDecision(
+				RenterPurchaseDecision renterPurchaseDecision) {
+			this.renterPurchaseDecision = renterPurchaseDecision;
+		}
+
+		public double getRENT_PROFIT_MARGIN() {
+			return RENT_PROFIT_MARGIN;
+		}
+
+		public void setRENT_PROFIT_MARGIN(double rENT_PROFIT_MARGIN) {
+			RENT_PROFIT_MARGIN = rENT_PROFIT_MARGIN;
+		}
+
+		public double getHOUSE_SALE_PRICE_DISCOUNT() {
+			return HOUSE_SALE_PRICE_DISCOUNT;
+		}
+
+		public void setHOUSE_SALE_PRICE_DISCOUNT(double hOUSE_SALE_PRICE_DISCOUNT) {
+			HOUSE_SALE_PRICE_DISCOUNT = hOUSE_SALE_PRICE_DISCOUNT;
+		}
+
+
+		public double getDOWNPAYMENT_FRACTION() {
+			return DOWNPAYMENT_FRACTION;
+		}
+
+		public void setDOWNPAYMENT_FRACTION(double dOWNPAYMENT_FRACTION) {
+			DOWNPAYMENT_FRACTION = dOWNPAYMENT_FRACTION;
+		}
+
+		public static double getP_SELL() {
+			return P_SELL;
+		}
+
+		public static void setP_SELL(double p_SELL) {
+			P_SELL = p_SELL;
+		}
+
+		public static double getRETURN_ON_FINANCIAL_WEALTH() {
+			return RETURN_ON_FINANCIAL_WEALTH;
+		}
+
+		public static void setRETURN_ON_FINANCIAL_WEALTH(
+				double rETURN_ON_FINANCIAL_WEALTH) {
+			RETURN_ON_FINANCIAL_WEALTH = rETURN_ON_FINANCIAL_WEALTH;
+		}
+		/////////////////////////////////////////////////////////////////////////////////
+		/////////////////////////////////////////////////////////////////////////////////		
 	}
 		
 	/********************************************************
@@ -156,7 +336,7 @@ public class Household implements IHouseOwner {
 		double propertyIncome = 0.0;
 		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
 			if (isCollectingRentFrom(payment.getKey())) {
-				propertyIncome += payment.getValue().monthlyPayment * (1.0 + config.RENT_PROFIT_MARGIN);
+				propertyIncome += payment.getValue().monthlyPayment * (1.0 + Config.RENT_PROFIT_MARGIN);
 			}
 		}
 		return propertyIncome;
@@ -330,7 +510,7 @@ public class Household implements IHouseOwner {
 		
 		// ---- try to buy house?
 		if(!isHomeowner()) {
-			decideToBuyFirstHome();
+			decideToStopRenting();
 		}
 	}
 	
@@ -406,7 +586,7 @@ public class Household implements IHouseOwner {
 		if(!housePayments.containsKey(h)) {
 			System.out.println("I don't own this house: strange");
 		}
-		rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN));
+		rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));
 	}
 
 
@@ -459,20 +639,18 @@ public class Household implements IHouseOwner {
 	 * COST_OF_RENTING being an intrinsic psychological cost of not
 	 * owning. 
 	 ********************************************************/
-	protected void decideToBuyFirstHome() {
-		double costOfHouse;
+	protected void decideToStopRenting() {
 		double costOfRent;
-		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double housePrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
-		if(p <= maxMortgage) {
-			costOfHouse = p*((1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - 12.0*houseMarket.housePriceAppreciation());
+		if(housePrice <= maxMortgage) {
 			if(home != null) {
 				costOfRent = housePayments.get(home).monthlyPayment*12;
 			} else {
 				costOfRent = rentalMarket.averageSalePrice[0]*12;
 			}
-			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(-config.FTB_K*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
-				houseMarket.bid(this, p);
+			if(config.renterPurchaseDecision.buy(housePrice, costOfRent)) {
+				houseMarket.bid(this, housePrice);
 			}
 		}
 	}
@@ -551,18 +729,11 @@ public class Household implements IHouseOwner {
 	/********************************************************
 	 * Decide whether to buy a house as a buy-to-let investment
 	 ********************************************************/
-	public boolean decideToBuyBuyToLet(House h, double price) {
+	public boolean decideToBuyBuyToLet(double price) {
 		if(price <= bank.getMaxMortgage(this, false)) {
 			MortgageApproval mortgage;
-			double yield;
 			mortgage = bank.requestLoan(this, price, bankBalance * config.DOWNPAYMENT_FRACTION, false);
-			
-			yield = (mortgage.monthlyPayment*12*config.RENT_PROFIT_MARGIN + houseMarket.housePriceAppreciation()*price)/
-					mortgage.downPayment;
-			
-			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
-				return(true);
-			}
+			return(config.buyToLetPurchaseDecision.buy(price, mortgage.monthlyPayment, mortgage.downPayment));
 		}
 		return(false);
 	}
