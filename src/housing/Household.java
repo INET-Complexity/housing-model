@@ -16,8 +16,6 @@ public class Household implements IHouseOwner {
 	protected double annualEmploymentIncome;
 	protected double bankBalance;
 
-	public double housePriceAppreciationForecastError;
-
 	/////////////////////////////////////////////////////////////////////////////////
 	static public class Config {
 
@@ -33,46 +31,6 @@ public class Household implements IHouseOwner {
 					return(BETA*Math.max(bankBalance + disposableIncome,0.0));
 				}
 			}
-		}
-
-		static public class ExpectationsRule {
-			public double GAMMA = 0.5; // "speed of adjustment" will be household specific
-
-			/**
-			 * Return the forecast error for a variable
-			 * @param currentValue: current value of the variable
-			 * @return the forecast error for the variable
-			 */
-			public double forecastError(double currentValue,
-										double previousExpectation) {
-				return currentValue - previousExpectation;
-			}
-
-			/**
-			 * Simple implementation of adaptive expectations
-			 * @param currentValue: current value of the variable
-			 * @param previousExpectation: the previous expected value of the variable
-			 * @return the new expected value
-			 */
-			public double adaptiveExpectations(double currentValue,
-											   double previousExpectation) {
-				double newExpectation = (previousExpectation +
-					GAMMA * forecastError(currentValue, previousExpectation));
-				return newExpectation;
-			}
-
-			/**
-			 * Simple implementation of extrapolative expectations
-			 * @param currentValue: the current value of the variable
-			 * @param previousValue: the previous value of the variables
-			 * @return the new expected value
-			 */
-			public double extrapolativeExpectations(double currentValue,
-											   		double previousValue) {
-				double newExpectation = GAMMA * currentValue + (1 - GAMMA) * previousValue;
-				return newExpectation;
-			}
-
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -104,7 +62,7 @@ public class Household implements IHouseOwner {
 		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
 		public HousePriceBidRule housePriceBidRule = new HousePriceBidRule();
 		public SaleEqn			saleEqn = new SaleEqn();
-		public ExpectationsRule expectationsRule = new ExpectationsRule();
+		public IExpectations expectationsRule = new AdaptiveExpectations();
 
 		public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
@@ -265,7 +223,7 @@ public class Household implements IHouseOwner {
 	// Household extrapolates HPA based on recent experience
 	private double expectedHousePriceAppreciation(double currentHPA, double oldHPA) {
 		// this.housePriceAppreciationForecastError = config.expectationsRule.forecastError(currentHPA, )
-		return config.expectationsRule.extrapolativeExpectations(currentHPA, oldHPA);
+		return config.expectationsRule.formExpectation(currentHPA, oldHPA);
 	}
 
 	/********************************************************
@@ -478,7 +436,8 @@ public class Household implements IHouseOwner {
 	 * given that it can afford a mortgage.
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
-		double desiredPrice = config.housePriceBidRule.desiredHousePrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double expectedHPA = config.expectationsRule.formExpectation(houseMarket.housePriceIndex, houseMarket.lastHousePriceIndex);
+		double desiredPrice = config.housePriceBidRule.desiredHousePrice(getMonthlyEmploymentIncome(), expectedHPA);
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
@@ -500,7 +459,8 @@ public class Household implements IHouseOwner {
 	protected void decideToBuyFirstHome() {
 		double costOfHouse;
 		double costOfRent;
-		double p = config.housePriceBidRule.desiredHousePrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double expectedHPA = config.expectationsRule.formExpectation(houseMarket.housePriceIndex, houseMarket.lastHousePriceIndex);
+		double p = config.housePriceBidRule.desiredHousePrice(getMonthlyEmploymentIncome(), expectedHPA);
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(p <= maxMortgage) {
 			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
