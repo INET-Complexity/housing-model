@@ -269,7 +269,7 @@ public class Household implements IHouseOwner {
 		
 		// --- consume
 //		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
-		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
+		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumptionB(getMonthlyEmploymentIncome(),bankBalance);
 //		bankBalance += -config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
 		
 		if(bankBalance < 0.0) {
@@ -425,7 +425,6 @@ public class Household implements IHouseOwner {
 		rent.downPayment = 0.0;
 		rent.monthlyPayment = sale.currentPrice;
 		rent.monthlyInterestRate = 0.0;
-		rent.monthlyInterest = 0.0;
 		rent.nPayments = (int)(12.0*rand.nextDouble()+1);
 		rent.principal = rent.monthlyPayment*rent.nPayments;
 		home = sale.house;

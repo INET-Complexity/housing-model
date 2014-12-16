@@ -86,7 +86,7 @@ public class Bank {
 		double ltv_principal, pdi_principal, lti_principal;
 		
 		
-		if(housePrice > h.monthlyIncome*12.0/config.PHI) {
+		if(housePrice > h.getMonthlyEmploymentIncome()*12.0/config.PHI) {
 			System.out.println("Failed ITV constraint");
 			return(null); // ITV constraint not satisfied
 		}
@@ -117,20 +117,20 @@ public class Bank {
 		
 		if(config.RECORD_STATS) {
 			//if(h.isFirstTimeBuyer()) {
-				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.monthlyIncome;
+				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.getMonthlyEmploymentIncome();
 			//}
 			if(approval.principal > 1.0) {
 				ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-config.STATS_DECAY)/10.0;
-				itv_distribution[1][(int)Math.min(100.0*h.monthlyIncome*12.0/housePrice,100.0)] += 1.0-config.STATS_DECAY;
-				lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.monthlyIncome*12.0),100.0)] += 1.0-config.STATS_DECAY;
+				itv_distribution[1][(int)Math.min(100.0*h.getMonthlyEmploymentIncome()*12.0/housePrice,100.0)] += 1.0-config.STATS_DECAY;
+				lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.getMonthlyEmploymentIncome()*12.0),100.0)] += 1.0-config.STATS_DECAY;
 			}
 			ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += 1.0-config.STATS_DECAY;
 			itv_distribution[1][(int)Math.min(100.0*h.annualEmploymentIncome / housePrice,100.0)] += 1.0-config.STATS_DECAY;
 			lti_distribution[1][(int)Math.min(10.0*approval.principal/(h.annualEmploymentIncome),100.0)] += 1.0-config.STATS_DECAY;
 			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.annualEmploymentIncome);
 			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.annualEmploymentIncome);
-			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.monthlyIncome*12.0);
-			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.monthlyIncome*12.0);
+			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.getMonthlyEmploymentIncome()*12.0);
+			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.getMonthlyEmploymentIncome()*12.0);
 			approved_mortgages_i += 1;
 			if(approved_mortgages_i == Config.ARCHIVE_LEN) approved_mortgages_i = 0;
 
