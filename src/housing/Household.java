@@ -101,18 +101,6 @@ public class Household implements IHouseOwner {
 	}
 
 	/**
-	 * @return annual disposable (i.e., after tax) income
-	 */
-	public double getAnnualDiscretionaryIncome() {return 12.0 * getMonthlyDiscretionaryIncome();}
-
-	/**
-	 * @return annual disposable (i.e., after tax) income
-	 */
-	public double getAnnualDisposableIncome() {
-		return getAnnualTotalIncome() - getAnnualTotalTax();
-	}
-
-	/**
 	 * @return total annual income tax due
 	 */
 	public double getAnnualIncomeTax() {
@@ -124,13 +112,6 @@ public class Household implements IHouseOwner {
 	 */
 	public double getAnnualNationalInsuranceTax() {
 		return HousingMarketTest.government.class1NICsDue(annualEmploymentIncome);
-	}
-
-	/**
-	 * @return gross total annual income
-	 */
-	public double getAnnualTotalIncome() {
-		return 12.0 * getMonthlyTotalIncome();
 	}
 
 	/**
@@ -151,7 +132,7 @@ public class Household implements IHouseOwner {
 	 * @return monthly disposable (i.e., after tax) income
 	 */
 	public double getMonthlyDisposableIncome() {
-		return getAnnualDisposableIncome() / 12.0;
+		return getMonthlyTotalIncome() - getMonthlyTotalTax();
 	}
 
 	/**
@@ -159,6 +140,13 @@ public class Household implements IHouseOwner {
 	 */
 	public double getMonthlyEmploymentIncome() {
 		return annualEmploymentIncome / 12.0;
+	}
+
+	/**
+	 * @return monthly interest income
+	 */
+	public double getMonthlyInterestIncome() {
+		return bankBalance * Config.RETURN_ON_FINANCIAL_WEALTH;
 	}
 
 	/**
@@ -175,10 +163,12 @@ public class Household implements IHouseOwner {
 	}
 
 	/**
-	 * @return gross monthly total income consists of employment income and any property income
+	 * @return gross monthly total income
 	 */
 	public double getMonthlyTotalIncome() {
-		return getMonthlyEmploymentIncome() + getMonthlyPropertyIncome();
+		double monthlyTotalIncome = (getMonthlyEmploymentIncome() +
+				getMonthlyPropertyIncome() + getMonthlyInterestIncome());
+		return monthlyTotalIncome;
 	}
 
 	/**
@@ -225,6 +215,13 @@ public class Household implements IHouseOwner {
 		return totalPrincipalPayments;
 	}
 
+	/**
+	 * @return total monthly taxes due
+	 */
+	public double getMonthlyTotalTax() {
+		return getAnnualTotalTax() / 12.0;
+	}
+
 	/////////////////////////////////////////////////////////
 	// House market behaviour
 	/////////////////////////////////////////////////////////
@@ -237,9 +234,7 @@ public class Household implements IHouseOwner {
 	public void preHouseSaleStep() {
 		double disposableIncome;
 		
-		disposableIncome = (getMonthlyDisposableIncome() + 
-				bankBalance*Config.RETURN_ON_FINANCIAL_WEALTH
-				- 0.8*Government.Config.INCOME_SUPPORT);
+		disposableIncome = getMonthlyDisposableIncome() - 0.8 * Government.Config.INCOME_SUPPORT;
 
 //		System.out.println("income = "+monthlyIncome+" disposable = "+disposableIncome );
 		
@@ -252,7 +247,7 @@ public class Household implements IHouseOwner {
 				disposableIncome -= payment.getValue().makeMonthlyPayment();
 				if(isCollectingRentFrom(payment.getKey())) {
 					// profit from rent collection
-					disposableIncome += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
+					//disposableIncome += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
 				}
 				if(payment.getValue().nPayments == 0) { // do paid-off stuff
 					if(payment.getKey().owner != this) { // renting
@@ -269,7 +264,7 @@ public class Household implements IHouseOwner {
 		
 		// --- consume
 //		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
-		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
+		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumptionB(getMonthlyEmploymentIncome(),bankBalance);
 //		bankBalance += -config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
 		
 		if(bankBalance < 0.0) {
@@ -425,7 +420,6 @@ public class Household implements IHouseOwner {
 		rent.downPayment = 0.0;
 		rent.monthlyPayment = sale.currentPrice;
 		rent.monthlyInterestRate = 0.0;
-		rent.monthlyInterest = 0.0;
 		rent.nPayments = (int)(12.0*rand.nextDouble()+1);
 		rent.principal = rent.monthlyPayment*rent.nPayments;
 		home = sale.house;
