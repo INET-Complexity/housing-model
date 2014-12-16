@@ -6,9 +6,9 @@ package housing;
 public interface IExpectations {
 
     /** Computes the forecast error for a variable. **/
-    public double forecastError(double currentValue, double previousExpectation);
+    public double forecastError(double currentValue);
 
     /** Computes the forecast error for a variable. **/
-    public double formExpectation(double... args);
+    public double formExpectation(double currentValue);
 
 }

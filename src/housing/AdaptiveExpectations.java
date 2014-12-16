@@ -1,37 +1,30 @@
 package housing;
 
+import ec.util.MersenneTwisterFast;
+
 /**
  * Created by drpugh on 12/16/14.
  */
-public class AdaptiveExpectations implements IExpectations {
+public class AdaptiveExpectations extends Expectations {
 
-    double SPEED_OF_ADJUSTMENT = 0.5;
+    private double speedOfAdjustment;
 
-    /**
-     * Return the forecast error for a variable
-     * @param currentValue: current value of the variable
-     * @param previousExpectation: previous expected value of the variable
-     * @return the forecast error for the variable
-     */
-    @Override
-    public double forecastError(double currentValue,
-                                double previousExpectation) {
-        return currentValue - previousExpectation;
+    /** Constructor **/
+    public AdaptiveExpectations(MersenneTwisterFast rng)  {
+        previousExpectation = 0.0;
+        speedOfAdjustment = rng.nextDouble();
     }
 
     @Override
     /**
      * Simple implementation of adaptive expectations
      * @param currentValue: current value of the variable
-     * @param previousExpectation: the previous expected value of the variable
      * @return the new expected value
      */
-    public double formExpectation(double... args) {
-        double currentValue = args[0];
-        double previousExpectation = args[1];
-
-        double newExpectation = (previousExpectation +
-                SPEED_OF_ADJUSTMENT * forecastError(currentValue, previousExpectation));
+    public double formExpectation(double currentValue) {
+        double newExpectation = (currentValue +
+                speedOfAdjustment * forecastError(currentValue));
+        previousExpectation = newExpectation;  // update previous expectation
         return newExpectation;
     }
 }

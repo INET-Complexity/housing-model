@@ -24,6 +24,7 @@ public class Household implements IHouseOwner {
 		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
 		public PurchaseEqn		purchaseEqn = new PurchaseEqn();
 		public SaleEqn			saleEqn = new SaleEqn();
+		public Expectations expectedHousePrices = new ExtrapolativeExpectations(HousingMarketTest.rand);
 		public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
 		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
@@ -58,8 +59,8 @@ public class Household implements IHouseOwner {
 			static public double EPSILON = 0.3;//0.365; // S.D. of noise
 			static public double SIGMA = 4.8*12.0;//4.5*12.0;	// scale
 
-			public double desiredPrice(double monthlyIncome, double hpa) {
-				return(SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa));
+			public double desiredPrice(double monthlyIncome, double expectedHousePrices) {
+				return(SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A * expectedHousePrices));
 			}
 		}
 
@@ -75,7 +76,7 @@ public class Household implements IHouseOwner {
 
 		}
 		
-		public PurchaseEqn getPurcahseEqn() {
+		public PurchaseEqn getPurchaseEqn() {
 			return(new PurchaseEqn());
 		}
 
@@ -119,6 +120,18 @@ public class Household implements IHouseOwner {
 	 */
 	public double getAnnualTotalTax() {
 		return getAnnualIncomeTax() + getAnnualNationalInsuranceTax();
+	}
+
+	/**
+	 * @return expected house price appreciation (HPA).
+	 */
+	public double getExpectedHPA() {
+		double currentHPA = houseMarket.HPIAppreciation;
+		double expectedHPA = config.expectedHousePrices.formExpectation(currentHPA);
+		config.expectedHousePrices.previousValue = currentHPA;
+		//System.out.println(expectedHPA);
+		//System.out.println(config.expectedHousePrices.speedOfAdjustment);
+		return expectedHPA;
 	}
 
 	/**
@@ -440,7 +453,7 @@ public class Household implements IHouseOwner {
 	 * given that it can afford a mortgage.
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
-		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), getExpectedHPA());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
@@ -462,7 +475,7 @@ public class Household implements IHouseOwner {
 	protected void decideToBuyFirstHome() {
 		double costOfHouse;
 		double costOfRent;
-		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), getExpectedHPA());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(p <= maxMortgage) {
 			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
