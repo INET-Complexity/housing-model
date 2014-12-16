@@ -11,7 +11,7 @@ package housing;
  *************************************************/
 public class Bank {
 
-	static public class Config {
+	static public class Config implements Configuration {
 		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
 		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
@@ -117,8 +117,8 @@ public class Bank {
 				itv_distribution[1][(int)Math.min(100.0*h.annualEmploymentIncome/housePrice,100.0)] += 1.0-config.STATS_DECAY;
 				lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome,100.0)] += 1.0-config.STATS_DECAY;
 			}
-			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.annualEmploymentIncome);
-			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.annualEmploymentIncome);
+			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.getMonthlyEmploymentIncome()*12.0);
+			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.getMonthlyEmploymentIncome()*12.0);
 			approved_mortgages_i += 1;
 			if(approved_mortgages_i == Config.ARCHIVE_LEN) approved_mortgages_i = 0;
 

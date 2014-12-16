@@ -197,6 +197,12 @@ public class HousingMarket {
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
+	public double getHPIAppreciation() {
+		return HPIAppreciation;
+	}
+
+	/////////////////////////////////////////////////////////////////////////////////////////////////
+
 	protected Map<House, HouseSaleRecord> 	onMarket = new TreeMap<House, HouseSaleRecord>();
 	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	
