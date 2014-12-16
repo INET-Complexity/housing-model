@@ -27,7 +27,7 @@ public class Household implements IHouseOwner {
 		public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
 		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
-		public double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost
+		public double FTB_K = 1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*HousingMarketTest.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 		
 		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
@@ -54,9 +54,9 @@ public class Household implements IHouseOwner {
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class PurchaseEqn {
-			static public double A = 0.01;//0.01;			// sensitivity to house price appreciation
-			static public double EPSILON = 0.3;//0.365; // S.D. of noise
-			static public double SIGMA = 4.8*12.0;//4.5*12.0;	// scale
+			static public double A = 0.2;//0.01;			// sensitivity to house price appreciation
+			static public double EPSILON = 0.48;//0.365; // S.D. of noise
+			static public double SIGMA = 5.0*12.0;//4.5*12.0;	// scale
 
 			public double desiredPrice(double monthlyIncome, double hpa) {
 				return(SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa));
@@ -66,7 +66,7 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
-			static public double D = 0.0011;//0.001;		// Size of Days-on-market effect
+			static public double D = 0.01;//0.001;		// Size of Days-on-market effect
 			static public double E = 0.02; //0.05;	// SD of noise
 			public double desiredPrice(double pbar, double d, double principal) {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*HousingMarketTest.rand.nextGaussian();
@@ -471,13 +471,13 @@ public class Household implements IHouseOwner {
 		double p = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		if(p <= maxMortgage) {
-			costOfHouse = p*(1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - p*houseMarket.housePriceAppreciation();
+			costOfHouse = p*((1.0-HousingMarketTest.bank.config.THETA_FTB)*bank.mortgageInterestRate() - 12.0*houseMarket.housePriceAppreciation());
 			if(home != null) {
 				costOfRent = housePayments.get(home).monthlyPayment*12;
 			} else {
-				costOfRent = rentalMarket.averageSalePrice[0];
+				costOfRent = rentalMarket.averageSalePrice[0]*12;
 			}
-			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(-config.FTB_K*0.5*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
+			if(rand.nextDouble() < 1.0/(1.0 + Math.exp(-config.FTB_K*(costOfRent + config.COST_OF_RENTING - costOfHouse)))) {
 				houseMarket.bid(this, p);
 			}
 		}

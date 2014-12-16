@@ -277,6 +277,11 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public MarketStatistics getMarket_Statistics() {
 		return(marketStats);
 	}
+
+	public HouseSaleMarket getHouseSaleMarket() {
+		return(housingMarket);
+	}
+
 	
 	////////////////////////////////////////////////////////////////////////
 
