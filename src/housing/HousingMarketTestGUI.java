@@ -29,7 +29,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
     private javax.swing.JFrame myChartFrame;
     
     // Chart generators
-
+    
 	public ScatterPlotGenerator
 		housingChart,
 		housePriceChart,
@@ -50,6 +50,59 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
     	super.start();
     }
         
+    /** Called once, to initialise display windows. */
+    @Override
+    public void init(Controller controller) {
+        super.init(controller);
+        myChartFrame = new JFrame("My Graphs");            		
+        controller.registerFrame(myChartFrame);
+       
+        // Create a tab interface
+        JTabbedPane newTabPane = new JTabbedPane();
+        housingChart = makeScatterPlot(newTabPane, "Housing stats", "Probability", "Household Income");
+        housePriceChart = makeScatterPlot(newTabPane, "House prices", "Modelled Price", "Reference Price");
+        bankBalanceChart = makeScatterPlot(newTabPane, "Bank balances", "Balance", "Income");
+        mortgageStatsChart = makeScatterPlot(newTabPane, "Mortgage stats", "Frequency", "Ratio");
+        mortgagePhaseChart = makeScatterPlot(newTabPane, "Mortgage phase",  "Deposit/income", "Loan/income");
+        mortgagePhaseChart.setXAxisRange(0.0, 8.0);
+        mortgagePhaseChart.setYAxisRange(0.0, 8.0);
+                
+        timeSeriesPlots.add(
+        		new TimeSeriesPlot("Market Statistics","Time (years)","Value")
+        			.addVariable(HousingMarketTest.housingMarket,"housePriceIndex", "HPI")
+        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageSoldPriceToOLP", "Sold Price/List price")
+        			.addVariable(HousingMarketTest.housingMarket,"averageDaysOnMarket", "Years on market", new DataRecorder.Transform() {
+        				public double exec(double x) {return(Math.min(x/360.0, 1.0));}
+        			})
+    	);
+
+        timeSeriesPlots.add(
+        		new TimeSeriesPlot("Bid/Offer quantities","Time (years)","Number")
+        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nSales", "Transactions")
+        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nSellers", "Sellers")
+        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nBuyers", "Buyers")
+    	);
+        
+        timeSeriesPlots.add(
+        		new TimeSeriesPlot("Bid/Offer Prices","Time (years)","Price")
+        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageBidPrice", "Average Bid Price")
+        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageOfferPrice", "Average Offer Price")        			
+        );
+
+        timeSeriesPlots.add(
+        		new TimeSeriesPlot("Affordability","Time (years)","mortgage payment/income")
+        			.addVariable(HousingMarketTest.bank.diagnostics,"affordability", "Affordability")
+    	);
+        
+        for(TimeSeriesPlot plot : timeSeriesPlots) {
+        	plot.addToPane(newTabPane);
+        }
+        
+        myChartFrame.add(newTabPane);
+        
+        myChartFrame.pack();
+    }
+
     /** Called once, when the simulation is to begin. */
     @Override
     public void start() {
@@ -87,59 +140,6 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
     }
     
     
-    /** Called once, to initialise display windows. */
-    @Override
-    public void init(Controller controller) {
-        super.init(controller);
-        myChartFrame = new JFrame("My Graphs");
-                		
-        controller.registerFrame(myChartFrame);
-       
-        // Create a tab interface
-        JTabbedPane newTabPane = new JTabbedPane();
-        housingChart = makeScatterPlot(newTabPane, "Housing stats", "Probability", "Household Income");
-        housePriceChart = makeScatterPlot(newTabPane, "House prices", "Modelled Price", "Reference Price");
-        bankBalanceChart = makeScatterPlot(newTabPane, "Bank balances", "Balance", "Income");
-        mortgageStatsChart = makeScatterPlot(newTabPane, "Mortgage stats", "Frequency", "Ratio");
-        mortgagePhaseChart = makeScatterPlot(newTabPane, "Mortgage phase",  "Deposit/income", "Loan/income");
-        mortgagePhaseChart.setXAxisRange(0.0, 8.0);
-        mortgagePhaseChart.setYAxisRange(0.0, 8.0);
-        
-        timeSeriesPlots.add(
-        		new TimeSeriesPlot("Market Statistics","Time (years)","Value")
-        			.addVariable(HousingMarketTest.housingMarket,"housePriceIndex", "HPI")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageSoldPriceToOLP", "Sold Price/List price")
-        			.addVariable(HousingMarketTest.housingMarket,"averageDaysOnMarket", "Years on market", new DataRecorder.Transform() {
-        				public double exec(double x) {return(Math.min(x/360.0, 1.0));}
-        			})
-    	);
-
-        timeSeriesPlots.add(
-        		new TimeSeriesPlot("Bid/Offer quantities","Time (years)","Number")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nSales", "Transactions")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nSellers", "Sellers")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nBuyers", "Buyers")
-    	);
-        
-        timeSeriesPlots.add(
-        		new TimeSeriesPlot("Bid/Offer Prices","Time (years)","Price")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageBidPrice", "Average Bid Price")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageOfferPrice", "Average Offer Price")        			
-        );
-
-        timeSeriesPlots.add(
-        		new TimeSeriesPlot("Affordability","Time (years)","mortgage payment/income")
-        			.addVariable(HousingMarketTest.bank.diagnostics,"affordability", "Affordability")
-    	);
-        
-        for(TimeSeriesPlot plot : timeSeriesPlots) {
-        	plot.addToPane(newTabPane);
-        }
-        
-        myChartFrame.add(newTabPane);
-        
-        myChartFrame.pack();
-    }
     
     /** Add titles and labels to charts. */
 
@@ -148,7 +148,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         pane.addTab(title, chart);
         return(chart);
     }
-    
+
     private void addSeries(ScatterPlotGenerator chart, String title, final double[][] data) {
     	ScatterPlotSeriesAttributes attributes = ChartUtilities.addSeries(chart, title);
         ChartUtilities.scheduleSeries(this, attributes, new sim.display.ChartUtilities.ProvidesDoubleDoubles() {
@@ -157,6 +157,20 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         	}
         });
     }
+
+    /***
+    private TimeSeriesChartGenerator makeTimeSeriesChart(JTabbedPane pane, String title, String yAxis) {
+    	TimeSeriesChartGenerator chart = ChartUtilities.buildTimeSeriesChartGenerator(title, yAxis);
+        pane.addTab(title, chart);
+        return(chart);
+    }
+
+
+    private void addSeries(TimeSeriesChartGenerator chart, String title, Valuable val) {
+    	TimeSeriesAttributes attributes = ChartUtilities.addSeries(chart, title);
+        ChartUtilities.scheduleSeries(this, attributes, val);
+    }
+     ***/
     
     /** Called once, when the console quits. */
     @Override
