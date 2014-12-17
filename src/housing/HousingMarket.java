@@ -17,7 +17,125 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
  *
  *********************************************************/
 public class HousingMarket {
+	
+	/////////////////////////////////////////////////////////////////////////////////
+	// Configuration
+	/////////////////////////////////////////////////////////////////////////////////
+	static public class Config {
+		public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
+		public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
+		public static final double HPI_MEAN = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
+		public static LogNormalDistribution listPriceDistribution = new LogNormalDistribution(HPI_LOG_MEDIAN, HPI_SHAPE);
+		public static final double T = 200.0; // characteristic number of data-points over which to average market statistics
+		public static final double F = Math.exp(-1.0/12.0); // House Price Index appreciation decay const (in market clearings)
+		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market
+		public static final double G = Math.exp(-1.0/8); // Decay const for averageListPrice averaging
+	}
 
+	/////////////////////////////////////////////////////////////////////////////////
+	// Diagnostics
+	/////////////////////////////////////////////////////////////////////////////////
+	public class Diagnostics {
+
+		public double averageSoldPriceToOLP;
+		public double averageBidPrice;
+		public double averageOfferPrice;
+		public int    nSales, saleCount;
+		public int    nBuyers;
+		public int    nSellers;
+	    public double [][]    priceData;
+	    public double [][]    referencePriceData;
+		double [] offerPrices;
+		double [] bidPrices;
+
+		public Diagnostics() {
+			averageSoldPriceToOLP = 1.0;
+			saleCount = 0;
+			nSales = 0;
+			nBuyers = 0;
+			nSellers = 0;
+	        priceData = new double[2][House.Config.N_QUALITY];
+	        referencePriceData = new double[2][House.Config.N_QUALITY];
+	        int i;
+	        for(i=0; i<House.Config.N_QUALITY; ++i) {
+	        	priceData[0][i] = HousingMarket.referencePrice(i);
+	        	referencePriceData[0][i] = HousingMarket.referencePrice(i);
+	        	referencePriceData[1][i] = HousingMarket.referencePrice(i);
+	        }
+
+		}
+
+		public void record() {
+			nSales = saleCount;
+			saleCount = 0;
+			nSellers = onMarket.size();
+			nBuyers = buyers.size();
+
+			// -- Record average bid price
+			// ---------------------------
+			averageBidPrice = 0.0;
+			for(HouseBuyerRecord buyer : buyers) {
+				averageBidPrice += buyer.price;
+			}
+			if(buyers.size() > 0) averageBidPrice /= buyers.size();
+
+			// -- Record average offer price
+			// -----------------------------
+			averageOfferPrice = 0.0;
+			for(HouseSaleRecord sale : onMarket.values()) {
+				averageOfferPrice += sale.currentPrice;
+			}
+			if(onMarket.size() > 0) averageOfferPrice /= onMarket.size();
+			recordOfferPrices();
+			recordBidPrices();
+		}
+		
+		public void step() {
+	        int i;
+	        for(i=0; i<House.Config.N_QUALITY; ++i) {
+	        	priceData[1][i] = HousingMarketTest.housingMarket.averageSalePrice[i];
+	        }
+		}
+		
+		public void recordSale(HouseSaleRecord sale) {
+			if(sale.initialListedPrice > 0.01) {
+				averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.currentPrice/sale.initialListedPrice;
+			}
+			saleCount += 1;			
+		}
+		
+		public void recordBid(double price) {
+//			bidCount += 1;
+//			averageBidPrice += price;
+		}
+		
+		protected void recordOfferPrices() {
+			offerPrices = new double[onMarket.size()];
+			int i = 0;
+			for(HouseSaleRecord sale : onMarket.values()) {
+				offerPrices[i] = sale.currentPrice;
+				++i;
+			}
+		}
+
+		protected void recordBidPrices() {
+			bidPrices = new double[buyers.size()];
+			int i = 0;
+			
+			for(HouseBuyerRecord bid : buyers) {
+				bidPrices[i] = bid.price;
+				++i;
+			}
+		}
+		public double[] getOfferPrices() {
+			return(offerPrices);
+		}
+
+		public double[] getBidPrices() {
+			return(bidPrices);
+		}
+
+	}
 	
 	public HousingMarket() {
 		int i;
@@ -28,9 +146,8 @@ public class HousingMarket {
 		housePriceIndex = 1.0;
 		lastHousePriceIndex = 1.0;
 		HPIAppreciation = 0.0;
-		averageSoldPriceToOLP = 1.0;
 		averageDaysOnMarket = 30;
-		nSales = 0;
+		diagnostics = this.new Diagnostics();
 	}
 	
 	/******************************************
@@ -71,7 +188,7 @@ public class HousingMarket {
 	 ******************************************/
 	public void bid(Household buyer, double price) {
 		buyers.add(new HouseBuyerRecord(buyer, price));
-		nBuyers += 1;
+		diagnostics.recordBid(price);
 	}
 
 	/**************************************************
@@ -127,13 +244,10 @@ public class HousingMarket {
 	 * @param sale The seller's record
 	 **********************************************/
 	public void completeTransaction(HouseBuyerRecord b, HouseSaleRecord sale) {
-		// --- update sales statistics
-		double initPrice = sale.initialListedPrice;
-		if(initPrice == 0.0) initPrice = 0.01;
-		averageSoldPriceToOLP = E*averageSoldPriceToOLP + (1.0-E)*sale.currentPrice/initPrice;
-		averageDaysOnMarket = E*averageDaysOnMarket + (1.0-E)*30*(HousingMarketTest.t - sale.tInitialListing);
-		averageSalePrice[sale.quality] = G*averageSalePrice[sale.quality] + (1.0-G)*sale.currentPrice;
-		nSales += 1;
+		// --- update sales statistics		
+		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(HousingMarketTest.t - sale.tInitialListing);
+		averageSalePrice[sale.quality] = Config.G*averageSalePrice[sale.quality] + (1.0-Config.G)*sale.currentPrice;
+		diagnostics.recordSale(sale);
 	}
 		
 	public boolean isOnMarket(House h) {
@@ -156,42 +270,24 @@ public class HousingMarket {
 	 * @param q quality of the house
 	************************************************/
 	static public double referencePrice(int q) {
-		return(listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY));
+		return(Config.listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY));
 	}
 	
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	protected void recordMarketStats() {
-		nSales = 0;
-		nSellers = onMarket.size();
-		nBuyers = buyers.size();
-
 		// --- House Price Index stuff
 		// ---------------------------
-		HPIAppreciation = F*HPIAppreciation - (1.0-F)*housePriceIndex;
+		HPIAppreciation = Config.F*HPIAppreciation - (1.0-Config.F)*housePriceIndex;
 		housePriceIndex = 0.0;
 		for(Double price : averageSalePrice) {
 			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
 		}
-		housePriceIndex /= House.Config.N_QUALITY*HPI_MEAN;
-		HPIAppreciation += (1.0-F)*housePriceIndex;
+		housePriceIndex /= House.Config.N_QUALITY*Config.HPI_MEAN;
+		HPIAppreciation += (1.0-Config.F)*housePriceIndex;
 
-		// -- Record average bid price
-		// ---------------------------
-		averageBidPrice = 0.0;
-		for(HouseBuyerRecord buyer : buyers) {
-			averageBidPrice += buyer.price;
-		}
-		if(buyers.size() > 0) averageBidPrice /= buyers.size();
-
-		// -- Record average offer price
-		// -----------------------------
-		averageOfferPrice = 0.0;
-		for(HouseSaleRecord sale : onMarket.values()) {
-			averageOfferPrice += sale.currentPrice;
-		}
-		if(onMarket.size() > 0) averageOfferPrice /= onMarket.size();
+		diagnostics.record();
 	}
 
 	
@@ -207,17 +303,16 @@ public class HousingMarket {
 	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	
 	// ---- statistics
-	public double averageSoldPriceToOLP;
 	public double averageDaysOnMarket;
-	public double averageBidPrice;
-	public double averageOfferPrice;
 	public double averageSalePrice[] = new double[House.Config.N_QUALITY];
-	public double housePriceIndex;
-	public double lastHousePriceIndex;
 	public double HPIAppreciation;
-	public int    nSales;
-	public int    nBuyers;
-	public int    nSellers;
+	public double housePriceIndex;
+
+	public double lastHousePriceIndex;
+	
+	public Diagnostics diagnostics;
+
+	/**
 	public static final double T = 200.0; // characteristic number of data-points over which to average market statistics
 	public static final double E = Math.exp(-1.0/T); // decay const for averaging
 	public static final double F = Math.exp(-1.0/12.0); // House Price Index appreciation decay const (in market clearings)
@@ -226,4 +321,5 @@ public class HousingMarket {
 	public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
 	public static final double HPI_MEAN = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
 	public static LogNormalDistribution listPriceDistribution = new LogNormalDistribution(HPI_LOG_MEDIAN, HPI_SHAPE);
+	**/
 }

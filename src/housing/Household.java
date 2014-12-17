@@ -17,7 +17,9 @@ public class Household implements IHouseOwner {
 	protected double annualEmploymentIncome;
 	protected double bankBalance;
 
-	/////////////////////////////////////////////////////////////////////////////////
+	//////////////////////////////////////////////////////////////////////////////////////
+	// Configuration
+	//////////////////////////////////////////////////////////////////////////////////////
 	static public class Config {
 
 		// ---- Parameters
@@ -29,7 +31,8 @@ public class Household implements IHouseOwner {
 		public static double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*HousingMarketTest.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
-		
+
+
 		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
 		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
 		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
@@ -51,9 +54,6 @@ public class Household implements IHouseOwner {
 				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*HousingMarketTest.rand.nextGaussian())),0.0));
 			}
 
-			public String toString() {return "Household Consumption Equation";}			
-			public String desALPHA() {return "Propensity to consume income";}
-			public String desBETA() {return "Propensity to consume wealth";}
 			public double getALPHA() {
 				return ALPHA;
 			}
@@ -66,6 +66,9 @@ public class Household implements IHouseOwner {
 			public void setBETA(double bETA) {
 				BETA = bETA;
 			}
+			public String toString() {return "Household Consumption Equation";}
+			public String desALPHA() {return("Marginal propensity to consume income");}
+			public String desBETA() {return("Marginal propensity to consume liquid wealth");}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +81,10 @@ public class Household implements IHouseOwner {
 				return(SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa));
 			}
 
+			public String toString() {return("(SIGMA.i.exp^r)/(1-A.hpa)");}
+			public String desA() {return("Sensitivity to house price appreciation");}
+			public String desEPSILON() {return("Standard Deviation of noise term");}
+			public String desSIGMA() {return("Price level factor");}
 			public static double getA() {
 				return A;
 			}
@@ -113,6 +120,11 @@ public class Household implements IHouseOwner {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*HousingMarketTest.rand.nextGaussian();
 				return(Math.max(Math.exp(exponent), principal));
 			}
+			
+			public String desA() {return("Initial markup");}
+			public String desB() {return("Sensitivity to days-on-market");}
+			public String desC() {return("Standard deviation of noise term");}
+			
 			public static double getC() {
 				return C;
 			}
@@ -144,6 +156,8 @@ public class Household implements IHouseOwner {
 				costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - 12.0*HousingMarketTest.housingMarket.housePriceAppreciation());
 				return(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
 			}			
+			public String desCOST_OF_RENTING() {return("Annual psychological cost of not owning a home");}
+			public String desFTB_K() {return("Steepness of sigma function");}
 
 			public double getCOST_OF_RENTING() {
 				return COST_OF_RENTING;
@@ -179,9 +193,6 @@ public class Household implements IHouseOwner {
 		
 		/////////////////////////////////////////////////////////////////////////////////
 		/////////////////////////////////////////////////////////////////////////////////
-		public PurchaseEqn getPurcahseEqn() {
-			return(new PurchaseEqn());
-		}
 
 		public ConsumptionEqn getConsumptionEqn() {
 			return consumptionEqn;
@@ -257,10 +268,71 @@ public class Household implements IHouseOwner {
 				double rETURN_ON_FINANCIAL_WEALTH) {
 			RETURN_ON_FINANCIAL_WEALTH = rETURN_ON_FINANCIAL_WEALTH;
 		}
-		/////////////////////////////////////////////////////////////////////////////////
-		/////////////////////////////////////////////////////////////////////////////////		
-	}
 		
+		public String desRENT_PROFIT_MARGIN() {return("Profit margin on rent charged by buy-to-let investors");}
+		public String desHOUSE_SALE_PRICE_DISCOUNT() {return("Monthly discount on price of un-sold house");}
+		public String desDOWNPAYMENT_FRACTION() {return("Fraction of bank-balance household would like to spend on mortgage downpayments");}
+		public String desRETURN_ON_FINANCIAL_WEALTH() {return("Monthly percentage growth of liquid wealth");}
+		public String desP_SELL() {return("Monthly probability of homeowner deciding to sell house");}
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// Diagnostics
+	//////////////////////////////////////////////////////////////////////////////////////
+	static public class Diagnostics {
+	    public double [][]    homelessData;
+	    public double [][]    rentingData;
+	    public double [][]    bankBalData;
+	    public double [][]    referenceBankBalData;
+	    public Household []	  households;
+	    
+	    public Diagnostics(Household [] array) {	    	
+	    	households = array;
+	        homelessData = new double[2][HousingMarketTest.N/50];
+	        rentingData = new double[2][HousingMarketTest.N/50];
+	        bankBalData = new double[2][HousingMarketTest.N/50];
+	        referenceBankBalData = new double[2][HousingMarketTest.N/50];
+
+	    }
+	    
+	    public void init() {
+	    	int i; 
+	        for(i = 0; i<HousingMarketTest.N-50; i += 50) {
+	        	homelessData[0][i/50] = households[i].annualEmploymentIncome;
+	        	homelessData[1][i/50] = 0.0;
+	        	rentingData[0][i/50] = households[i].annualEmploymentIncome;
+	        	bankBalData[0][i/50] = households[i].annualEmploymentIncome;
+	        	referenceBankBalData[0][i/50] = households[i].annualEmploymentIncome;
+	        	referenceBankBalData[1][i/50] = HousingMarketTest.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/HousingMarketTest.N);
+	        }	    	
+	    }
+	    
+	    public void step() {
+	    	int i,j,n,r;
+	        for(i = 0; i<HousingMarketTest.N-50; i += 50) {
+	        	n = 0;
+	        	r = 0;
+	        	for(j = 0; j<50; ++j) {
+	        		if(households[i+j].isHomeless()) {
+	        			n++;
+	        		} else if(households[i+j].isRenting()) {
+	        			r++;
+	        		}
+	        	}
+	        	homelessData[1][i/50] = n/50.0;
+	        	rentingData[1][i/50] = r/50.0;
+	        }
+	        for(i=0; i<HousingMarketTest.N-50; i+=50) {
+	        	bankBalData[1][i/50] = households[i].bankBalance;
+	        }
+
+	    }
+	}
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// Model
+	//////////////////////////////////////////////////////////////////////////////////////
+
 	/********************************************************
 	 * Constructor.
 	 ********************************************************/
@@ -774,6 +846,7 @@ public class Household implements IHouseOwner {
 	Household.Config	config;
 	HouseSaleMarket		houseMarket;
 	HouseRentalMarket	rentalMarket;
+	static Diagnostics	diagnostics = new Diagnostics(HousingMarketTest.households);
 
 	protected House		home; // current home
 	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned

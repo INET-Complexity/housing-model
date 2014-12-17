@@ -1,9 +1,5 @@
 package housing;
 
-
-import java.util.ArrayList;
-import java.util.Collection;
-
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
@@ -36,7 +32,6 @@ public class HousingMarketTest extends SimState implements Steppable {
         if (schedule.getTime() >= N_STEPS) simulationStateNow.kill();
         
 		for(j = 0; j<N; ++j) households[j].preHouseSaleStep();
-		marketStats.recordStats();
 		housingMarket.clearMarket();
 		for(j = 0; j<N; ++j) households[j].preHouseLettingStep();
 		housingMarket.clearBuyToLetMarket();
@@ -49,37 +44,6 @@ public class HousingMarketTest extends SimState implements Steppable {
 	}
 	
 	
-	////////////////////////////////////////////////////////////////////////
-/***
-	public static void main(String[] args) {
-
-		int j;
-		
-		initialise();
-		
-		// ---- simulate
-		// -------------
-		for(t = 0; t<N_STEPS; ++t) {
-			for(j = 0; j<N; ++j) households[j].preHouseSaleStep();
-
-			
-			housingMarket.clearMarket();
-			
-	//		System.out.println(housingMarket.nSales);
-			
-			for(j = 0; j<N; ++j) households[j].preHouseLettingStep();
-
-			housingMarket.clearBuyToLetMarket();
-			rentalMarket.clearMarket();
-
-//			printMarketStats();
-		printHPI();
-	//		System.out.println(housingMarket.nSales + " " + rentalMarket.nSales + " " + housingMarket.housePriceIndex);
-
-		}
-		printHousePriceDist();
-	}
-	***/
 	////////////////////////////////////////////////////////////////////////
 	// Initialisation
 	////////////////////////////////////////////////////////////////////////
@@ -168,97 +132,51 @@ public class HousingMarketTest extends SimState implements Steppable {
 		}
 		rentalMarket.clearMarket();				
 	}
-	
-	////////////////////////////////////////////////////////////////////////
-	// Monthly income against number of houses owned for each household.
-	////////////////////////////////////////////////////////////////////////
-	static void printHomeOwnershipData() {
-		int i,j;
-		for(j = 0; j<N; ++j) {
-			i = 0;
-			for(House h : households[j].housePayments.keySet()) {
-				if(h.owner == households[j]) {
-					i += 1;
-				}
-			}
-			System.out.println(households[j].getMonthlyEmploymentIncome() + " " + i);
-		}
-	}
-	
-	////////////////////////////////////////////////////////////////////////
-	// Quality of home against monthly income.
-	////////////////////////////////////////////////////////////////////////
-	static void printHomeQualityData() {
-		int j;
-		for(j = 0; j<N; ++j) {
-			if(households[j].isHomeowner())
-				System.out.println(households[j].home.quality+" "+households[j].getMonthlyEmploymentIncome());
-		}		
-	}
-	
-	////////////////////////////////////////////////////////////////////////
-	// average list price as a function of house quality
-	////////////////////////////////////////////////////////////////////////
-	static void printHousePriceDist() {
-		int j;
-		for(j = 0; j < House.Config.N_QUALITY; ++j) {
-			System.out.println(j+" "+housingMarket.averageSalePrice[j]);
-		}
-	}
-
-	////////////////////////////////////////////////////////////////////////
-	static void printMarketStats() {
-		System.out.println(t/12.0+" "+housingMarket.housePriceIndex+" "+
-				housingMarket.averageDaysOnMarket/360.0+" "+
-				housingMarket.averageSoldPriceToOLP);		
-	}
-	
-	////////////////////////////////////////////////////////////////////////
-	// Just house price index
-	////////////////////////////////////////////////////////////////////////
-	static void printHPI() {
-		System.out.println(housingMarket.housePriceIndex);		
-	}
-		
-	////////////////////////////////////////////////////////////////////////
-	// Average bid and average offer prices
-	////////////////////////////////////////////////////////////////////////
-	static void printBidOffer(HousingMarket market) {
-		System.out.println(t + "\t" + housingMarket.averageBidPrice + "\t" + housingMarket.averageOfferPrice
-				+ "\t" + housingMarket.averageSoldPriceToOLP + "\t" + housingMarket.averageDaysOnMarket);		
-	}
-
 
 	////////////////////////////////////////////////////////////////////////
 	// Getters/setters for the console
 	////////////////////////////////////////////////////////////////////////
 	
-	/***
-	public double getHousehold_DownpaymentFraction() {
-		return(Household.Config.DOWNPAYMENT_FRACTION);
-	}
-
-	public void setHousehold_DownpaymentFraction(double x) {
-		Household.Config.DOWNPAYMENT_FRACTION = x;
-	}
-***/
-	public Bank.Config getBank_Configuration() {
+	public Bank.Config getBankConfig() {
 		return(bank.config);
 	}
 
-	public Household.Config getHousehold_Configuration() {
+	public Household.Config getHouseholdConfig() {
 		return(new Household.Config());
 	}
-	
-	public MarketStatistics getMarket_Statistics() {
-		return(marketStats);
-	}
-	
-	public HouseSaleMarket getHouseSaleMarket() {
-		return(housingMarket);
-	}
+	public String nameBankConfig() {return("Bank Configuration");}
+	public String nameHouseholdConfig() {return("Household Configuration");}
 
+	public Bank.Diagnostics getBankDiagnostics() {
+		return(bank.diagnostics);
+	}
+	public String nameBankDiagnostics() {return("Bank Diagnostics");}
 	
+	public HouseSaleMarket.Diagnostics getMarketDiagnostics() {
+		return(housingMarket.diagnostics);
+	}
+	public String nameMarketDiagnostics() {return("Housing Market Diagnostics");}
+
+	public HouseRentalMarket.Diagnostics getRentalDiagnostics() {
+		return(rentalMarket.diagnostics);
+	}
+	public String nameRentalDiagnostics() {return("Rental Market Diagnostics");}
+	
+	public static int getN() {
+		return N;
+	}
+	public String nameN() {return("Number of households");}
+	
+	public static int getNh() {
+		return Nh;
+	}
+	public String nameNh() {return("Number of houses");}
+
+	public static int getnSteps() {
+		return N_STEPS;
+	}
+	public String namenSteps() {return("Number of timesteps");}
+
 	////////////////////////////////////////////////////////////////////////
 
 	public static final int N = 5000; // number of households
@@ -273,7 +191,6 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public static House 			houses[] = new House[Nh];
 	public static int 				t;
 	public static MersenneTwisterFast			rand = new MersenneTwisterFast(1L);
-	public static MarketStatistics	marketStats = new MarketStatistics(housingMarket);
 	
 	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
 

@@ -42,7 +42,7 @@ public class MortgageApproval {
 		principal -= amount;
 		return(amount);
 	}
-	
+		
 	public int 		nPayments;
 	public double 	monthlyPayment;
 	public double	principal;

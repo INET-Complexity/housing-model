@@ -11,19 +11,23 @@ package housing;
  *************************************************/
 public class Bank {
 
+	//////////////////////////////////////////////////////////////////////////////////////
+	// Configuration
+	//////////////////////////////////////////////////////////////////////////////////////
 	static public class Config implements Configuration {
 		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
 		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
 		public double LTI = 4.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14
 		public int    N_PAYMENTS = 12*25; // number of monthly repayments
-		public boolean RECORD_STATS = true; // record mortgage statistics?		
-		public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
-		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
-		static public int ARCHIVE_LEN = 1000; // number of mortgage approvals to remember
 
-		//////////////////////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////////////////
+		// ---- Mason stuff
+		// ----------------
+		public String desLTI() {return("Loan to Income constraint on mortgages");}
+		public String desTHETA_FTB() {return("Loan to Value haircut for first time buyers");}
+		public String desTHETA_HOME() {return("Loan to Value haircut for homeowners");}
+		public String desTHETA_BTL() {return("Loan to Value haircut for buy-to-let investors");}
+		public String desN_PAYMENTS() {return("Number of monthly repayments in a mortgage");}
 		public double getLTI() {
 			return(LTI);
 		}		
@@ -54,14 +58,87 @@ public class Bank {
 		public void setN_PAYMENTS(int n_PAYMENTS) {
 			N_PAYMENTS = n_PAYMENTS;
 		}
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// Diagnostics
+	//////////////////////////////////////////////////////////////////////////////////////
+	static public class Diagnostics {
+		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
+		public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
+		public int ARCHIVE_LEN = 1000; // number of mortgage approvals to remember
+		public boolean DIAGNOSTICS_ACTIVE = true; // record mortgage statistics?		
+
+		public double affordability = 0.0;
+		public double [][] ltv_distribution = new double[2][101]; // index/100 = LTV
+		public double [][] lti_distribution = new double[2][101]; // index/10 = LTI
+		public double [][] approved_mortgages = new double [2][ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
+		public int approved_mortgages_i;		
+
+		public Diagnostics() {
+			for(int i=0; i<=100; ++i) { // set up x-values for distribution
+				ltv_distribution[0][i] = i/100.0;
+				lti_distribution[0][i] = i/100.0;
+				ltv_distribution[1][i] = 0.0;
+				lti_distribution[1][i] = 0.0;
+			}
+		}
+
+		public void recordLoan(Household h, MortgageApproval approval) {
+			double housePrice;
+			if(DIAGNOSTICS_ACTIVE) {
+				housePrice = approval.principal + approval.downPayment;
+				affordability = AFFORDABILITY_DECAY*affordability + (1.0-AFFORDABILITY_DECAY)*approval.monthlyPayment/h.getMonthlyEmploymentIncome();
+				if(approval.principal > 1.0) {
+					ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-STATS_DECAY)/10.0;
+					lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome,100.0)] += 1.0-STATS_DECAY;
+				}
+				approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.getMonthlyEmploymentIncome()*12.0);
+				approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.getMonthlyEmploymentIncome()*12.0);
+				approved_mortgages_i += 1;
+				if(approved_mortgages_i == ARCHIVE_LEN) approved_mortgages_i = 0;
+			}
+		}
+		
+		public void step() {
+			int i;
+	        for(i=0; i<=100; ++i) {
+				ltv_distribution[1][i] *= STATS_DECAY;
+				lti_distribution[1][i] *= STATS_DECAY;
+	        }
+		}
+
 		public double getAFFORDABILITY_DECAY() {
 			return AFFORDABILITY_DECAY;
 		}
+
 		public void setAFFORDABILITY_DECAY(double aFFORDABILITY_DECAY) {
 			AFFORDABILITY_DECAY = aFFORDABILITY_DECAY;
 		}
-		//////////////////////////////////////////////////////////////////////////////////////
-		//////////////////////////////////////////////////////////////////////////////////////
+
+		public double getSTATS_DECAY() {
+			return STATS_DECAY;
+		}
+
+		public void setSTATS_DECAY(double sTATS_DECAY) {
+			STATS_DECAY = sTATS_DECAY;
+		}
+
+		public int getARCHIVE_LEN() {
+			return ARCHIVE_LEN;
+		}
+
+		public void setARCHIVE_LEN(int aRCHIVE_LEN) {
+			ARCHIVE_LEN = aRCHIVE_LEN;
+		}
+
+		public boolean isDIAGNOSTICS_ACTIVE() {
+			return DIAGNOSTICS_ACTIVE;
+		}
+
+		public void setDIAGNOSTICS_ACTIVE(boolean dIAGNOSTICS_ACTIVE) {
+			DIAGNOSTICS_ACTIVE = dIAGNOSTICS_ACTIVE;
+		}
 	}
 	
 	/********************************
@@ -70,22 +147,13 @@ public class Bank {
 	 ********************************/
 	public Bank() {
 		this(new Bank.Config());
-		if(config.RECORD_STATS) {
-			for(int i=0; i<=100; ++i) { // set up x-values for distribution
-				ltv_distribution[0][i] = i/100.0;
-				itv_distribution[0][i] = i/100.0;
-				lti_distribution[0][i] = i/100.0;
-				ltv_distribution[1][i] = 0.0;
-				itv_distribution[1][i] = 0.0;
-				lti_distribution[1][i] = 0.0;
-			}
-		}
 	}
 	
 	public Bank(Bank.Config c) {
 		config = c;
 		double r = mortgageInterestRate()/12.0;
 		k = r/(1.0 - Math.pow(1.0+r, -config.N_PAYMENTS));
+		diagnostics = new Diagnostics();
 	}
 	
 	/******************************
@@ -140,24 +208,8 @@ public class Bank {
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();		
 		approval.nPayments = config.N_PAYMENTS;
 		approval.monthlyInterestRate = r;
-		
-		if(config.RECORD_STATS) {
-			//if(h.isFirstTimeBuyer()) {
-				affordability = config.AFFORDABILITY_DECAY*affordability + (1.0-config.AFFORDABILITY_DECAY)*approval.monthlyPayment/h.getMonthlyEmploymentIncome();
-			//}
-			if(approval.principal > 1.0) {
-				ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-config.STATS_DECAY)/10.0;
-				itv_distribution[1][(int)Math.min(100.0*h.annualEmploymentIncome/housePrice,100.0)] += 1.0-config.STATS_DECAY;
-				lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome,100.0)] += 1.0-config.STATS_DECAY;
-			}
-			approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.getMonthlyEmploymentIncome()*12.0);
-			approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.getMonthlyEmploymentIncome()*12.0);
-			approved_mortgages_i += 1;
-			if(approved_mortgages_i == Config.ARCHIVE_LEN) approved_mortgages_i = 0;
 
-		}
-		
-		
+		diagnostics.recordLoan(h, approval);
 		return(approval);
 	}
 
@@ -205,15 +257,10 @@ public class Bank {
 		
 
 	
-	public Bank.Config config;
+	public Config 		config;
+	public Diagnostics 	diagnostics;
 	
-	public double k; // principal to monthly payment factor
+	public double 		k; // principal to monthly payment factor
 	/** First time buyer affordability **/
-	public double affordability = 0.0;
-	public double [][] ltv_distribution = new double[2][101]; // index/100 = LTV
-	public double [][] itv_distribution = new double[2][101]; // index/100 = ITV
-	public double [][] lti_distribution = new double[2][101]; // index/10 = LTI
-	public double [][] approved_mortgages = new double [2][Config.ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
-	public int approved_mortgages_i;
 	
 }
