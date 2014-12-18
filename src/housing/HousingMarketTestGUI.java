@@ -93,6 +93,12 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         		new TimeSeriesPlot("Affordability","Time (years)","mortgage payment/income")
         			.addVariable(HousingMarketTest.bank.diagnostics,"affordability", "Affordability")
     	);
+
+        timeSeriesPlots.add(
+        		new TimeSeriesPlot("Renting/Homeless Quantity","Time (years)","number")
+        			.addVariable(Household.diagnostics,"nHomeless", "Homeless")
+        			.addVariable(Household.diagnostics,"nRenting", "Renting")        			
+    	);
         
         for(TimeSeriesPlot plot : timeSeriesPlots) {
         	plot.addToPane(newTabPane);

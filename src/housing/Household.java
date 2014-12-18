@@ -285,6 +285,8 @@ public class Household implements IHouseOwner {
 	    public double [][]    bankBalData;
 	    public double [][]    referenceBankBalData;
 	    public Household []	  households;
+	    public double 		  nRenting;
+	    public double 		  nHomeless;	    
 	    
 	    public Diagnostics(Household [] array) {	    	
 	    	households = array;
@@ -309,14 +311,18 @@ public class Household implements IHouseOwner {
 	    
 	    public void step() {
 	    	int i,j,n,r;
+	    	nRenting = 0;
+	    	nHomeless = 0;
 	        for(i = 0; i<HousingMarketTest.N-50; i += 50) {
 	        	n = 0;
 	        	r = 0;
 	        	for(j = 0; j<50; ++j) {
 	        		if(households[i+j].isHomeless()) {
 	        			n++;
+	        			nHomeless++;
 	        		} else if(households[i+j].isRenting()) {
 	        			r++;
+	        			nRenting++;
 	        		}
 	        	}
 	        	homelessData[1][i/50] = n/50.0;
@@ -352,127 +358,6 @@ public class Household implements IHouseOwner {
 		id = ++id_pool;
 	}
 
-	/**
-	 * @return total annual income tax due
-	 */
-	public double getAnnualIncomeTax() {
-		return HousingMarketTest.government.incomeTaxDue(annualEmploymentIncome);
-	}
-
-	/**
-	 * @return total annual national insurance contributions
-	 */
-	public double getAnnualNationalInsuranceTax() {
-		return HousingMarketTest.government.class1NICsDue(annualEmploymentIncome);
-	}
-
-	/**
-	 * @return total annual taxes due
-	 */
-	public double getAnnualTotalTax() {
-		return getAnnualIncomeTax() + getAnnualNationalInsuranceTax();
-	}
-
-	/**
-	 * @return discretionary income is disposable income less any mortgage payments
-	 */
-	public double getMonthlyDiscretionaryIncome() {
-		return getMonthlyDisposableIncome() - getMonthlyTotalMortgagePayments();
-	}
-
-	/**
-	 * @return monthly disposable (i.e., after tax) income
-	 */
-	public double getMonthlyDisposableIncome() {
-		return getMonthlyTotalIncome() - getMonthlyTotalTax();
-	}
-
-	/**
-	 * @return gross monthly employment (i.e., before tax) income
-	 */
-	public double getMonthlyEmploymentIncome() {
-		return annualEmploymentIncome / 12.0;
-	}
-
-	/**
-	 * @return monthly interest income
-	 */
-	public double getMonthlyInterestIncome() {
-		return bankBalance * Config.RETURN_ON_FINANCIAL_WEALTH;
-	}
-
-	/**
-	 * @return gross property income will be zero for most households
-	 */
-	public double getMonthlyPropertyIncome() {
-		double propertyIncome = 0.0;
-		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-			if (isCollectingRentFrom(payment.getKey())) {
-				propertyIncome += payment.getValue().monthlyPayment * (1.0 + Config.RENT_PROFIT_MARGIN);
-			}
-		}
-		return propertyIncome;
-	}
-
-	/**
-	 * @return gross monthly total income
-	 */
-	public double getMonthlyTotalIncome() {
-		double monthlyTotalIncome = (getMonthlyEmploymentIncome() +
-				getMonthlyPropertyIncome() + getMonthlyInterestIncome());
-		return monthlyTotalIncome;
-	}
-
-	/**
-	 * @return monthly total monthly interest payments for all houses owned
-	 */
-	public double getMonthlyTotalInterestPayments() {
-		double totalInterestPayments = 0.0;
-		double interestPayment;
-		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
-				totalInterestPayments += interestPayment;
-			}
-		}
-		return totalInterestPayments;
-	}
-
-	/**
-	 * @return monthly total monthly mortgage payments for all houses owned
-	 */
-	public double getMonthlyTotalMortgagePayments() {
-		double totalMortgagePayments = 0.0;
-		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-				totalMortgagePayments += payment.getValue().monthlyPayment;
-			}
-		}
-		return totalMortgagePayments;
-	}
-
-	/**
-	 * @return monthly total monthly principal payments for all houses owned
-	 */
-	public double getMonthlyTotalPrincipalPayments() {
-		double totalPrincipalPayments = 0.0;
-		double interestPayment, mortgagePayment;
-		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-				mortgagePayment = payment.getValue().monthlyPayment;
-				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
-				totalPrincipalPayments += mortgagePayment - interestPayment;
-			}
-		}
-		return totalPrincipalPayments;
-	}
-
-	/**
-	 * @return total monthly taxes due
-	 */
-	public double getMonthlyTotalTax() {
-		return getAnnualTotalTax() / 12.0;
-	}
 
 	/////////////////////////////////////////////////////////
 	// House market behaviour
@@ -503,11 +388,13 @@ public class Household implements IHouseOwner {
 				}
 				if(payment.getValue().nPayments == 0) { // do paid-off stuff
 					if(payment.getKey().owner != this) { // renting
+						if(home == null) System.out.println("Strange: paying rent and homeless");
+						if(payment.getKey() != home) System.out.println("Strange: I seem to be renting a house but not living in it"); 
+						if(payment.getKey().owner == payment.getKey().resident) System.out.println("Very Strange: this is impossible");
+						if(home.resident != this) System.out.println("home/resident link is broken");
 						payment.getKey().owner.endOfLettingAgreement(payment.getKey());
-						if(payment.getKey() == home) {
-							home.resident = null;
-							home = null;
-						}
+						home.resident = null;
+						home = null;
 						mapIt.remove();
 					}
 				}
@@ -599,11 +486,11 @@ public class Household implements IHouseOwner {
 	 * Put house on rental market if buy-to-let and no tenant.
 	 ********************************************************/
 	public void completeHousePurchase(HouseSaleRecord sale) {
-		if(isRenting()) { // give immediate notice to landlord
+		if(isRenting()) { // give immediate notice to landlord and move out
+			if(sale.house.resident != null) System.out.println("Strange: my new house has someone in it!");
+			if(home == sale.house) System.out.println("Strange: I've just bought a house I'm renting out");
 			if(home != sale.house) home.owner.endOfLettingAgreement(home);
-			housePayments.remove(home);
-			home.resident = null;
-			home = null;
+			endTenancy();
 		}
 		MortgageApproval mortgage = bank.requestLoan(this, sale.currentPrice, bankBalance*config.DOWNPAYMENT_FRACTION, home == null);
 		if(mortgage == null) {
@@ -619,7 +506,7 @@ public class Household implements IHouseOwner {
 		}
 		bankBalance -= mortgage.downPayment;
 		housePayments.put(sale.house, mortgage);
-		if(home == null) {
+		if(home == null) { // move in to house
 			home = sale.house;
 			sale.house.resident = this;
 		} else if(sale.house.resident == null) { // put empty buy-to-let house on rental market
@@ -638,10 +525,12 @@ public class Household implements IHouseOwner {
 		if(housePayments.get(sale.house).nPayments == 0) {
 			housePayments.remove(sale.house);
 		}
-		if(sale.house == home) {
+		if(sale.house == home) { // move out of home and become (temporarily) homeless
 			home.resident = null;
 			home = null;
 			bidOnHousingMarket(1.0);
+		} else if(sale.house.resident != null) { // evict current renter
+			sale.house.resident.endTenancy();
 		}
 	}
 	
@@ -658,9 +547,20 @@ public class Household implements IHouseOwner {
 		if(!housePayments.containsKey(h)) {
 			System.out.println("I don't own this house: strange");
 		}
+		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");
 		rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));
 	}
 
+	/**********************************************************
+	 * This household moves out of current rented accommodation
+	 * and becomes homeless (possibly temporarily)
+	 **********************************************************/
+	public void endTenancy() {
+		if(home.owner == this) System.out.println("Strange: got endTenancy on a home I own");
+		housePayments.remove(home);
+		home.resident = null;
+		home = null;		
+	}
 
 	/********************************************************
 	 * Do all the stuff necessary when this household moves
@@ -668,15 +568,23 @@ public class Household implements IHouseOwner {
 	 * payment contract. At present we use a MortgageApproval).
 	 ********************************************************/
 	public void completeHouseRental(HouseSaleRecord sale) {
-		MortgageApproval rent = new MortgageApproval();
-		rent.downPayment = 0.0;
-		rent.monthlyPayment = sale.currentPrice;
-		rent.monthlyInterestRate = 0.0;
-		rent.nPayments = (int)(12.0*rand.nextDouble()+1);
-		rent.principal = rent.monthlyPayment*rent.nPayments;
+		if(sale.house.owner != this) { // if renting own house, no need for contract
+			MortgageApproval rent = new MortgageApproval();
+			rent.downPayment = 0.0;
+			rent.monthlyPayment = sale.currentPrice;
+			rent.monthlyInterestRate = 0.0;
+			rent.nPayments = (int)(12.0*rand.nextDouble()+1);
+			rent.principal = rent.monthlyPayment*rent.nPayments;
+			housePayments.put(sale.house, rent);
+		}
 		home = sale.house;
+		if(sale.house.resident != null) {
+			System.out.println("Strange: moving into an occupied house");
+			if(sale.house.resident == this) System.out.println("It's me!");
+			if(sale.house.owner == this) System.out.println("It's my house!");
+			if(sale.house.owner == sale.house.resident) System.out.println("It's a homeowner!");
+		}
 		sale.house.resident = this;
-		housePayments.put(home, rent);
 	}
 
 
@@ -839,6 +747,128 @@ public class Household implements IHouseOwner {
 	
 	public boolean isCollectingRentFrom(House h) {
 		return(h.owner == this && h != home && h.resident != null);
+	}
+
+	/**
+	 * @return total annual income tax due
+	 */
+	public double getAnnualIncomeTax() {
+		return HousingMarketTest.government.incomeTaxDue(annualEmploymentIncome);
+	}
+
+	/**
+	 * @return total annual national insurance contributions
+	 */
+	public double getAnnualNationalInsuranceTax() {
+		return HousingMarketTest.government.class1NICsDue(annualEmploymentIncome);
+	}
+
+	/**
+	 * @return total annual taxes due
+	 */
+	public double getAnnualTotalTax() {
+		return getAnnualIncomeTax() + getAnnualNationalInsuranceTax();
+	}
+
+	/**
+	 * @return discretionary income is disposable income less any mortgage payments
+	 */
+	public double getMonthlyDiscretionaryIncome() {
+		return getMonthlyDisposableIncome() - getMonthlyTotalMortgagePayments();
+	}
+
+	/**
+	 * @return monthly disposable (i.e., after tax) income
+	 */
+	public double getMonthlyDisposableIncome() {
+		return getMonthlyTotalIncome() - getMonthlyTotalTax();
+	}
+
+	/**
+	 * @return gross monthly employment (i.e., before tax) income
+	 */
+	public double getMonthlyEmploymentIncome() {
+		return annualEmploymentIncome / 12.0;
+	}
+
+	/**
+	 * @return monthly interest income
+	 */
+	public double getMonthlyInterestIncome() {
+		return bankBalance * Config.RETURN_ON_FINANCIAL_WEALTH;
+	}
+
+	/**
+	 * @return gross property income will be zero for most households
+	 */
+	public double getMonthlyPropertyIncome() {
+		double propertyIncome = 0.0;
+		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+			if (isCollectingRentFrom(payment.getKey())) {
+				propertyIncome += payment.getValue().monthlyPayment * (1.0 + Config.RENT_PROFIT_MARGIN);
+			}
+		}
+		return propertyIncome;
+	}
+
+	/**
+	 * @return gross monthly total income
+	 */
+	public double getMonthlyTotalIncome() {
+		double monthlyTotalIncome = (getMonthlyEmploymentIncome() +
+				getMonthlyPropertyIncome() + getMonthlyInterestIncome());
+		return monthlyTotalIncome;
+	}
+
+	/**
+	 * @return monthly total monthly interest payments for all houses owned
+	 */
+	public double getMonthlyTotalInterestPayments() {
+		double totalInterestPayments = 0.0;
+		double interestPayment;
+		if (! isRenting()) {
+			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
+				totalInterestPayments += interestPayment;
+			}
+		}
+		return totalInterestPayments;
+	}
+
+	/**
+	 * @return monthly total monthly mortgage payments for all houses owned
+	 */
+	public double getMonthlyTotalMortgagePayments() {
+		double totalMortgagePayments = 0.0;
+		if (! isRenting()) {
+			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+				totalMortgagePayments += payment.getValue().monthlyPayment;
+			}
+		}
+		return totalMortgagePayments;
+	}
+
+	/**
+	 * @return monthly total monthly principal payments for all houses owned
+	 */
+	public double getMonthlyTotalPrincipalPayments() {
+		double totalPrincipalPayments = 0.0;
+		double interestPayment, mortgagePayment;
+		if (! isRenting()) {
+			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
+				mortgagePayment = payment.getValue().monthlyPayment;
+				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
+				totalPrincipalPayments += mortgagePayment - interestPayment;
+			}
+		}
+		return totalPrincipalPayments;
+	}
+
+	/**
+	 * @return total monthly taxes due
+	 */
+	public double getMonthlyTotalTax() {
+		return getAnnualTotalTax() / 12.0;
 	}
 
 	///////////////////////////////////////////////

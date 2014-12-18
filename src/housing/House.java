@@ -14,7 +14,9 @@ public class House implements Comparable<House> {
 	}
 	
 	public House() {
-		id = ++id_pool;		
+		id = ++id_pool;	
+		resident = null;
+		owner = null;
 	}
 	
 	// placeholder

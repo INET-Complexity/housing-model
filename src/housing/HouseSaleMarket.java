@@ -15,6 +15,7 @@ public class HouseSaleMarket extends HousingMarket {
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		super.completeTransaction(purchase, sale);
 		Household buyer = purchase.buyer;		
+		if(buyer == sale.house.owner) return;
 		sale.house.owner.completeHouseSale(sale);
 		buyer.completeHousePurchase(sale);
 		sale.house.owner = buyer;

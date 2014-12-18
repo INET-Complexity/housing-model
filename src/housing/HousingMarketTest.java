@@ -30,7 +30,15 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public void step(SimState simulationStateNow) {
 		int j;
         if (schedule.getTime() >= N_STEPS) simulationStateNow.kill();
-        
+
+        System.out.println(schedule.getTime());
+		for(j = 0; j<N; ++j) {
+			if(households[j].home != null && households[j].home.resident != households[j]) {
+				if(households[j].isRenting()) System.out.println("Failed test on renter");
+				if(households[j].isHomeowner()) System.out.println("Failed test on homeowner");
+			}
+		}
+
 		for(j = 0; j<N; ++j) households[j].preHouseSaleStep();
 		housingMarket.clearMarket();
 		for(j = 0; j<N; ++j) households[j].preHouseLettingStep();
@@ -82,6 +90,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 			if(1.0/(1.0+Math.exp((j*1.0/N - RENTERS)/0.04)) < rand.nextDouble()) {
 				houses[i].owner = households[j];
 				houses[i].resident = households[j];
+				households[j].home = houses[i];
 				if(rand.nextDouble() < OWNERS/(1.0-RENTERS)) {
 					// household owns house outright
 					households[j].completeHousePurchase(new HouseSaleRecord(houses[i], 0));
