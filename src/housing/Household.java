@@ -192,6 +192,11 @@ public class Household implements IHouseOwner {
 		}
 		
 		/////////////////////////////////////////////////////////////////////////////////
+		static public class RentalOfferPriceEqn {
+			public double price(double mortgagePayment) {
+				return(mortgagePayment*(1.0+Config.RENT_PROFIT_MARGIN));
+			}
+		}
 		/////////////////////////////////////////////////////////////////////////////////
 
 		public ConsumptionEqn getConsumptionEqn() {
@@ -389,8 +394,7 @@ public class Household implements IHouseOwner {
 				if(payment.getValue().nPayments == 0) { // do paid-off stuff
 					if(payment.getKey().owner != this) { // renting
 						if(home == null) System.out.println("Strange: paying rent and homeless");
-						if(payment.getKey() != home) System.out.println("Strange: I seem to be renting a house but not living in it"); 
-						if(payment.getKey().owner == payment.getKey().resident) System.out.println("Very Strange: this is impossible");
+						if(payment.getKey() != home) System.out.println("Strange: I seem to be renting a house but not living in it");
 						if(home.resident != this) System.out.println("home/resident link is broken");
 						payment.getKey().owner.endOfLettingAgreement(payment.getKey());
 						home.resident = null;
@@ -456,8 +460,14 @@ public class Household implements IHouseOwner {
 						houseMarket.updateOffer(h, newPrice);						
 					} else {
 						houseMarket.removeOffer(h);
+						if(h != home) {
+							rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));							
+						}
 					}
 				} else if(decideToSellHouse(h)) { // put house on market
+					if(rentalMarket.isOnMarket(h)) {
+						rentalMarket.removeOffer(h);
+					}
 					houseMarket.offer(h, config.saleEqn.desiredPrice(
 							houseMarket.averageSalePrice[h.quality],
 							houseMarket.averageDaysOnMarket,
@@ -548,7 +558,9 @@ public class Household implements IHouseOwner {
 			System.out.println("I don't own this house: strange");
 		}
 		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");
-		rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));
+		if(!houseMarket.isOnMarket(h)) {
+			rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));
+		}
 	}
 
 	/**********************************************************
@@ -580,9 +592,9 @@ public class Household implements IHouseOwner {
 		home = sale.house;
 		if(sale.house.resident != null) {
 			System.out.println("Strange: moving into an occupied house");
-			if(sale.house.resident == this) System.out.println("It's me!");
-			if(sale.house.owner == this) System.out.println("It's my house!");
-			if(sale.house.owner == sale.house.resident) System.out.println("It's a homeowner!");
+			if(sale.house.resident == this) System.out.println("...It's me!");
+			if(sale.house.owner == this) System.out.println("...It's my house!");
+			if(sale.house.owner == sale.house.resident) System.out.println("...It's a homeowner!");
 		}
 		sale.house.resident = this;
 	}

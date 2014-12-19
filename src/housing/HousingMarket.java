@@ -135,6 +135,28 @@ public class HousingMarket {
 			return(bidPrices);
 		}
 
+		public double getAverageBidPrice() {
+			return averageBidPrice;
+		}
+
+		public double getAverageOfferPrice() {
+			return averageOfferPrice;
+		}
+
+		public int getnSales() {
+			return nSales;
+		}
+
+		public int getnBuyers() {
+			return nBuyers;
+		}
+
+		public int getnSellers() {
+			return nSellers;
+		}
+		
+		
+
 	}
 	
 	public HousingMarket() {

@@ -30,15 +30,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 	public void step(SimState simulationStateNow) {
 		int j;
         if (schedule.getTime() >= N_STEPS) simulationStateNow.kill();
-
-        System.out.println(schedule.getTime());
-		for(j = 0; j<N; ++j) {
-			if(households[j].home != null && households[j].home.resident != households[j]) {
-				if(households[j].isRenting()) System.out.println("Failed test on renter");
-				if(households[j].isHomeowner()) System.out.println("Failed test on homeowner");
-			}
-		}
-
+		
 		for(j = 0; j<N; ++j) households[j].preHouseSaleStep();
 		housingMarket.clearMarket();
 		for(j = 0; j<N; ++j) households[j].preHouseLettingStep();
