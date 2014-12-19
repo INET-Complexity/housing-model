@@ -73,9 +73,9 @@ public class Household implements IHouseOwner {
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class PurchaseEqn {
-			static public double A = 0.2;//0.01;			// sensitivity to house price appreciation
-			static public double EPSILON = 0.48;//0.365; // S.D. of noise
-			static public double SIGMA = 5.0*12.0;//4.5*12.0;	// scale
+			static public double A = 0.01;//0.2;//0.01;			// sensitivity to house price appreciation
+			static public double EPSILON = 0.3;//0.48;//0.365; // S.D. of noise
+			static public double SIGMA = 4.8*12;//5.0*12.0;//4.5*12.0;	// scale
 
 			public double desiredPrice(double monthlyIncome, double hpa) {
 				return(SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa));
@@ -114,7 +114,7 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
-			static public double D = 0.01;//0.001;		// Size of Days-on-market effect
+			static public double D = 0.0011;//0.01;//0.001;		// Size of Days-on-market effect
 			static public double E = 0.02; //0.05;	// SD of noise
 			public double desiredPrice(double pbar, double d, double principal) {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*HousingMarketTest.rand.nextGaussian();
@@ -149,11 +149,11 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class RenterPurchaseDecision {
 			public double COST_OF_RENTING = 600; // Annual psychological cost of renting
-			public double FTB_K = 1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
+			public double FTB_K = 0.005;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 			
 			public boolean buy(double housePrice, double annualRent) {
 				double costOfHouse;
-				costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - 12.0*HousingMarketTest.housingMarket.housePriceAppreciation());
+				costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());
 				return(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
 			}			
 			public String desCOST_OF_RENTING() {return("Annual psychological cost of not owning a home");}
@@ -180,11 +180,11 @@ public class Household implements IHouseOwner {
 		static public class BuyToLetPurchaseDecision {
 			public boolean buy(double price, double monthlyPayment, double downPayment) {
 				double yield;
-				
 				yield = (monthlyPayment*12*Household.Config.RENT_PROFIT_MARGIN + HousingMarketTest.housingMarket.housePriceAppreciation()*price)/
 						downPayment;
 				
-				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
+//				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
+				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(24.0*(0.18 - yield)))) {
 					return(true);
 				}
 				return(false);
@@ -460,7 +460,7 @@ public class Household implements IHouseOwner {
 						houseMarket.updateOffer(h, newPrice);						
 					} else {
 						houseMarket.removeOffer(h);
-						if(h != home) {
+						if(h != home && h.resident == null) {
 							rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));							
 						}
 					}
@@ -557,8 +557,9 @@ public class Household implements IHouseOwner {
 		if(!housePayments.containsKey(h)) {
 			System.out.println("I don't own this house: strange");
 		}
-		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");
+		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");		
 		if(!houseMarket.isOnMarket(h)) {
+			if(rentalMarket.isOnMarket(h)) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
 			rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));
 		}
 	}
