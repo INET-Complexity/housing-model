@@ -73,12 +73,13 @@ public class Household implements IHouseOwner {
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class PurchaseEqn {
-			static public double A = 0.01;//0.2;//0.01;			// sensitivity to house price appreciation
-			static public double EPSILON = 0.3;//0.48;//0.365; // S.D. of noise
-			static public double SIGMA = 4.8*12;//5.0*12.0;//4.5*12.0;	// scale
+			static public double A = 0.48;//0.2;//0.01;			// sensitivity to house price appreciation
+			static public double EPSILON = 0.35;//0.48;//0.365; // S.D. of noise
+			static public double SIGMA = 5.5*12.0;//4.8*12;//5.0*12.0;//4.5*12.0;	// scale
 
 			public double desiredPrice(double monthlyIncome, double hpa) {
-				return(SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa));
+				double p = SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa);
+				return(p);
 			}
 
 			public String toString() {return("(SIGMA.i.exp^r)/(1-A.hpa)");}
@@ -114,8 +115,8 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
-			static public double D = 0.0011;//0.01;//0.001;		// Size of Days-on-market effect
-			static public double E = 0.02; //0.05;	// SD of noise
+			static public double D = 0.025;//0.01;//0.001;		// Size of Days-on-market effect
+			static public double E = 0.05; //0.05;	// SD of noise
 			public double desiredPrice(double pbar, double d, double principal) {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*HousingMarketTest.rand.nextGaussian();
 				return(Math.max(Math.exp(exponent), principal));
@@ -149,7 +150,7 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class RenterPurchaseDecision {
 			public double COST_OF_RENTING = 600; // Annual psychological cost of renting
-			public double FTB_K = 0.005;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
+			public double FTB_K = 1.0/600.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 			
 			public boolean buy(double housePrice, double annualRent) {
 				double costOfHouse;
@@ -184,7 +185,7 @@ public class Household implements IHouseOwner {
 						downPayment;
 				
 //				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
-				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(24.0*(0.18 - yield)))) {
+				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.3 - yield*16.0))) {
 					return(true);
 				}
 				return(false);
@@ -360,6 +361,7 @@ public class Household implements IHouseOwner {
 		home = null;
 		bankBalance = 0.0;
 		isFirstTimeBuyer = true;
+		setPropertyInvestor(false);
 		id = ++id_pool;
 	}
 
@@ -412,8 +414,8 @@ public class Household implements IHouseOwner {
 		
 		if(bankBalance < 0.0) {
 			// bankrupt behaviour
-			System.out.println("Household gone bankrupt!");
-			System.out.println("...Houses = "+housePayments.size());
+//			System.out.println("Household gone bankrupt!");
+//			System.out.println("...Houses = "+housePayments.size());
 //			int i = 0;
 //			for(House h : housePayments.keySet()) {
 //				if(h.resident == null) ++i;
@@ -438,7 +440,7 @@ public class Household implements IHouseOwner {
 	public void preHouseLettingStep() {
 		if(isHomeless()) {
 			rentalMarket.bid(this, desiredRent());
-		} else if(housePayments.size() > 1) { // this is a buy-to-let investor
+		} else if(isPropertyInvestor()) { // this is a buy-to-let investor
 			houseMarket.bid(this, bank.getMaxMortgage(this, false));
 		}
 	}
@@ -615,6 +617,9 @@ public class Household implements IHouseOwner {
 	protected void bidOnHousingMarket(double p) {
 		double desiredPrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
+		double ltiConstraint =  annualEmploymentIncome * bank.config.LTI/bank.loanToValue(this, true); // ##### TEST #####
+		if(desiredPrice > ltiConstraint) desiredPrice = ltiConstraint - 1.0; // ##### TEST #####
+//		if(desiredPrice > maxMortgage) desiredPrice = maxMortgage - 1;
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
 				if(rand.nextDouble() < p) houseMarket.bid(this, desiredPrice);
@@ -636,11 +641,14 @@ public class Household implements IHouseOwner {
 		double costOfRent;
 		double housePrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
+		double ltiConstraint =  annualEmploymentIncome * bank.config.LTI/bank.loanToValue(this, true); // ##### TEST #####
+		if(housePrice > ltiConstraint) housePrice = ltiConstraint - 1.0; // ##### TEST #####
 		if(housePrice <= maxMortgage) {
 			if(home != null) {
 				costOfRent = housePayments.get(home).monthlyPayment*12;
 			} else {
 				costOfRent = rentalMarket.averageSalePrice[0]*12;
+//				costOfRent = 0.0;
 			}
 			if(config.renterPurchaseDecision.buy(housePrice, costOfRent)) {
 				houseMarket.bid(this, housePrice);
@@ -755,9 +763,14 @@ public class Household implements IHouseOwner {
 	}
 
 	public boolean isPropertyInvestor() {
-		return(housePayments.size() > 1);
+//		return(housePayments.size() > 1);
+		return(propertyInvestor);
 	}
 	
+	public void setPropertyInvestor(boolean propertyInvestor) {
+		this.propertyInvestor = propertyInvestor;
+	}
+
 	public boolean isCollectingRentFrom(House h) {
 		return(h.owner == this && h != home && h.resident != null);
 	}
@@ -894,6 +907,7 @@ public class Household implements IHouseOwner {
 	protected House		home; // current home
 	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned
 	private boolean		isFirstTimeBuyer;
+	private boolean 	propertyInvestor;
 	Bank				bank;
 	//double				age;
 	protected MersenneTwisterFast 	rand;

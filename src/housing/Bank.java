@@ -18,7 +18,7 @@ public class Bank {
 		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
 		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
-		public double LTI = 4.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14
+		public double LTI = 6.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14
 		public int    N_PAYMENTS = 12*25; // number of monthly repayments
 
 		// ---- Mason stuff

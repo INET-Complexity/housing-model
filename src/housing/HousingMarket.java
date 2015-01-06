@@ -251,8 +251,8 @@ public class HousingMarket {
 				seller = sellers.lower(ceilingSeller); // cheapest seller at this quality
 			}
 			if(seller != null) {
-				completeTransaction(buyer, seller);
 				removeOffer(seller.house);
+				completeTransaction(buyer, seller);
 				sellers.remove(seller);
 			}
 		}

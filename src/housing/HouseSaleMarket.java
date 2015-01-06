@@ -49,9 +49,9 @@ public class HouseSaleMarket extends HousingMarket {
 				buyer = potentialBuyers.get(i);
 				if(buyer.buyer != seller.house.owner && 
 						buyer.buyer.decideToBuyBuyToLet(seller.currentPrice)) {
+					removeOffer(seller.house);
 					completeTransaction(buyer, seller);
 					potentialBuyers.remove(buyer);
-					onMarket.remove(seller.house);
 					saleIt.remove();
 				}
 			}

@@ -110,6 +110,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 			while(n>0 && i>=0) { 			
 				houses[i].owner = households[j];
 				houses[i].resident = null;
+				households[j].setPropertyInvestor(true);
 				p = (int)(bank.config.N_PAYMENTS*rand.nextDouble()); // number of payments outstanding
 				price = Math.min(
 						HousingMarket.referencePrice(houses[i].quality)
