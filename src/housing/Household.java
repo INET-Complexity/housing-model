@@ -73,9 +73,9 @@ public class Household implements IHouseOwner {
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class PurchaseEqn {
-			static public double A = 0.48;//0.2;//0.01;			// sensitivity to house price appreciation
-			static public double EPSILON = 0.35;//0.48;//0.365; // S.D. of noise
-			static public double SIGMA = 5.5*12.0;//4.8*12;//5.0*12.0;//4.5*12.0;	// scale
+			static public double A = 0.4;//0.48;			// sensitivity to house price appreciation
+			static public double EPSILON = 0.36;//0.48;//0.365; // S.D. of noise
+			static public double SIGMA = 5.6*12.0;//5.5;	// scale
 
 			public double desiredPrice(double monthlyIncome, double hpa) {
 				double p = SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa);
@@ -115,7 +115,7 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
-			static public double D = 0.025;//0.01;//0.001;		// Size of Days-on-market effect
+			static public double D = 0.024;//0.01;//0.001;		// Size of Days-on-market effect
 			static public double E = 0.05; //0.05;	// SD of noise
 			public double desiredPrice(double pbar, double d, double principal) {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*HousingMarketTest.rand.nextGaussian();
@@ -185,7 +185,7 @@ public class Household implements IHouseOwner {
 						downPayment;
 				
 //				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
-				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.3 - yield*16.0))) {
+				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.4 - yield*16.0))) {
 					return(true);
 				}
 				return(false);
