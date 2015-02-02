@@ -294,7 +294,11 @@ public class HousingMarket {
 	static public double referencePrice(int q) {
 		return(Config.listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY));
 	}
-	
+
+	public double getAverageSalePrice(int q) {
+		return(averageSalePrice[q]);
+	}
+
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	
@@ -326,7 +330,7 @@ public class HousingMarket {
 	
 	// ---- statistics
 	public double averageDaysOnMarket;
-	public double averageSalePrice[] = new double[House.Config.N_QUALITY];
+	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
 	public double HPIAppreciation;
 	public double housePriceIndex;
 

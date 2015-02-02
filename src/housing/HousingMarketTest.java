@@ -56,7 +56,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 		int i, j, p, n;
 		double price;
 		LogNormalDistribution incomeDistribution;		// Annual household post-tax income
-		LogNormalDistribution buyToLetDistribution; 	// No. of houses owned by buy-to-let investors
+		LogNormalDistribution buyToLetDistribution; 	// No. of houses owned by buy-to-let investors (ARLA review and index 2014)
 		
 		incomeDistribution 	  = new LogNormalDistribution(Household.Config.INCOME_LOG_MEDIAN, Household.Config.INCOME_SHAPE);
 //		residenceDistribution = new LogNormalDistribution(Math.log(190000), 0.568); // Source: ONS, Wealth in Great Britain wave 3
@@ -110,22 +110,27 @@ public class HousingMarketTest extends SimState implements Steppable {
 			while(n>0 && i>=0) { 			
 				houses[i].owner = households[j];
 				houses[i].resident = null;
-				households[j].setPropertyInvestor(true);
 				p = (int)(bank.config.N_PAYMENTS*rand.nextDouble()); // number of payments outstanding
 				price = Math.min(
 						HousingMarket.referencePrice(houses[i].quality)
 						/(Math.pow(1.0+INFLATION,Math.floor((bank.config.N_PAYMENTS-p)/12.0))),
 						bank.getMaxMortgage(households[j], false)
 						);
-				households[j].completeHousePurchase(new HouseSaleRecord(houses[i], price));		
+				households[j].completeHousePurchase(new HouseSaleRecord(houses[i], price));	
 				--i;
 				--n;
 			}
+			households[j].desiredPropertyInvestmentFraction = 123.4; // temporary flag for later
 		}
 
 		for(j = 0; j<N; ++j) { // setup financial wealth
 			households[j].bankBalance = grossFinancialWealth.inverseCumulativeProbability((j+0.5)/N);
 //			System.out.println(households[j].monthlyPersonalIncome*12+" "+households[j].bankBalance/households[j].monthlyPersonalIncome);
+			if(households[j].isPropertyInvestor()) {
+				price = households[j].getPropertyInvestmentValuation();
+				households[j].setDesiredPropertyInvestmentFraction(price/(price + households[j].bankBalance));
+//				System.out.println(households[j].desiredPropertyInvestmentFraction + " " + households[j].getDesiredPropertyInvestmentValue()+" "+households[j].getPropertyInvestmentValuation());
+			}
 		}
 
 		

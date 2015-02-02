@@ -32,11 +32,11 @@ public class Household implements IHouseOwner {
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*HousingMarketTest.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
-
-		public static double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
+		public double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling home
 		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
 		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
 		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
+		protected MersenneTwisterFast 	rand = HousingMarketTest.rand;
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class ConsumptionEqn {
@@ -198,8 +198,24 @@ public class Household implements IHouseOwner {
 				return(mortgagePayment*(1.0+Config.RENT_PROFIT_MARGIN));
 			}
 		}
+		
 		/////////////////////////////////////////////////////////////////////////////////
-
+		public boolean decideToSellHome() {
+			if(rand.nextDouble() < P_SELL) return(true);
+			return false;
+		}
+		
+		/////////////////////////////////////////////////////////////////////////////////
+		public boolean decideToSellInvestmentProperty(House h, Household me) {
+	//		System.out.println(me.desiredPropertyInvestmentFraction + " " + me.getDesiredPropertyInvestmentValue() + " -> "+me.getPropertyInvestmentValuation());
+			if(me.getDesiredPropertyInvestmentValue() < 
+					(me.getPropertyInvestmentValuation() - me.houseMarket.getAverageSalePrice(h.quality))) {
+				return(true);
+			}
+			return(false);
+		}
+		
+		
 		public ConsumptionEqn getConsumptionEqn() {
 			return consumptionEqn;
 		}
@@ -258,11 +274,11 @@ public class Household implements IHouseOwner {
 			DOWNPAYMENT_FRACTION = dOWNPAYMENT_FRACTION;
 		}
 
-		public static double getP_SELL() {
+		public double getP_SELL() {
 			return P_SELL;
 		}
 
-		public static void setP_SELL(double p_SELL) {
+		public void setP_SELL(double p_SELL) {
 			P_SELL = p_SELL;
 		}
 
@@ -361,7 +377,7 @@ public class Household implements IHouseOwner {
 		home = null;
 		bankBalance = 0.0;
 		isFirstTimeBuyer = true;
-		setPropertyInvestor(false);
+		setDesiredPropertyInvestmentFraction(0.0);
 		id = ++id_pool;
 	}
 
@@ -682,8 +698,10 @@ public class Household implements IHouseOwner {
 	 * Decide whether to sell ones own house.
 	 ********************************************************/
 	private boolean decideToSellHouse(House h) {
-		if(rand.nextDouble() < Config.P_SELL) return(true);
-		return false;
+		if(h == home) {
+			return(config.decideToSellHome());
+		}
+		return(config.decideToSellInvestmentProperty(h, this));
 	}
 
 	/********************************************************
@@ -764,13 +782,38 @@ public class Household implements IHouseOwner {
 
 	public boolean isPropertyInvestor() {
 //		return(housePayments.size() > 1);
-		return(propertyInvestor);
+		return(desiredPropertyInvestmentFraction > 0.0);
 	}
 	
-	public void setPropertyInvestor(boolean propertyInvestor) {
-		this.propertyInvestor = propertyInvestor;
+	//////////////////////////////////////////////////////////////////
+	// Fraction of property+financial wealth that I want to invest
+	// in buy-to-let housing
+	//////////////////////////////////////////////////////////////////
+	public void setDesiredPropertyInvestmentFraction(double val) {
+		this.desiredPropertyInvestmentFraction = val;
 	}
 
+	/////////////////////////////////////////////////////////////////
+	// Current valuation of buy-to-let properties, not including
+	// houses up for sale.
+	/////////////////////////////////////////////////////////////////
+	public double getPropertyInvestmentValuation() {
+		double valuation = 0.0;
+		for(House h : housePayments.keySet()) {
+			if(h.owner == this && h != home && !houseMarket.isOnMarket(h)) {
+				valuation += houseMarket.getAverageSalePrice(h.quality);
+			}
+		}
+		return(valuation);
+	}
+	
+	///////////////////////////////////////////////////////////////
+	// returns current desired cash value of buy-to-let property investment
+	//////////////////////////////////////////////////////////////
+	public double getDesiredPropertyInvestmentValue() {
+		return(desiredPropertyInvestmentFraction * (getPropertyInvestmentValuation() + bankBalance));
+	}
+	
 	public boolean isCollectingRentFrom(House h) {
 		return(h.owner == this && h != home && h.resident != null);
 	}
@@ -907,7 +950,7 @@ public class Household implements IHouseOwner {
 	protected House		home; // current home
 	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned
 	private boolean		isFirstTimeBuyer;
-	private boolean 	propertyInvestor;
+	public	double		desiredPropertyInvestmentFraction;
 	Bank				bank;
 	//double				age;
 	protected MersenneTwisterFast 	rand;
