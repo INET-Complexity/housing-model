@@ -63,17 +63,21 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         housePriceChart = makeScatterPlot(newTabPane, "House prices", "Modelled Price", "Reference Price");
         bankBalanceChart = makeScatterPlot(newTabPane, "Bank balances", "Balance", "Income");
         mortgageStatsChart = makeScatterPlot(newTabPane, "Mortgage stats", "Frequency", "Ratio");
-        mortgagePhaseChart = makeScatterPlot(newTabPane, "Mortgage phase",  "Deposit/income", "Loan/income");
+        mortgagePhaseChart = makeScatterPlot(newTabPane, "Mortgage phase",  "Down-payment/Income", "Loan to Income ratio");
         mortgagePhaseChart.setXAxisRange(0.0, 8.0);
         mortgagePhaseChart.setYAxisRange(0.0, 8.0);
                 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Market Statistics","Time (years)","Value")
         			.addVariable(HousingMarketTest.housingMarket,"housePriceIndex", "HPI")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageSoldPriceToOLP", "Sold Price/List price")
         			.addVariable(HousingMarketTest.housingMarket,"averageDaysOnMarket", "Years on market", new DataRecorder.Transform() {
         				public double exec(double x) {return(Math.min(x/360.0, 1.0));}
         			})
+        			.addVariable(HousingMarketTest.housingMarket.diagnostics, "nBuyers", "Buyers (1000s)", new DataRecorder.Transform() {
+        				public double exec(double x) {return(x/1000.0);}
+        			})
+//        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageSoldPriceToOLP", "Sold Price/List price")
+        			.addVariable(HousingMarketTest.bank.diagnostics,"affordability", "Affordability (Mortgage-payment/income)")
     	);
 
         timeSeriesPlots.add(
@@ -89,10 +93,10 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageOfferPrice", "Average Offer Price")        			
         );
 
-        timeSeriesPlots.add(
-        		new TimeSeriesPlot("Affordability","Time (years)","mortgage payment/income")
-        			.addVariable(HousingMarketTest.bank.diagnostics,"affordability", "Affordability")
-    	);
+//        timeSeriesPlots.add(
+//        		new TimeSeriesPlot("Affordability","Time (years)","mortgage payment/income")
+//        			.addVariable(HousingMarketTest.bank.diagnostics,"affordability", "Affordability")
+//    	);
 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Renting/Homeless Quantity","Time (years)","number")
@@ -120,7 +124,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         addSeries(housePriceChart, "Modelled prices", HousingMarketTest.housingMarket.diagnostics.priceData);
         addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);
         addSeries(mortgageStatsChart, "LTV distribution", HousingMarketTest.bank.diagnostics.ltv_distribution);
-        addSeries(mortgageStatsChart, "LTI distribution", HousingMarketTest.bank.diagnostics.lti_distribution);
+        addSeries(mortgageStatsChart, "LTI distribution (x0.1)", HousingMarketTest.bank.diagnostics.lti_distribution);
         addSeries(mortgagePhaseChart, "Approved mortgages", HousingMarketTest.bank.diagnostics.approved_mortgages);
         
         housePriceChart.addSeries(HousingMarketTest.housingMarket.diagnostics.referencePriceData, "Reference price", null);

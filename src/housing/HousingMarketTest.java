@@ -193,7 +193,7 @@ public class HousingMarketTest extends SimState implements Steppable {
 
 	public static final int N = 5000; // number of households
 	public static final int Nh = 4100; // number of houses
-	public static int N_STEPS = 5000; // timesteps
+	public static int N_STEPS = 50000; // timesteps
 
 	public static Bank 				bank = new Bank();
 	public static Government		government = new Government();
