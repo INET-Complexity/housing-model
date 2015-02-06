@@ -30,13 +30,13 @@ public class Household implements IHouseOwner {
 		public BuyToLetPurchaseDecision buyToLetPurchaseDecision = new BuyToLetPurchaseDecision();
 		public static double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
-		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*HousingMarketTest.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
+		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
 		public double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling home
 		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
 		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
 		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
-		protected MersenneTwisterFast 	rand = HousingMarketTest.rand;
+		protected MersenneTwisterFast 	rand = Model.rand;
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class ConsumptionEqn {
@@ -51,7 +51,7 @@ public class Household implements IHouseOwner {
 				}
 			}
 			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
-				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*HousingMarketTest.rand.nextGaussian())),0.0));
+				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*Model.rand.nextGaussian())),0.0));
 			}
 
 			public double getALPHA() {
@@ -78,7 +78,7 @@ public class Household implements IHouseOwner {
 			static public double SIGMA = 5.6*12.0;//5.5;	// scale
 
 			public double desiredPrice(double monthlyIncome, double hpa) {
-				double p = SIGMA*monthlyIncome*Math.exp(EPSILON*HousingMarketTest.rand.nextGaussian())/(1.0 - A*hpa);
+				double p = SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*hpa);
 				return(p);
 			}
 
@@ -118,7 +118,7 @@ public class Household implements IHouseOwner {
 			static public double D = 0.024;//0.01;//0.001;		// Size of Days-on-market effect
 			static public double E = 0.05; //0.05;	// SD of noise
 			public double desiredPrice(double pbar, double d, double principal) {
-				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*HousingMarketTest.rand.nextGaussian();
+				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 				return(Math.max(Math.exp(exponent), principal));
 			}
 			
@@ -154,8 +154,8 @@ public class Household implements IHouseOwner {
 			
 			public boolean buy(double housePrice, double annualRent) {
 				double costOfHouse;
-				costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());
-				return(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
+				costOfHouse = housePrice*((1.0-Model.bank.config.THETA_FTB)*Model.bank.mortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
+				return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
 			}			
 			public String desCOST_OF_RENTING() {return("Annual psychological cost of not owning a home");}
 			public String desFTB_K() {return("Steepness of sigma function");}
@@ -181,11 +181,11 @@ public class Household implements IHouseOwner {
 		static public class BuyToLetPurchaseDecision {
 			public boolean buy(double price, double monthlyPayment, double downPayment) {
 				double yield;
-				yield = (monthlyPayment*12*Household.Config.RENT_PROFIT_MARGIN + HousingMarketTest.housingMarket.housePriceAppreciation()*price)/
+				yield = (monthlyPayment*12*Household.Config.RENT_PROFIT_MARGIN + Model.housingMarket.housePriceAppreciation()*price)/
 						downPayment;
 				
 //				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.5 - yield*24.0))) {
-				if(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.4 - yield*16.0))) {
+				if(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.4 - yield*16.0))) {
 					return(true);
 				}
 				return(false);
@@ -306,28 +306,28 @@ public class Household implements IHouseOwner {
 	    public double [][]    rentingData;
 	    public double [][]    bankBalData;
 	    public double [][]    referenceBankBalData;
-	    public Household []	  households;
+	    public HouseholdSet	  households;
 	    public double 		  nRenting;
 	    public double 		  nHomeless;	    
 	    
-	    public Diagnostics(Household [] array) {	    	
-	    	households = array;
-	        homelessData = new double[2][HousingMarketTest.N/50];
-	        rentingData = new double[2][HousingMarketTest.N/50];
-	        bankBalData = new double[2][HousingMarketTest.N/50];
-	        referenceBankBalData = new double[2][HousingMarketTest.N/50];
+	    public Diagnostics(HouseholdSet households2) {	    	
+	    	households = households2;
+	        homelessData = new double[2][Model.households.config.N/50];
+	        rentingData = new double[2][Model.households.config.N/50];
+	        bankBalData = new double[2][Model.households.config.N/50];
+	        referenceBankBalData = new double[2][Model.households.config.N/50];
 
 	    }
 	    
 	    public void init() {
 	    	int i; 
-	        for(i = 0; i<HousingMarketTest.N-50; i += 50) {
-	        	homelessData[0][i/50] = households[i].annualEmploymentIncome;
+	        for(i = 0; i<Model.households.config.N-50; i += 50) {
+	        	homelessData[0][i/50] = households.get(i).annualEmploymentIncome;
 	        	homelessData[1][i/50] = 0.0;
-	        	rentingData[0][i/50] = households[i].annualEmploymentIncome;
-	        	bankBalData[0][i/50] = households[i].annualEmploymentIncome;
-	        	referenceBankBalData[0][i/50] = households[i].annualEmploymentIncome;
-	        	referenceBankBalData[1][i/50] = HousingMarketTest.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/HousingMarketTest.N);
+	        	rentingData[0][i/50] = households.get(i).annualEmploymentIncome;
+	        	bankBalData[0][i/50] = households.get(i).annualEmploymentIncome;
+	        	referenceBankBalData[0][i/50] = households.get(i).annualEmploymentIncome;
+	        	referenceBankBalData[1][i/50] = Model.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/Model.households.config.N);
 	        }	    	
 	    }
 	    
@@ -335,14 +335,14 @@ public class Household implements IHouseOwner {
 	    	int i,j,n,r;
 	    	nRenting = 0;
 	    	nHomeless = 0;
-	        for(i = 0; i<HousingMarketTest.N-50; i += 50) {
+	        for(i = 0; i<Model.households.config.N-50; i += 50) {
 	        	n = 0;
 	        	r = 0;
 	        	for(j = 0; j<50; ++j) {
-	        		if(households[i+j].isHomeless()) {
+	        		if(households.get(i+j).isHomeless()) {
 	        			n++;
 	        			nHomeless++;
-	        		} else if(households[i+j].isRenting()) {
+	        		} else if(households.get(i+j).isRenting()) {
 	        			r++;
 	        			nRenting++;
 	        		}
@@ -350,8 +350,8 @@ public class Household implements IHouseOwner {
 	        	homelessData[1][i/50] = n/50.0;
 	        	rentingData[1][i/50] = r/50.0;
 	        }
-	        for(i=0; i<HousingMarketTest.N-50; i+=50) {
-	        	bankBalData[1][i/50] = households[i].bankBalance;
+	        for(i=0; i<Model.households.config.N-50; i+=50) {
+	        	bankBalData[1][i/50] = households.get(i).bankBalance;
 	        }
 
 	    }
@@ -370,10 +370,10 @@ public class Household implements IHouseOwner {
 
 	public Household(Household.Config c) {
 		config = c;
-		bank = HousingMarketTest.bank;
-		houseMarket = HousingMarketTest.housingMarket;
-		rentalMarket = HousingMarketTest.rentalMarket;
-		rand = HousingMarketTest.rand;
+		bank = Model.bank;
+		houseMarket = Model.housingMarket;
+		rentalMarket = Model.rentalMarket;
+		rand = Model.rand;
 		home = null;
 		bankBalance = 0.0;
 		isFirstTimeBuyer = true;
@@ -822,14 +822,14 @@ public class Household implements IHouseOwner {
 	 * @return total annual income tax due
 	 */
 	public double getAnnualIncomeTax() {
-		return HousingMarketTest.government.incomeTaxDue(annualEmploymentIncome);
+		return Model.government.incomeTaxDue(annualEmploymentIncome);
 	}
 
 	/**
 	 * @return total annual national insurance contributions
 	 */
 	public double getAnnualNationalInsuranceTax() {
-		return HousingMarketTest.government.class1NICsDue(annualEmploymentIncome);
+		return Model.government.class1NICsDue(annualEmploymentIncome);
 	}
 
 	/**
@@ -945,7 +945,7 @@ public class Household implements IHouseOwner {
 	Household.Config	config;
 	HouseSaleMarket		houseMarket;
 	HouseRentalMarket	rentalMarket;
-	static Diagnostics	diagnostics = new Diagnostics(HousingMarketTest.households);
+	static Diagnostics	diagnostics = new Diagnostics(Model.households);
 
 	protected House		home; // current home
 	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned

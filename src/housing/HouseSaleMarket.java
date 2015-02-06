@@ -45,7 +45,7 @@ public class HouseSaleMarket extends HousingMarket {
 			
 			// --- choose potential buyer at random
 			if(!potentialBuyers.isEmpty()) {
-				i = (int)(HousingMarketTest.rand.nextDouble()*potentialBuyers.size());
+				i = (int)(Model.rand.nextDouble()*potentialBuyers.size());
 				buyer = potentialBuyers.get(i);
 				if(buyer.buyer != seller.house.owner && 
 						buyer.buyer.decideToBuyBuyToLet(seller.currentPrice)) {

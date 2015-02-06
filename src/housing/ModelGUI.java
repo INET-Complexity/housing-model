@@ -24,7 +24,7 @@ import sim.display.ChartUtilities;
  *
  ********************************************/
 @SuppressWarnings("serial")
-public class HousingMarketTestGUI extends GUIState implements Steppable {
+public class ModelGUI extends GUIState implements Steppable {
 
     private javax.swing.JFrame myChartFrame;
     
@@ -40,8 +40,8 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
     protected ArrayList<TimeSeriesPlot> timeSeriesPlots;
     
     /** Create an instance of MySecondModelGUI */
-    HousingMarketTestGUI() { 
-        super(new HousingMarketTest(1L));
+    ModelGUI() { 
+        super(new Model(1L));
         timeSeriesPlots = new ArrayList<TimeSeriesPlot>();
     }
 
@@ -69,28 +69,28 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
                 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Market Statistics","Time (years)","Value")
-        			.addVariable(HousingMarketTest.housingMarket,"housePriceIndex", "HPI")
-        			.addVariable(HousingMarketTest.housingMarket,"averageDaysOnMarket", "Years on market", new DataRecorder.Transform() {
+        			.addVariable(Model.housingMarket,"housePriceIndex", "HPI")
+        			.addVariable(Model.housingMarket,"averageDaysOnMarket", "Years on market", new DataRecorder.Transform() {
         				public double exec(double x) {return(Math.min(x/360.0, 1.0));}
         			})
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics, "nBuyers", "Buyers (1000s)", new DataRecorder.Transform() {
+        			.addVariable(Model.housingMarket.diagnostics, "nBuyers", "Buyers (1000s)", new DataRecorder.Transform() {
         				public double exec(double x) {return(x/1000.0);}
         			})
 //        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageSoldPriceToOLP", "Sold Price/List price")
-        			.addVariable(HousingMarketTest.bank.diagnostics,"affordability", "Affordability (Mortgage-payment/income)")
+        			.addVariable(Model.bank.diagnostics,"affordability", "Affordability (Mortgage-payment/income)")
     	);
 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Bid/Offer quantities","Time (years)","Number")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nSales", "Transactions")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nSellers", "Sellers")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"nBuyers", "Buyers")
+        			.addVariable(Model.housingMarket.diagnostics,"nSales", "Transactions")
+        			.addVariable(Model.housingMarket.diagnostics,"nSellers", "Sellers")
+        			.addVariable(Model.housingMarket.diagnostics,"nBuyers", "Buyers")
     	);
         
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Bid/Offer Prices","Time (years)","Price")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageBidPrice", "Average Bid Price")
-        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageOfferPrice", "Average Offer Price")        			
+        			.addVariable(Model.housingMarket.diagnostics,"averageBidPrice", "Average Bid Price")
+        			.addVariable(Model.housingMarket.diagnostics,"averageOfferPrice", "Average Offer Price")        			
         );
 
 //        timeSeriesPlots.add(
@@ -121,13 +121,13 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         
         addSeries(housingChart, "Homeless", Household.diagnostics.homelessData);
         addSeries(housingChart, "Renting", Household.diagnostics.rentingData);
-        addSeries(housePriceChart, "Modelled prices", HousingMarketTest.housingMarket.diagnostics.priceData);
+        addSeries(housePriceChart, "Modelled prices", Model.housingMarket.diagnostics.priceData);
         addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);
-        addSeries(mortgageStatsChart, "LTV distribution", HousingMarketTest.bank.diagnostics.ltv_distribution);
-        addSeries(mortgageStatsChart, "LTI distribution (x0.1)", HousingMarketTest.bank.diagnostics.lti_distribution);
-        addSeries(mortgagePhaseChart, "Approved mortgages", HousingMarketTest.bank.diagnostics.approved_mortgages);
+        addSeries(mortgageStatsChart, "LTV distribution", Model.bank.diagnostics.ltv_distribution);
+        addSeries(mortgageStatsChart, "LTI distribution (x0.1)", Model.bank.diagnostics.lti_distribution);
+        addSeries(mortgagePhaseChart, "Approved mortgages", Model.bank.diagnostics.approved_mortgages);
         
-        housePriceChart.addSeries(HousingMarketTest.housingMarket.diagnostics.referencePriceData, "Reference price", null);
+        housePriceChart.addSeries(Model.housingMarket.diagnostics.referencePriceData, "Reference price", null);
         bankBalanceChart.addSeries(Household.diagnostics.referenceBankBalData, "Reference bank balance", null);
 
         // Execute when each time-step is complete
@@ -137,7 +137,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
     /** Called after each simulation step. */
     @Override
     public void step(SimState state) {
-        HousingMarketTest myModel = (HousingMarketTest)state;
+        Model myModel = (Model)state;
         double t = myModel.schedule.getTime()/12.0;
         
         for(TimeSeriesPlot plot : timeSeriesPlots) {
@@ -145,8 +145,8 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         }
         
         Household.diagnostics.step();
-        HousingMarketTest.bank.diagnostics.step();
-        HousingMarketTest.housingMarket.diagnostics.step();
+        Model.bank.diagnostics.step();
+        Model.housingMarket.diagnostics.step();
     }
     
     
@@ -192,7 +192,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
     // Java entry point
     public static void main(String[] args) {
         // Create a console for the GUI
-        Console console = new Console(new HousingMarketTestGUI());
+        Console console = new Console(new ModelGUI());
         console.setVisible(true);
     }
 

@@ -93,7 +93,7 @@ public class HousingMarket {
 		public void step() {
 	        int i;
 	        for(i=0; i<House.Config.N_QUALITY; ++i) {
-	        	priceData[1][i] = HousingMarketTest.housingMarket.averageSalePrice[i];
+	        	priceData[1][i] = Model.housingMarket.averageSalePrice[i];
 	        }
 		}
 		
@@ -267,7 +267,7 @@ public class HousingMarket {
 	 **********************************************/
 	public void completeTransaction(HouseBuyerRecord b, HouseSaleRecord sale) {
 		// --- update sales statistics		
-		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(HousingMarketTest.t - sale.tInitialListing);
+		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.t - sale.tInitialListing);
 		averageSalePrice[sale.quality] = Config.G*averageSalePrice[sale.quality] + (1.0-Config.G)*sale.currentPrice;
 		diagnostics.recordSale(sale);
 	}
