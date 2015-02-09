@@ -25,7 +25,7 @@ public class Model extends SimState implements Steppable {
 		super.start();
         schedule.scheduleRepeating(this);
         households.start();
-        houses.start();
+//        houses.start();
 		initialise();
 		t=0;
 	}
@@ -51,37 +51,32 @@ public class Model extends SimState implements Steppable {
 	// Initialisation
 	////////////////////////////////////////////////////////////////////////
 	static void initialise() {		
+		/***
 		final double RENTERS = 0.32; // proportion of population who rent
 		final double OWNERS = 0.32;  // proportion of population outright home-owners (no mortgage)
 		final double INFLATION = 0.5; // average house-price inflation over last 25 years (not verified)
-		final double INCOME_SUPPORT = 113.7*52.0; // married couple lower earnings from income support Source: www.nidirect.gov.uk
+//		final double INCOME_SUPPORT = 113.7*52.0; // married couple lower earnings from income support Source: www.nidirect.gov.uk
 		
 		int i, j, p, n;
 		double price;
-		LogNormalDistribution incomeDistribution;		// Annual household post-tax income
-		LogNormalDistribution buyToLetDistribution; 	// No. of houses owned by buy-to-let investors (ARLA review and index 2014)
+//		LogNormalDistribution incomeDistribution;		// Annual household post-tax income
+//		LogNormalDistribution buyToLetDistribution; 	// No. of houses owned by buy-to-let investors (ARLA review and index 2014)
 		
-		incomeDistribution 	  = new LogNormalDistribution(Household.Config.INCOME_LOG_MEDIAN, Household.Config.INCOME_SHAPE);
+//		incomeDistribution 	  = new LogNormalDistribution(Household.Config.INCOME_LOG_MEDIAN, Household.Config.INCOME_SHAPE);
 //		residenceDistribution = new LogNormalDistribution(Math.log(190000), 0.568); // Source: ONS, Wealth in Great Britain wave 3
-		buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); 	// Source: ARLA report Q2 2014
+//		buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); 	// Source: ARLA report Q2 2014
 		grossFinancialWealth  = new LogNormalDistribution(Math.log(9500), 2.259); 	// Source: ONS Wealth in Great Britain table 5.8
-		
-		for(j = 0; j<households.config.N; ++j) { // setup households
-			households.get(j).annualEmploymentIncome = incomeDistribution.inverseCumulativeProbability((j+0.5)/households.config.N);
-			if(households.get(j).annualEmploymentIncome < INCOME_SUPPORT) households.get(j).annualEmploymentIncome = INCOME_SUPPORT;
-			households.get(j).bankBalance = 1e8; // Interim value to ensure liquidity during initialisation of housing
-		}
-		
+				
 		i = houses.config.N-1;
 		for(j = households.config.N-1; j>=0 && i > RENTERS*houses.config.N; --j) { // assign houses to homeowners with sigma function probability
 			if(1.0/(1.0+Math.exp((j*1.0/households.config.N - RENTERS)/0.04)) < rand.nextDouble()) {
-				houses.get(i).owner = households.get(j);
-				houses.get(i).resident = households.get(j);
-				households.get(j).home = houses.get(i);
+	//			houses.get(i).owner = households.get(j);
+	//			houses.get(i).resident = households.get(j);
+	//			households.get(j).home = houses.get(i);
 				if(rand.nextDouble() < OWNERS/(1.0-RENTERS)) {
 					// household owns house outright
-					households.get(j).completeHousePurchase(new HouseSaleRecord(houses.get(i), 0));
-					households.get(j).housePayments.get(houses.get(i)).nPayments = 0;
+	//				households.get(j).completeHousePurchase(new HouseSaleRecord(houses.get(i), 0));
+	//				households.get(j).housePayments.get(houses.get(i)).nPayments = 0;
 				} else {
 					// household is still paying off mortgage
 					p = (int)(bank.config.N_PAYMENTS*rand.nextDouble()); // number of payments outstanding
@@ -133,6 +128,7 @@ public class Model extends SimState implements Steppable {
 			if(households.get(j).isHomeless()) rentalMarket.bid(households.get(j), households.get(j).desiredRent());
 		}
 		rentalMarket.clearMarket();				
+		***/
 	}
 
 	////////////////////////////////////////////////////////////////////////
@@ -170,7 +166,7 @@ public class Model extends SimState implements Steppable {
 	public String nameN() {return("Number of households");}
 	
 	public static int getNh() {
-		return houses.config.N;
+		return Nh;
 	}
 	public String nameNh() {return("Number of houses");}
 
@@ -187,7 +183,7 @@ public class Model extends SimState implements Steppable {
 	////////////////////////////////////////////////////////////////////////
 
 //	public static final int N = 5000; // number of households
-//	public static final int Nh = 4100; // number of houses
+	public static final int Nh = 4100; // number of houses
 	public static int N_STEPS = 50000; // timesteps
 
 	public static Bank 				bank = new Bank();
@@ -198,10 +194,10 @@ public class Model extends SimState implements Steppable {
 //	public static Household 		households[] = new Household[N];
 	public static HouseholdSet 		households = new HouseholdSet();
 //	public static House 			houses[] = new House[Nh];
-	public static HousingStock		houses = new HousingStock();
+//	public static HousingStock		houses = new HousingStock();
 	public static int 				t;
 	public static MersenneTwisterFast			rand = new MersenneTwisterFast(1L);
 	
-	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
+//	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
 
 }

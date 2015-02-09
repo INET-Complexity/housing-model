@@ -26,6 +26,7 @@ public class Household implements IHouseOwner {
 		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
 		public PurchaseEqn		purchaseEqn = new PurchaseEqn();
 		public SaleEqn			saleEqn = new SaleEqn();
+		public RentalOfferPriceEqn rentalOfferPriceEqn = new RentalOfferPriceEqn();
 		public RenterPurchaseDecision renterPurchaseDecision = new RenterPurchaseDecision();
 		public BuyToLetPurchaseDecision buyToLetPurchaseDecision = new BuyToLetPurchaseDecision();
 		public static double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
@@ -33,8 +34,6 @@ public class Household implements IHouseOwner {
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
 		public double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling home
-		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
-		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
 		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
 		protected MersenneTwisterFast 	rand = Model.rand;
 
@@ -327,7 +326,7 @@ public class Household implements IHouseOwner {
 	        	rentingData[0][i/50] = households.get(i).annualEmploymentIncome;
 	        	bankBalData[0][i/50] = households.get(i).annualEmploymentIncome;
 	        	referenceBankBalData[0][i/50] = households.get(i).annualEmploymentIncome;
-	        	referenceBankBalData[1][i/50] = Model.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/Model.households.config.N);
+	        	referenceBankBalData[1][i/50] = Model.households.config.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/Model.households.config.N);
 	        }	    	
 	    }
 	    
@@ -479,7 +478,7 @@ public class Household implements IHouseOwner {
 					} else {
 						houseMarket.removeOffer(h);
 						if(h != home && h.resident == null) {
-							rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));							
+							rentalMarket.offer(h, config.rentalOfferPriceEqn.price(housePayments.get(h).monthlyPayment));							
 						}
 					}
 				} else if(decideToSellHouse(h)) { // put house on market
@@ -578,7 +577,7 @@ public class Household implements IHouseOwner {
 		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");		
 		if(!houseMarket.isOnMarket(h)) {
 			if(rentalMarket.isOnMarket(h)) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
-			rentalMarket.offer(h, housePayments.get(h).monthlyPayment*(1.0+Config.RENT_PROFIT_MARGIN));
+			rentalMarket.offer(h, config.rentalOfferPriceEqn.price(housePayments.get(h).monthlyPayment));
 		}
 	}
 
@@ -874,7 +873,7 @@ public class Household implements IHouseOwner {
 		double propertyIncome = 0.0;
 		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
 			if (isCollectingRentFrom(payment.getKey())) {
-				propertyIncome += payment.getValue().monthlyPayment * (1.0 + Config.RENT_PROFIT_MARGIN);
+				propertyIncome += config.rentalOfferPriceEqn.price(payment.getValue().monthlyPayment);
 			}
 		}
 		return propertyIncome;
