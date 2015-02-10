@@ -1,7 +1,5 @@
 package housing;
 
-import org.apache.commons.math3.distribution.LogNormalDistribution;
-
 import ec.util.MersenneTwisterFast;
 
 import sim.engine.SimState;

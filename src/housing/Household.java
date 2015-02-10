@@ -1,10 +1,9 @@
 package housing;
 
-import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
-
 import ec.util.MersenneTwisterFast;
+
 /**********************************************
  * This represents a household who receives an income, consumes,
  * saves and can buy/sell/let/invest-in houses.
@@ -17,6 +16,19 @@ public class Household implements IHouseOwner {
 	protected double annualEmploymentIncome;
 	protected double bankBalance;
 
+	public class RenterBehaviour {
+		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
+		public double FTB_K = 1.0/600.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
+		
+		public boolean purchaseDecision(double housePrice, double annualRent) {
+			double costOfHouse;
+			costOfHouse = housePrice*((1.0-Model.bank.config.THETA_FTB)*Model.bank.mortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
+			return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
+		};
+		
+		
+	}
+	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Configuration
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -39,6 +51,7 @@ public class Household implements IHouseOwner {
 
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class ConsumptionEqn {
+/***
 			public double ALPHA = 0.2; // propensity to consume income
 			public double BETA = 0.01; // propensity to consume liquid wealth
 			
@@ -49,25 +62,16 @@ public class Household implements IHouseOwner {
 					return(BETA*Math.max(bankBalance + disposableIncome,0.0));
 				}
 			}
+			***/
 			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
 				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*Model.rand.nextGaussian())),0.0));
 			}
 
-			public double getALPHA() {
-				return ALPHA;
-			}
-			public void setALPHA(double aLPHA) {
-				ALPHA = aLPHA;
-			}
-			public double getBETA() {
-				return BETA;
-			}
-			public void setBETA(double bETA) {
-				BETA = bETA;
-			}
+//			public double getALPHA() {return ALPHA;} public void setALPHA(double aLPHA) {ALPHA = aLPHA;}
+//			public double getBETA() {return BETA;} public void setBETA(double bETA) {BETA = bETA;}
 			public String toString() {return "Household Consumption Equation";}
-			public String desALPHA() {return("Marginal propensity to consume income");}
-			public String desBETA() {return("Marginal propensity to consume liquid wealth");}
+//			public String desALPHA() {return("Marginal propensity to consume income");}
+//			public String desBETA() {return("Marginal propensity to consume liquid wealth");}
 		}
 
 		/////////////////////////////////////////////////////////////////////////////////
@@ -85,29 +89,9 @@ public class Household implements IHouseOwner {
 			public String desA() {return("Sensitivity to house price appreciation");}
 			public String desEPSILON() {return("Standard Deviation of noise term");}
 			public String desSIGMA() {return("Price level factor");}
-			public static double getA() {
-				return A;
-			}
-
-			public static void setA(double a) {
-				A = a;
-			}
-
-			public static double getEPSILON() {
-				return EPSILON;
-			}
-
-			public static void setEPSILON(double ePSILON) {
-				EPSILON = ePSILON;
-			}
-
-			public static double getSIGMA() {
-				return SIGMA;
-			}
-
-			public static void setSIGMA(double sIGMA) {
-				SIGMA = sIGMA;
-			}
+			public static double getA() {return A;}	public static void setA(double a) {A = a;}
+			public static double getEPSILON() {return EPSILON;}	public static void setEPSILON(double ePSILON) {EPSILON = ePSILON;}
+			public static double getSIGMA() {return SIGMA;}	public static void setSIGMA(double sIGMA) {SIGMA = sIGMA;}
 			
 		}
 
@@ -372,7 +356,7 @@ public class Household implements IHouseOwner {
 		bank = Model.bank;
 		houseMarket = Model.housingMarket;
 		rentalMarket = Model.rentalMarket;
-		rand = Model.rand;
+//		rand = Model.rand;
 		home = null;
 		bankBalance = 0.0;
 		isFirstTimeBuyer = true;
@@ -394,50 +378,23 @@ public class Household implements IHouseOwner {
 		double disposableIncome;
 		
 		disposableIncome = getMonthlyDisposableIncome() - 0.8 * Government.Config.INCOME_SUPPORT;
-
-//		System.out.println("income = "+monthlyIncome+" disposable = "+disposableIncome );
 		
 		// ---- Pay rent/mortgage(s)
-		Iterator<Map.Entry<House,MortgageApproval> > mapIt = housePayments.entrySet().iterator();
-		Map.Entry<House,MortgageApproval> payment;
-		while(mapIt.hasNext()) {
-			payment = mapIt.next();
-			if(payment.getValue().nPayments > 0) {
-				disposableIncome -= payment.getValue().makeMonthlyPayment();
-				if(isCollectingRentFrom(payment.getKey())) {
-					// profit from rent collection
-					//disposableIncome += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
-				}
-				if(payment.getValue().nPayments == 0) { // do paid-off stuff
-					if(payment.getKey().owner != this) { // renting
-						if(home == null) System.out.println("Strange: paying rent and homeless");
-						if(payment.getKey() != home) System.out.println("Strange: I seem to be renting a house but not living in it");
-						if(home.resident != this) System.out.println("home/resident link is broken");
-						payment.getKey().owner.endOfLettingAgreement(payment.getKey());
-						home.resident = null;
-						home = null;
-						mapIt.remove();
-					}
-				}
+		for(MortgageApproval p : housePayments.values()) {
+			if(p.nPayments > 0) {
+				disposableIncome -= p.makeMonthlyPayment();					
 			}
+		}
+		if(isRenting() && housePayments.get(home).nPayments == 0) { // move out at end of tenancy
+			home.owner.endOfLettingAgreement(home);
+			endTenancy();
 		}
 		
 		// --- consume
-//		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
 		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumptionB(getMonthlyEmploymentIncome(),bankBalance);
-//		bankBalance += -config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
 		
 		if(bankBalance < 0.0) {
-			// bankrupt behaviour
-//			System.out.println("Household gone bankrupt!");
-//			System.out.println("...Houses = "+housePayments.size());
-//			int i = 0;
-//			for(House h : housePayments.keySet()) {
-//				if(h.resident == null) ++i;
-//			}
-//			System.out.println("...Empty = "+i);
-				
-			// TODO: cash injection for now...
+			// TODO: bankrupt behaviour...cash injection for now...
 			bankBalance = 1.0;
 		}
 		
@@ -468,8 +425,11 @@ public class Household implements IHouseOwner {
 		HouseSaleRecord forSale;
 		double newPrice;
 		
-		for(House h : housePayments.keySet()) {
-			if(h.owner == this) {
+		// ---- try to buy house?
+		if(!isHomeowner()) {
+			considerBecomingHomeowner();
+		} else {
+			for(House h : housePayments.keySet()) {
 				forSale = houseMarket.getSaleRecord(h);
 				if(forSale != null) { // reprice house for sale
 					newPrice = rethinkHouseSalePrice(forSale);
@@ -492,11 +452,6 @@ public class Household implements IHouseOwner {
 					));
 				}
 			}
-		}
-		
-		// ---- try to buy house?
-		if(!isHomeowner()) {
-			decideToStopRenting();
 		}
 	}
 	
@@ -603,7 +558,7 @@ public class Household implements IHouseOwner {
 			rent.downPayment = 0.0;
 			rent.monthlyPayment = sale.currentPrice;
 			rent.monthlyInterestRate = 0.0;
-			rent.nPayments = (int)(12.0*rand.nextDouble()+1);
+			rent.nPayments = (int)(12.0*Model.rand.nextDouble()+1);
 			rent.principal = rent.monthlyPayment*rent.nPayments;
 			housePayments.put(sale.house, rent);
 		}
@@ -637,7 +592,7 @@ public class Household implements IHouseOwner {
 //		if(desiredPrice > maxMortgage) desiredPrice = maxMortgage - 1;
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
-				if(rand.nextDouble() < p) houseMarket.bid(this, desiredPrice);
+				if(Model.rand.nextDouble() < p) houseMarket.bid(this, desiredPrice);
 			} else {
 				// no need to call random if p = 1.0
 				houseMarket.bid(this, desiredPrice);				
@@ -652,7 +607,7 @@ public class Household implements IHouseOwner {
 	 * COST_OF_RENTING being an intrinsic psychological cost of not
 	 * owning. 
 	 ********************************************************/
-	protected void decideToStopRenting() {
+	protected void considerBecomingHomeowner() {
 		double costOfRent;
 		double housePrice = config.purchaseEqn.desiredPrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
@@ -671,27 +626,6 @@ public class Household implements IHouseOwner {
 		}
 	}
 	
-	/********************************************************
-	 * Calculate the price of a house that this household would like to buy
-	 * 
-	 * @return The desired price.
-	 ********************************************************/
-//	public double desiredHousePurchasePrice() {
-//		final double h = 0.4;//38.8;
-//		final double g = 1.0;//0.56;
-//		final double a = 0.01;//0.16;//0.16;
-//		final double tau = 0.02;
-//		final double c = 0.03;
-//		double epsilon;
-		
-//		epsilon = Math.exp(0.46*rand.nextGaussian() - 0.13);
-
-		//		return(epsilon * h * Math.pow(monthlyPersonalIncome*12, g)/
-//		(tau + c + bank.loanToValue(this,true)*bank.mortgageInterestRate() - a*houseMarket.housePriceAppreciation()));
-		
-//		return(config.purchaseEqn.SIGMA*monthlyPersonalIncome*12.0*Math.exp(config.purchaseEqn.EPSILON*rand.nextGaussian())/
-//				(1.0 - config.purchaseEqn.A*houseMarket.housePriceAppreciation()));
-//	}
 	
 	/********************************************************
 	 * Decide whether to sell ones own house.
@@ -702,27 +636,6 @@ public class Household implements IHouseOwner {
 		}
 		return(config.decideToSellInvestmentProperty(h, this));
 	}
-
-	/********************************************************
-	 * Decide the initial list price if this household was to put
-	 * its own home on the market.
-	 ********************************************************/
-//	public double desiredHouseSalePrice(House house) {
-		/**	Original version (Axtell):	
-		double exponent = 
-				0.22
-				+ 0.99*Math.log(houseMarket.averageListPrice[house.quality])
-				+ 0.22*Math.log(houseMarket.averageSoldPriceToOLP)
-				- 0.01*Math.log(houseMarket.averageDaysOnMarket + 1)
-				+ 0.01*rand.nextGaussian();
-				**/
-//		double exponent = 
-//				0.095
-//				+ Math.log(houseMarket.averageSalePrice[house.quality])
-//				- 0.01*Math.log((houseMarket.averageDaysOnMarket + 1.0)/31.0)
-//				+ 0.05*rand.nextGaussian();
-//		return(Math.max(Math.exp(exponent), housePayments.get(house).principal));
-//	}
 
 	
 	/********************************************************
@@ -951,8 +864,6 @@ public class Household implements IHouseOwner {
 	private boolean		isFirstTimeBuyer;
 	public	double		desiredPropertyInvestmentFraction;
 	Bank				bank;
-	//double				age;
-	protected MersenneTwisterFast 	rand;
 	public int		 id;
 	static int		 id_pool;
 
