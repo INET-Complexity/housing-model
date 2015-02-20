@@ -74,7 +74,7 @@ public class Household implements IHouseOwner {
 		/////////////////////////////////////////////////////////////////////////////////
 		static public class PurchaseEqn {
 			static public double A = 0.4;//0.48;			// sensitivity to house price appreciation
-			static public double EPSILON = 0.36;//0.48;//0.365; // S.D. of noise
+			static public double EPSILON = 0.40;//0.36;//0.48;//0.365; // S.D. of noise
 			static public double SIGMA = 5.6*12.0;//5.5;	// scale
 
 			public double desiredPrice(double monthlyIncome, double hpa) {
@@ -377,8 +377,8 @@ public class Household implements IHouseOwner {
 		rand = HousingMarketTest.rand;
 		home = null;
 		bankBalance = 0.0;
-//		isFirstTimeBuyer = true; 
-		isFirstTimeBuyer = false; // FTB makes no sense in a model with no creation of new households
+		isFirstTimeBuyer = true; 
+//		isFirstTimeBuyer = false; // FTB makes no sense in a model with no creation of new households
 		setDesiredPropertyInvestmentFraction(0.0);
 		id = ++id_pool;
 	}
