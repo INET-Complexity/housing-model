@@ -99,8 +99,8 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
 //    	);
 
         timeSeriesPlots.add(
-        		new TimeSeriesPlot("Renting/Homeless Quantity","Time (years)","number")
-        			.addVariable(Household.diagnostics,"nHomeless", "Homeless")
+        		new TimeSeriesPlot("Renting/SocialHousing Quantity","Time (years)","number")
+        			.addVariable(Household.diagnostics,"nHomeless", "Social-Housing")
         			.addVariable(Household.diagnostics,"nRenting", "Renting")        			
     	);
         
@@ -119,7 +119,7 @@ public class HousingMarketTestGUI extends GUIState implements Steppable {
         super.start();
         Household.diagnostics.init();
         
-        addSeries(housingChart, "Homeless", Household.diagnostics.homelessData);
+        addSeries(housingChart, "Social Housing", Household.diagnostics.homelessData);
         addSeries(housingChart, "Renting", Household.diagnostics.rentingData);
         addSeries(housePriceChart, "Modelled prices", HousingMarketTest.housingMarket.diagnostics.priceData);
         addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);

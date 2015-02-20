@@ -195,7 +195,9 @@ public class Bank {
 		
 		if(h.bankBalance < approval.downPayment) {
 			System.out.println("Failed down-payment constraint: bank balance = "+h.bankBalance+" Downpayment = "+approval.downPayment);
-			return(null);
+			System.out.println("isHome = "+isHome+" isFirstTimeBuyer = "+h.isFirstTimeBuyer());
+			approval.downPayment = h.bankBalance;
+//			return(null);
 		}
 		// --- allow larger downpayments
 		if(desiredDownPayment > h.bankBalance) desiredDownPayment = h.bankBalance;

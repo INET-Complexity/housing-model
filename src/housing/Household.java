@@ -152,9 +152,10 @@ public class Household implements IHouseOwner {
 			public double COST_OF_RENTING = 600; // Annual psychological cost of renting
 			public double FTB_K = 1.0/600.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 			
-			public boolean buy(double housePrice, double annualRent) {
+			public boolean buy(Household h, double housePrice, double annualRent) {
 				double costOfHouse;
-				costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());
+//				costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());
+				costOfHouse = housePrice*(HousingMarketTest.bank.loanToValue(h,true)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());
 				return(HousingMarketTest.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
 			}			
 			public String desCOST_OF_RENTING() {return("Annual psychological cost of not owning a home");}
@@ -376,7 +377,8 @@ public class Household implements IHouseOwner {
 		rand = HousingMarketTest.rand;
 		home = null;
 		bankBalance = 0.0;
-		isFirstTimeBuyer = true;
+//		isFirstTimeBuyer = true; 
+		isFirstTimeBuyer = false; // FTB makes no sense in a model with no creation of new households
 		setDesiredPropertyInvestmentFraction(0.0);
 		id = ++id_pool;
 	}
@@ -531,6 +533,9 @@ public class Household implements IHouseOwner {
 			if(isHomeowner()) System.out.println("Is homeowner");
 			if(isHomeless()) System.out.println("Is homeless");
 			if(isFirstTimeBuyer()) System.out.println("Is firsttimebuyer");
+			if(isPropertyInvestor()) System.out.println("Is investor");
+			System.out.println("House owner = "+sale.house.owner);
+			System.out.println("me = "+this);
 		}
 		bankBalance -= mortgage.downPayment;
 		housePayments.put(sale.house, mortgage);
@@ -666,7 +671,7 @@ public class Household implements IHouseOwner {
 				costOfRent = rentalMarket.averageSalePrice[0]*12;
 //				costOfRent = 0.0;
 			}
-			if(config.renterPurchaseDecision.buy(housePrice, costOfRent)) {
+			if(config.renterPurchaseDecision.buy(this, housePrice, costOfRent)) {
 				houseMarket.bid(this, housePrice);
 			}
 		}
