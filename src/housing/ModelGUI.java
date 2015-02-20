@@ -1,5 +1,6 @@
 package housing;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -7,6 +8,7 @@ import javax.swing.JTabbedPane;
 
 //import org.jfree.chart.ChartUtilities;
 //import org.jfree.data.xy.XYSeries;
+
 
 import sim.display.Console;
 import sim.display.Controller;
@@ -192,6 +194,15 @@ public class ModelGUI extends GUIState implements Steppable {
     // Java entry point
     public static void main(String[] args) {
         // Create a console for the GUI
+
+    	/****
+    	try {
+			DataTable myTable = new DataTable("./data/ONS_UN_Census2011Table57b.csv");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	***/
         Console console = new Console(new ModelGUI());
         console.setVisible(true);
     }

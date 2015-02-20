@@ -15,19 +15,6 @@ public class Household implements IHouseOwner {
 
 	protected double annualEmploymentIncome;
 	protected double bankBalance;
-
-	public class RenterBehaviour {
-		public double COST_OF_RENTING = 600; // Annual psychological cost of renting
-		public double FTB_K = 1.0/600.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
-		
-		public boolean purchaseDecision(double housePrice, double annualRent) {
-			double costOfHouse;
-			costOfHouse = housePrice*((1.0-Model.bank.config.THETA_FTB)*Model.bank.mortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
-			return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
-		};
-		
-		
-	}
 	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Configuration
