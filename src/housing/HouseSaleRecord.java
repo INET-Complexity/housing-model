@@ -23,7 +23,7 @@ public class HouseSaleRecord implements Comparable<HouseSaleRecord> {
 		setPrice(p);
 		initialListedPrice = currentPrice;
 		quality = house.quality;
-		tInitialListing = HousingMarketTest.t;
+		tInitialListing = Model.t;
 	}
 	
 	/***********************************************

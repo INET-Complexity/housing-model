@@ -14,9 +14,9 @@ import sim.engine.Steppable;
  *
  */
 @SuppressWarnings("serial")
-public class HousingMarketTest extends SimState implements Steppable {
+public class Model extends SimState implements Steppable {
 
-	public HousingMarketTest(long seed) {
+	public Model(long seed) {
 		super(seed);
 	}
 
