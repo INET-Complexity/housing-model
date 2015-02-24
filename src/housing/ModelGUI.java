@@ -1,5 +1,6 @@
 package housing;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -7,6 +8,7 @@ import javax.swing.JTabbedPane;
 
 //import org.jfree.chart.ChartUtilities;
 //import org.jfree.data.xy.XYSeries;
+
 
 import sim.display.Console;
 import sim.display.Controller;
@@ -99,8 +101,8 @@ public class ModelGUI extends GUIState implements Steppable {
 //    	);
 
         timeSeriesPlots.add(
-        		new TimeSeriesPlot("Renting/SocialHousing Quantity","Time (years)","number")
-        			.addVariable(Household.diagnostics,"nHomeless", "Social-Housing")
+        		new TimeSeriesPlot("Renting/Homeless Quantity","Time (years)","number")
+        			.addVariable(Household.diagnostics,"nHomeless", "Homeless")
         			.addVariable(Household.diagnostics,"nRenting", "Renting")        			
     	);
         
@@ -119,7 +121,7 @@ public class ModelGUI extends GUIState implements Steppable {
         super.start();
         Household.diagnostics.init();
         
-        addSeries(housingChart, "Social Housing", Household.diagnostics.homelessData);
+        addSeries(housingChart, "Homeless", Household.diagnostics.homelessData);
         addSeries(housingChart, "Renting", Household.diagnostics.rentingData);
         addSeries(housePriceChart, "Modelled prices", Model.housingMarket.diagnostics.priceData);
         addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);
@@ -192,6 +194,15 @@ public class ModelGUI extends GUIState implements Steppable {
     // Java entry point
     public static void main(String[] args) {
         // Create a console for the GUI
+
+    	/****
+    	try {
+			DataTable myTable = new DataTable("./data/ONS_UN_Census2011Table57b.csv");
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    	***/
         Console console = new Console(new ModelGUI());
         console.setVisible(true);
     }
