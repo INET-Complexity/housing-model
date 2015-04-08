@@ -4,6 +4,14 @@ import java.lang.reflect.Field;
 
 import org.jfree.data.xy.XYSeries;
 
+/**
+ * This class represents a set of data points in a timeseries.
+ * Use this to record a value that you later want to plot a
+ * timeseries of.
+ * 
+ * @author daniel
+ *
+ */
 @SuppressWarnings("serial")
 public class DataRecorder extends XYSeries {
 	
@@ -14,10 +22,25 @@ public class DataRecorder extends XYSeries {
 		public double exec(double x);
 	}
 
+	/**
+	 * Construct a new DataRecorder
+	 * 
+	 * @param o	The object that contains the value to record.
+	 * @param varName The name of the variable to record
+	 * @param title A description of the recorded value.
+	 */
 	public DataRecorder(Object o, String varName, String title) {
 		this(o,varName,title,null);
 	}
 	
+	/**
+	 * Construct a new DataRecorder
+	 * 
+	 * @param o	The object that contains the value to record.
+	 * @param varName The name of the variable to record
+	 * @param title A description of the recorded value.
+	 * @param t A transform that should be applied to the value before recording.
+	 */
 	public DataRecorder(Object o, String varName, String title, Transform t) {
 		super(title, false);
 		transform = t;
@@ -34,6 +57,10 @@ public class DataRecorder extends XYSeries {
 		}
 	}
 
+	/**
+	 * Take a sample of the value now.
+	 * @param timestamp the timestamp to associate with this sample.
+	 */
 	public void record(double timestamp) {		
 		try {
 			if(transform == null) {

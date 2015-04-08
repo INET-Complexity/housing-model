@@ -1,8 +1,8 @@
 package housing;
 
 /*************************************************
- * This class represents a mortgage-lender (i.e. a bank or building society),
- * rather than a deposit holder. Its only function is to approve/decline
+ * This class represents a mortgage-lender (i.e. a bank or building society).
+ * Its only function is to approve/decline
  * mortgage requests, so this is where mortgage-lending policy is encoded.
  *  
  * 
@@ -11,10 +11,12 @@ package housing;
  *************************************************/
 public class Bank {
 
-	//////////////////////////////////////////////////////////////////////////////////////
-	// Configuration
-	//////////////////////////////////////////////////////////////////////////////////////
-	static public class Config implements Configuration {
+	/**
+	 * This object holds the configutation for the Bank.
+	 * @author daniel
+	 *
+	 */
+	static public class Config {
 		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
 		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
@@ -60,9 +62,11 @@ public class Bank {
 		}
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////
-	// Diagnostics
-	//////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * This object interfaces to the MASON visualisation
+	 * @author daniel
+	 *
+	 */
 	static public class Diagnostics {
 		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
 		public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats

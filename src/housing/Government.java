@@ -9,6 +9,11 @@ package housing;
  ****************************************/
 public class Government {
 	
+	/**
+	 * Configuration for the govenment. This contains tax banding, NI rates etc.
+	 * @author daniel
+	 *
+	 */
 	static public class Config {
 		public double PERSONAL_ALLOWANCE_LIMIT = 100000.0;
 

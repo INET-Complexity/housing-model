@@ -18,7 +18,10 @@ import sim.util.media.chart.ScatterPlotSeriesAttributes;
 import sim.display.ChartUtilities;
 
 /********************************************
- * Mason Graphic Interface for the housing market simulation.
+ * Interface to the Mason Graphic Interface for the housing market simulation.
+ * This object contains the "main" function, which crates a ModelGUI instance.
+ * This, in turn, creates an instance of the Model class, which actually does
+ * the simulation.
  * 
  * @author daniel
  *
@@ -189,7 +192,10 @@ public class ModelGUI extends GUIState implements Steppable {
         myChartFrame.dispose();
     }
 
-    // Java entry point
+    /**
+     * Java entry point. This is what's called when we begin an execution
+     * @param args
+     */
     public static void main(String[] args) {
         // Create a console for the GUI
         Console console = new Console(new ModelGUI());
@@ -199,6 +205,9 @@ public class ModelGUI extends GUIState implements Steppable {
     ////////////////////////////////////////////////////////////////////
     // Console stuff
     ////////////////////////////////////////////////////////////////////
+    /**
+     * MASON stuff
+     */
 	@Override
 	public Object getSimulationInspectedObject() {
 		return state;

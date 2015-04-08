@@ -17,10 +17,12 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
  *
  *********************************************************/
 public class HousingMarket {
-	
-	/////////////////////////////////////////////////////////////////////////////////
-	// Configuration
-	/////////////////////////////////////////////////////////////////////////////////
+
+	/**
+	 * Configuration for the housing market.
+	 * @author daniel
+	 *
+	 */
 	static public class Config {
 		public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
 		public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
@@ -32,9 +34,11 @@ public class HousingMarket {
 		public static final double G = Math.exp(-1.0/8); // Decay const for averageListPrice averaging
 	}
 
-	/////////////////////////////////////////////////////////////////////////////////
-	// Diagnostics
-	/////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * Visualisation of the housing market
+	 * @author daniel
+	 *
+	 */
 	public class Diagnostics {
 
 		public double averageSoldPriceToOLP;
@@ -337,15 +341,4 @@ public class HousingMarket {
 	public double lastHousePriceIndex;
 	
 	public Diagnostics diagnostics;
-
-	/**
-	public static final double T = 200.0; // characteristic number of data-points over which to average market statistics
-	public static final double E = Math.exp(-1.0/T); // decay const for averaging
-	public static final double F = Math.exp(-1.0/12.0); // House Price Index appreciation decay const (in market clearings)
-	public static final double G = Math.exp(-1.0/8); // Decay const for averageListPrice averaging
-	public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
-	public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
-	public static final double HPI_MEAN = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
-	public static LogNormalDistribution listPriceDistribution = new LogNormalDistribution(HPI_LOG_MEDIAN, HPI_SHAPE);
-	**/
 }

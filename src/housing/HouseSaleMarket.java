@@ -12,6 +12,9 @@ import java.util.TreeSet;
  *****************************************************/
 public class HouseSaleMarket extends HousingMarket {
 	
+	/**
+	 * This method deals with doing all the stuff necessary whenever a house gets sold.
+	 */
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		super.completeTransaction(purchase, sale);
 		Household buyer = purchase.buyer;		
@@ -21,7 +24,10 @@ public class HouseSaleMarket extends HousingMarket {
 		sale.house.owner = buyer;
 	}
 	
-	
+	/**
+	 * Buy to let investors get randomly offered the chance to buy houses that
+	 * are still on the market after non-investors have been cleared.
+	 */
 	public void clearBuyToLetMarket() {
 		HouseBuyerRecord buyer;
 		HouseSaleRecord  seller;

@@ -17,9 +17,10 @@ public class Household implements IHouseOwner {
 	protected double annualEmploymentIncome;
 	protected double bankBalance;
 
-	//////////////////////////////////////////////////////////////////////////////////////
-	// Configuration
-	//////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * Configuration for a household.
+	 * @author daniel
+	 */
 	static public class Config {
 
 		// ---- Parameters
@@ -38,11 +39,18 @@ public class Household implements IHouseOwner {
 		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
 		protected MersenneTwisterFast 	rand = Model.rand;
 
-		/////////////////////////////////////////////////////////////////////////////////
+		/********************************
+		 * How much a household consumes
+		 * @author daniel
+		 *
+		 ********************************/
 		static public class ConsumptionEqn {
 			public double ALPHA = 0.2; // propensity to consume income
 			public double BETA = 0.01; // propensity to consume liquid wealth
 			
+			/**
+			 * Linear consumption rule. Economists seem to like it.
+			 */
 			public double desiredConsumption(double disposableIncome, double bankBalance) {
 				if(disposableIncome > 0.0) {
 					return(ALPHA*disposableIncome + BETA*bankBalance);
@@ -50,6 +58,10 @@ public class Household implements IHouseOwner {
 					return(BETA*Math.max(bankBalance + disposableIncome,0.0));
 				}
 			}
+			
+			/**
+			 * Consumption rule made to fit wealth data.
+			 */
 			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
 				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*Model.rand.nextGaussian())),0.0));
 			}
@@ -71,7 +83,11 @@ public class Household implements IHouseOwner {
 			public String desBETA() {return("Marginal propensity to consume liquid wealth");}
 		}
 
-		/////////////////////////////////////////////////////////////////////////////////
+		/**
+		 * Decide on desired purchase price as a function of monthly income and current
+		 * appreciation of the house price index.
+		 * @author daniel
+		 */
 		static public class PurchaseEqn {
 			static public double A = 0.4;//0.48;			// sensitivity to house price appreciation
 			static public double EPSILON = 0.40;//0.36;//0.48;//0.365; // S.D. of noise
@@ -112,11 +128,23 @@ public class Household implements IHouseOwner {
 			
 		}
 
-		/////////////////////////////////////////////////////////////////////////////////
+		/**
+		 * The desired sale price of a house
+		 * @author daniel
+		 *
+		 */
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
 			static public double D = 0.024;//0.01;//0.001;		// Size of Days-on-market effect
 			static public double E = 0.05; //0.05;	// SD of noise
+			
+			/**
+			 * 
+			 * @param pbar average sale price of houses of the same quality
+			 * @param d average number of days on the market before sale
+			 * @param principal amount of principal left on any mortgage on this house
+			 * @return desired sale price
+			 */
 			public double desiredPrice(double pbar, double d, double principal) {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 				return(Math.max(Math.exp(exponent), principal));
@@ -178,8 +206,19 @@ public class Household implements IHouseOwner {
 			}
 		}
 
-		/////////////////////////////////////////////////////////////////////////////////
+		/**
+		 * Investors decision as to whether to buy a house as a buy-to-let investment.
+		 * @author daniel
+		 *
+		 */
 		static public class BuyToLetPurchaseDecision {
+			/**
+			 * 
+			 * @param price The asking price of the house
+			 * @param monthlyPayment The monthly payment on a mortgage for this house
+			 * @param downPayment The minimum downpayment on a mortgage for this house
+			 * @return will the investor decide to buy this house?
+			 */
 			public boolean buy(double price, double monthlyPayment, double downPayment) {
 				double yield;
 				yield = (monthlyPayment*12*Household.Config.RENT_PROFIT_MARGIN + Model.housingMarket.housePriceAppreciation()*price)/
@@ -193,20 +232,31 @@ public class Household implements IHouseOwner {
 			}
 		}
 		
-		/////////////////////////////////////////////////////////////////////////////////
+		/**
+		 * How much rent does an investor decide to charge on a buy-to-let house? 
+		 * @author daniel
+		 *
+		 */
 		static public class RentalOfferPriceEqn {
 			public double price(double mortgagePayment) {
 				return(mortgagePayment*(1.0+Config.RENT_PROFIT_MARGIN));
 			}
 		}
-		
-		/////////////////////////////////////////////////////////////////////////////////
+
+		/**
+		 * @return Does an owner-occupier decide to sell house?
+		 */
 		public boolean decideToSellHome() {
 			if(rand.nextDouble() < P_SELL) return(true);
 			return false;
 		}
 		
-		/////////////////////////////////////////////////////////////////////////////////
+		/**
+		 * 
+		 * @param h The house in question
+		 * @param me The investor
+		 * @return Does an investor decide to sell a buy-to-let property
+		 */
 		public boolean decideToSellInvestmentProperty(House h, Household me) {
 	//		System.out.println(me.desiredPropertyInvestmentFraction + " " + me.getDesiredPropertyInvestmentValue() + " -> "+me.getPropertyInvestmentValuation());
 			if(me.getDesiredPropertyInvestmentValue() < 
@@ -299,9 +349,11 @@ public class Household implements IHouseOwner {
 		public String desP_SELL() {return("Monthly probability of homeowner deciding to sell house");}
 	}
 
-	//////////////////////////////////////////////////////////////////////////////////////
-	// Diagnostics
-	//////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * Visualisation for a household
+	 * @author daniel
+	 *
+	 */
 	static public class Diagnostics {
 	    public double [][]    homelessData;
 	    public double [][]    rentingData;
@@ -677,27 +729,6 @@ public class Household implements IHouseOwner {
 		}
 	}
 	
-	/********************************************************
-	 * Calculate the price of a house that this household would like to buy
-	 * 
-	 * @return The desired price.
-	 ********************************************************/
-//	public double desiredHousePurchasePrice() {
-//		final double h = 0.4;//38.8;
-//		final double g = 1.0;//0.56;
-//		final double a = 0.01;//0.16;//0.16;
-//		final double tau = 0.02;
-//		final double c = 0.03;
-//		double epsilon;
-		
-//		epsilon = Math.exp(0.46*rand.nextGaussian() - 0.13);
-
-		//		return(epsilon * h * Math.pow(monthlyPersonalIncome*12, g)/
-//		(tau + c + bank.loanToValue(this,true)*bank.mortgageInterestRate() - a*houseMarket.housePriceAppreciation()));
-		
-//		return(config.purchaseEqn.SIGMA*monthlyPersonalIncome*12.0*Math.exp(config.purchaseEqn.EPSILON*rand.nextGaussian())/
-//				(1.0 - config.purchaseEqn.A*houseMarket.housePriceAppreciation()));
-//	}
 	
 	/********************************************************
 	 * Decide whether to sell ones own house.
@@ -708,27 +739,6 @@ public class Household implements IHouseOwner {
 		}
 		return(config.decideToSellInvestmentProperty(h, this));
 	}
-
-	/********************************************************
-	 * Decide the initial list price if this household was to put
-	 * its own home on the market.
-	 ********************************************************/
-//	public double desiredHouseSalePrice(House house) {
-		/**	Original version (Axtell):	
-		double exponent = 
-				0.22
-				+ 0.99*Math.log(houseMarket.averageListPrice[house.quality])
-				+ 0.22*Math.log(houseMarket.averageSoldPriceToOLP)
-				- 0.01*Math.log(houseMarket.averageDaysOnMarket + 1)
-				+ 0.01*rand.nextGaussian();
-				**/
-//		double exponent = 
-//				0.095
-//				+ Math.log(houseMarket.averageSalePrice[house.quality])
-//				- 0.01*Math.log((houseMarket.averageDaysOnMarket + 1.0)/31.0)
-//				+ 0.05*rand.nextGaussian();
-//		return(Math.max(Math.exp(exponent), housePayments.get(house).principal));
-//	}
 
 	
 	/********************************************************
@@ -960,23 +970,5 @@ public class Household implements IHouseOwner {
 	//double				age;
 	protected MersenneTwisterFast 	rand;
 	public int		 id;
-	static int		 id_pool;
-
-	
-	// ---- Parameters
-	/**
-	public double ALPHA = 0.2; // propensity to consume income
-	public double BETA = 0.01; // propensity to consume liquid wealth
-	public double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
-	public double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling house
-	public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
-	public double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
-	public double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
-	public double COST_OF_RENTING = 600; // Annual psychological cost of renting
-	public double FTB_K = 0.005; // Heterogeneity of sensitivity of desire to first-time-buy to cost
-	**/
-//	protected static final double INCOME_LOG_95_PERCENTILE = Math.log(66200); // One-tailed percentile. Source: O.N.S. 2011/2012
-//	protected static final double INCOME_SHAPE = (INCOME_LOG_95_PERCENTILE-INCOME_LOG_MEDIAN)/1.64; // Shape parameter of lognormal distribution
-	
-	
+	static int		 id_pool;	
 }

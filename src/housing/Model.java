@@ -8,11 +8,12 @@ import sim.engine.SimState;
 import sim.engine.Steppable;
 
 /**
- * Simulates the housing market.
+ * This is the root object of the simulation. Upon creation it creates
+ * and initialises all the agents in the model.
  * 
  * @author daniel
  *
- */
+ **/
 @SuppressWarnings("serial")
 public class Model extends SimState implements Steppable {
 
@@ -20,6 +21,10 @@ public class Model extends SimState implements Steppable {
 		super(seed);
 	}
 
+	/**
+	 * This method is called before the simualtion starts. It schedules this
+	 * object to be stepped at each timestep and initialises the agents.
+	 */
 	public void start() {
 		super.start();
         schedule.scheduleRepeating(this);
@@ -27,6 +32,10 @@ public class Model extends SimState implements Steppable {
 		t=0;
 	}
 	
+	/**
+	 * This is the main time-step of the whole simulation. Everything starts
+	 * here.
+	 */
 	public void step(SimState simulationStateNow) {
 		int j;
         if (schedule.getTime() >= N_STEPS) simulationStateNow.kill();
@@ -39,6 +48,9 @@ public class Model extends SimState implements Steppable {
 		t++;
 	}
 	
+	/**
+	 * Cleans up after a simulation ends.
+	 */
 	public void finish() {
 		super.finish();
 	}
@@ -47,6 +59,13 @@ public class Model extends SimState implements Steppable {
 	////////////////////////////////////////////////////////////////////////
 	// Initialisation
 	////////////////////////////////////////////////////////////////////////
+	/**
+	 * Initialises the agents after first creation.
+	 * 
+	 * Assigns houses to agents, creates aged mortgages. Assigns income and
+	 * wealth. Puts renters in rented accomodation, creates rental agreements
+	 * assigns rented houses to buy-to-let investors.
+	 */
 	static void initialise() {		
 		final double RENTERS = 0.32; // proportion of population who rent
 		final double OWNERS = 0.32;  // proportion of population outright home-owners (no mortgage)
