@@ -14,7 +14,6 @@ public class Bank {
 	/**
 	 * This object holds the configutation for the Bank.
 	 * @author daniel
-	 *
 	 */
 	static public class Config {
 		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
@@ -65,7 +64,6 @@ public class Bank {
 	/**
 	 * This object interfaces to the MASON visualisation
 	 * @author daniel
-	 *
 	 */
 	static public class Diagnostics {
 		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
@@ -77,7 +75,7 @@ public class Bank {
 		public double [][] ltv_distribution = new double[2][101]; // index/100 = LTV
 		public double [][] lti_distribution = new double[2][101]; // index/10 = LTI
 		public double [][] approved_mortgages = new double [2][ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
-		public int approved_mortgages_i;		
+		public int approved_mortgages_i;
 
 		public Diagnostics() {
 			for(int i=0; i<=100; ++i) { // set up x-values for distribution
@@ -143,6 +141,14 @@ public class Bank {
 		public void setDIAGNOSTICS_ACTIVE(boolean dIAGNOSTICS_ACTIVE) {
 			DIAGNOSTICS_ACTIVE = dIAGNOSTICS_ACTIVE;
 		}
+		
+		public double getMortgageInterestRate() {
+			return(Model.bank.getMortgageInterestRate());
+		}
+		
+		public double getMortgageSupplyVal() {
+			return(Model.bank.lastMonthsSupplyVal);
+		}
 	}
 	
 	/********************************
@@ -155,18 +161,62 @@ public class Bank {
 	
 	public Bank(Bank.Config c) {
 		config = c;
-		double r = mortgageInterestRate()/12.0;
-		k = r/(1.0 - Math.pow(1.0+r, -config.N_PAYMENTS));
 		diagnostics = new Diagnostics();
+		setMortgageInterestRate(0.03);
+		supplyTarget = 1500.0*Model.N;
+		dDemand_dInterest = 10*1e10;
+		resetMonthlyCounters();
+	}
+	
+	/***
+	 * This is where the bank gets to do its monthly calculations
+	 */
+	public void step() {
+		setMortgageInterestRate(recalcInterestRate());
+		resetMonthlyCounters();
+	}
+	
+	/***
+	 *  Resets all the various monthly diagnostic measures ready for the next month
+	 */
+	public void resetMonthlyCounters() {
+		lastMonthsSupplyVal = supplyVal;
+		demand = 0.0;
+		supplyVal = 0.0;
+		supplyN = 0;
+	}
+	
+	/***
+	 * Calculates the next months mortgage interest based on this months
+	 * rate and the resulting demand.
+	 * 
+	 * Assumes a linear relationship between interest rate and demand,
+	 * and aims to halve the difference between current demand
+	 * and target supply
+	 */
+	public double recalcInterestRate() {
+		return(getMortgageInterestRate() + 0.5*(supplyVal - supplyTarget)/dDemand_dInterest);
 	}
 	
 	/******************************
 	 * Get the interest rate on mortgages.
 	 * @return The interest rate on mortgages.
 	 *****************************/
-	public double mortgageInterestRate() {
-		return(0.03);
+	public double getMortgageInterestRate() {
+		return(interestRate);
 	}
+	
+
+	/******************************
+	 * Get the interest rate on mortgages.
+	 * @return The interest rate on mortgages.
+	 *****************************/
+	public void setMortgageInterestRate(double rate) {
+		interestRate = rate;
+		double r = rate/12.0;
+		k = r/(1.0 - Math.pow(1.0+r, -config.N_PAYMENTS));
+	}
+	
 	
 	/*******************************
 	 * Get the monthly payment on a mortgage as a fraction of the mortgage principle.
@@ -185,8 +235,28 @@ public class Bank {
 	 * @return The MortgageApproval object, or NULL if the mortgage is declined
 	 ****************************/
 	public MortgageApproval requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+		MortgageApproval approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
+		if(approval == null) return(null);
+		// --- if all's well, go ahead and arrange mortgage
+		diagnostics.recordLoan(h, approval);
+		supplyVal += approval.principal;
+		supplyN += 1;
+		return(approval);
+	}
+
+	/********
+	 * Use this to request a mortgage approval but not actually sign a mortgage contract.
+	 * This is useful if you want to inspect the details of the mortgage contract before
+	 * deciding whether to actually go ahead and sign.
+	 * 
+	 * @param h 			The household that is requesting the approval.
+	 * @param housePrice 	The price of the house that 'h' wants to buy
+	 * @param isHome 		does 'h' plan to live in the house?
+	 * @return A MortgageApproval object, or NULL if the mortgage is declined
+	 */
+	public MortgageApproval requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
 		MortgageApproval approval = new MortgageApproval();
-		double r = mortgageInterestRate()/12.0; // monthly interest rate
+		double r = getMortgageInterestRate()/12.0; // monthly interest rate
 		double ltv_principal, pdi_principal, lti_principal;
 
 		// --- calculate maximum allowable principal
@@ -215,7 +285,6 @@ public class Bank {
 		approval.nPayments = config.N_PAYMENTS;
 		approval.monthlyInterestRate = r;
 
-		diagnostics.recordLoan(h, approval);
 		return(approval);
 	}
 
@@ -266,7 +335,13 @@ public class Bank {
 	public Config 		config;
 	public Diagnostics 	diagnostics;
 	
-	public double 		k; // principal to monthly payment factor
-	/** First time buyer affordability **/
-	
+	public double 		k; 				// principal to monthly payment factor
+	public double		interestRate;	// current mortgage interest rate (monthly rate*12)
+	// --- supply strategy stuff
+	public double		supplyTarget; 	// target supply of mortgage lending (pounds)
+	public double		demand;			// monthly demand for mortgage loans (pounds)
+	public double		supplyVal;		// monthly supply of mortgage loans (pounds)
+	public double		lastMonthsSupplyVal;
+	public int			supplyN;		// monthly number of mortgages taken out
+	public double		dDemand_dInterest; // rate of change of demand with interest rate (pounds)
 }

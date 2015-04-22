@@ -46,6 +46,6 @@ public class MortgageApproval {
 	public int 		nPayments;
 	public double 	monthlyPayment;
 	public double	principal;
-	public double monthlyInterestRate;
+	public double 	monthlyInterestRate;
 	public double	downPayment;
 }

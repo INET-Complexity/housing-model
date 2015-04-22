@@ -45,6 +45,7 @@ public class Model extends SimState implements Steppable {
 		for(j = 0; j<N; ++j) households[j].preHouseLettingStep();
 		housingMarket.clearBuyToLetMarket();
 		rentalMarket.clearMarket();
+        bank.step();
 		t++;
 	}
 	

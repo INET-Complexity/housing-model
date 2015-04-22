@@ -183,7 +183,7 @@ public class Household implements IHouseOwner {
 			public boolean buy(Household h, double housePrice, double annualRent) {
 				double costOfHouse;
 //				costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());
-				costOfHouse = housePrice*(Model.bank.loanToValue(h,true)*Model.bank.mortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
+				costOfHouse = housePrice*(Model.bank.loanToValue(h,true)*Model.bank.getMortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
 				return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
 			}			
 			public String desCOST_OF_RENTING() {return("Annual psychological cost of not owning a home");}
@@ -766,7 +766,7 @@ public class Household implements IHouseOwner {
 	public boolean decideToBuyBuyToLet(double price) {
 		if(price <= bank.getMaxMortgage(this, false)) {
 			MortgageApproval mortgage;
-			mortgage = bank.requestLoan(this, price, bankBalance * config.DOWNPAYMENT_FRACTION, false);
+			mortgage = bank.requestApproval(this, price, bankBalance * config.DOWNPAYMENT_FRACTION, false);
 			return(config.buyToLetPurchaseDecision.buy(price, mortgage.monthlyPayment, mortgage.downPayment));
 		}
 		return(false);
