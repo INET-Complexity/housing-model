@@ -20,7 +20,7 @@ public class Model extends SimState implements Steppable {
 
 	public Model(long seed) {
 		super(seed);
-		households.ensureCapacity(demographics.TARGET_POPULATION*2);
+		households.ensureCapacity(Demographics.TARGET_POPULATION*2);
 	}
 
 	/**

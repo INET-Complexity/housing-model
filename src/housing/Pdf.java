@@ -38,24 +38,30 @@ public class Pdf {
 		double cp;		// cumulative proability
 		double targetcp;// target cumulative probability
 		double x;		// x in P(x)
+		int INTEGRATION_STEPS = 2048;
 		double dcp_dx;
 		int i;
 
 		inverseCDF = new double[CDF_SAMPLES];
-		dx = (end-start)/(CDF_SAMPLES-1);
-		x = start;
+		dx = (end-start)/INTEGRATION_STEPS;
+		x = start + dx/2.0;
 		cp = 0.0;
-		targetcp = 0.0;
+		dcp_dx = 0.0;
 		inverseCDF[0] = 0.0;
 		inverseCDF[CDF_SAMPLES-1] = 1.0;
 		for(i=1; i<(CDF_SAMPLES-1); ++i) {
-			targetcp += dx;
-			while(cp < targetcp) {
-				cp += p(x)*dx;
+			targetcp = i/(CDF_SAMPLES-1.0);
+			while(cp < targetcp && x < end) {
+				dcp_dx = p(x);
+				cp += dcp_dx*dx;
 				x += dx;
 			}
-			dcp_dx = p(x - dx/2.0);
-			x += (targetcp - cp)/dcp_dx;
+			if(x < end) {
+				x += (targetcp - cp)/dcp_dx;
+				cp = targetcp;
+			} else {
+				x = end;
+			}
 			inverseCDF[i] = x;
 		}
 	}
@@ -66,8 +72,8 @@ public class Pdf {
 	 */
 	public double nextDouble() {
 		double uniform = Model.rand.nextDouble(); // uniform random sample on [0:1)
-		int i = (int)(uniform/dx);
-		double remainder = uniform - i*dx; 
+		int i = (int)(uniform*(CDF_SAMPLES-1));
+		double remainder = uniform*(CDF_SAMPLES-1.0) - i;
 		return((1.0-remainder)*inverseCDF[i] + remainder*inverseCDF[i+1]);
 	}
 	

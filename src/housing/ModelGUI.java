@@ -102,9 +102,11 @@ public class ModelGUI extends GUIState implements Steppable {
 //    	);
 
         timeSeriesPlots.add(
-        		new TimeSeriesPlot("Renting/SocialHousing Quantity","Time (years)","number")
+        		new TimeSeriesPlot("Tenure quantities","Time (years)","number")
         			.addVariable(Household.diagnostics,"nHomeless", "Social-Housing")
-        			.addVariable(Household.diagnostics,"nRenting", "Renting")        			
+        			.addVariable(Household.diagnostics,"nNonOwner", "Non Owners")
+        			.addVariable(Household.diagnostics,"nEmpty", "Empty Houses")
+        			.addVariable(Household.diagnostics,"nHouseholds", "Total")
     	);
         
         for(TimeSeriesPlot plot : timeSeriesPlots) {

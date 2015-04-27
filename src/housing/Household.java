@@ -34,14 +34,11 @@ public class Household implements IHouseOwner {
 		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
-		public double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling home
+		public double P_SELL = 1.0/(7.0*12.0);  // monthly probability of selling home
+		public double P_INVESTOR = 0.04; 		// Probability of being (wanting to be) a property investor
 		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
 		protected MersenneTwisterFast 	rand = Model.rand;
-
-		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
-		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
-		public static LogNormalDistribution incomeDistribution = new LogNormalDistribution(INCOME_LOG_MEDIAN, INCOME_SHAPE);
-
+		LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
 
 		/********************************
 		 * How much a household consumes
@@ -93,7 +90,7 @@ public class Household implements IHouseOwner {
 		 * @author daniel
 		 */
 		static public class PurchaseEqn {
-			static public double A = 0.4;//0.48;			// sensitivity to house price appreciation
+			static public double A = 0.0;//0.4;//0.48;			// sensitivity to house price appreciation
 			static public double EPSILON = 0.40;//0.36;//0.48;//0.365; // S.D. of noise
 			static public double SIGMA = 5.6*12.0;//5.5;	// scale
 
@@ -139,7 +136,7 @@ public class Household implements IHouseOwner {
 		 */
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
-			static public double D = 0.024;//0.01;//0.001;		// Size of Days-on-market effect
+			static public double D = 0.0;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 			static public double E = 0.05; //0.05;	// SD of noise
 			
 			/**
@@ -263,8 +260,11 @@ public class Household implements IHouseOwner {
 		 */
 		public boolean decideToSellInvestmentProperty(House h, Household me) {
 	//		System.out.println(me.desiredPropertyInvestmentFraction + " " + me.getDesiredPropertyInvestmentValue() + " -> "+me.getPropertyInvestmentValuation());
-			if(me.getDesiredPropertyInvestmentValue() < 
-					(me.getPropertyInvestmentValuation() - me.houseMarket.getAverageSalePrice(h.quality))) {
+	//		if(me.getDesiredPropertyInvestmentValue() < 
+	//				(me.getPropertyInvestmentValuation() - me.houseMarket.getAverageSalePrice(h.quality))) {
+	//			return(true);
+	//		}
+			if(me.desiredBTLProperties > me.housePayments.size()+1) {
 				return(true);
 			}
 			return(false);
@@ -367,6 +367,9 @@ public class Household implements IHouseOwner {
 	    public ArrayList<Household>	  households;
 	    public double 		  nRenting;
 	    public double 		  nHomeless;
+	    public double 		  nNonOwner;
+	    public double		  nHouseholds;
+	    public double		  nEmpty;
 	    public static int 	  NBINS;	// number of bins on histograms	
 	    
 	    public Diagnostics(ArrayList<Household> array) {	    	
@@ -398,6 +401,18 @@ public class Household implements IHouseOwner {
 	//    	int i,j,n,r;
 	    	
 	    	// --- fill in tenure histogram
+	    	nRenting = 0;
+	    	nHomeless = 0;
+	    	nHouseholds = Model.households.size();
+	    	for(Household h : households) {
+	    		if(h.isHomeless()) {
+	    			++nHomeless;
+	    		} else if(h.isRenting()) {
+	    			++nRenting;
+	    		}
+	    	}
+	    	nNonOwner = nHomeless + nRenting;
+	    	nEmpty = Model.construction.housingStock + nHomeless - nHouseholds;
 	    	/**
 	    	nRenting = 0;
 	    	nHomeless = 0;
@@ -451,12 +466,15 @@ public class Household implements IHouseOwner {
 		rand = Model.rand;
 		home = null;
 		bankBalance = 0.0;
-		isFirstTimeBuyer = true; 
-//		isFirstTimeBuyer = false; // FTB makes no sense in a model with no creation of new households
-		setDesiredPropertyInvestmentFraction(0.0);
+		isFirstTimeBuyer = true;
+		if(c.P_INVESTOR < rand.nextDouble()) {
+			desiredBTLProperties = (int)c.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble());
+		} else {
+			desiredBTLProperties = 0;
+		}
+//		setDesiredPropertyInvestmentFraction(0.0);
 		id = ++id_pool;
-		age = iage;
-		incomePercentile = Model.rand.nextDouble();
+		lifecycle = new Lifecycle(iage);
 	}
 
 
@@ -465,12 +483,27 @@ public class Household implements IHouseOwner {
 	/////////////////////////////////////////////////////////
 
 	public void transferAllWealthTo(Household beneficiary) {
-		for(Map.Entry<House, MortgageApproval> ownedHouse : housePayments.entrySet()) {
-			beneficiary.inheritHouse(ownedHouse.getKey());
-			beneficiary.bankBalance += bankBalance;
+		for(House h : housePayments.keySet()) {
+			if(home == h) {
+				h.resident = null;
+				home = null;
+			}
+			if(h.owner == this) {
+				if(rentalMarket.isOnMarket(h)) rentalMarket.removeOffer(h);
+				if(houseMarket.isOnMarket(h)) houseMarket.removeOffer(h);
+				beneficiary.inheritHouse(h);
+			} else {
+				h.owner.endOfLettingAgreement(h);
+			}
 		}
+		housePayments.clear();
+		beneficiary.bankBalance += bankBalance;
 	}
 	
+	/**
+	 * 
+	 * @param h House to inherit
+	 */
 	public void inheritHouse(House h) {
 		MortgageApproval nullMortgage = new MortgageApproval();
 		nullMortgage.nPayments = 0;
@@ -479,6 +512,22 @@ public class Household implements IHouseOwner {
 		nullMortgage.monthlyPayment = 0.0;
 		nullMortgage.principal = 0.0;
 		housePayments.put(h, nullMortgage);
+		h.owner = this;
+		if(!isHomeowner()) {
+			if(isRenting()) {
+				home.owner.endOfLettingAgreement(home);
+				endTenancy();
+			}
+			if(h.resident != null) {
+				h.resident.endTenancy();
+			}
+			home = h;
+			h.resident = this;
+		} else if(decideToSellHouse(h)) {
+			putHouseForSale(h);
+		} else if(h.resident == null) {
+			endOfLettingAgreement(h); // put inherited house on rental market
+		}
 	}
 	
 	/////////////////////////////////////////////////////////
@@ -493,8 +542,8 @@ public class Household implements IHouseOwner {
 	public void preHouseSaleStep() {
 		double disposableIncome;
 		
-		age += 1.0/12.0;
-		annualEmploymentIncome = householdIncome(age, incomePercentile);
+		lifecycle.step();
+		annualEmploymentIncome = lifecycle.annualIncome();
 		disposableIncome = getMonthlyDisposableIncome() - 0.8 * Government.Config.INCOME_SUPPORT;
 
 //		System.out.println("income = "+monthlyIncome+" disposable = "+disposableIncome );
@@ -584,14 +633,7 @@ public class Household implements IHouseOwner {
 						}
 					}
 				} else if(decideToSellHouse(h)) { // put house on market
-					if(rentalMarket.isOnMarket(h)) {
-						rentalMarket.removeOffer(h);
-					}
-					houseMarket.offer(h, config.saleEqn.desiredPrice(
-							houseMarket.averageSalePrice[h.quality],
-							houseMarket.averageDaysOnMarket,
-							housePayments.get(h).principal
-					));
+					putHouseForSale(h);
 				}
 			}
 		}
@@ -600,6 +642,17 @@ public class Household implements IHouseOwner {
 		if(!isHomeowner()) {
 			decideToStopRenting();
 		}
+	}
+
+	protected void putHouseForSale(House h) {
+		if(rentalMarket.isOnMarket(h)) {
+			rentalMarket.removeOffer(h);
+		}
+		houseMarket.offer(h, config.saleEqn.desiredPrice(
+				houseMarket.averageSalePrice[h.quality],
+				houseMarket.averageDaysOnMarket,
+				housePayments.get(h).principal
+		));
 	}
 	
 	/////////////////////////////////////////////////////////
@@ -844,16 +897,16 @@ public class Household implements IHouseOwner {
 
 	public boolean isPropertyInvestor() {
 //		return(housePayments.size() > 1);
-		return(desiredPropertyInvestmentFraction > 0.0);
+		return(desiredBTLProperties > 0);
 	}
 	
 	//////////////////////////////////////////////////////////////////
 	// Fraction of property+financial wealth that I want to invest
 	// in buy-to-let housing
 	//////////////////////////////////////////////////////////////////
-	public void setDesiredPropertyInvestmentFraction(double val) {
-		this.desiredPropertyInvestmentFraction = val;
-	}
+//	public void setDesiredPropertyInvestmentFraction(double val) {
+//		this.desiredPropertyInvestmentFraction = val;
+//	}
 
 	/////////////////////////////////////////////////////////////////
 	// Current valuation of buy-to-let properties, not including
@@ -872,9 +925,9 @@ public class Household implements IHouseOwner {
 	///////////////////////////////////////////////////////////////
 	// returns current desired cash value of buy-to-let property investment
 	//////////////////////////////////////////////////////////////
-	public double getDesiredPropertyInvestmentValue() {
-		return(desiredPropertyInvestmentFraction * (getPropertyInvestmentValuation() + bankBalance));
-	}
+//	public double getDesiredPropertyInvestmentValue() {
+//		return(desiredPropertyInvestmentFraction * (getPropertyInvestmentValuation() + bankBalance));
+//	}
 	
 	public boolean isCollectingRentFrom(House h) {
 		return(h.owner == this && h != home && h.resident != null);
@@ -1002,16 +1055,6 @@ public class Household implements IHouseOwner {
 		return getAnnualTotalTax() / 12.0;
 	}
 
-	/*** 
-	 * TODO: Make this age dependent
-	 * 
-	 * @param age
-	 * @param percentile
-	 * @return Household income given age and percentile of population
-	 */
-	public double householdIncome(double age, double percentile) {
-		return(Config.incomeDistribution.inverseCumulativeProbability(percentile));
-	}
 	
 	///////////////////////////////////////////////
 	
@@ -1020,16 +1063,17 @@ public class Household implements IHouseOwner {
 	HouseRentalMarket	rentalMarket;
 
 	protected double 	annualEmploymentIncome;
-	protected double	incomePercentile;
 	protected double 	bankBalance;
 	protected House		home; // current home
 	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned
 	private boolean		isFirstTimeBuyer;
-	public	double		desiredPropertyInvestmentFraction;
+//	public	double		desiredPropertyInvestmentFraction;
+	public int			desiredBTLProperties;	// number of properties
 	Bank				bank;
 	public int		 	id;		// only to ensure deterministic execution
-	public double		age;	// age in years
 	protected MersenneTwisterFast 	rand;
+	
+	public Lifecycle	lifecycle;	// lifecycle plugin
 	
 	static Diagnostics	diagnostics = new Diagnostics(Model.households);
 	static int		 id_pool;

@@ -1,6 +1,5 @@
 package housing;
 
-import java.util.ArrayList;
 
 public class Construction implements IHouseOwner {
 
@@ -20,6 +19,8 @@ public class Construction implements IHouseOwner {
 		double price;
 		while(shortFall > 0) {
 			newBuild = new House();
+			newBuild.owner = this;
+			++housingStock;
 			price = Model.housingMarket.getAverageSalePrice(newBuild.quality);
 			Model.housingMarket.offer(newBuild, price);
 			--shortFall;
