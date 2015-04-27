@@ -1,8 +1,11 @@
 package housing;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
 /**********************************************
@@ -14,8 +17,6 @@ import ec.util.MersenneTwisterFast;
  **********************************************/
 public class Household implements IHouseOwner {
 
-	protected double annualEmploymentIncome;
-	protected double bankBalance;
 
 	/**
 	 * Configuration for a household.
@@ -34,10 +35,13 @@ public class Household implements IHouseOwner {
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
 		public double P_SELL = 1.0/(7.0*12.0); // monthly probability of selling home
-		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
-		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
 		public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
 		protected MersenneTwisterFast 	rand = Model.rand;
+
+		public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
+		public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
+		public static LogNormalDistribution incomeDistribution = new LogNormalDistribution(INCOME_LOG_MEDIAN, INCOME_SHAPE);
+
 
 		/********************************
 		 * How much a household consumes
@@ -355,47 +359,62 @@ public class Household implements IHouseOwner {
 	 *
 	 */
 	static public class Diagnostics {
-	    public double [][]    homelessData;
-	    public double [][]    rentingData;
-	    public double [][]    bankBalData;
-	    public double [][]    referenceBankBalData;
-	    public Household []	  households;
+//	    public double [][]    homelessData;
+//	    public double [][]    rentingData;
+//	    public double [][]    bankBalData;
+//	    public double [][]    referenceBankBalData;
+		public double [][]	  tenureData;
+	    public ArrayList<Household>	  households;
 	    public double 		  nRenting;
-	    public double 		  nHomeless;	    
+	    public double 		  nHomeless;
+	    public static int 	  NBINS;	// number of bins on histograms	
 	    
-	    public Diagnostics(Household [] array) {	    	
+	    public Diagnostics(ArrayList<Household> array) {	    	
 	    	households = array;
-	        homelessData = new double[2][Model.N/50];
-	        rentingData = new double[2][Model.N/50];
-	        bankBalData = new double[2][Model.N/50];
-	        referenceBankBalData = new double[2][Model.N/50];
-
+//	        homelessData = new double[2][NBINS];
+//	        rentingData = new double[2][NBINS];
+//	        bankBalData = new double[2][NBINS];
+//	        referenceBankBalData = new double[2][NBINS];
+	    	tenureData = new double[2][4];
 	    }
 	    
 	    public void init() {
-	    	int i; 
-	        for(i = 0; i<Model.N-50; i += 50) {
-	        	homelessData[0][i/50] = households[i].annualEmploymentIncome;
-	        	homelessData[1][i/50] = 0.0;
-	        	rentingData[0][i/50] = households[i].annualEmploymentIncome;
-	        	bankBalData[0][i/50] = households[i].annualEmploymentIncome;
-	        	referenceBankBalData[0][i/50] = households[i].annualEmploymentIncome;
-	        	referenceBankBalData[1][i/50] = Model.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/Model.N);
-	        }	    	
+//	    	int i;
+//	    	double income;
+//	        for(i = 0; i<NBINS; ++i) {
+//				income = Household.Config.incomeDistribution.inverseCumulativeProbability((i+0.5)/NBINS);
+
+//	        	homelessData[0][i/50] = income;
+//	        	rentingData[0][i/50] = income;
+//	        	bankBalData[0][i/50] = income;
+//	        	homelessData[1][i/50] = 0.0;
+//	        	referenceBankBalData[0][i/50] = income;
+//	        	referenceBankBalData[1][i/50] = Model.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/NBINS);
+//	        }
+	    	
 	    }
 	    
 	    public void step() {
-	    	int i,j,n,r;
+	//    	int i,j,n,r;
+	    	
+	    	// --- fill in tenure histogram
+	    	/**
 	    	nRenting = 0;
 	    	nHomeless = 0;
+	    	for(Household h : households) {
+	    		i = h.annualEmploymentIncome
+	    		if(h.isHomeless()) {
+	    			homelessData[1][h.annualEmploymentIncome]
+	    		}
+	    	}
 	        for(i = 0; i<Model.N-50; i += 50) {
 	        	n = 0;
 	        	r = 0;
 	        	for(j = 0; j<50; ++j) {
-	        		if(households[i+j].isHomeless()) {
+	        		if(households.get(i+j).isHomeless()) {
 	        			n++;
 	        			nHomeless++;
-	        		} else if(households[i+j].isRenting()) {
+	        		} else if(households.get(i+j).isRenting()) {
 	        			r++;
 	        			nRenting++;
 	        		}
@@ -403,10 +422,13 @@ public class Household implements IHouseOwner {
 	        	homelessData[1][i/50] = n/50.0;
 	        	rentingData[1][i/50] = r/50.0;
 	        }
+	        **/
+	        // --- fill in bank balance data
+	    	/**
 	        for(i=0; i<Model.N-50; i+=50) {
-	        	bankBalData[1][i/50] = households[i].bankBalance;
+	        	bankBalData[1][i/50] = households.get(i).bankBalance;
 	        }
-
+			**/
 	    }
 	}
 	
@@ -417,11 +439,11 @@ public class Household implements IHouseOwner {
 	/********************************************************
 	 * Constructor.
 	 ********************************************************/
-	public Household() {
-		this(new Household.Config());
+	public Household(double age) {
+		this(new Household.Config(), age);
 	}
 
-	public Household(Household.Config c) {
+	public Household(Household.Config c, double iage) {
 		config = c;
 		bank = Model.bank;
 		houseMarket = Model.housingMarket;
@@ -433,9 +455,32 @@ public class Household implements IHouseOwner {
 //		isFirstTimeBuyer = false; // FTB makes no sense in a model with no creation of new households
 		setDesiredPropertyInvestmentFraction(0.0);
 		id = ++id_pool;
+		age = iage;
+		incomePercentile = Model.rand.nextDouble();
 	}
 
 
+	/////////////////////////////////////////////////////////
+	// Inheritance behaviour
+	/////////////////////////////////////////////////////////
+
+	public void transferAllWealthTo(Household beneficiary) {
+		for(Map.Entry<House, MortgageApproval> ownedHouse : housePayments.entrySet()) {
+			beneficiary.inheritHouse(ownedHouse.getKey());
+			beneficiary.bankBalance += bankBalance;
+		}
+	}
+	
+	public void inheritHouse(House h) {
+		MortgageApproval nullMortgage = new MortgageApproval();
+		nullMortgage.nPayments = 0;
+		nullMortgage.downPayment = 0.0;
+		nullMortgage.monthlyInterestRate = 0.0;
+		nullMortgage.monthlyPayment = 0.0;
+		nullMortgage.principal = 0.0;
+		housePayments.put(h, nullMortgage);
+	}
+	
 	/////////////////////////////////////////////////////////
 	// House market behaviour
 	/////////////////////////////////////////////////////////
@@ -448,6 +493,8 @@ public class Household implements IHouseOwner {
 	public void preHouseSaleStep() {
 		double disposableIncome;
 		
+		age += 1.0/12.0;
+		annualEmploymentIncome = householdIncome(age, incomePercentile);
 		disposableIncome = getMonthlyDisposableIncome() - 0.8 * Government.Config.INCOME_SUPPORT;
 
 //		System.out.println("income = "+monthlyIncome+" disposable = "+disposableIncome );
@@ -955,20 +1002,36 @@ public class Household implements IHouseOwner {
 		return getAnnualTotalTax() / 12.0;
 	}
 
+	/*** 
+	 * TODO: Make this age dependent
+	 * 
+	 * @param age
+	 * @param percentile
+	 * @return Household income given age and percentile of population
+	 */
+	public double householdIncome(double age, double percentile) {
+		return(Config.incomeDistribution.inverseCumulativeProbability(percentile));
+	}
+	
 	///////////////////////////////////////////////
 	
 	Household.Config	config;
 	HouseSaleMarket		houseMarket;
 	HouseRentalMarket	rentalMarket;
-	static Diagnostics	diagnostics = new Diagnostics(Model.households);
 
+	protected double 	annualEmploymentIncome;
+	protected double	incomePercentile;
+	protected double 	bankBalance;
 	protected House		home; // current home
 	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned
 	private boolean		isFirstTimeBuyer;
 	public	double		desiredPropertyInvestmentFraction;
 	Bank				bank;
-	//double				age;
+	public int		 	id;		// only to ensure deterministic execution
+	public double		age;	// age in years
 	protected MersenneTwisterFast 	rand;
-	public int		 id;
-	static int		 id_pool;	
+	
+	static Diagnostics	diagnostics = new Diagnostics(Model.households);
+	static int		 id_pool;
+
 }

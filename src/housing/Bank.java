@@ -163,7 +163,6 @@ public class Bank {
 		config = c;
 		diagnostics = new Diagnostics();
 		setMortgageInterestRate(0.03);
-		supplyTarget = 1500.0*Model.N;
 		dDemand_dInterest = 10*1e10;
 		resetMonthlyCounters();
 	}
@@ -172,6 +171,7 @@ public class Bank {
 	 * This is where the bank gets to do its monthly calculations
 	 */
 	public void step() {
+		supplyTarget = 1000.0 * Model.households.size();
 		setMortgageInterestRate(recalcInterestRate());
 		resetMonthlyCounters();
 	}

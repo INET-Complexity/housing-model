@@ -17,6 +17,7 @@ public class House implements Comparable<House> {
 		id = ++id_pool;	
 		resident = null;
 		owner = null;
+		quality = (int)(Model.rand.nextDouble()*Config.N_QUALITY);
 	}
 			
 	public int 				quality;
@@ -24,7 +25,6 @@ public class House implements Comparable<House> {
 	public Household		resident;
 	public int				id;
 	static int 				id_pool = 0;
-
 	
 	@Override
 	public int compareTo(House o) {

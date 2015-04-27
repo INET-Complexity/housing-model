@@ -34,9 +34,9 @@ public class ModelGUI extends GUIState implements Steppable {
     // Chart generators
     
 	public ScatterPlotGenerator
-		housingChart,
+//		housingChart,
 		housePriceChart,
-		bankBalanceChart,
+//		bankBalanceChart,
 		mortgageStatsChart,
 		mortgagePhaseChart;
             
@@ -62,9 +62,9 @@ public class ModelGUI extends GUIState implements Steppable {
        
         // Create a tab interface
         JTabbedPane newTabPane = new JTabbedPane();
-        housingChart = makeScatterPlot(newTabPane, "Housing stats", "Probability", "Household Income");
+//        housingChart = makeScatterPlot(newTabPane, "Housing stats", "Probability", "Household Income");
         housePriceChart = makeScatterPlot(newTabPane, "House prices", "Modelled Price", "Reference Price");
-        bankBalanceChart = makeScatterPlot(newTabPane, "Bank balances", "Balance", "Income");
+//        bankBalanceChart = makeScatterPlot(newTabPane, "Bank balances", "Balance", "Income");
         mortgageStatsChart = makeScatterPlot(newTabPane, "Mortgage stats", "Frequency", "Ratio");
         mortgagePhaseChart = makeScatterPlot(newTabPane, "Mortgage phase",  "Down-payment/Income", "Loan to Income ratio");
         mortgagePhaseChart.setXAxisRange(0.0, 8.0);
@@ -122,16 +122,16 @@ public class ModelGUI extends GUIState implements Steppable {
         super.start();
         Household.diagnostics.init();
         
-        addSeries(housingChart, "Social Housing", Household.diagnostics.homelessData);
-        addSeries(housingChart, "Renting", Household.diagnostics.rentingData);
+  //      addSeries(housingChart, "Social Housing", Household.diagnostics.homelessData);
+  //      addSeries(housingChart, "Renting", Household.diagnostics.rentingData);
         addSeries(housePriceChart, "Modelled prices", Model.housingMarket.diagnostics.priceData);
-        addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);
+//        addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);
         addSeries(mortgageStatsChart, "LTV distribution", Model.bank.diagnostics.ltv_distribution);
         addSeries(mortgageStatsChart, "LTI distribution (x0.1)", Model.bank.diagnostics.lti_distribution);
         addSeries(mortgagePhaseChart, "Approved mortgages", Model.bank.diagnostics.approved_mortgages);
         
         housePriceChart.addSeries(Model.housingMarket.diagnostics.referencePriceData, "Reference price", null);
-        bankBalanceChart.addSeries(Household.diagnostics.referenceBankBalData, "Reference bank balance", null);
+//        bankBalanceChart.addSeries(Household.diagnostics.referenceBankBalData, "Reference bank balance", null);
 
         // Execute when each time-step is complete
         scheduleRepeatingImmediatelyAfter(this);

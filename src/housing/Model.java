@@ -1,9 +1,10 @@
 package housing;
 
+import java.util.ArrayList;
+
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
-
 import sim.engine.SimState;
 import sim.engine.Steppable;
 
@@ -19,6 +20,7 @@ public class Model extends SimState implements Steppable {
 
 	public Model(long seed) {
 		super(seed);
+		households.ensureCapacity(demographics.TARGET_POPULATION*2);
 	}
 
 	/**
@@ -29,7 +31,7 @@ public class Model extends SimState implements Steppable {
 		super.start();
         schedule.scheduleRepeating(this);
 		initialise();
-		t=0;
+		t = 0;
 	}
 	
 	/**
@@ -37,16 +39,17 @@ public class Model extends SimState implements Steppable {
 	 * here.
 	 */
 	public void step(SimState simulationStateNow) {
-		int j;
-        if (schedule.getTime() >= N_STEPS) simulationStateNow.kill();
+		if (schedule.getTime() >= N_STEPS) simulationStateNow.kill();
 		
-		for(j = 0; j<N; ++j) households[j].preHouseSaleStep();
+		demographics.step();
+		construction.step();
+		for(Household h : households) h.preHouseSaleStep();
 		housingMarket.clearMarket();
-		for(j = 0; j<N; ++j) households[j].preHouseLettingStep();
+		for(Household h : households) h.preHouseLettingStep();
 		housingMarket.clearBuyToLetMarket();
 		rentalMarket.clearMarket();
         bank.step();
-		t++;
+        t += 1;
 	}
 	
 	/**
@@ -68,6 +71,7 @@ public class Model extends SimState implements Steppable {
 	 * assigns rented houses to buy-to-let investors.
 	 */
 	static void initialise() {		
+		/***
 		final double RENTERS = 0.32; // proportion of population who rent
 		final double OWNERS = 0.32;  // proportion of population outright home-owners (no mortgage)
 		final double INFLATION = 0.5; // average house-price inflation over last 25 years (not verified)
@@ -158,6 +162,7 @@ public class Model extends SimState implements Steppable {
 			if(households[j].isHomeless()) rentalMarket.bid(households[j], households[j].desiredRent());
 		}
 		rentalMarket.clearMarket();				
+		***/
 	}
 
 	////////////////////////////////////////////////////////////////////////
@@ -190,15 +195,10 @@ public class Model extends SimState implements Steppable {
 	public String nameRentalDiagnostics() {return("Rental Market Diagnostics");}
 	
 	public static int getN() {
-		return N;
+		return households.size();
 	}
-	public String nameN() {return("Number of households");}
+	public String nameN() {return("Current number of households");}
 	
-	public static int getNh() {
-		return Nh;
-	}
-	public String nameNh() {return("Number of houses");}
-
 	public static int getN_STEPS() {
 		return N_STEPS;
 	}
@@ -211,19 +211,18 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
-	public static final int N = 5000; // number of households
-	public static final int Nh = 4100; // number of houses
 	public static int N_STEPS = 50000; // timesteps
 
 	public static Bank 				bank = new Bank();
 	public static Government		government = new Government();
+	public static Construction		construction = new Construction();
 	public static HouseSaleMarket 	housingMarket = new HouseSaleMarket();
 	public static HouseRentalMarket	rentalMarket = new HouseRentalMarket();
-	public static Household 		households[] = new Household[N];
-	public static House 			houses[] = new House[Nh];
-	public static int 				t;
+	public static ArrayList<Household>	households = new ArrayList<Household>();
+	public static Demographics		demographics = new Demographics();
 	public static MersenneTwisterFast			rand = new MersenneTwisterFast(1L);
 	
+	public static int	t; // time (months)
 	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
 
 }
