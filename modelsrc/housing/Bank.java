@@ -21,136 +21,8 @@ public class Bank {
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
 		public double LTI = 6.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14
 		public int    N_PAYMENTS = 12*25; // number of monthly repayments
-
-		// ---- Mason stuff
-		// ----------------
-		public String desLTI() {return("Loan to Income constraint on mortgages");}
-		public String desTHETA_FTB() {return("Loan to Value haircut for first time buyers");}
-		public String desTHETA_HOME() {return("Loan to Value haircut for homeowners");}
-		public String desTHETA_BTL() {return("Loan to Value haircut for buy-to-let investors");}
-		public String desN_PAYMENTS() {return("Number of monthly repayments in a mortgage");}
-		public double getLTI() {
-			return(LTI);
-		}		
-		public void setLTI(double x) {
-			LTI = x;
-		}
-		public double getTHETA_FTB() {
-			return THETA_FTB;
-		}
-		public void setTHETA_FTB(double tHETA_FTB) {
-			THETA_FTB = tHETA_FTB;
-		}
-		public double getTHETA_HOME() {
-			return THETA_HOME;
-		}
-		public void setTHETA_HOME(double tHETA_HOME) {
-			THETA_HOME = tHETA_HOME;
-		}
-		public double getTHETA_BTL() {
-			return THETA_BTL;
-		}
-		public void setTHETA_BTL(double tHETA_BTL) {
-			THETA_BTL = tHETA_BTL;
-		}
-		public int getN_PAYMENTS() {
-			return N_PAYMENTS;
-		}
-		public void setN_PAYMENTS(int n_PAYMENTS) {
-			N_PAYMENTS = n_PAYMENTS;
-		}
 	}
 
-	/**
-	 * This object interfaces to the MASON visualisation
-	 * @author daniel
-	 */
-	static public class Diagnostics {
-		public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
-		public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
-		public int ARCHIVE_LEN = 1000; // number of mortgage approvals to remember
-		public boolean DIAGNOSTICS_ACTIVE = true; // record mortgage statistics?		
-
-		public double affordability = 0.0;
-		public double [][] ltv_distribution = new double[2][101]; // index/100 = LTV
-		public double [][] lti_distribution = new double[2][101]; // index/10 = LTI
-		public double [][] approved_mortgages = new double [2][ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
-		public int approved_mortgages_i;
-
-		public Diagnostics() {
-			for(int i=0; i<=100; ++i) { // set up x-values for distribution
-				ltv_distribution[0][i] = i/100.0;
-				lti_distribution[0][i] = i/100.0;
-				ltv_distribution[1][i] = 0.0;
-				lti_distribution[1][i] = 0.0;
-			}
-		}
-
-		public void recordLoan(Household h, MortgageApproval approval) {
-			double housePrice;
-			if(DIAGNOSTICS_ACTIVE) {
-				housePrice = approval.principal + approval.downPayment;
-				affordability = AFFORDABILITY_DECAY*affordability + (1.0-AFFORDABILITY_DECAY)*approval.monthlyPayment/h.getMonthlyEmploymentIncome();
-				if(approval.principal > 1.0) {
-					ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-STATS_DECAY)/10.0;
-					lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome,100.0)] += 1.0-STATS_DECAY;
-				}
-				approved_mortgages[0][approved_mortgages_i] = approval.principal/(h.getMonthlyEmploymentIncome()*12.0);
-				approved_mortgages[1][approved_mortgages_i] = approval.downPayment/(h.getMonthlyEmploymentIncome()*12.0);
-				approved_mortgages_i += 1;
-				if(approved_mortgages_i == ARCHIVE_LEN) approved_mortgages_i = 0;
-			}
-		}
-		
-		public void step() {
-			int i;
-	        for(i=0; i<=100; ++i) {
-				ltv_distribution[1][i] *= STATS_DECAY;
-				lti_distribution[1][i] *= STATS_DECAY;
-	        }
-		}
-
-		public double getAFFORDABILITY_DECAY() {
-			return AFFORDABILITY_DECAY;
-		}
-
-		public void setAFFORDABILITY_DECAY(double aFFORDABILITY_DECAY) {
-			AFFORDABILITY_DECAY = aFFORDABILITY_DECAY;
-		}
-
-		public double getSTATS_DECAY() {
-			return STATS_DECAY;
-		}
-
-		public void setSTATS_DECAY(double sTATS_DECAY) {
-			STATS_DECAY = sTATS_DECAY;
-		}
-
-		public int getARCHIVE_LEN() {
-			return ARCHIVE_LEN;
-		}
-
-		public void setARCHIVE_LEN(int aRCHIVE_LEN) {
-			ARCHIVE_LEN = aRCHIVE_LEN;
-		}
-
-		public boolean isDIAGNOSTICS_ACTIVE() {
-			return DIAGNOSTICS_ACTIVE;
-		}
-
-		public void setDIAGNOSTICS_ACTIVE(boolean dIAGNOSTICS_ACTIVE) {
-			DIAGNOSTICS_ACTIVE = dIAGNOSTICS_ACTIVE;
-		}
-		
-		public double getMortgageInterestRate() {
-			return(Model.bank.getMortgageInterestRate());
-		}
-		
-		public double getMortgageSupplyVal() {
-			return(Model.bank.lastMonthsSupplyVal);
-		}
-	}
-	
 	/********************************
 	 * Constructor. This just sets up a few
 	 * pre-computed values.
@@ -161,7 +33,6 @@ public class Bank {
 	
 	public Bank(Bank.Config c) {
 		config = c;
-		diagnostics = new Diagnostics();
 		setMortgageInterestRate(0.03);
 		dDemand_dInterest = 10*1e10;
 		resetMonthlyCounters();
@@ -183,7 +54,6 @@ public class Bank {
 		lastMonthsSupplyVal = supplyVal;
 		demand = 0.0;
 		supplyVal = 0.0;
-		supplyN = 0;
 	}
 	
 	/***
@@ -238,9 +108,8 @@ public class Bank {
 		MortgageApproval approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
 		if(approval == null) return(null);
 		// --- if all's well, go ahead and arrange mortgage
-		diagnostics.recordLoan(h, approval);
 		supplyVal += approval.principal;
-		supplyN += 1;
+		approval.signContract(h);
 		return(approval);
 	}
 
@@ -284,7 +153,7 @@ public class Bank {
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();		
 		approval.nPayments = config.N_PAYMENTS;
 		approval.monthlyInterestRate = r;
-
+		approval.isBuyToLet = !isHome;
 		return(approval);
 	}
 
@@ -329,11 +198,8 @@ public class Bank {
 		}
 		return(1.0 - config.THETA_BTL);
 	}
-		
 
-	
 	public Config 		config;
-	public Diagnostics 	diagnostics;
 	
 	public double 		k; 				// principal to monthly payment factor
 	public double		interestRate;	// current mortgage interest rate (monthly rate*12)
@@ -342,6 +208,5 @@ public class Bank {
 	public double		demand;			// monthly demand for mortgage loans (pounds)
 	public double		supplyVal;		// monthly supply of mortgage loans (pounds)
 	public double		lastMonthsSupplyVal;
-	public int			supplyN;		// monthly number of mortgages taken out
 	public double		dDemand_dInterest; // rate of change of demand with interest rate (pounds)
 }

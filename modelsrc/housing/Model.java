@@ -169,20 +169,15 @@ public class Model extends SimState implements Steppable {
 	// Getters/setters for the console
 	////////////////////////////////////////////////////////////////////////
 	
-	public Bank.Config getBankConfig() {
-		return(bank.config);
-	}
-
 	public Household.Config getHouseholdConfig() {
 		return(new Household.Config());
 	}
-	public String nameBankConfig() {return("Bank Configuration");}
 	public String nameHouseholdConfig() {return("Household Configuration");}
 
-	public Bank.Diagnostics getBankDiagnostics() {
-		return(bank.diagnostics);
+	public CreditSupply getCreditSupply() {
+		return(collectors.creditSupply);
 	}
-	public String nameBankDiagnostics() {return("Bank Diagnostics");}
+	public String nameCreditSupply() {return("Credit Supply");}
 	
 	public HouseSaleMarket.Diagnostics getMarketDiagnostics() {
 		return(housingMarket.diagnostics);
@@ -221,6 +216,8 @@ public class Model extends SimState implements Steppable {
 	public static ArrayList<Household>	households = new ArrayList<Household>();
 	public static Demographics		demographics = new Demographics();
 	public static MersenneTwisterFast			rand = new MersenneTwisterFast(1L);
+	
+	public static Collectors		collectors = new Collectors();
 	
 	public static int	t; // time (months)
 	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments

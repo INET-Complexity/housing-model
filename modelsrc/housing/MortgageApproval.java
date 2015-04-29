@@ -11,6 +11,10 @@ package housing;
  ***************************************************/
 public class MortgageApproval {
 
+	public MortgageApproval() {
+		isBuyToLet = false;
+	}
+	
 	/********************************************
 	 * Updates internal variables to simulate a payment
 	 * being made (Does not move any assets from payer to payee).
@@ -42,10 +46,15 @@ public class MortgageApproval {
 		principal -= amount;
 		return(amount);
 	}
-		
+	
+	public void signContract(Household h) {
+		Collectors.creditSupply.recordLoan(h, this);
+	}
+	
 	public int 		nPayments;
 	public double 	monthlyPayment;
 	public double	principal;
 	public double 	monthlyInterestRate;
 	public double	downPayment;
+	public boolean	isBuyToLet;
 }

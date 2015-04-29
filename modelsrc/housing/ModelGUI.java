@@ -80,7 +80,7 @@ public class ModelGUI extends GUIState implements Steppable {
         				public double exec(double x) {return(x/1000.0);}
         			})
 //        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageSoldPriceToOLP", "Sold Price/List price")
-        			.addVariable(Model.bank.diagnostics,"affordability", "Affordability (Mortgage-payment/income)")
+        			.addVariable(Model.collectors.creditSupply,"affordability", "Affordability (Mortgage-payment/income)")
     	);
 
         timeSeriesPlots.add(
@@ -128,9 +128,9 @@ public class ModelGUI extends GUIState implements Steppable {
   //      addSeries(housingChart, "Renting", Household.diagnostics.rentingData);
         addSeries(housePriceChart, "Modelled prices", Model.housingMarket.diagnostics.priceData);
 //        addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);
-        addSeries(mortgageStatsChart, "LTV distribution", Model.bank.diagnostics.ltv_distribution);
-        addSeries(mortgageStatsChart, "LTI distribution (x0.1)", Model.bank.diagnostics.lti_distribution);
-        addSeries(mortgagePhaseChart, "Approved mortgages", Model.bank.diagnostics.approved_mortgages);
+        addSeries(mortgageStatsChart, "LTV distribution", Model.collectors.creditSupply.ltv_distribution);
+        addSeries(mortgageStatsChart, "LTI distribution (x0.1)", Model.collectors.creditSupply.lti_distribution);
+        addSeries(mortgagePhaseChart, "Approved mortgages", Model.collectors.creditSupply.approved_mortgages);
         
         housePriceChart.addSeries(Model.housingMarket.diagnostics.referencePriceData, "Reference price", null);
 //        bankBalanceChart.addSeries(Household.diagnostics.referenceBankBalData, "Reference bank balance", null);
@@ -150,7 +150,7 @@ public class ModelGUI extends GUIState implements Steppable {
         }
         
         Household.diagnostics.step();
-        Model.bank.diagnostics.step();
+        Model.collectors.step();
         Model.housingMarket.diagnostics.step();
     }
     
