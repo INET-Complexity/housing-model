@@ -1,5 +1,7 @@
 package housing;
 
+import java.util.HashSet;
+
 /*************************************************
  * This class represents a mortgage-lender (i.e. a bank or building society).
  * Its only function is to approve/decline
@@ -29,6 +31,7 @@ public class Bank {
 	 ********************************/
 	public Bank() {
 		this(new Bank.Config());
+		mortgages = new HashSet<MortgageApproval>();
 	}
 	
 	public Bank(Bank.Config c) {
@@ -109,8 +112,13 @@ public class Bank {
 		if(approval == null) return(null);
 		// --- if all's well, go ahead and arrange mortgage
 		supplyVal += approval.principal;
-		approval.signContract(h);
+		mortgages.add(approval);
+		Collectors.creditSupply.recordLoan(h, approval);
 		return(approval);
+	}
+	
+	public void endMortgageContract(MortgageApproval mortgage) {
+		mortgages.remove(mortgage);
 	}
 
 	/********
@@ -154,6 +162,7 @@ public class Bank {
 		approval.nPayments = config.N_PAYMENTS;
 		approval.monthlyInterestRate = r;
 		approval.isBuyToLet = !isHome;
+		approval.isFirstTimeBuyer = h.isFirstTimeBuyer();
 		return(approval);
 	}
 
@@ -201,6 +210,7 @@ public class Bank {
 
 	public Config 		config;
 	
+	public HashSet<MortgageApproval>		mortgages;	// all unpaid mortgage contracts supplied by the bank
 	public double 		k; 				// principal to monthly payment factor
 	public double		interestRate;	// current mortgage interest rate (monthly rate*12)
 	// --- supply strategy stuff

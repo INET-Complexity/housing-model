@@ -21,6 +21,7 @@ public class Model extends SimState implements Steppable {
 	public Model(long seed) {
 		super(seed);
 		households.ensureCapacity(Demographics.TARGET_POPULATION*2);
+		collectors = new Collectors();
 	}
 
 	/**
@@ -44,6 +45,7 @@ public class Model extends SimState implements Steppable {
 		demographics.step();
 		construction.step();
 		for(Household h : households) h.preHouseSaleStep();
+		Collectors.housingMarketStats.record();
 		housingMarket.clearMarket();
 		for(Household h : households) h.preHouseLettingStep();
 		housingMarket.clearBuyToLetMarket();
@@ -70,7 +72,7 @@ public class Model extends SimState implements Steppable {
 	 * wealth. Puts renters in rented accomodation, creates rental agreements
 	 * assigns rented houses to buy-to-let investors.
 	 */
-	static void initialise() {		
+	static void initialise() {
 		/***
 		final double RENTERS = 0.32; // proportion of population who rent
 		final double OWNERS = 0.32;  // proportion of population outright home-owners (no mortgage)
@@ -164,46 +166,6 @@ public class Model extends SimState implements Steppable {
 		rentalMarket.clearMarket();				
 		***/
 	}
-
-	////////////////////////////////////////////////////////////////////////
-	// Getters/setters for the console
-	////////////////////////////////////////////////////////////////////////
-	
-	public Household.Config getHouseholdConfig() {
-		return(new Household.Config());
-	}
-	public String nameHouseholdConfig() {return("Household Configuration");}
-
-	public CreditSupply getCreditSupply() {
-		return(collectors.creditSupply);
-	}
-	public String nameCreditSupply() {return("Credit Supply");}
-	
-	public HouseSaleMarket.Diagnostics getMarketDiagnostics() {
-		return(housingMarket.diagnostics);
-	}
-	public String nameMarketDiagnostics() {return("Housing Market Diagnostics");}
-
-	public HouseRentalMarket.Diagnostics getRentalDiagnostics() {
-		return(rentalMarket.diagnostics);
-	}
-	public String nameRentalDiagnostics() {return("Rental Market Diagnostics");}
-	
-	public static int getN() {
-		return households.size();
-	}
-	public String nameN() {return("Current number of households");}
-	
-	public static int getN_STEPS() {
-		return N_STEPS;
-	}
-
-	public static void setN_STEPS(int n_STEPS) {
-		N_STEPS = n_STEPS;
-	}
-
-	public String nameN_STEPS() {return("Number of timesteps");}
-
 	////////////////////////////////////////////////////////////////////////
 
 	public static int N_STEPS = 50000; // timesteps
@@ -217,9 +179,40 @@ public class Model extends SimState implements Steppable {
 	public static Demographics		demographics = new Demographics();
 	public static MersenneTwisterFast			rand = new MersenneTwisterFast(1L);
 	
-	public static Collectors		collectors = new Collectors();
+	public static Collectors		collectors;// = new Collectors();
 	
 	public static int	t; // time (months)
 	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
+
+
+	////////////////////////////////////////////////////////////////////////
+	// Getters/setters for MASON console
+	////////////////////////////////////////////////////////////////////////
+	
+	public Household.Config getHouseholdConfig() {
+		return(new Household.Config());
+	}
+	public String nameHouseholdConfig() {return("Household Configuration");}
+
+	public Collectors getCollectors() {
+		return(collectors);
+	}
+	public String nameCollectors() {return("Diagnostics");}
+	
+	public static int getN_STEPS() {
+		return N_STEPS;
+	}
+
+	public static void setN_STEPS(int n_STEPS) {
+		N_STEPS = n_STEPS;
+	}
+	public String nameN_STEPS() {return("Number of timesteps");}
+
+	public double getLTI() {
+		return bank.config.LTI;
+	}
+	public void setLTI(double lTI) {
+		bank.config.LTI = lTI;
+	}
 
 }

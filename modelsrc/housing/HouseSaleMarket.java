@@ -11,7 +11,7 @@ import java.util.TreeSet;
  *
  *****************************************************/
 public class HouseSaleMarket extends HousingMarket {
-	
+		
 	/**
 	 * This method deals with doing all the stuff necessary whenever a house gets sold.
 	 */
@@ -22,6 +22,7 @@ public class HouseSaleMarket extends HousingMarket {
 		sale.house.owner.completeHouseSale(sale);
 		buyer.completeHousePurchase(sale);
 		sale.house.owner = buyer;
+		Collectors.housingMarketStats.recordSale(sale);
 	}
 	
 	/**

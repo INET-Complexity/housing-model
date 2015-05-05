@@ -23,15 +23,12 @@ public class Household implements IHouseOwner {
 	 * @author daniel
 	 */
 	static public class Config {
-
-		// ---- Parameters
 		public ConsumptionEqn	consumptionEqn = new ConsumptionEqn();
 		public PurchaseEqn		purchaseEqn = new PurchaseEqn();
 		public SaleEqn			saleEqn = new SaleEqn();
 		public RenterPurchaseDecision renterPurchaseDecision = new RenterPurchaseDecision();
 		public BuyToLetPurchaseDecision buyToLetPurchaseDecision = new BuyToLetPurchaseDecision();
-		public static double RENT_PROFIT_MARGIN = 0.0; // profit margin for buy-to-let investors
-		public double HOUSE_SALE_PRICE_DISCOUNT = 0.95; // monthly discount on price of house for sale
+		public static double RENT_PROFIT_MARGIN = 5.0; // profit margin for buy-to-let investors
 		public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
 		public double P_SELL = 1.0/(7.0*12.0);  // monthly probability of selling home
@@ -42,52 +39,21 @@ public class Household implements IHouseOwner {
 
 		/********************************
 		 * How much a household consumes
+		 * Consumption rule made to fit ONS wealth in Great Britain data.
 		 * @author daniel
 		 *
 		 ********************************/
 		static public class ConsumptionEqn {
 			public double ALPHA = 0.2; // propensity to consume income
 			public double BETA = 0.01; // propensity to consume liquid wealth
-			
-			/**
-			 * Linear consumption rule. Economists seem to like it.
-			 */
-			public double desiredConsumption(double disposableIncome, double bankBalance) {
-				if(disposableIncome > 0.0) {
-					return(ALPHA*disposableIncome + BETA*bankBalance);
-				} else {
-					return(BETA*Math.max(bankBalance + disposableIncome,0.0));
-				}
-			}
-			
-			/**
-			 * Consumption rule made to fit wealth data.
-			 */
 			public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
 				return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*Model.rand.nextGaussian())),0.0));
 			}
-
-			public double getALPHA() {
-				return ALPHA;
-			}
-			public void setALPHA(double aLPHA) {
-				ALPHA = aLPHA;
-			}
-			public double getBETA() {
-				return BETA;
-			}
-			public void setBETA(double bETA) {
-				BETA = bETA;
-			}
-			public String toString() {return "Household Consumption Equation";}
-			public String desALPHA() {return("Marginal propensity to consume income");}
-			public String desBETA() {return("Marginal propensity to consume liquid wealth");}
 		}
 
 		/**
 		 * Decide on desired purchase price as a function of monthly income and current
 		 * appreciation of the house price index.
-		 * @author daniel
 		 */
 		static public class PurchaseEqn {
 			static public double A = 0.0;//0.4;//0.48;			// sensitivity to house price appreciation
@@ -98,41 +64,10 @@ public class Household implements IHouseOwner {
 				double p = SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*hpa);
 				return(p);
 			}
-
-			public String toString() {return("(SIGMA.i.exp^r)/(1-A.hpa)");}
-			public String desA() {return("Sensitivity to house price appreciation");}
-			public String desEPSILON() {return("Standard Deviation of noise term");}
-			public String desSIGMA() {return("Price level factor");}
-			public static double getA() {
-				return A;
-			}
-
-			public static void setA(double a) {
-				A = a;
-			}
-
-			public static double getEPSILON() {
-				return EPSILON;
-			}
-
-			public static void setEPSILON(double ePSILON) {
-				EPSILON = ePSILON;
-			}
-
-			public static double getSIGMA() {
-				return SIGMA;
-			}
-
-			public static void setSIGMA(double sIGMA) {
-				SIGMA = sIGMA;
-			}
-			
 		}
 
 		/**
 		 * The desired sale price of a house
-		 * @author daniel
-		 *
 		 */
 		static public class SaleEqn {
 			static public double C = 0.095;	// initial markup from average price
@@ -140,7 +75,6 @@ public class Household implements IHouseOwner {
 			static public double E = 0.05; //0.05;	// SD of noise
 			
 			/**
-			 * 
 			 * @param pbar average sale price of houses of the same quality
 			 * @param d average number of days on the market before sale
 			 * @param principal amount of principal left on any mortgage on this house
@@ -150,30 +84,6 @@ public class Household implements IHouseOwner {
 				double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 				return(Math.max(Math.exp(exponent), principal));
 			}
-			
-			public String desA() {return("Initial markup");}
-			public String desB() {return("Sensitivity to days-on-market");}
-			public String desC() {return("Standard deviation of noise term");}
-			
-			public static double getC() {
-				return C;
-			}
-			public static void setC(double c) {
-				C = c;
-			}
-			public static double getD() {
-				return D;
-			}
-			public static void setD(double d) {
-				D = d;
-			}
-			public static double getE() {
-				return E;
-			}
-			public static void setE(double e) {
-				E = e;
-			}
-
 		}
 		
 		/////////////////////////////////////////////////////////////////////////////////
@@ -187,24 +97,6 @@ public class Household implements IHouseOwner {
 				costOfHouse = housePrice*(Model.bank.loanToValue(h,true)*Model.bank.getMortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
 				return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
 			}			
-			public String desCOST_OF_RENTING() {return("Annual psychological cost of not owning a home");}
-			public String desFTB_K() {return("Steepness of sigma function");}
-
-			public double getCOST_OF_RENTING() {
-				return COST_OF_RENTING;
-			}
-
-			public void setCOST_OF_RENTING(double cOST_OF_RENTING) {
-				COST_OF_RENTING = cOST_OF_RENTING;
-			}
-
-			public double getFTB_K() {
-				return FTB_K;
-			}
-
-			public void setFTB_K(double fTB_K) {
-				FTB_K = fTB_K;
-			}
 		}
 
 		/**
@@ -214,7 +106,6 @@ public class Household implements IHouseOwner {
 		 */
 		static public class BuyToLetPurchaseDecision {
 			/**
-			 * 
 			 * @param price The asking price of the house
 			 * @param monthlyPayment The monthly payment on a mortgage for this house
 			 * @param downPayment The minimum downpayment on a mortgage for this house
@@ -235,8 +126,6 @@ public class Household implements IHouseOwner {
 		
 		/**
 		 * How much rent does an investor decide to charge on a buy-to-let house? 
-		 * @author daniel
-		 *
 		 */
 		static public class RentalOfferPriceEqn {
 			public double price(double mortgagePayment) {
@@ -269,184 +158,8 @@ public class Household implements IHouseOwner {
 			}
 			return(false);
 		}
-		
-		
-		public ConsumptionEqn getConsumptionEqn() {
-			return consumptionEqn;
-		}
-
-		public void setConsumptionEqn(ConsumptionEqn consumptionEqn) {
-			this.consumptionEqn = consumptionEqn;
-		}
-
-		public PurchaseEqn getPurchaseEqn() {
-			return purchaseEqn;
-		}
-
-		public void setPurchaseEqn(PurchaseEqn purchaseEqn) {
-			this.purchaseEqn = purchaseEqn;
-		}
-
-		public SaleEqn getSaleEqn() {
-			return saleEqn;
-		}
-
-		public void setSaleEqn(SaleEqn saleEqn) {
-			this.saleEqn = saleEqn;
-		}
-
-		public RenterPurchaseDecision getRenterPurchaseDecision() {
-			return renterPurchaseDecision;
-		}
-
-		public void setRenterPurchaseDecision(
-				RenterPurchaseDecision renterPurchaseDecision) {
-			this.renterPurchaseDecision = renterPurchaseDecision;
-		}
-
-		public double getRENT_PROFIT_MARGIN() {
-			return RENT_PROFIT_MARGIN;
-		}
-
-		public void setRENT_PROFIT_MARGIN(double rENT_PROFIT_MARGIN) {
-			RENT_PROFIT_MARGIN = rENT_PROFIT_MARGIN;
-		}
-
-		public double getHOUSE_SALE_PRICE_DISCOUNT() {
-			return HOUSE_SALE_PRICE_DISCOUNT;
-		}
-
-		public void setHOUSE_SALE_PRICE_DISCOUNT(double hOUSE_SALE_PRICE_DISCOUNT) {
-			HOUSE_SALE_PRICE_DISCOUNT = hOUSE_SALE_PRICE_DISCOUNT;
-		}
-
-
-		public double getDOWNPAYMENT_FRACTION() {
-			return DOWNPAYMENT_FRACTION;
-		}
-
-		public void setDOWNPAYMENT_FRACTION(double dOWNPAYMENT_FRACTION) {
-			DOWNPAYMENT_FRACTION = dOWNPAYMENT_FRACTION;
-		}
-
-		public double getP_SELL() {
-			return P_SELL;
-		}
-
-		public void setP_SELL(double p_SELL) {
-			P_SELL = p_SELL;
-		}
-
-		public static double getRETURN_ON_FINANCIAL_WEALTH() {
-			return RETURN_ON_FINANCIAL_WEALTH;
-		}
-
-		public static void setRETURN_ON_FINANCIAL_WEALTH(
-				double rETURN_ON_FINANCIAL_WEALTH) {
-			RETURN_ON_FINANCIAL_WEALTH = rETURN_ON_FINANCIAL_WEALTH;
-		}
-		
-		public String desRENT_PROFIT_MARGIN() {return("Profit margin on rent charged by buy-to-let investors");}
-		public String desHOUSE_SALE_PRICE_DISCOUNT() {return("Monthly discount on price of un-sold house");}
-		public String desDOWNPAYMENT_FRACTION() {return("Fraction of bank-balance household would like to spend on mortgage downpayments");}
-		public String desRETURN_ON_FINANCIAL_WEALTH() {return("Monthly percentage growth of liquid wealth");}
-		public String desP_SELL() {return("Monthly probability of homeowner deciding to sell house");}
 	}
 
-	/**
-	 * Visualisation for a household
-	 * @author daniel
-	 *
-	 */
-	static public class Diagnostics {
-//	    public double [][]    homelessData;
-//	    public double [][]    rentingData;
-//	    public double [][]    bankBalData;
-//	    public double [][]    referenceBankBalData;
-		public double [][]	  tenureData;
-	    public ArrayList<Household>	  households;
-	    public double 		  nRenting;
-	    public double 		  nHomeless;
-	    public double 		  nNonOwner;
-	    public double		  nHouseholds;
-	    public double		  nEmpty;
-	    public static int 	  NBINS;	// number of bins on histograms	
-	    
-	    public Diagnostics(ArrayList<Household> array) {	    	
-	    	households = array;
-//	        homelessData = new double[2][NBINS];
-//	        rentingData = new double[2][NBINS];
-//	        bankBalData = new double[2][NBINS];
-//	        referenceBankBalData = new double[2][NBINS];
-	    	tenureData = new double[2][4];
-	    }
-	    
-	    public void init() {
-//	    	int i;
-//	    	double income;
-//	        for(i = 0; i<NBINS; ++i) {
-//				income = Household.Config.incomeDistribution.inverseCumulativeProbability((i+0.5)/NBINS);
-
-//	        	homelessData[0][i/50] = income;
-//	        	rentingData[0][i/50] = income;
-//	        	bankBalData[0][i/50] = income;
-//	        	homelessData[1][i/50] = 0.0;
-//	        	referenceBankBalData[0][i/50] = income;
-//	        	referenceBankBalData[1][i/50] = Model.grossFinancialWealth.inverseCumulativeProbability((i+0.5)/NBINS);
-//	        }
-	    	
-	    }
-	    
-	    public void step() {
-	//    	int i,j,n,r;
-	    	
-	    	// --- fill in tenure histogram
-	    	nRenting = 0;
-	    	nHomeless = 0;
-	    	nHouseholds = Model.households.size();
-	    	for(Household h : households) {
-	    		if(h.isHomeless()) {
-	    			++nHomeless;
-	    		} else if(h.isRenting()) {
-	    			++nRenting;
-	    		}
-	    	}
-	    	nNonOwner = nHomeless + nRenting;
-	    	nEmpty = Model.construction.housingStock + nHomeless - nHouseholds;
-	    	/**
-	    	nRenting = 0;
-	    	nHomeless = 0;
-	    	for(Household h : households) {
-	    		i = h.annualEmploymentIncome
-	    		if(h.isHomeless()) {
-	    			homelessData[1][h.annualEmploymentIncome]
-	    		}
-	    	}
-	        for(i = 0; i<Model.N-50; i += 50) {
-	        	n = 0;
-	        	r = 0;
-	        	for(j = 0; j<50; ++j) {
-	        		if(households.get(i+j).isHomeless()) {
-	        			n++;
-	        			nHomeless++;
-	        		} else if(households.get(i+j).isRenting()) {
-	        			r++;
-	        			nRenting++;
-	        		}
-	        	}
-	        	homelessData[1][i/50] = n/50.0;
-	        	rentingData[1][i/50] = r/50.0;
-	        }
-	        **/
-	        // --- fill in bank balance data
-	    	/**
-	        for(i=0; i<Model.N-50; i+=50) {
-	        	bankBalData[1][i/50] = households.get(i).bankBalance;
-	        }
-			**/
-	    }
-	}
-	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// Model
 	//////////////////////////////////////////////////////////////////////////////////////
@@ -844,12 +557,16 @@ public class Household implements IHouseOwner {
 	/********************************************************
 	 * Decide how much to drop the list-price of a house if
 	 * it has been on the market for (another) month and hasn't
-	 * sold.
+	 * sold. Calibrated against Zoopla dataset in Bank of England
 	 * 
 	 * @param sale The HouseSaleRecord of the house that is on the market.
 	 ********************************************************/
 	protected double rethinkHouseSalePrice(HouseSaleRecord sale) {
-		return(sale.currentPrice * config.HOUSE_SALE_PRICE_DISCOUNT);
+		if(rand.nextDouble() > 0.885) {
+			double logReduction = 1.670+(rand.nextGaussian()*0.61122);
+			return(sale.currentPrice * (1.0-Math.exp(logReduction)));
+		}
+		return(sale.currentPrice);
 	}
 
 	
@@ -1075,7 +792,7 @@ public class Household implements IHouseOwner {
 	
 	public Lifecycle	lifecycle;	// lifecycle plugin
 	
-	static Diagnostics	diagnostics = new Diagnostics(Model.households);
+//	static Diagnostics	diagnostics = new Diagnostics(Model.households);
 	static int		 id_pool;
 
 }

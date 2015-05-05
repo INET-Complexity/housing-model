@@ -8,10 +8,12 @@ package housing;
  **********************************************/
 public class HouseRentalMarket extends HousingMarket {
 
+	
 	@Override
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		super.completeTransaction(purchase, sale);
 		purchase.buyer.completeHouseRental(sale);
+		Collectors.rentalMarketStats.recordSale(sale);
 	}
 
 }

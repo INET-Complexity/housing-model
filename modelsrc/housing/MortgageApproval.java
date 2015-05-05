@@ -13,6 +13,7 @@ public class MortgageApproval {
 
 	public MortgageApproval() {
 		isBuyToLet = false;
+		isFirstTimeBuyer = false;
 	}
 	
 	/********************************************
@@ -25,6 +26,7 @@ public class MortgageApproval {
 		if(nPayments == 0) return(0.0);
 		nPayments -= 1;
 		principal = principal*(1.0 + monthlyInterestRate) - monthlyPayment;
+		if(nPayments == 0) Model.bank.endMortgageContract(this);
 		return(monthlyPayment);
 	}
 
@@ -40,21 +42,19 @@ public class MortgageApproval {
 			principal = 0.0;
 			monthlyPayment = 0.0;
 			nPayments = 0;
+			Model.bank.endMortgageContract(this);
 			return(principal);
 		}
 		monthlyPayment *= (principal-amount)/principal;
 		principal -= amount;
 		return(amount);
 	}
-	
-	public void signContract(Household h) {
-		Collectors.creditSupply.recordLoan(h, this);
-	}
-	
+		
 	public int 		nPayments;
 	public double 	monthlyPayment;
 	public double	principal;
 	public double 	monthlyInterestRate;
 	public double	downPayment;
 	public boolean	isBuyToLet;
+	public boolean	isFirstTimeBuyer;
 }

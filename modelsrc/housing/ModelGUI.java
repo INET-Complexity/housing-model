@@ -76,24 +76,24 @@ public class ModelGUI extends GUIState implements Steppable {
         			.addVariable(Model.housingMarket,"averageDaysOnMarket", "Years on market", new DataRecorder.Transform() {
         				public double exec(double x) {return(Math.min(x/360.0, 1.0));}
         			})
-        			.addVariable(Model.housingMarket.diagnostics, "nBuyers", "Buyers (1000s)", new DataRecorder.Transform() {
+        			.addVariable(Collectors.housingMarketStats, "nBuyers", "Buyers (1000s)", new DataRecorder.Transform() {
         				public double exec(double x) {return(x/1000.0);}
         			})
 //        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageSoldPriceToOLP", "Sold Price/List price")
-        			.addVariable(Model.collectors.creditSupply,"affordability", "Affordability (Mortgage-payment/income)")
+        			.addVariable(Collectors.creditSupply,"affordability", "Affordability (Mortgage-payment/income)")
     	);
 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Bid/Offer quantities","Time (years)","Number")
-        			.addVariable(Model.housingMarket.diagnostics,"nSales", "Transactions")
-        			.addVariable(Model.housingMarket.diagnostics,"nSellers", "Sellers")
-        			.addVariable(Model.housingMarket.diagnostics,"nBuyers", "Buyers")
+        			.addVariable(Collectors.housingMarketStats,"nSales", "Transactions")
+        			.addVariable(Collectors.housingMarketStats,"nSellers", "Sellers")
+        			.addVariable(Collectors.housingMarketStats,"nBuyers", "Buyers")
     	);
         
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Bid/Offer Prices","Time (years)","Price")
-        			.addVariable(Model.housingMarket.diagnostics,"averageBidPrice", "Average Bid Price")
-        			.addVariable(Model.housingMarket.diagnostics,"averageOfferPrice", "Average Offer Price")        			
+        			.addVariable(Collectors.housingMarketStats,"averageBidPrice", "Average Bid Price")
+        			.addVariable(Collectors.housingMarketStats,"averageOfferPrice", "Average Offer Price")        			
         );
 
 //        timeSeriesPlots.add(
@@ -103,10 +103,10 @@ public class ModelGUI extends GUIState implements Steppable {
 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Tenure quantities","Time (years)","number")
-        			.addVariable(Household.diagnostics,"nHomeless", "Social-Housing")
-        			.addVariable(Household.diagnostics,"nNonOwner", "Non Owners")
-        			.addVariable(Household.diagnostics,"nEmpty", "Empty Houses")
-        			.addVariable(Household.diagnostics,"nHouseholds", "Total")
+        			.addVariable(Collectors.householdStats,"nHomeless", "Social-Housing")
+        			.addVariable(Collectors.householdStats,"nNonOwner", "Non Owners")
+        			.addVariable(Collectors.householdStats,"nEmpty", "Empty Houses")
+        			.addVariable(Collectors.householdStats,"nHouseholds", "Total")
     	);
         
         for(TimeSeriesPlot plot : timeSeriesPlots) {
@@ -122,17 +122,16 @@ public class ModelGUI extends GUIState implements Steppable {
     @Override
     public void start() {
         super.start();
-        Household.diagnostics.init();
         
   //      addSeries(housingChart, "Social Housing", Household.diagnostics.homelessData);
   //      addSeries(housingChart, "Renting", Household.diagnostics.rentingData);
-        addSeries(housePriceChart, "Modelled prices", Model.housingMarket.diagnostics.priceData);
+        addSeries(housePriceChart, "Modelled prices", Collectors.housingMarketStats.priceData);
 //        addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);
-        addSeries(mortgageStatsChart, "LTV distribution", Model.collectors.creditSupply.ltv_distribution);
-        addSeries(mortgageStatsChart, "LTI distribution (x0.1)", Model.collectors.creditSupply.lti_distribution);
-        addSeries(mortgagePhaseChart, "Approved mortgages", Model.collectors.creditSupply.approved_mortgages);
+        addSeries(mortgageStatsChart, "Owner-occupier LTV distribution", Collectors.creditSupply.oo_ltv_distribution);
+        addSeries(mortgageStatsChart, "Owner-occupier LTI distribution (x0.1)", Collectors.creditSupply.oo_lti_distribution);
+        addSeries(mortgagePhaseChart, "Approved mortgages", Collectors.creditSupply.approved_mortgages);
         
-        housePriceChart.addSeries(Model.housingMarket.diagnostics.referencePriceData, "Reference price", null);
+        housePriceChart.addSeries(Collectors.housingMarketStats.referencePriceData, "Reference price", null);
 //        bankBalanceChart.addSeries(Household.diagnostics.referenceBankBalData, "Reference bank balance", null);
 
         // Execute when each time-step is complete
@@ -149,9 +148,7 @@ public class ModelGUI extends GUIState implements Steppable {
         	plot.recordValues(t);
         }
         
-        Household.diagnostics.step();
         Model.collectors.step();
-        Model.housingMarket.diagnostics.step();
     }
     
     

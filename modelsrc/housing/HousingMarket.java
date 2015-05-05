@@ -34,134 +34,6 @@ public class HousingMarket {
 		public static final double G = Math.exp(-1.0/8); // Decay const for averageListPrice averaging
 	}
 
-	/**
-	 * Visualisation of the housing market
-	 * @author daniel
-	 *
-	 */
-	public class Diagnostics {
-
-		public double averageSoldPriceToOLP;
-		public double averageBidPrice;
-		public double averageOfferPrice;
-		public int    nSales, saleCount;
-		public int    nBuyers;
-		public int    nSellers;
-	    public double [][]    priceData;
-	    public double [][]    referencePriceData;
-		double [] offerPrices;
-		double [] bidPrices;
-
-		public Diagnostics() {
-			averageSoldPriceToOLP = 1.0;
-			saleCount = 0;
-			nSales = 0;
-			nBuyers = 0;
-			nSellers = 0;
-	        priceData = new double[2][House.Config.N_QUALITY];
-	        referencePriceData = new double[2][House.Config.N_QUALITY];
-	        int i;
-	        for(i=0; i<House.Config.N_QUALITY; ++i) {
-	        	priceData[0][i] = HousingMarket.referencePrice(i);
-	        	referencePriceData[0][i] = HousingMarket.referencePrice(i);
-	        	referencePriceData[1][i] = HousingMarket.referencePrice(i);
-	        }
-
-		}
-
-		public void record() {
-			nSales = saleCount;
-			saleCount = 0;
-			nSellers = onMarket.size();
-			nBuyers = buyers.size();
-
-			// -- Record average bid price
-			// ---------------------------
-			averageBidPrice = 0.0;
-			for(HouseBuyerRecord buyer : buyers) {
-				averageBidPrice += buyer.price;
-			}
-			if(buyers.size() > 0) averageBidPrice /= buyers.size();
-
-			// -- Record average offer price
-			// -----------------------------
-			averageOfferPrice = 0.0;
-			for(HouseSaleRecord sale : onMarket.values()) {
-				averageOfferPrice += sale.currentPrice;
-			}
-			if(onMarket.size() > 0) averageOfferPrice /= onMarket.size();
-			recordOfferPrices();
-			recordBidPrices();
-		}
-		
-		public void step() {
-	        int i;
-	        for(i=0; i<House.Config.N_QUALITY; ++i) {
-	        	priceData[1][i] = Model.housingMarket.averageSalePrice[i];
-	        }
-		}
-		
-		public void recordSale(HouseSaleRecord sale) {
-			if(sale.initialListedPrice > 0.01) {
-				averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.currentPrice/sale.initialListedPrice;
-			}
-			saleCount += 1;			
-		}
-		
-		public void recordBid(double price) {
-//			bidCount += 1;
-//			averageBidPrice += price;
-		}
-		
-		protected void recordOfferPrices() {
-			offerPrices = new double[onMarket.size()];
-			int i = 0;
-			for(HouseSaleRecord sale : onMarket.values()) {
-				offerPrices[i] = sale.currentPrice;
-				++i;
-			}
-		}
-
-		protected void recordBidPrices() {
-			bidPrices = new double[buyers.size()];
-			int i = 0;
-			
-			for(HouseBuyerRecord bid : buyers) {
-				bidPrices[i] = bid.price;
-				++i;
-			}
-		}
-		public double[] getOfferPrices() {
-			return(offerPrices);
-		}
-
-		public double[] getBidPrices() {
-			return(bidPrices);
-		}
-
-		public double getAverageBidPrice() {
-			return averageBidPrice;
-		}
-
-		public double getAverageOfferPrice() {
-			return averageOfferPrice;
-		}
-
-		public int getnSales() {
-			return nSales;
-		}
-
-		public int getnBuyers() {
-			return nBuyers;
-		}
-
-		public int getnSellers() {
-			return nSellers;
-		}
-		
-		
-
-	}
 	
 	public HousingMarket() {
 		int i;
@@ -173,7 +45,6 @@ public class HousingMarket {
 		lastHousePriceIndex = 1.0;
 		HPIAppreciation = 0.0;
 		averageDaysOnMarket = 30;
-		diagnostics = this.new Diagnostics();
 	}
 	
 	/******************************************
@@ -214,7 +85,6 @@ public class HousingMarket {
 	 ******************************************/
 	public void bid(Household buyer, double price) {
 		buyers.add(new HouseBuyerRecord(buyer, price));
-		diagnostics.recordBid(price);
 	}
 
 	/**************************************************
@@ -273,7 +143,6 @@ public class HousingMarket {
 		// --- update sales statistics		
 		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.t - sale.tInitialListing);
 		averageSalePrice[sale.quality] = Config.G*averageSalePrice[sale.quality] + (1.0-Config.G)*sale.currentPrice;
-		diagnostics.recordSale(sale);
 	}
 		
 	public boolean isOnMarket(House h) {
@@ -317,7 +186,6 @@ public class HousingMarket {
 		housePriceIndex /= House.Config.N_QUALITY*Config.HPI_MEAN;
 		HPIAppreciation += (1.0-Config.F)*housePriceIndex;
 
-		diagnostics.record();
 	}
 
 	
@@ -337,8 +205,6 @@ public class HousingMarket {
 	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
 	public double HPIAppreciation;
 	public double housePriceIndex;
-
 	public double lastHousePriceIndex;
 	
-	public Diagnostics diagnostics;
 }
