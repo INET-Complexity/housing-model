@@ -15,4 +15,7 @@ public interface IHouseOwner {
 	
 	/** Called when a tenant moves out of a house that the agent owns **/
 	public void endOfLettingAgreement(House h);
+
+	public void completeHouseLet(House house);
+	
 }

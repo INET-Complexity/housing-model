@@ -55,7 +55,7 @@ public class HouseSaleMarket extends HousingMarket {
 				i = (int)(Model.rand.nextDouble()*potentialBuyers.size());
 				buyer = potentialBuyers.get(i);
 				if(buyer.buyer != seller.house.owner && 
-						buyer.buyer.decideToBuyBuyToLet(seller.currentPrice)) {
+						buyer.buyer.decideToBuyBuyToLet(seller.house, seller.currentPrice)) {
 					removeOffer(seller.house);
 					completeTransaction(buyer, seller);
 					potentialBuyers.remove(buyer);

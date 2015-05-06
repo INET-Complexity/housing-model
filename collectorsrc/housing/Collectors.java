@@ -11,7 +11,7 @@ public class Collectors {
 		creditSupply.step();
 		householdStats.step();
 		housingMarketStats.step();
-//		rentalMarketStats.step();
+		rentalMarketStats.step();
 	}
 	
 	public static CreditSupply		creditSupply 	= new CreditSupply();

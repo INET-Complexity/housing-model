@@ -21,6 +21,8 @@ public class Model extends SimState implements Steppable {
 	public Model(long seed) {
 		super(seed);
 		households.ensureCapacity(Demographics.TARGET_POPULATION*2);
+		housingMarket = new HouseSaleMarket();
+		rentalMarket = new HouseRentalMarket();
 		collectors = new Collectors();
 	}
 
@@ -49,6 +51,7 @@ public class Model extends SimState implements Steppable {
 		housingMarket.clearMarket();
 		for(Household h : households) h.preHouseLettingStep();
 		housingMarket.clearBuyToLetMarket();
+		Collectors.rentalMarketStats.record();
 		rentalMarket.clearMarket();
         bank.step();
         t += 1;
@@ -173,8 +176,8 @@ public class Model extends SimState implements Steppable {
 	public static Bank 				bank = new Bank();
 	public static Government		government = new Government();
 	public static Construction		construction = new Construction();
-	public static HouseSaleMarket 	housingMarket = new HouseSaleMarket();
-	public static HouseRentalMarket	rentalMarket = new HouseRentalMarket();
+	public static HouseSaleMarket 	housingMarket;
+	public static HouseRentalMarket	rentalMarket;
 	public static ArrayList<Household>	households = new ArrayList<Household>();
 	public static Demographics		demographics = new Demographics();
 	public static MersenneTwisterFast			rand = new MersenneTwisterFast(1L);
@@ -189,11 +192,6 @@ public class Model extends SimState implements Steppable {
 	// Getters/setters for MASON console
 	////////////////////////////////////////////////////////////////////////
 	
-	public Household.Config getHouseholdConfig() {
-		return(new Household.Config());
-	}
-	public String nameHouseholdConfig() {return("Household Configuration");}
-
 	public Collectors getCollectors() {
 		return(collectors);
 	}

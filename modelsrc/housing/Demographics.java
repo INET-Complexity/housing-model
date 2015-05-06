@@ -35,8 +35,8 @@ public class Demographics {
 		    Household h = iterator.next();
 			if(Model.rand.nextDouble() < probDeathGivenAge(h.lifecycle.age)/12.0) {
 				// --- inheritance
-				h.transferAllWealthTo(Model.households.get(Model.rand.nextInt(Model.households.size())));
 				iterator.remove();
+				h.transferAllWealthTo(Model.households.get(Model.rand.nextInt(Model.households.size())));
 			}
 		}
 	}

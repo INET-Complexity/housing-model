@@ -15,6 +15,13 @@ package housing;
  */
 public class CoreIndicators {
 	
+	public void step() {
+		if(dumpToFile) {
+			
+		}
+	}
+	
+	
 	/***
 	 * @return Owner-occupier mortgage LTV ratio (mean above the median)
 	 */
@@ -147,12 +154,35 @@ public class CoreIndicators {
 		return("House price to household disposable income ratio");
 	}
 
+	public boolean isDumpToFile() {
+		return dumpToFile;
+	}
+	public void setDumpToFile(boolean dumpToFile) {
+		this.dumpToFile = dumpToFile;
+		if(dumpToFile) {
+			
+		}
+	}
+	public String nameDumpToFile() {
+		return("Dump core indicators to file?");
+	}
+	
+	public String getDumpFilename() {
+		return dumpFilename;
+	}
+	public void setDumpFilename(String dumpFilename) {
+		this.dumpFilename = dumpFilename;
+	}
+	public String nameDumpFilename() {
+		return("Filename for core indicator dump:");
+	}
 	
 	
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Array tools
 	////////////////////////////////////////////////////////////////////////////////////////
 	
+
 	/***
 	 * 
 	 * @param d 	The frequency distribution. Doesn't need to be normalised.
@@ -226,4 +256,6 @@ public class CoreIndicators {
 	}
 
 	static final double UK_HOUSEHOLDS = 26.5e6; // approx number of households in UK
+	boolean		dumpToFile = false;
+	String		dumpFilename = "coreIndicators.csv";
 }

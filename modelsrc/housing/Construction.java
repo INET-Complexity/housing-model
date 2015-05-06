@@ -21,7 +21,7 @@ public class Construction implements IHouseOwner {
 			newBuild = new House();
 			newBuild.owner = this;
 			++housingStock;
-			price = Model.housingMarket.getAverageSalePrice(newBuild.quality);
+			price = HousingMarket.referencePrice(newBuild.quality);
 			Model.housingMarket.offer(newBuild, price);
 			--shortFall;
 		}
@@ -44,7 +44,12 @@ public class Construction implements IHouseOwner {
 		// TODO Auto-generated method stub
 
 	}
-	
+
+	@Override
+	public void completeHouseLet(House house) {
+		// TODO Auto-generated method stub		
+	}
+
 	public double housesPerHousehold; 	// target number of houses per household
 	public int housingStock;			// total number of houses built
 }
