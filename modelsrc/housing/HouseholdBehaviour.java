@@ -5,7 +5,10 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 import ec.util.MersenneTwisterFast;
 
 public class HouseholdBehaviour implements IHouseholdBehaviour {
-	public static double RENT_PROFIT_MARGIN = 0.05; // profit margin for buy-to-let investors
+	public static double RENT_PROFIT_MARGIN = 0.05; // profit margin for buy-to-let investors 
+	// Yield on rent had average 6% between 2009/01 and 2015/01, 
+	// minimum in 2009/10 maximum in 2012/04 peak-to-peak amplitude of 0.4%
+	// source: Bank of England, unpublished analysis based on Zoopla/Land reg matching, Philippe Bracke 
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
 	public double P_SELL = 1.0/(7.0*12.0);  // monthly probability of selling home
@@ -109,9 +112,18 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 
 	/********************************************************
 	 * Decide how much to bid on the rental market
+	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
 	 ********************************************************/
 	public double desiredRent(double monthlyIncome) {
-		return(0.33*monthlyIncome);
+		double annualIncome = monthlyIncome*12.0; // TODO: this should be net annual income, not gross
+		double rent;
+		if(annualIncome < 12000.0) {
+			rent = 386.0;
+		} else {
+			rent = 11.72*Math.pow(annualIncome, 0.372);
+		}
+		rent *= Math.exp(Model.rand.nextGaussian()*0.0826);
+		return(rent);
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////

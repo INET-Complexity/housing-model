@@ -22,7 +22,8 @@ public class Bank {
 		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
 		public double LTI = 6.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14
-		public double LTI_CAP_PERCENTAGE = 0.85; // %age of loans that must be constrianed below the LTI limit
+		public double OVER_LTI_MAX = 0.15; // proportion of loans allowed that are above the LTI limit
+		public double OVER_LTV_MAX = 0.10; // proportion of loans allowed that are above the LTV limit		
 		public int    N_PAYMENTS = 12*25; // number of monthly repayments
 	}
 
@@ -60,6 +61,7 @@ public class Bank {
 		supplyVal = 0.0;
 		nLoans = 0;
 		nOverLTICapLoans = 0;
+		nOverLTVCapLoans = 0;
 	}
 	
 	/***
@@ -118,11 +120,17 @@ public class Bank {
 		mortgages.add(approval);
 		Collectors.creditSupply.recordLoan(h, approval);
 		++nLoans;
-		if(isHome && (approval.principal/h.annualEmploymentIncome > config.LTI)) {
-			++nOverLTICapLoans;
+		if(isHome) {
+			if(approval.principal/h.annualEmploymentIncome > config.LTI) {
+				++nOverLTICapLoans;
+			}
+			if(approval.principal/(approval.principal + approval.downPayment) > loanToValue(h,isHome)) {
+				++nOverLTVCapLoans;
+			}
 		}
 		return(approval);
 	}
+	
 	
 	public void endMortgageContract(MortgageApproval mortgage) {
 		mortgages.remove(mortgage);
@@ -141,13 +149,15 @@ public class Bank {
 	public MortgageApproval requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
 		MortgageApproval approval = new MortgageApproval();
 		double r = getMortgageInterestRate()/12.0; // monthly interest rate
-		double ltv_principal, pdi_principal, lti_principal;
+		double ltv_principal, lti_principal;
 
 		// --- calculate maximum allowable principal
-		ltv_principal = housePrice*loanToValue(h, isHome);
-		pdi_principal = Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
-		approval.principal = Math.min(ltv_principal, pdi_principal);
-		if(isHome && (nOverLTICapLoans*1.0/nLoans < config.LTI_CAP_PERCENTAGE)) { // no LTI constraint for buy-to-let
+		approval.principal = Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
+		if(!isHome || ((nOverLTVCapLoans+1.0)/(nLoans+1.0) > config.OVER_LTV_MAX)) { // LTV for all buy-to-let
+			ltv_principal = housePrice*loanToValue(h, isHome);
+			approval.principal = Math.min(approval.principal, ltv_principal);
+		}
+		if(isHome && ((nOverLTICapLoans+1.0)/(nLoans+1.0) > config.OVER_LTI_MAX)) { // no LTI constraint for buy-to-let
 			lti_principal = h.annualEmploymentIncome * config.LTI;
 			approval.principal = Math.min(approval.principal, lti_principal);
 		}
@@ -160,6 +170,7 @@ public class Bank {
 //			return(null);
 		}
 		// --- allow larger downpayments
+		if(desiredDownPayment < 0.0) desiredDownPayment = 0.0;
 		if(desiredDownPayment > h.bankBalance) desiredDownPayment = h.bankBalance;
 		if(desiredDownPayment > housePrice) desiredDownPayment = housePrice;
 		if(desiredDownPayment > approval.downPayment) {
@@ -175,6 +186,7 @@ public class Bank {
 		return(approval);
 	}
 
+	
 	/*****************************************
 	 * Find the maximum mortgage that this mortgage-lender will approve
 	 * to a household.
@@ -189,16 +201,18 @@ public class Bank {
 		double pdi_max; // disposable income constraint
 		double lti_max; // loan to income constraint
 		
-		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-		pdi_max = h.bankBalance + Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();		
-		ltv_max = Math.min(pdi_max, ltv_max); // find minimum
-		if(isHome && (nOverLTICapLoans*1.0/nLoans < config.LTI_CAP_PERCENTAGE)) { // no LTI constraint for buy-to-let
-			lti_max = h.annualEmploymentIncome * config.LTI/loanToValue(h,isHome);
-			ltv_max = Math.min(ltv_max, lti_max);
+		pdi_max = h.bankBalance + Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
+		if(!isHome || ((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTV_MAX)) {
+			ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
+			pdi_max = Math.min(pdi_max, ltv_max); // find minimum
 		}
-		ltv_max = Math.floor(ltv_max*100.0)/100.0; // round down to nearest penny
+		if(isHome && ((nOverLTICapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTI_MAX)) { // no LTI constraint for buy-to-let
+			lti_max = h.annualEmploymentIncome * config.LTI/loanToValue(h,isHome);
+			pdi_max = Math.min(pdi_max, lti_max);
+		}
 		
-		return(ltv_max);
+		pdi_max = Math.floor(pdi_max*100.0)/100.0; // round down to nearest penny
+		return(pdi_max);
 	}
 
 	/**********************************************
@@ -229,7 +243,8 @@ public class Bank {
 	public double		supplyVal;		// monthly supply of mortgage loans (pounds)
 	public double		lastMonthsSupplyVal;
 	public double		dDemand_dInterest; // rate of change of demand with interest rate (pounds)
-	public int			nOverLTICapLoans; 	// number of loans above LTI cap this step
+	public int			nOverLTICapLoans; 	// number of (non-BTL) loans above LTI cap this step
+	public int			nOverLTVCapLoans;	// number of (non-BTL) loans above LTV cap this step
 	public int			nLoans; 			// total number of non-BTL loans this step
 	
 }
