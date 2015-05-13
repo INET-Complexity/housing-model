@@ -27,6 +27,7 @@ public class Bank {
 		public boolean REGULATE_BTL_LTI = false;	// apply LTI regulation to buy-to-let?
 		public boolean REGULATE_BTL_LTV = true;	// apply LTI regulation to buy-to-let?		
 		public int    N_PAYMENTS = 12*25; // number of monthly repayments
+		public double INITIAL_BASE_RATE = 0.5; // Bank base-rate
 	}
 
 	/********************************
@@ -42,6 +43,7 @@ public class Bank {
 		config = c;
 		setMortgageInterestRate(0.03);
 		dDemand_dInterest = 10*1e10;
+		baseRate = config.INITIAL_BASE_RATE;
 		resetMonthlyCounters();
 	}
 	
@@ -83,7 +85,7 @@ public class Bank {
 	 * @return The interest rate on mortgages.
 	 *****************************/
 	public double getMortgageInterestRate() {
-		return(interestRate);
+		return(baseRate + interestSpread);
 	}
 	
 
@@ -92,7 +94,7 @@ public class Bank {
 	 * @return The interest rate on mortgages.
 	 *****************************/
 	public void setMortgageInterestRate(double rate) {
-		interestRate = rate;
+		interestSpread = rate - baseRate;
 		double r = rate/12.0;
 		k = r/(1.0 - Math.pow(1.0+r, -config.N_PAYMENTS));
 	}
@@ -238,7 +240,8 @@ public class Bank {
 	
 	public HashSet<MortgageApproval>		mortgages;	// all unpaid mortgage contracts supplied by the bank
 	public double 		k; 				// principal to monthly payment factor
-	public double		interestRate;	// current mortgage interest rate (monthly rate*12)
+	public double		interestSpread;	// current mortgage interest spread above base rate (monthly rate*12)
+	public double		baseRate;
 	// --- supply strategy stuff
 	public double		supplyTarget; 	// target supply of mortgage lending (pounds)
 	public double		demand;			// monthly demand for mortgage loans (pounds)
