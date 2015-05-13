@@ -358,7 +358,7 @@ public class Household implements IHouseOwner {
 	protected void bidOnHousingMarket(double p) {
 		double desiredPrice = behaviour.desiredPurchasePrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
-		double ltiConstraint =  annualEmploymentIncome * bank.config.LTI/bank.loanToValue(this, true); // ##### TEST #####
+		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(this,true)/bank.loanToValue(this, true); // ##### TEST #####
 		if(desiredPrice > ltiConstraint) desiredPrice = ltiConstraint - 1.0; // ##### TEST #####
 //		if(desiredPrice > maxMortgage) desiredPrice = maxMortgage - 1;
 		if(desiredPrice <= maxMortgage) {
@@ -382,7 +382,7 @@ public class Household implements IHouseOwner {
 		double costOfRent;
 		double housePrice = behaviour.desiredPurchasePrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
-		double ltiConstraint =  annualEmploymentIncome * bank.config.LTI/bank.loanToValue(this, true); // ##### TEST #####
+		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(this,true)/bank.loanToValue(this, true); // ##### TEST #####
 		if(housePrice > ltiConstraint) housePrice = ltiConstraint - 1.0; // ##### TEST #####
 		if(housePrice <= maxMortgage) {
 			if(home != null) {

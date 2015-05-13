@@ -87,35 +87,11 @@ public class CreditSupply {
 	public String desTHETA_HOME() {return("Loan to Value haircut for homeowners");}
 	public String desTHETA_BTL() {return("Loan to Value haircut for buy-to-let investors");}
 	public String desN_PAYMENTS() {return("Number of monthly repayments in a mortgage");}
-	public double getLTI() {
-		return(Model.bank.config.LTI);
-	}		
-	public void setLTI(double x) {
-		Model.bank.config.LTI = x;
+	public double getBaseRate() {
+		return Model.bank.getBaseRate();
 	}
-	public double getTHETA_FTB() {
-		return Model.bank.config.THETA_FTB;
-	}
-	public void setTHETA_FTB(double tHETA_FTB) {
-		Model.bank.config.THETA_FTB = tHETA_FTB;
-	}
-	public double getTHETA_HOME() {
-		return Model.bank.config.THETA_HOME;
-	}
-	public void setTHETA_HOME(double tHETA_HOME) {
-		Model.bank.config.THETA_HOME = tHETA_HOME;
-	}
-	public double getTHETA_BTL() {
-		return Model.bank.config.THETA_BTL;
-	}
-	public void setTHETA_BTL(double tHETA_BTL) {
-		Model.bank.config.THETA_BTL = tHETA_BTL;
-	}
-	public int getN_PAYMENTS() {
-		return Model.bank.config.N_PAYMENTS;
-	}
-	public void setN_PAYMENTS(int n_PAYMENTS) {
-		Model.bank.config.N_PAYMENTS = n_PAYMENTS;
+	public void setBaseRate(double rate) {
+		Model.bank.setBaseRate(rate);
 	}
 
 	public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability

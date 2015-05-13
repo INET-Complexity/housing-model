@@ -13,37 +13,23 @@ import java.util.HashSet;
  *************************************************/
 public class Bank {
 
-	/**
-	 * This object holds the configutation for the Bank.
-	 * @author daniel
-	 */
-	static public class Config {
-		public double THETA_FTB = 0.1; // first-time buyer haircut (LTV)
-		public double THETA_HOME = 0.2; // home buyer haircut (LTV)
-		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
-		public double LTI = 6.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14
-		public double OVER_LTI_MAX = 0.15; // proportion of loans allowed that are above the LTI limit
-		public double OVER_LTV_MAX = 0.10; // proportion of loans allowed that are above the LTV limit
-		public boolean REGULATE_BTL_LTI = false;	// apply LTI regulation to buy-to-let?
-		public boolean REGULATE_BTL_LTV = true;	// apply LTI regulation to buy-to-let?		
-		public int    N_PAYMENTS = 12*25; // number of monthly repayments
-		public double INITIAL_BASE_RATE = 0.5; // Bank base-rate
-	}
+	public int    N_PAYMENTS = 12*25; // number of monthly repayments
+	public double INITIAL_BASE_RATE = 0.5; // Bank base-rate
+	public double MAX_OO_LTV = 1.0;		// maximum LTV bank will give to owner-occupier when not regulated	
+	public double MAX_BTL_LTV = 0.6;	// maximum LTV bank will give to BTL when not regulated
+	public double MAX_OO_LTI = 6.5;		// maximum LTI bank will give to owner-occupier when not regulated	
+	public double MAX_BTL_LTI = 10.0;	// maximum LTI bank will give to BTL when not regulated
 
 	/********************************
 	 * Constructor. This just sets up a few
 	 * pre-computed values.
 	 ********************************/
-	public Bank() {
-		this(new Bank.Config());
+	public Bank(CentralBank c) {
 		mortgages = new HashSet<MortgageApproval>();
-	}
-	
-	public Bank(Bank.Config c) {
-		config = c;
+		centralBank = c;
 		setMortgageInterestRate(0.03);
 		dDemand_dInterest = 10*1e10;
-		baseRate = config.INITIAL_BASE_RATE;
+		baseRate = INITIAL_BASE_RATE;
 		resetMonthlyCounters();
 	}
 	
@@ -95,11 +81,23 @@ public class Bank {
 	 *****************************/
 	public void setMortgageInterestRate(double rate) {
 		interestSpread = rate - baseRate;
-		double r = rate/12.0;
-		k = r/(1.0 - Math.pow(1.0+r, -config.N_PAYMENTS));
+		recalculateK();
 	}
 	
-	
+	public double getBaseRate() {
+		return baseRate;
+	}
+
+	public void setBaseRate(double baseRate) {
+		this.baseRate = baseRate;
+		recalculateK();
+	}
+
+	protected void recalculateK() {
+		double r = getMortgageInterestRate()/12.0;
+		k = r/(1.0 - Math.pow(1.0+r, -N_PAYMENTS));		
+	}
+
 	/*******************************
 	 * Get the monthly payment on a mortgage as a fraction of the mortgage principle.
 	 * @return The monthly payment fraction.
@@ -125,10 +123,10 @@ public class Bank {
 		Collectors.creditSupply.recordLoan(h, approval);
 		++nLoans;
 		if(isHome) {
-			if(approval.principal/h.annualEmploymentIncome > config.LTI) {
+			if(approval.principal/h.annualEmploymentIncome > centralBank.loanToIncomeRegulation(h,isHome)) {
 				++nOverLTICapLoans;
 			}
-			if(approval.principal/(approval.principal + approval.downPayment) > loanToValue(h,isHome)) {
+			if(approval.principal/(approval.principal + approval.downPayment) > centralBank.loanToValueRegulation(h,isHome)) {
 				++nOverLTVCapLoans;
 			}
 		}
@@ -157,14 +155,13 @@ public class Bank {
 
 		// --- calculate maximum allowable principal
 		approval.principal = Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
-		if((isHome || config.REGULATE_BTL_LTV) && ((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTV_MAX)) {
-			ltv_principal = housePrice*loanToValue(h, isHome);
-			approval.principal = Math.min(approval.principal, ltv_principal);
-		}
-		if((isHome || config.REGULATE_BTL_LTI) && ((nOverLTICapLoans+1.0)/(nLoans+1.0) > config.OVER_LTI_MAX)) {
-			lti_principal = h.annualEmploymentIncome * config.LTI;
-			approval.principal = Math.min(approval.principal, lti_principal);
-		}
+
+		ltv_principal = housePrice*loanToValue(h, isHome);
+		approval.principal = Math.min(approval.principal, ltv_principal);
+
+		lti_principal = h.annualEmploymentIncome * loanToIncome(h,isHome);
+		approval.principal = Math.min(approval.principal, lti_principal);
+
 		approval.downPayment = housePrice - approval.principal;
 		
 		if(h.bankBalance < approval.downPayment) {
@@ -183,7 +180,7 @@ public class Bank {
 		}
 		
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();		
-		approval.nPayments = config.N_PAYMENTS;
+		approval.nPayments = N_PAYMENTS;
 		approval.monthlyInterestRate = r;
 		approval.isBuyToLet = !isHome;
 		approval.isFirstTimeBuyer = h.isFirstTimeBuyer();
@@ -204,16 +201,14 @@ public class Bank {
 		double ltv_max; // loan to value constraint
 		double pdi_max; // disposable income constraint
 		double lti_max; // loan to income constraint
-		
+
 		pdi_max = h.bankBalance + Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
-		if((isHome || config.REGULATE_BTL_LTV) && ((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTV_MAX)) {
-			ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-			pdi_max = Math.min(pdi_max, ltv_max);
-		}
-		if((isHome || config.REGULATE_BTL_LTI) && ((nOverLTICapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTI_MAX)) {
-			lti_max = h.annualEmploymentIncome * config.LTI/loanToValue(h,isHome);
-			pdi_max = Math.min(pdi_max, lti_max);
-		}
+		
+		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
+		pdi_max = Math.min(pdi_max, ltv_max);
+
+		lti_max = h.annualEmploymentIncome * loanToIncome(h,isHome)/loanToValue(h,isHome);
+		pdi_max = Math.min(pdi_max, lti_max);
 		
 		pdi_max = Math.floor(pdi_max*100.0)/100.0; // round down to nearest penny
 		return(pdi_max);
@@ -227,16 +222,32 @@ public class Bank {
 	 * @return The loan-to-value ratio applicable to the given household.
 	 *********************************************/
 	public double loanToValue(Household h, boolean isHome) {
+		double limit;
 		if(isHome) {
-			if(h.isFirstTimeBuyer()) {
-				return(1.0 - config.THETA_FTB);
-			}
-			return(1.0 - config.THETA_HOME);
+			limit = MAX_OO_LTV;
+		} else {
+			limit = MAX_BTL_LTV;
 		}
-		return(1.0 - config.THETA_BTL);
+		if((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > centralBank.proportionOverLTVLimit) {
+			limit = Math.min(limit, centralBank.loanToValueRegulation(h,isHome));
+		}
+		return(limit);
 	}
 
-	public Config 		config;
+	public double loanToIncome(Household h, boolean isHome) {
+		double limit;
+		if(isHome) {
+			limit = MAX_OO_LTI;
+		} else {
+			limit = MAX_BTL_LTI;
+		}
+		if((nOverLTICapLoans+1.0)/(nLoans + 1.0) > centralBank.proportionOverLTILimit) {
+			limit = Math.min(limit, centralBank.loanToIncomeRegulation(h,isHome));
+		}
+		return(limit);
+	}
+
+	public CentralBank 		centralBank;
 	
 	public HashSet<MortgageApproval>		mortgages;	// all unpaid mortgage contracts supplied by the bank
 	public double 		k; 				// principal to monthly payment factor
