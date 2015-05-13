@@ -23,7 +23,9 @@ public class Bank {
 		public double THETA_BTL = 0.4; // buy-to-let buyer haircut (LTV)
 		public double LTI = 6.5;//6.5;//4.5; // loan-to-income ratio. Capped at 4.5 for all lenders from 01/10/14
 		public double OVER_LTI_MAX = 0.15; // proportion of loans allowed that are above the LTI limit
-		public double OVER_LTV_MAX = 0.10; // proportion of loans allowed that are above the LTV limit		
+		public double OVER_LTV_MAX = 0.10; // proportion of loans allowed that are above the LTV limit
+		public boolean REGULATE_BTL_LTI = false;	// apply LTI regulation to buy-to-let?
+		public boolean REGULATE_BTL_LTV = true;	// apply LTI regulation to buy-to-let?		
 		public int    N_PAYMENTS = 12*25; // number of monthly repayments
 	}
 
@@ -153,11 +155,11 @@ public class Bank {
 
 		// --- calculate maximum allowable principal
 		approval.principal = Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
-		if(!isHome || ((nOverLTVCapLoans+1.0)/(nLoans+1.0) > config.OVER_LTV_MAX)) { // LTV for all buy-to-let
+		if((isHome || config.REGULATE_BTL_LTV) && ((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTV_MAX)) {
 			ltv_principal = housePrice*loanToValue(h, isHome);
 			approval.principal = Math.min(approval.principal, ltv_principal);
 		}
-		if(isHome && ((nOverLTICapLoans+1.0)/(nLoans+1.0) > config.OVER_LTI_MAX)) { // no LTI constraint for buy-to-let
+		if((isHome || config.REGULATE_BTL_LTI) && ((nOverLTICapLoans+1.0)/(nLoans+1.0) > config.OVER_LTI_MAX)) {
 			lti_principal = h.annualEmploymentIncome * config.LTI;
 			approval.principal = Math.min(approval.principal, lti_principal);
 		}
@@ -202,11 +204,11 @@ public class Bank {
 		double lti_max; // loan to income constraint
 		
 		pdi_max = h.bankBalance + Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
-		if(!isHome || ((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTV_MAX)) {
+		if((isHome || config.REGULATE_BTL_LTV) && ((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTV_MAX)) {
 			ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
-			pdi_max = Math.min(pdi_max, ltv_max); // find minimum
+			pdi_max = Math.min(pdi_max, ltv_max);
 		}
-		if(isHome && ((nOverLTICapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTI_MAX)) { // no LTI constraint for buy-to-let
+		if((isHome || config.REGULATE_BTL_LTI) && ((nOverLTICapLoans+1.0)/(nLoans + 1.0) > config.OVER_LTI_MAX)) {
 			lti_max = h.annualEmploymentIncome * config.LTI/loanToValue(h,isHome);
 			pdi_max = Math.min(pdi_max, lti_max);
 		}
