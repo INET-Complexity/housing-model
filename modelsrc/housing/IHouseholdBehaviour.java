@@ -43,7 +43,9 @@ public interface IHouseholdBehaviour {
 	/**
 	 * How much rent does an investor decide to charge on a buy-to-let house? 
 	 */
-	public abstract double buyToLetRent(double mortgagePayment);
+//	public abstract double buyToLetRent(double mortgagePayment);
+	public abstract double buyToLetRent(double pbar, double d, double mortgagePayment);
+	public abstract double rethinkBuyToLetRent(HouseSaleRecord sale);
 
 	/**
 	 * @param h The house in question
@@ -54,4 +56,5 @@ public interface IHouseholdBehaviour {
 
 	public abstract boolean decideToBuyBuyToLet(House h, Household me, double price);
 	public abstract boolean isPropertyInvestor();
+
 }

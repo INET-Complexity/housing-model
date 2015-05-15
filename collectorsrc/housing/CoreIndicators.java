@@ -16,9 +16,6 @@ package housing;
 public class CoreIndicators {
 	
 	public void step() {
-		if(dumpToFile) {
-			
-		}
 	}
 	
 	
@@ -58,7 +55,7 @@ public class CoreIndicators {
 		return(Collectors.creditSupply.netCreditGrowth*12.0);
 	}
 	public String desHouseholdCreditGrowth() {
-		return("Household credit growth (net, annualised)");
+		return("Household credit growth (net, annualised, as a proportion of credit in previous step)");
 	}
 	public String nameHouseholdCreditGrowth() {
 		return("Household credit growth");
@@ -153,31 +150,27 @@ public class CoreIndicators {
 	public String namePriceToIncome() {
 		return("House price to household disposable income ratio");
 	}
+	
+	public double getRentalYield() {
+		return(Collectors.householdStats.rentalYield);
+	}
+	public String desRentalYield() {
+		return("Average gross annual yield on occupied rental properties");
+	}
+	public String nameRentalYield() {
+		return("Rental Yield");
+	}
 
-	public boolean isDumpToFile() {
-		return dumpToFile;
+	public double getHousePriceGrowth() {
+		return(Collectors.housingMarketStats.getHPA());
 	}
-	public void setDumpToFile(boolean dumpToFile) {
-		this.dumpToFile = dumpToFile;
-		if(dumpToFile) {
-			
-		}
+	public String desHousePriceGrowth() {
+		return("Growth of house price index (year on year)");
 	}
-	public String nameDumpToFile() {
-		return("Dump core indicators to file?");
+	public String nameHousePriceGrowth() {
+		return("Annual house price growth");
 	}
-	
-	public String getDumpFilename() {
-		return dumpFilename;
-	}
-	public void setDumpFilename(String dumpFilename) {
-		this.dumpFilename = dumpFilename;
-	}
-	public String nameDumpFilename() {
-		return("Filename for core indicator dump:");
-	}
-	
-	
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Array tools
 	////////////////////////////////////////////////////////////////////////////////////////
@@ -194,8 +187,8 @@ public class CoreIndicators {
 		// median is where they meet in the middle
 		if(d.length < 2) return(0);
 		int top = d.length;
-		int bottom = -1;
-		double total = 0.0;
+		int bottom = 0;
+		double total = d[0];
 		
 		while(top > bottom) {
 			if(total < 0.0) {
@@ -256,6 +249,4 @@ public class CoreIndicators {
 	}
 
 	static final double UK_HOUSEHOLDS = 26.5e6; // approx number of households in UK
-	boolean		dumpToFile = false;
-	String		dumpFilename = "coreIndicators.csv";
 }

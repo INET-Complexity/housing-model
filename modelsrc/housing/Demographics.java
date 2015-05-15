@@ -1,7 +1,7 @@
 package housing;
 
 import java.util.Iterator;
-import java.util.function.DoubleUnaryOperator;
+// import java.util.function.DoubleUnaryOperator; // not compatible with Java 1.7
 
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.ArrayRealVector;

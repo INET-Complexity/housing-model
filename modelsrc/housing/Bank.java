@@ -27,9 +27,10 @@ public class Bank {
 	public Bank(CentralBank c) {
 		mortgages = new HashSet<MortgageApproval>();
 		centralBank = c;
-		setMortgageInterestRate(0.03);
-		dDemand_dInterest = 10*1e10;
 		baseRate = INITIAL_BASE_RATE;
+		dDemand_dInterest = 10*1e10;
+
+		setMortgageInterestRate(0.03);
 		resetMonthlyCounters();
 	}
 	
@@ -184,6 +185,7 @@ public class Bank {
 		approval.monthlyInterestRate = r;
 		approval.isBuyToLet = !isHome;
 		approval.isFirstTimeBuyer = h.isFirstTimeBuyer();
+		approval.purchasePrice = approval.principal + approval.downPayment;
 		return(approval);
 	}
 

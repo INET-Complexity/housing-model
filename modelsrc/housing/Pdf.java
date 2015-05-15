@@ -1,6 +1,6 @@
 package housing;
 
-import java.util.function.DoubleUnaryOperator;
+// import java.util.function.DoubleUnaryOperator; // not compatible with Java 1.7
 
 /****
  * Represents an arbitrarily shaped, 1-dimensional Probability Density Function.
@@ -47,8 +47,8 @@ public class Pdf {
 		x = start + dx/2.0;
 		cp = 0.0;
 		dcp_dx = 0.0;
-		inverseCDF[0] = 0.0;
-		inverseCDF[CDF_SAMPLES-1] = 1.0;
+		inverseCDF[0] = start;
+		inverseCDF[CDF_SAMPLES-1] = end;
 		for(i=1; i<(CDF_SAMPLES-1); ++i) {
 			targetcp = i/(CDF_SAMPLES-1.0);
 			while(cp < targetcp && x < end) {

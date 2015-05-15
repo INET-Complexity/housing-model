@@ -49,12 +49,15 @@ public class MortgageApproval {
 		principal -= amount;
 		return(amount);
 	}
-		
+
+
+	
 	public int 		nPayments;
 	public double 	monthlyPayment;
 	public double	principal;
 	public double 	monthlyInterestRate;
 	public double	downPayment;
+	public double	purchasePrice;
 	public boolean	isBuyToLet;
 	public boolean	isFirstTimeBuyer;
 }

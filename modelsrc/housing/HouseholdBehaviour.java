@@ -38,28 +38,28 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 		return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*Model.rand.nextGaussian())),0.0));
 	}
 
-	/**
+	/***************************
 	 * Decide on desired purchase price as a function of monthly income and current
 	 *  of house price appreciation.
-	 */
+	 ****************************/
 	@Override
 	public double desiredPurchasePrice(double monthlyIncome, double hpa) {
-		final double A = 0.0;//0.4;//0.48;			// sensitivity to house price appreciation
+		final double A = 0.48;//0.48;			// sensitivity to house price appreciation
 		final double EPSILON = 0.40;//0.36;//0.48;//0.365; // S.D. of noise
-		final double SIGMA = 5.4*12.0;//5.6;	// scale
+		final double SIGMA = 5.5*12.0;//5.6;	// scale
 		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*hpa));
 	}
 
-	/**
+	/********************************
 	 * @param pbar average sale price of houses of the same quality
 	 * @param d average number of days on the market before sale
 	 * @param principal amount of principal left on any mortgage on this house
 	 * @return initial sale price of a house 
-	 */
+	 ********************************/
 	@Override
 	public double initialSalePrice(double pbar, double d, double principal) {
-		final double C = 0.02;//0.095;	// initial markup from average price
-		final double D = 0.0;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
+		final double C = 0.02;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
+		final double D = 0.024;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
@@ -155,16 +155,33 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 
 	/**
 	 * How much rent does an investor decide to charge on a buy-to-let house? 
+	 * @param pbar average rent for house of this quality
+	 * @param d average days on market
 	 */
 	@Override
-	public double buyToLetRent(double mortgagePayment) {
-		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
+	public double buyToLetRent(double pbar, double d, double mortgagePayment) {
+		final double C = 0.02;//0.095;	// initial markup from average price
+		final double D = 0.0;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
+		final double E = 0.05; //0.05;	// SD of noise
+		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
+//		return(Math.max(Math.exp(exponent), mortgagePayment));
+		return(Math.exp(exponent));
+//		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
+	}
+
+	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
+		if(rand.nextDouble() > 0.944) {
+			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
+			return(sale.currentPrice * (1.0-Math.exp(logReduction)));
+		}
+		return(sale.currentPrice);
 	}
 
 	/********************************************************
 	 * Decide whether to buy a house as a buy-to-let investment
 	 ********************************************************/
 	public boolean decideToBuyBuyToLet(House h, Household me, double price) {
+		if(h.quality > House.Config.N_QUALITY/2) return(false);
 		if(price <= Model.bank.getMaxMortgage(me, false)) {
 			MortgageApproval mortgage;
 			mortgage = Model.bank.requestApproval(me, price, 0.0, false); // maximise leverege with min downpayment

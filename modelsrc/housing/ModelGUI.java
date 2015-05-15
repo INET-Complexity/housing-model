@@ -123,20 +123,18 @@ public class ModelGUI extends GUIState implements Steppable {
     public void start() {
         super.start();
         
-  //      addSeries(housingChart, "Social Housing", Household.diagnostics.homelessData);
-  //      addSeries(housingChart, "Renting", Household.diagnostics.rentingData);
         addSeries(housePriceChart, "Modelled prices", Collectors.housingMarketStats.priceData);
-//        addSeries(bankBalanceChart, "Bank balances", Household.diagnostics.bankBalData);
         addSeries(mortgageStatsChart, "Owner-occupier LTV distribution", Collectors.creditSupply.oo_ltv_distribution);
         addSeries(mortgageStatsChart, "Owner-occupier LTI distribution (x0.1)", Collectors.creditSupply.oo_lti_distribution);
         addSeries(mortgagePhaseChart, "Approved mortgages", Collectors.creditSupply.approved_mortgages);
         
         housePriceChart.addSeries(Collectors.housingMarketStats.referencePriceData, "Reference price", null);
-//        bankBalanceChart.addSeries(Household.diagnostics.referenceBankBalData, "Reference bank balance", null);
 
         // Execute when each time-step is complete
         scheduleRepeatingImmediatelyAfter(this);
+
     }
+    
     
     /** Called after each simulation step. */
     @Override
@@ -150,7 +148,7 @@ public class ModelGUI extends GUIState implements Steppable {
         
         Model.collectors.step();
     }
-    
+        
     
     
     /** Add titles and labels to charts. */

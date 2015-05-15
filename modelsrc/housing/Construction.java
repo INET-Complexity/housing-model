@@ -12,6 +12,10 @@ public class Construction implements IHouseOwner {
 //		}	
 	}
 	
+	public void init() {
+		housingStock = 0;		
+	}
+	
 	public void step() {
 		int targetStock = (int)(Model.households.size()*housesPerHousehold);
 		int shortFall = targetStock - housingStock;

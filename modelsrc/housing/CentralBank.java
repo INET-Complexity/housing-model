@@ -21,7 +21,7 @@ public class CentralBank {
 		if(coreIndicators.getHouseholdCreditGrowth() > 1.5) {
 			// do something e.g. firstTimeBuyerLTILimit = 4.5;
 		}
-		if(coreIndicators.getHouseholdCreditGrowth() > -0.9) {
+		if(coreIndicators.getHouseholdCreditGrowth() < 0.9) {
 			// do something else e.g. firstTimeBuyerLTILimit = 8.0;
 		}
 	}

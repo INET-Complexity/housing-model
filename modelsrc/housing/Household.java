@@ -76,6 +76,7 @@ public class Household implements IHouseOwner {
 		nullMortgage.monthlyInterestRate = 0.0;
 		nullMortgage.monthlyPayment = 0.0;
 		nullMortgage.principal = 0.0;
+		nullMortgage.purchasePrice = 0.0;
 		housePayments.put(h, nullMortgage);
 		h.owner = this;
 		if(!isHomeowner()) {
@@ -186,7 +187,7 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	void makeHousingDecision() {
 		// --- add and manage houses for sale
-		HouseSaleRecord forSale;
+		HouseSaleRecord forSale, forRent;
 		double newPrice;
 		
 		for(House h : housePayments.keySet()) {
@@ -199,11 +200,17 @@ public class Household implements IHouseOwner {
 					} else {
 						houseMarket.removeOffer(h);
 						if(h != home && h.resident == null) {
-							rentalMarket.offer(h, behaviour.buyToLetRent(housePayments.get(h).monthlyPayment));
+							rentalMarket.offer(h, buyToLetRent(h));
 						}
 					}
 				} else if(decideToSellHouse(h)) { // put house on market
 					putHouseForSale(h);
+				}
+				
+				forRent = rentalMarket.getSaleRecord(h);
+				if(forRent != null) {
+					newPrice = behaviour.rethinkBuyToLetRent(forRent);
+					rentalMarket.updateOffer(h, newPrice);		
 				}
 			}
 		}
@@ -243,7 +250,8 @@ public class Household implements IHouseOwner {
 		}
 		MortgageApproval mortgage = bank.requestLoan(this, sale.currentPrice, behaviour.downPayment(bankBalance), home == null);
 		if(mortgage == null) {
-			// TODO: throw exception
+			// TODO: need to either provide a way for house sales to fall through or to
+			// TODO: ensure that pre-approvals are always satisfiable
 			System.out.println("Can't afford to buy house: strange");
 			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.getMaxMortgage(this,home==null));
 			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyDiscretionaryIncome());
@@ -304,7 +312,7 @@ public class Household implements IHouseOwner {
 		}
 		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");		
 			if(rentalMarket.isOnMarket(h)) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
-			rentalMarket.offer(h, behaviour.buyToLetRent(housePayments.get(h).monthlyPayment));
+			rentalMarket.offer(h, buyToLetRent(h));
 	}
 
 	/**********************************************************
@@ -331,6 +339,7 @@ public class Household implements IHouseOwner {
 			rent.monthlyInterestRate = 0.0;
 			rent.nPayments = (int)(12.0*rand.nextDouble()+1);
 			rent.principal = rent.monthlyPayment*rent.nPayments;
+			rent.purchasePrice = 0.0;
 			housePayments.put(sale.house, rent);
 		}
 		home = sale.house;
@@ -422,6 +431,13 @@ public class Household implements IHouseOwner {
 		}
 	}
 
+	public double buyToLetRent(House h) {
+		return(behaviour.buyToLetRent(
+				rentalMarket.getAverageSalePrice(h.quality), 
+				rentalMarket.averageDaysOnMarket,
+				housePayments.get(h).monthlyPayment));
+	}
+	
 	/////////////////////////////////////////////////////////
 	// Helpers
 	/////////////////////////////////////////////////////////
@@ -543,9 +559,11 @@ public class Household implements IHouseOwner {
 	 */
 	public double getMonthlyPropertyIncome() {
 		double propertyIncome = 0.0;
+		House h;
 		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-			if (isCollectingRentFrom(payment.getKey())) {
-				propertyIncome += behaviour.buyToLetRent(payment.getValue().monthlyPayment);
+			h = payment.getKey();
+			if (isCollectingRentFrom(h)) {
+				propertyIncome += h.resident.housePayments.get(h).monthlyPayment;
 			}
 		}
 		return propertyIncome;

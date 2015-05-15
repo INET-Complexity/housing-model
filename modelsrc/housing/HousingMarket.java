@@ -36,8 +36,11 @@ public class HousingMarket {
 
 	
 	public HousingMarket() {
+		init();
+	}
+	
+	public void init() {
 		int i;
-		
 		for(i = 0; i<House.Config.N_QUALITY; ++i) {
 			averageSalePrice[i] = referencePrice(i);
 		}
@@ -45,6 +48,8 @@ public class HousingMarket {
 		lastHousePriceIndex = 1.0;
 		HPIAppreciation = 0.0;
 		averageDaysOnMarket = 30;
+		buyers.clear();
+		onMarket.clear();
 	}
 	
 	/******************************************
@@ -168,6 +173,11 @@ public class HousingMarket {
 		return(Config.listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY));
 	}
 
+	/***
+	 * 
+	 * @param q the quality of the house
+	 * @return the average sale price of houses of the given quality
+	 */
 	public double getAverageSalePrice(int q) {
 		return(averageSalePrice[q]);
 	}

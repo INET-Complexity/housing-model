@@ -22,7 +22,7 @@ public class HouseSaleMarket extends HousingMarket {
 		sale.house.owner.completeHouseSale(sale);
 		buyer.completeHousePurchase(sale);
 		sale.house.owner = buyer;
-		Collectors.housingMarketStats.recordSale(sale);
+		Collectors.housingMarketStats.recordSale(purchase, sale);
 	}
 	
 	/**
