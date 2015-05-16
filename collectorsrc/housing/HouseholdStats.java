@@ -91,7 +91,24 @@ public class HouseholdStats {
 		return("Rental Yields");
 	}
 	
-			
+	public double [] getIncomes() {
+		double [] result = new double[Model.households.size()];
+		int i = 0;
+		for(Household h : Model.households) {
+			result[i++] = h.annualEmploymentIncome;
+		}
+		return(result);
+	}
+
+	public double [] getBankBalances() {
+		double [] result = new double[Model.households.size()];
+		int i = 0;
+		for(Household h : Model.households) {
+			result[i++] = h.bankBalance;
+		}
+		return(result);
+	}
+
     public int 		  nRenting;
     public int 		  nHomeless;
     public int 		  nNonOwner;

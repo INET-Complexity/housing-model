@@ -21,6 +21,8 @@ public class Lifecycle {
 	 * @return Household income given age and percentile of population
 	 */
 	public double annualIncome() {
+		double income = incomeByAge[(int)Math.min(age,99)].inverseCumulativeProbability(incomePercentile);
+		if(income < 6000.0) income = 6000.0; // income support
 		return(incomeByAge[(int)Math.min(age,99)].inverseCumulativeProbability(incomePercentile));
 	}
 

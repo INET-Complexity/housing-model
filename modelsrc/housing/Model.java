@@ -112,7 +112,7 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
-	public static int N_STEPS = 3000; // timesteps
+	public static int N_STEPS = 1200; // timesteps
 	public static int N_SIMS = 1; // number of simulations to run (monte-carlo) 
 
 

@@ -5,22 +5,22 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 import ec.util.MersenneTwisterFast;
 
 public class HouseholdBehaviour implements IHouseholdBehaviour {
-	public static double RENT_PROFIT_MARGIN = 0.05; // profit margin for buy-to-let investors 
+	public static double RENT_PROFIT_MARGIN = 0.03;//0.05; // profit margin for buy-to-let investors 
 	// Yield on rent had average 6% between 2009/01 and 2015/01, 
 	// minimum in 2009/10 maximum in 2012/04 peak-to-peak amplitude of 0.4%
 	// source: Bank of England, unpublished analysis based on Zoopla/Land reg matching, Philippe Bracke 
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
 	public double P_SELL = 1.0/(7.0*12.0);  // monthly probability of selling home
-	public double P_INVESTOR = 0.08; 		// Probability of being (wanting to be) a property investor
+	public double P_INVESTOR = 0.03; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)
 	protected MersenneTwisterFast 	rand = Model.rand;
 	LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
 
 	public int			desiredBTLProperties;	// number of properties
 
 	
-	public HouseholdBehaviour() {
-		if(rand.nextDouble() < P_INVESTOR) {
+	public HouseholdBehaviour(double incomePercentile) {
+		if( incomePercentile > 0.5 && rand.nextDouble() < P_INVESTOR*2.0) {
 			desiredBTLProperties = (int)buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble());
 		} else {
 			desiredBTLProperties = 0;
@@ -44,9 +44,9 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 ****************************/
 	@Override
 	public double desiredPurchasePrice(double monthlyIncome, double hpa) {
-		final double A = 0.48;//0.48;			// sensitivity to house price appreciation
-		final double EPSILON = 0.40;//0.36;//0.48;//0.365; // S.D. of noise
-		final double SIGMA = 5.5*12.0;//5.6;	// scale
+		final double A = 0.0;//0.48;			// sensitivity to house price appreciation
+		final double EPSILON = 0.36;//0.36;//0.48;//0.365; // S.D. of noise
+		final double SIGMA = 5.6*12.0;//5.6;	// scale
 		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*hpa));
 	}
 
@@ -59,7 +59,7 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	@Override
 	public double initialSalePrice(double pbar, double d, double principal) {
 		final double C = 0.02;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
-		final double D = 0.024;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
+		final double D = 0.00;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
@@ -89,11 +89,14 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * @param sale The HouseSaleRecord of the house that is on the market.
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
+		return(sale.currentPrice *0.95);
+		/*** BoE calibrated reprice
 		if(rand.nextDouble() > 0.944) {
 			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
 			return(sale.currentPrice * (1.0-Math.exp(logReduction)));
 		}
 		return(sale.currentPrice);
+		***/
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -115,6 +118,7 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
 	 ********************************************************/
 	public double desiredRent(double monthlyIncome) {
+//		return(monthlyIncome * 0.33);
 		double annualIncome = monthlyIncome*12.0; // TODO: this should be net annual income, not gross
 		double rent;
 		if(annualIncome < 12000.0) {
@@ -181,7 +185,8 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * Decide whether to buy a house as a buy-to-let investment
 	 ********************************************************/
 	public boolean decideToBuyBuyToLet(House h, Household me, double price) {
-		if(h.quality > House.Config.N_QUALITY/2) return(false);
+		// --- give preference to cheaper properties
+		if(Model.rand.nextDouble() < (h.quality*1.0/House.Config.N_QUALITY)-0.5) return(false);
 		if(price <= Model.bank.getMaxMortgage(me, false)) {
 			MortgageApproval mortgage;
 			mortgage = Model.bank.requestApproval(me, price, 0.0, false); // maximise leverege with min downpayment
@@ -201,9 +206,11 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 		double yield;
 		yield = (monthlyPayment*12*RENT_PROFIT_MARGIN + Model.housingMarket.housePriceAppreciation()*price)/
 				downPayment;
-		if(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(4.4 - yield*16.0))) {
+		if(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp( - yield*4.0))) {
+//			System.out.println("BTL: bought");
 			return(true);
 		}
+//		System.out.println("BTL: didn't buy");
 		return(false);
 	}
 

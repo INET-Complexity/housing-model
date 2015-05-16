@@ -26,6 +26,7 @@ public class Recorder {
         priceToIncome = new PrintWriter("coreIndicator-priceToIncome.csv", "UTF-8");
         rentalYield = new PrintWriter("coreIndicator-rentalYield.csv", "UTF-8");
         housePriceGrowth = new PrintWriter("coreIndicator-housePriceGrowth.csv", "UTF-8");
+        interestRateSpread = new PrintWriter("coreIndicator-interestRateSpread.csv", "UTF-8");
 	}
 
 	public void step() {
@@ -41,8 +42,9 @@ public class Recorder {
 			advancesToBTL.print(", ");
 			advancesToHomeMovers.print(", ");
 			priceToIncome.print(", ");
-			rentalYield.print(", ");			
+			rentalYield.print(", ");
 			housePriceGrowth.print(", ");			
+			interestRateSpread.print(", ");			
 		} else if(Model.nSimulation > 0) {
 			ooLTI.println("");
 			btlLTV.println("");
@@ -57,6 +59,7 @@ public class Recorder {
 			priceToIncome.println("");
 			rentalYield.println("");
 			housePriceGrowth.println("");
+			interestRateSpread.println("");
 		}
         ooLTI.print(Collectors.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
     	btlLTV.print(Collectors.coreIndicators.getBuyToLetLTVMean());
@@ -71,6 +74,7 @@ public class Recorder {
     	priceToIncome.print(Collectors.coreIndicators.getPriceToIncome());
     	rentalYield.print(Collectors.coreIndicators.getRentalYield());
     	housePriceGrowth.print(Collectors.coreIndicators.getHousePriceGrowth());
+    	interestRateSpread.print(Collectors.coreIndicators.getInterestRateSpread());
 	}
 	
 	public void finish() {
@@ -97,8 +101,10 @@ public class Recorder {
     	advancesToHomeMovers.close();
     	priceToIncome.close();
     	rentalYield.close();
+    	housePriceGrowth.close();
+    	interestRateSpread.close();
 	}
-	
+		
 	PrintWriter ooLTI;
 	PrintWriter btlLTV;
 	PrintWriter creditGrowth;
@@ -112,4 +118,5 @@ public class Recorder {
 	PrintWriter priceToIncome;
 	PrintWriter	rentalYield;
 	PrintWriter	housePriceGrowth;
+	PrintWriter	interestRateSpread;
 }

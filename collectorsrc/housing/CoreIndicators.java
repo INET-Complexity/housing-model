@@ -171,6 +171,17 @@ public class CoreIndicators {
 		return("Annual house price growth");
 	}
 
+	public double getInterestRateSpread() {
+		return(Model.bank.interestSpread);
+	}
+	public String desInterestRateSpread() {
+		return("Spread between mortgage-lender interest rate and bank base-rate");
+	}
+	public String nameInterestRateSpread() {
+		return("Interest Rate Spread");
+	}
+
+
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Array tools
 	////////////////////////////////////////////////////////////////////////////////////////

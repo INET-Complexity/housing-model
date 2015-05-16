@@ -170,7 +170,7 @@ public class HousingMarket {
 	 * @param q quality of the house
 	************************************************/
 	static public double referencePrice(int q) {
-		return(Config.listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY));
+		return(Config.listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY) * 0.9);
 	}
 
 	/***

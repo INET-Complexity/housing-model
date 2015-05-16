@@ -160,7 +160,7 @@ public class Bank {
 		ltv_principal = housePrice*loanToValue(h, isHome);
 		approval.principal = Math.min(approval.principal, ltv_principal);
 
-		lti_principal = h.annualEmploymentIncome * loanToIncome(h,isHome);
+		lti_principal = h.getMonthlyTotalIncome()*12.0 * loanToIncome(h,isHome);
 		approval.principal = Math.min(approval.principal, lti_principal);
 
 		approval.downPayment = housePrice - approval.principal;
@@ -209,7 +209,7 @@ public class Bank {
 		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
 		pdi_max = Math.min(pdi_max, ltv_max);
 
-		lti_max = h.annualEmploymentIncome * loanToIncome(h,isHome)/loanToValue(h,isHome);
+		lti_max = h.getMonthlyTotalIncome()*12.0* loanToIncome(h,isHome)/loanToValue(h,isHome);
 		pdi_max = Math.min(pdi_max, lti_max);
 		
 		pdi_max = Math.floor(pdi_max*100.0)/100.0; // round down to nearest penny

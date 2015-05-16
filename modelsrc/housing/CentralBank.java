@@ -4,8 +4,8 @@ public class CentralBank {
 	
 	public CentralBank() {
 		// Setup initial values
-		firstTimeBuyerLTVLimit = 0.9;
-		ownerOccupierLTVLimit= 0.8;
+		firstTimeBuyerLTVLimit = 0.95;
+		ownerOccupierLTVLimit= 0.9;
 		buyToLetLTVLimit = 0.6;
 		
 		firstTimeBuyerLTILimit = 6.5;

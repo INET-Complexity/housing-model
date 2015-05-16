@@ -25,11 +25,6 @@ public class Household implements IHouseOwner {
 	 * Constructor.
 	 ********************************************************/
 	public Household(double age) {
-		this(new HouseholdBehaviour(), age);
-	}
-
-	public Household(IHouseholdBehaviour b, double iage) {
-		behaviour = b;
 		bank = Model.bank;
 		houseMarket = Model.housingMarket;
 		rentalMarket = Model.rentalMarket;
@@ -37,7 +32,8 @@ public class Household implements IHouseOwner {
 		home = null;
 		isFirstTimeBuyer = true;
 		id = ++id_pool;
-		lifecycle = new Lifecycle(iage);
+		lifecycle = new Lifecycle(age);
+		behaviour = new HouseholdBehaviour(lifecycle.incomePercentile);
 		annualEmploymentIncome = lifecycle.annualIncome();
 		bankBalance = Math.exp(4.07*Math.log(annualEmploymentIncome)-33.1);
 	}
@@ -320,7 +316,9 @@ public class Household implements IHouseOwner {
 	 * and becomes homeless (possibly temporarily)
 	 **********************************************************/
 	public void endTenancy() {
-		if(home.owner == this) System.out.println("Strange: got endTenancy on a home I own");
+		if(home.owner == this) {
+			System.out.println("Strange: got endTenancy on a home I own");
+		}
 		housePayments.remove(home);
 		home.resident = null;
 		home = null;		
@@ -342,6 +340,7 @@ public class Household implements IHouseOwner {
 			rent.purchasePrice = 0.0;
 			housePayments.put(sale.house, rent);
 		}
+		if(home != null) System.out.println("Strange: I'm renting a house but not homeless");
 		home = sale.house;
 		if(sale.house.resident != null) {
 			System.out.println("Strange: moving into an occupied house");
@@ -365,7 +364,7 @@ public class Household implements IHouseOwner {
 	 * given that it can afford a mortgage.
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
-		double desiredPrice = behaviour.desiredPurchasePrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double desiredPrice = behaviour.desiredPurchasePrice(getMonthlyTotalIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(this,true)/bank.loanToValue(this, true); // ##### TEST #####
 		if(desiredPrice > ltiConstraint) desiredPrice = ltiConstraint - 1.0; // ##### TEST #####
@@ -389,7 +388,7 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	protected void decideToStopRenting() {
 		double costOfRent;
-		double housePrice = behaviour.desiredPurchasePrice(getMonthlyEmploymentIncome(), houseMarket.housePriceAppreciation());
+		double housePrice = behaviour.desiredPurchasePrice(getMonthlyTotalIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
 		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(this,true)/bank.loanToValue(this, true); // ##### TEST #####
 		if(housePrice > ltiConstraint) housePrice = ltiConstraint - 1.0; // ##### TEST #####
