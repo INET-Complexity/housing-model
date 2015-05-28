@@ -18,12 +18,15 @@ public class CentralBank {
 	
 	
 	public void step(CoreIndicators coreIndicators) {
-		if(coreIndicators.getHouseholdCreditGrowth() > 1.5) {
-			// do something e.g. firstTimeBuyerLTILimit = 4.5;
-		}
-		if(coreIndicators.getHouseholdCreditGrowth() < 0.9) {
-			// do something else e.g. firstTimeBuyerLTILimit = 8.0;
-		}
+//  Example policy: if house price growth is greater than 0.001 then FTB LTV limit is 0.75
+//                  otherwise (if house price growth is less than or equal to  0.001)
+//					FTB LTV limit is 0.95
+//
+//		if(coreIndicators.getHousePriceGrowth() > 0.001) {
+//			firstTimeBuyerLTVLimit = 0.75;
+//		} else {
+//			firstTimeBuyerLTVLimit = 0.95;
+//		}
 	}
 	
 	public double loanToIncomeRegulation(Household h, boolean isHome) {

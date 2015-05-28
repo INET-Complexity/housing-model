@@ -27,9 +27,13 @@ public class Bank {
 	public Bank(CentralBank c) {
 		mortgages = new HashSet<MortgageApproval>();
 		centralBank = c;
+		init();
+	}
+	
+	public void init() {
+		mortgages.clear();
 		baseRate = INITIAL_BASE_RATE;
 		dDemand_dInterest = 10*1e10;
-
 		setMortgageInterestRate(0.03);
 		resetMonthlyCounters();
 	}

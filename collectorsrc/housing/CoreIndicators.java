@@ -142,7 +142,7 @@ public class CoreIndicators {
 	}
 
 	public double getPriceToIncome() {
-		return(Model.housingMarket.housePriceIndex/Collectors.householdStats.totalDisposableIncome);
+		return(Model.housingMarket.housePriceIndex*HousingMarket.Config.HPI_MEAN/Collectors.householdStats.totalDisposableIncome);
 	}
 	public String desPriceToIncome() {
 		return("House price to household disposable income ratio");

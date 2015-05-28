@@ -20,6 +20,7 @@ public class HouseholdStats {
     	if(rentalYield > 0.0) rentalYield /= nRenting;
     	nNonOwner = nHomeless + nRenting;
     	nEmpty = Model.construction.housingStock + nHomeless - nHouseholds;
+    	totalDisposableIncome *= 12.0; // annualise
 	}
 
 	public double [] getNonOwnerAges() {

@@ -40,6 +40,7 @@ public class Model extends SimState implements Steppable {
 		construction.init();
 		housingMarket.init();
 		rentalMarket.init();
+		bank.init();
 		households.clear();
 		t = 0;
 	}
@@ -98,6 +99,7 @@ public class Model extends SimState implements Steppable {
 		Collectors.rentalMarketStats.record();
 		rentalMarket.clearMarket();
         bank.step();
+        centralBank.step(Collectors.getCoreIndicators());
         t += 1;		
 	}
 	
