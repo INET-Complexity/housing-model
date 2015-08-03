@@ -50,8 +50,8 @@ public class Household implements IHouseOwner {
 				home = null;
 			}
 			if(h.owner == this) {
-				if(h.isOnRentalMarket()) rentalMarket.removeOffer(h);
-				if(h.isOnMarket()) houseMarket.removeOffer(h);
+				if(h.isOnRentalMarket()) rentalMarket.removeOffer(h.getRentalRecord());
+				if(h.isOnMarket()) houseMarket.removeOffer(h.getSaleRecord());
 				beneficiary.inheritHouse(h);
 			} else {
 				h.owner.endOfLettingAgreement(h);
@@ -188,13 +188,13 @@ public class Household implements IHouseOwner {
 		
 		for(House h : housePayments.keySet()) {
 			if(h.owner == this) {
-				forSale = houseMarket.getSaleRecord(h);
+				forSale = h.getSaleRecord();
 				if(forSale != null) { // reprice house for sale
 					newPrice = behaviour.rethinkHouseSalePrice(forSale);
 					if(newPrice > housePayments.get(h).principal) {
-						houseMarket.updateOffer(h, newPrice);						
+						houseMarket.updateOffer(h.getSaleRecord(), newPrice);						
 					} else {
-						houseMarket.removeOffer(h);
+						houseMarket.removeOffer(h.getSaleRecord());
 						if(h != home && h.resident == null) {
 							rentalMarket.offer(h, buyToLetRent(h));
 						}
@@ -203,10 +203,10 @@ public class Household implements IHouseOwner {
 					putHouseForSale(h);
 				}
 				
-				forRent = rentalMarket.getSaleRecord(h);
+				forRent = h.getRentalRecord();
 				if(forRent != null) {
 					newPrice = behaviour.rethinkBuyToLetRent(forRent);
-					rentalMarket.updateOffer(h, newPrice);		
+					rentalMarket.updateOffer(h.getRentalRecord(), newPrice);		
 				}
 			}
 		}
@@ -279,7 +279,7 @@ public class Household implements IHouseOwner {
 		if(profit < 0) System.out.println("Strange: Profit is negative.");
 		bankBalance += profit;
 		if(sale.house.isOnMarket()) {
-			rentalMarket.removeOffer(sale.house);
+			rentalMarket.removeOffer(sale);
 		}
 		if(housePayments.get(sale.house).nPayments == 0) {
 			housePayments.remove(sale.house);
@@ -426,7 +426,7 @@ public class Household implements IHouseOwner {
 	@Override
 	public void completeHouseLet(House house) {
 		if(house.isOnMarket()) {
-			houseMarket.removeOffer(house);
+			houseMarket.removeOffer(house.getSaleRecord());
 		}
 	}
 

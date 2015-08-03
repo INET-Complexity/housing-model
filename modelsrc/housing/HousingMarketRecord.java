@@ -14,7 +14,7 @@ public abstract class HousingMarketRecord {
 
 	double price;
 	
-	public static class QPComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord> {
+	public static class PQComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord> {
 		@Override
 		public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
 			double diff = arg0.price - arg1.price;
@@ -33,7 +33,7 @@ public abstract class HousingMarketRecord {
 			return Integer.signum(diff);
 		}
 	}
-	public static class QYComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord> {
+	public static class PYComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord> {
 		@Override
 		public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
 			double diff = arg0.price - arg1.price;

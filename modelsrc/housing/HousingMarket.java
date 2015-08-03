@@ -1,5 +1,6 @@
 package housing;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
@@ -7,6 +8,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
+import org.apache.commons.math3.distribution.PoissonDistribution;
 
 /**********************************************************
  * Implementation of the mechanism of the house-sale and
@@ -38,6 +40,10 @@ public class HousingMarket {
 	
 	public HousingMarket() {
 		init();
+		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
+		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());	
+//		matches = new HashMap<>(Demographics.TARGET_POPULATION/16);
+		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
 	}
 	
 	public void init() {
@@ -51,7 +57,7 @@ public class HousingMarket {
 		averageDaysOnMarket = 30;
 		offersPQ.clear();
 		offersPY.clear();
-		matches.clear();
+//		matches.clear();
 	}
 	
 	/******************************************
@@ -99,17 +105,8 @@ public class HousingMarket {
 	 * @param price The price that the household is willing to pay.
 	 ******************************************/
 	public void bid(Household buyer, double price) {
-//		buyers.add(new HouseBuyerRecord(buyer, price));
+		bids.add(new HouseBuyerRecord(buyer, price));
 		// match bid with current offers
-	}
-
-	/**************************************************
-	 * Get information on a given house that is on the market.
-	 * @param h House we're interested in.
-	 * @return The sale-record for the given house (NULL if not on the market)
-	 *************************************************/
-	public HouseSaleRecord getSaleRecord(House h) {
-		return(onMarket.get(h));
 	}
 	
 	/**************************************************
@@ -117,8 +114,36 @@ public class HousingMarket {
 	 * 
 	 **************************************************/
 	public void clearMarket() {
-		// onMarket contains offers (House->HouseSaleRecords)
-		// buyers contains bids (HouseBuyerRecords)
+		// offersPQ contains Price-Quality 2D-priority queue of offers
+		// offersPY contains Price-Yeild 2D-priority queue of offers
+		// bids contains bids (HouseBuyerRecords) in an array
+		
+		final double DELAY = 7.0/30.0; // time that a 
+		
+		// --- create matches
+		HouseSaleRecord offer;
+		for(HouseBuyerRecord bid : bids) {
+			if(bid.getClass() == HouseBuyerRecord.class) { // OO buyer (quality driven)
+				offer = (HouseSaleRecord)offersPQ.peek(bid);
+			} else { // BTL buyer (yield driven)
+				offer = (HouseSaleRecord)offersPY.peek(bid);
+			}
+			if(offer != null) {
+				offer.matchWith(bid);
+			}
+		}
+		
+		// --- clear and resolve oversubscribed offers
+		// 
+		PoissonDistribution poisson;
+		int nBids;
+		for(HousingMarketRecord record : offersPQ) {
+			offer = (HouseSaleRecord)record;
+			nBids = offer.matchedBids.size();
+			if(nBids > 0) {
+				poisson = new PoissonDistribution(Model.rand, nBids*DELAY, 1.0, 1);
+			}
+		}
 		
 		
 		
@@ -223,9 +248,10 @@ public class HousingMarket {
 
 	//protected Map<House, HouseSaleRecord> 	onMarket = new TreeMap<House, HouseSaleRecord>();
 
-	protected PriorityQueue2D<HouseSaleRecord>	offersPQ;
-	protected PriorityQueue2D<HouseSaleRecord>	offersPY;	
-	protected HashMap<HouseSaleRecord, HouseBuyerRecord> matches;
+	protected PriorityQueue2D<HousingMarketRecord>	offersPQ;
+	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	
+//	protected HashMap<HouseSaleRecord, ArrayList<HouseBuyerRecord> > matches;
+	protected ArrayList<HouseBuyerRecord> bids;
 
 //	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	

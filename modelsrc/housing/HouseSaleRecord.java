@@ -1,5 +1,6 @@
 package housing;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 
 /*************************************************
@@ -24,6 +25,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 		initialListedPrice = price;
 		quality = house.quality;
 		tInitialListing = Model.t;
+		matchedBids = new ArrayList<>(8);
 	}
 	
 	/***********************************************
@@ -50,14 +52,14 @@ public class HouseSaleRecord extends HousingMarketRecord {
 		return house.id;
 	}
 	
+	public void matchWith(HouseBuyerRecord bid) {
+		matchedBids.add(bid);
+	}
+	
 	public House 	house;
 	public int		quality;
 	public double 	initialListedPrice;
 //	public double	price;
 	public int		tInitialListing; // time of initial listing
-	
-	/************************************************
-	 * order by quality then price
-	 ************************************************/
-
+	public ArrayList<HouseBuyerRecord> matchedBids;
 }

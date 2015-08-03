@@ -24,10 +24,29 @@ public class HouseSaleMarket extends HousingMarket {
 		sale.house.owner = buyer;
 		Collectors.housingMarketStats.recordSale(purchase, sale);
 	}
-	
+
+	@Override
 	public HouseSaleRecord offer(House house, double price) {
 		HouseSaleRecord hsr = super.offer(house, price);
 		house.putForSale(hsr);
+		return(hsr);
+	}
+	
+	@Override
+	public void removeOffer(HouseSaleRecord hsr) {
+		super.removeOffer(hsr);
+		hsr.house.resetSaleRecord();
+	}
+	
+	/*******************************************
+	 * Make a bid on the market as a Buy-to-let investor
+	 *  (i.e. make an offer on a (yet to be decided) house).
+	 * 
+	 * @param buyer The household that is making the bid.
+	 * @param price The price that the household is willing to pay.
+	 ******************************************/
+	public void BTLbid(Household buyer, double price) {
+		bids.add(new BTLBuyerRecord(buyer, price));
 	}
 
 	/**

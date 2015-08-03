@@ -39,14 +39,14 @@ public class House implements Comparable<House> {
 	public void putForSale(HouseSaleRecord saleRecord) {
 		this.saleRecord = saleRecord;
 	}
-	public void offSaleMarket() {
+	public void resetSaleRecord() {
 		saleRecord = null;
 	}
 
 	public void putForRent(HouseSaleRecord rentalRecord) {
 		this.rentalRecord = rentalRecord;
 	}
-	public void offRentalMarket() {
+	public void resetRentalRecord() {
 		rentalRecord = null;
 	}
 			

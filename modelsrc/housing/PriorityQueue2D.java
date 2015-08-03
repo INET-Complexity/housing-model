@@ -1,6 +1,7 @@
 package housing;
 
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.TreeSet;
 
 /***
@@ -18,7 +19,7 @@ import java.util.TreeSet;
  *
  */
 //public class PriorityQueue2D<E extends PriorityQueue2D.Comparable<E>> {
-public class PriorityQueue2D<E> {
+public class PriorityQueue2D<E> implements Iterable<E> {
 	public interface Comparable<T> {
 		/***
 		 * @return (-1, 0, 1) if this is (less than, equal to, greater than) other
@@ -184,6 +185,11 @@ public class PriorityQueue2D<E> {
 	public void clear() {
 		uncoveredElements.clear();
 		ySortedElements.clear();
+	}
+
+	@Override
+	public Iterator<E> iterator() {
+		return ySortedElements.iterator();
 	}
 	
 	//////////////////////////////////////////////

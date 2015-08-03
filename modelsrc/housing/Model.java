@@ -1,10 +1,14 @@
 package housing;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
+import org.apache.commons.math3.random.RandomGenerator;
 
 import ec.util.MersenneTwisterFast;
 import sim.engine.SimState;
@@ -33,7 +37,7 @@ public class Model extends SimState implements Steppable {
 		rentalMarket = new HouseRentalMarket();
 		collectors = new Collectors();
 		recorder = new Recorder();
-		rand = new MersenneTwisterFast(seed);
+		rand = new MersenneTwister(seed);
 	}
 
 	public void init() {
@@ -128,7 +132,7 @@ public class Model extends SimState implements Steppable {
 	public static HouseRentalMarket	rentalMarket;
 	public static ArrayList<Household>	households;
 	public static Demographics		demographics;
-	public static MersenneTwisterFast			rand;
+	public static MersenneTwister			rand;
 	
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
@@ -138,6 +142,13 @@ public class Model extends SimState implements Steppable {
 	public static int	t; // time (months)
 //	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
 
+	/*** proxy class to allow us to work with apache.commons distributions */
+	public static class MersenneTwister extends MersenneTwisterFast implements RandomGenerator {
+		public MersenneTwister(long seed) {super(seed);}
+		public void setSeed(int arg0) {
+			super.setSeed((long)arg0);
+		}		
+	}
 
 	////////////////////////////////////////////////////////////////////////
 	// Getters/setters for MASON console
