@@ -29,24 +29,24 @@ public class HousingMarketStats {
 		nSales = saleCount; saleCount = 0;
 		nFTBSales = ftbSaleCount; ftbSaleCount = 0;
 		nBTLSales = btlSaleCount; btlSaleCount = 0;
-		nSellers = market.onMarket.size();
-		nBuyers = market.buyers.size();
+		nSellers = market.offersPQ.size();
+		nBuyers = market.bids.size();
 
 		// -- Record average bid price
 		// ---------------------------
 		averageBidPrice = 0.0;
-		for(HouseBuyerRecord buyer : market.buyers) {
+		for(HouseBuyerRecord buyer : market.bids) {
 			averageBidPrice += buyer.price;
 		}
-		if(market.buyers.size() > 0) averageBidPrice /= market.buyers.size();
+		if(market.bids.size() > 0) averageBidPrice /= market.bids.size();
 
 		// -- Record average offer price
 		// -----------------------------
 		averageOfferPrice = 0.0;
-		for(HouseSaleRecord sale : market.onMarket.values()) {
+		for(HousingMarketRecord sale : market.offersPQ) {
 			averageOfferPrice += sale.price;
 		}
-		if(market.onMarket.size() > 0) averageOfferPrice /= market.onMarket.size();
+		if(market.offersPQ.size() > 0) averageOfferPrice /= market.offersPQ.size();
 		recordOfferPrices();
 		recordBidPrices();
 	}
@@ -73,19 +73,19 @@ public class HousingMarketStats {
 	}
 		
 	protected void recordOfferPrices() {
-		offerPrices = new double[market.onMarket.size()];
+		offerPrices = new double[market.offersPQ.size()];
 		int i = 0;
-		for(HouseSaleRecord sale : market.onMarket.values()) {
+		for(HousingMarketRecord sale : market.offersPQ) {
 			offerPrices[i] = sale.price;
 			++i;
 		}
 	}
 
 	protected void recordBidPrices() {
-		bidPrices = new double[market.buyers.size()];
+		bidPrices = new double[market.bids.size()];
 		int i = 0;
 		
-		for(HouseBuyerRecord bid : market.buyers) {
+		for(HouseBuyerRecord bid : market.bids) {
 			bidPrices[i] = bid.price;
 			++i;
 		}

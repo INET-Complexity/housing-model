@@ -3,6 +3,7 @@ package housing;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 /***
  * A 2-dimensional priority queue: The items in the queue have two unrelated orderings:
@@ -189,9 +190,39 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 
 	@Override
 	public Iterator<E> iterator() {
-		return ySortedElements.iterator();
+		return this.new Iter();
 	}
 	
+	public class Iter implements Iterator<E> {
+		public Iter() {
+			it = PriorityQueue2D.this.ySortedElements.iterator();
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return it.hasNext();
+		}
+
+		@Override
+		public E next() {
+			last = it.next();
+			return last;
+		}
+
+		@Override
+		public void remove() {
+			it.remove();
+			PriorityQueue2D.this.uncoveredElements.remove(last);
+		}
+
+		@Override
+		public void forEachRemaining(Consumer<? super E> action) {
+			it.forEachRemaining(action);
+		}
+		
+		Iterator<E> it;
+		E last;
+	}
 	//////////////////////////////////////////////
 	
 	TreeSet<E> uncoveredElements; // x-sorted

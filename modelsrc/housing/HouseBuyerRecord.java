@@ -1,5 +1,7 @@
 package housing;
 
+import java.util.Comparator;
+
 /**********************************************
  * This class represents information regarding a household that has
  * entered the housing market. Think of it as the file that an
@@ -19,6 +21,18 @@ public class HouseBuyerRecord extends HousingMarketRecord {
 	public int getId() {
 		return buyer.id;
 	}
+
+	public static class PComparator implements Comparator<HouseBuyerRecord> {
+		@Override
+		public int compare(HouseBuyerRecord arg0, HouseBuyerRecord arg1) {
+			double diff = arg0.price - arg1.price;
+			if(diff == 0.0) {
+				diff = arg0.getId() - arg1.getId();
+			}
+			return (int)Math.signum(diff);
+		}
+	}
+	
 
 	/////////////////////////////////////////////////////////////////
 	

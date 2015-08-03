@@ -13,7 +13,7 @@ public abstract class HousingMarketRecord {
 	abstract public int getId();
 
 	double price;
-	
+
 	public static class PQComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord> {
 		@Override
 		public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {

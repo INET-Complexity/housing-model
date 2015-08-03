@@ -2,11 +2,13 @@ package housing;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import org.apache.commons.math3.distribution.GeometricDistribution;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
@@ -27,6 +29,8 @@ public class HousingMarket {
 	 *
 	 */
 	static public class Config {
+		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
+		public static final double BIDUP = 1.01; // smallest proportion increase in price that can cause a gazump
 		public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
 		public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
 		public static final double HPI_MEAN = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
@@ -118,7 +122,6 @@ public class HousingMarket {
 		// offersPY contains Price-Yeild 2D-priority queue of offers
 		// bids contains bids (HouseBuyerRecords) in an array
 		
-		final double DELAY = 7.0/30.0; // time that a 
 		
 		// --- create matches
 		HouseSaleRecord offer;
@@ -132,16 +135,41 @@ public class HousingMarket {
 				offer.matchWith(bid);
 			}
 		}
+		bids.clear();
 		
 		// --- clear and resolve oversubscribed offers
 		// 
-		PoissonDistribution poisson;
+		GeometricDistribution geomDist;
 		int nBids;
-		for(HousingMarketRecord record : offersPQ) {
-			offer = (HouseSaleRecord)record;
+		double pSuccessfulBid;
+		int winningBid;
+		Iterator<HousingMarketRecord> record = offersPQ.iterator();
+		while(record.hasNext()) {
+			offer = (HouseSaleRecord)record.next();
 			nBids = offer.matchedBids.size();
 			if(nBids > 0) {
-				poisson = new PoissonDistribution(Model.rand, nBids*DELAY, 1.0, 1);
+				// bid up the price
+				pSuccessfulBid = Math.exp(-nBids*Config.UNDEROFFER);
+				geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
+				offer.price *= Math.pow(Config.BIDUP, geomDist.sample());
+				// choose a bid above the new price
+				offer.matchedBids.sort(new HouseBuyerRecord.PComparator());
+				if(offer.matchedBids.get(0).price < offer.price) {
+					offer.price = offer.matchedBids.get(0).price;
+					winningBid = 0;
+				} else {
+					nBids = offer.matchedBids.size()-1;
+					while(offer.matchedBids.get(nBids).price < offer.price) {
+						--nBids;
+					}
+					winningBid = Model.rand.nextInt(nBids+1);
+				}
+				completeTransaction(offer.matchedBids.get(winningBid), offer);
+				record.remove();
+				offersPY.remove(offer);
+				// put failed bids back on array
+				bids.addAll(offer.matchedBids.subList(0, winningBid));
+				bids.addAll(offer.matchedBids.subList(winningBid+1, offer.matchedBids.size()));			
 			}
 		}
 		
@@ -180,6 +208,7 @@ public class HousingMarket {
 		***/
 	}
 
+		
 	/**********************************************
 	 * Do all stuff necessary when a buyer and seller is matched
 	 * and the transaction is completed.
