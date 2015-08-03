@@ -44,7 +44,7 @@ public class HousingMarketStats {
 		// -----------------------------
 		averageOfferPrice = 0.0;
 		for(HouseSaleRecord sale : market.onMarket.values()) {
-			averageOfferPrice += sale.currentPrice;
+			averageOfferPrice += sale.price;
 		}
 		if(market.onMarket.size() > 0) averageOfferPrice /= market.onMarket.size();
 		recordOfferPrices();
@@ -60,7 +60,7 @@ public class HousingMarketStats {
 	
 	public void recordSale(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		if(sale.initialListedPrice > 0.01) {
-			averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.currentPrice/sale.initialListedPrice;
+			averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.price/sale.initialListedPrice;
 		}
 		saleCount += 1;
 		MortgageApproval mortgage = purchase.buyer.housePayments.get(sale.house);
@@ -76,7 +76,7 @@ public class HousingMarketStats {
 		offerPrices = new double[market.onMarket.size()];
 		int i = 0;
 		for(HouseSaleRecord sale : market.onMarket.values()) {
-			offerPrices[i] = sale.currentPrice;
+			offerPrices[i] = sale.price;
 			++i;
 		}
 	}

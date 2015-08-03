@@ -10,7 +10,7 @@ import java.util.Comparator;
  * @author daniel
  *
  *************************************************/
-public class HouseSaleRecord implements Comparable<HouseSaleRecord> {
+public class HouseSaleRecord extends HousingMarketRecord {
 	
 	/***********************************************
 	 * Construct a new record.
@@ -21,7 +21,7 @@ public class HouseSaleRecord implements Comparable<HouseSaleRecord> {
 	public HouseSaleRecord(House h, double p) {
 		house = h;
 		setPrice(p);
-		initialListedPrice = currentPrice;
+		initialListedPrice = price;
 		quality = house.quality;
 		tInitialListing = Model.t;
 	}
@@ -33,46 +33,31 @@ public class HouseSaleRecord implements Comparable<HouseSaleRecord> {
 	 * @param p The list-price.
 	 **********************************************/
 	public void setPrice(double p) {
-		currentPrice = Math.round(p*100.0)/100.0; // round to nearest penny
+		price = Math.round(p*100.0)/100.0; // round to nearest penny
 	}
 
 //	public double doubleValue() {
 //		return(currentPrice);
 //	}
+	
+	@Override
+	public int getQuality() {
+		return(quality);
+	}
 
+	@Override
+	public int getId() {
+		return house.id;
+	}
+	
 	public House 	house;
 	public int		quality;
 	public double 	initialListedPrice;
-	public double	currentPrice;
+//	public double	price;
 	public int		tInitialListing; // time of initial listing
 	
 	/************************************************
 	 * order by quality then price
 	 ************************************************/
-	@Override
-	public int compareTo(HouseSaleRecord o) {
-		double diff = quality - o.quality;
-		if(diff == 0.0) {
-			diff = o.currentPrice - currentPrice;
-			if(diff == 0.0) {
-				diff = house.id - o.house.id;
-			}
-		}
-		return((int)Math.signum(diff));
-	}
-	
-	static public class PriceComparator implements Comparator<HouseSaleRecord> {
-		@Override
-		public int compare(HouseSaleRecord arg0, HouseSaleRecord arg1) {
-			double diff = arg0.currentPrice - arg1.currentPrice;
-			if(diff == 0.0) {
-				diff = arg0.quality - arg1.quality;
-				if(diff == 0.0) {
-					diff = arg0.house.id - arg1.house.id;
-				}
-			}
-			return((int)Math.signum(diff));
-		}
-		
-	}
+
 }

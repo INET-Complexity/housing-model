@@ -8,7 +8,7 @@ package housing;
  * @author daniel
  *
  **********************************************/
-public class HouseBuyerRecord implements Comparable<HouseBuyerRecord> {
+public class HouseBuyerRecord extends HousingMarketRecord {
 	
 	public HouseBuyerRecord(Household h, double p) {
 		buyer = h;
@@ -16,12 +16,8 @@ public class HouseBuyerRecord implements Comparable<HouseBuyerRecord> {
 	}
 	
 	@Override
-	public int compareTo(HouseBuyerRecord other) {
-		double diff = other.price - price;
-		if(diff == 0.0) {
-			diff = other.buyer.id - buyer.id;
-		}
-		return((int)Math.signum(diff));
+	public int getId() {
+		return buyer.id;
 	}
 
 	/////////////////////////////////////////////////////////////////

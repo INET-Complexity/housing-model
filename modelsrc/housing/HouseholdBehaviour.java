@@ -89,7 +89,7 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * @param sale The HouseSaleRecord of the house that is on the market.
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
-		return(sale.currentPrice *0.95);
+		return(sale.price *0.95);
 		/*** BoE calibrated reprice
 		if(rand.nextDouble() > 0.944) {
 			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
@@ -176,9 +176,9 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
 		if(rand.nextDouble() > 0.944) {
 			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
-			return(sale.currentPrice * (1.0-Math.exp(logReduction)));
+			return(sale.price * (1.0-Math.exp(logReduction)));
 		}
-		return(sale.currentPrice);
+		return(sale.price);
 	}
 
 	/********************************************************

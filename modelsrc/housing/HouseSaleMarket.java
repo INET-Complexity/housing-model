@@ -25,10 +25,16 @@ public class HouseSaleMarket extends HousingMarket {
 		Collectors.housingMarketStats.recordSale(purchase, sale);
 	}
 	
+	public HouseSaleRecord offer(House house, double price) {
+		HouseSaleRecord hsr = super.offer(house, price);
+		house.putForSale(hsr);
+	}
+
 	/**
 	 * Buy to let investors get randomly offered the chance to buy houses that
 	 * are still on the market after non-investors have been cleared.
 	 */
+	/***
 	public void clearBuyToLetMarket() {
 		HouseBuyerRecord buyer;
 		HouseSaleRecord  seller;
@@ -46,7 +52,7 @@ public class HouseSaleMarket extends HousingMarket {
 		while(saleIt.hasNext()) {
 			seller = saleIt.next();
 			// --- construct collection of buyers that can afford this house
-			while(!buyers.isEmpty() && buyers.peek().price >= seller.currentPrice) {
+			while(!buyers.isEmpty() && buyers.peek().price >= seller.price) {
 				potentialBuyers.add(buyers.poll());
 			}
 			
@@ -55,7 +61,7 @@ public class HouseSaleMarket extends HousingMarket {
 				i = (int)(Model.rand.nextDouble()*potentialBuyers.size());
 				buyer = potentialBuyers.get(i);
 				if(buyer.buyer != seller.house.owner && 
-						buyer.buyer.decideToBuyBuyToLet(seller.house, seller.currentPrice)) {
+						buyer.buyer.decideToBuyBuyToLet(seller.house, seller.price)) {
 					removeOffer(seller.house);
 					completeTransaction(buyer, seller);
 					potentialBuyers.remove(buyer);
@@ -65,5 +71,5 @@ public class HouseSaleMarket extends HousingMarket {
 		}
 		buyers.clear();
 	}
-
+	***/
 }

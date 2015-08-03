@@ -1,5 +1,6 @@
 package housing;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.TreeMap;
@@ -48,8 +49,9 @@ public class HousingMarket {
 		lastHousePriceIndex = 1.0;
 		HPIAppreciation = 0.0;
 		averageDaysOnMarket = 30;
-		buyers.clear();
-		onMarket.clear();
+		offersPQ.clear();
+		offersPY.clear();
+		matches.clear();
 	}
 	
 	/******************************************
@@ -57,8 +59,11 @@ public class HousingMarket {
 	 * @param house House to put on the market
 	 * @param price List price for the house.
 	 ******************************************/
-	public void offer(House house, double price) {
-		onMarket.put(house, new HouseSaleRecord(house, price));
+	public HouseSaleRecord offer(House house, double price) {
+		HouseSaleRecord hsr = new HouseSaleRecord(house, price);
+		offersPQ.add(hsr);
+		offersPY.add(hsr);
+		return(hsr);
 	}
 	
 	/******************************************
@@ -68,8 +73,12 @@ public class HousingMarket {
 	 * @param h The house to change the price for.
 	 * @param newPrice The new price of the house.
 	 ******************************************/
-	public void updateOffer(House h, double newPrice) {
-		onMarket.get(h).currentPrice = newPrice;
+	public void updateOffer(HouseSaleRecord hsr, double newPrice) {
+		offersPQ.remove(hsr);
+		offersPY.remove(hsr);
+		hsr.price = newPrice;
+		offersPQ.add(hsr);
+		offersPY.add(hsr);
 	}
 	
 	/*******************************************
@@ -77,8 +86,9 @@ public class HousingMarket {
 	 * 
 	 * @param house The house to take off the market.
 	 *******************************************/
-	public void removeOffer(House house) {
-		onMarket.remove(house);
+	public void removeOffer(HouseSaleRecord hsr) {
+		offersPQ.remove(hsr);
+		offersPY.remove(hsr);
 	}
 
 	/*******************************************
@@ -89,7 +99,8 @@ public class HousingMarket {
 	 * @param price The price that the household is willing to pay.
 	 ******************************************/
 	public void bid(Household buyer, double price) {
-		buyers.add(new HouseBuyerRecord(buyer, price));
+//		buyers.add(new HouseBuyerRecord(buyer, price));
+		// match bid with current offers
 	}
 
 	/**************************************************
@@ -106,6 +117,12 @@ public class HousingMarket {
 	 * 
 	 **************************************************/
 	public void clearMarket() {
+		// onMarket contains offers (House->HouseSaleRecords)
+		// buyers contains bids (HouseBuyerRecords)
+		
+		
+		
+		/***
 		HouseBuyerRecord buyer;
 		HouseSaleRecord  seller;
 		HouseSaleRecord	 ceilingSeller = new HouseSaleRecord(new House(), 0.0);
@@ -125,7 +142,7 @@ public class HousingMarket {
 			ceilingSeller.quality = House.Config.N_QUALITY;
 			seller = sellers.lower(ceilingSeller); // cheapest seller at this quality
 			while(seller != null && 
-				(seller.currentPrice > buyer.price || seller.house.owner == buyer.buyer)) {
+				(seller.price > buyer.price || seller.house.owner == buyer.buyer)) {
 				ceilingSeller.quality = seller.quality-1;
 				seller = sellers.lower(ceilingSeller); // cheapest seller at this quality
 			}
@@ -135,6 +152,7 @@ public class HousingMarket {
 				sellers.remove(seller);
 			}
 		}
+		***/
 	}
 
 	/**********************************************
@@ -147,11 +165,7 @@ public class HousingMarket {
 	public void completeTransaction(HouseBuyerRecord b, HouseSaleRecord sale) {
 		// --- update sales statistics		
 		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.t - sale.tInitialListing);
-		averageSalePrice[sale.quality] = Config.G*averageSalePrice[sale.quality] + (1.0-Config.G)*sale.currentPrice;
-	}
-		
-	public boolean isOnMarket(House h) {
-		return(onMarket.containsKey(h));
+		averageSalePrice[sale.quality] = Config.G*averageSalePrice[sale.quality] + (1.0-Config.G)*sale.price;
 	}
 	
 	/***************************************************
@@ -207,8 +221,13 @@ public class HousingMarket {
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 
-	protected Map<House, HouseSaleRecord> 	onMarket = new TreeMap<House, HouseSaleRecord>();
-	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
+	//protected Map<House, HouseSaleRecord> 	onMarket = new TreeMap<House, HouseSaleRecord>();
+
+	protected PriorityQueue2D<HouseSaleRecord>	offersPQ;
+	protected PriorityQueue2D<HouseSaleRecord>	offersPY;	
+	protected HashMap<HouseSaleRecord, HouseBuyerRecord> matches;
+
+//	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	
 	// ---- statistics
 	public double averageDaysOnMarket;

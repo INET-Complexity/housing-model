@@ -50,8 +50,8 @@ public class Household implements IHouseOwner {
 				home = null;
 			}
 			if(h.owner == this) {
-				if(rentalMarket.isOnMarket(h)) rentalMarket.removeOffer(h);
-				if(houseMarket.isOnMarket(h)) houseMarket.removeOffer(h);
+				if(h.isOnRentalMarket()) rentalMarket.removeOffer(h);
+				if(h.isOnMarket()) houseMarket.removeOffer(h);
 				beneficiary.inheritHouse(h);
 			} else {
 				h.owner.endOfLettingAgreement(h);
@@ -244,12 +244,12 @@ public class Household implements IHouseOwner {
 			if(home != sale.house) home.owner.endOfLettingAgreement(home);
 			endTenancy();
 		}
-		MortgageApproval mortgage = bank.requestLoan(this, sale.currentPrice, behaviour.downPayment(bankBalance), home == null);
+		MortgageApproval mortgage = bank.requestLoan(this, sale.price, behaviour.downPayment(bankBalance), home == null);
 		if(mortgage == null) {
 			// TODO: need to either provide a way for house sales to fall through or to
 			// TODO: ensure that pre-approvals are always satisfiable
 			System.out.println("Can't afford to buy house: strange");
-			System.out.println("Want "+sale.currentPrice+" but can only get "+bank.getMaxMortgage(this,home==null));
+			System.out.println("Want "+sale.price+" but can only get "+bank.getMaxMortgage(this,home==null));
 			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyDiscretionaryIncome());
 			System.out.println("Annual income is "+ getMonthlyEmploymentIncome() *12.0);
 			if(isRenting()) System.out.println("Is renting");
@@ -275,10 +275,10 @@ public class Household implements IHouseOwner {
 	 * Do all stuff necessary when this household sells a house
 	 ********************************************************/
 	public void completeHouseSale(HouseSaleRecord sale) {
-		double profit = sale.currentPrice - housePayments.get(sale.house).payoff(bankBalance+sale.currentPrice);
+		double profit = sale.price - housePayments.get(sale.house).payoff(bankBalance+sale.price);
 		if(profit < 0) System.out.println("Strange: Profit is negative.");
 		bankBalance += profit;
-		if(rentalMarket.isOnMarket(sale.house)) {
+		if(sale.house.isOnMarket()) {
 			rentalMarket.removeOffer(sale.house);
 		}
 		if(housePayments.get(sale.house).nPayments == 0) {
@@ -307,7 +307,7 @@ public class Household implements IHouseOwner {
 			System.out.println("I don't own this house: strange");
 		}
 		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");		
-			if(rentalMarket.isOnMarket(h)) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
+			if(h.isOnRentalMarket()) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
 			rentalMarket.offer(h, buyToLetRent(h));
 	}
 
@@ -333,7 +333,7 @@ public class Household implements IHouseOwner {
 		if(sale.house.owner != this) { // if renting own house, no need for contract
 			MortgageApproval rent = new MortgageApproval();
 			rent.downPayment = 0.0;
-			rent.monthlyPayment = sale.currentPrice;
+			rent.monthlyPayment = sale.price;
 			rent.monthlyInterestRate = 0.0;
 			rent.nPayments = (int)(12.0*rand.nextDouble()+1);
 			rent.principal = rent.monthlyPayment*rent.nPayments;
@@ -425,7 +425,7 @@ public class Household implements IHouseOwner {
 
 	@Override
 	public void completeHouseLet(House house) {
-		if(houseMarket.isOnMarket(house)) {
+		if(house.isOnMarket()) {
 			houseMarket.removeOffer(house);
 		}
 	}
@@ -475,7 +475,7 @@ public class Household implements IHouseOwner {
 	public double getPropertyInvestmentValuation() {
 		double valuation = 0.0;
 		for(House h : housePayments.keySet()) {
-			if(h.owner == this && h != home && !houseMarket.isOnMarket(h)) {
+			if(h.owner == this && h != home && !h.isOnMarket()) {
 				valuation += houseMarket.getAverageSalePrice(h.quality);
 			}
 		}
@@ -495,7 +495,7 @@ public class Household implements IHouseOwner {
 	public int nPropertiesForSale() {
 		int n=0;
 		for(House h : housePayments.keySet()) {
-			if(houseMarket.isOnMarket(h)) ++n;
+			if(h.isOnMarket()) ++n;
 		}
 		return(n);
 	}
