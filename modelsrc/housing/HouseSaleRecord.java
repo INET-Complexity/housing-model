@@ -19,11 +19,15 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	 * @param h The house that is for sale.
 	 * @param p The initial list price for the house.
 	 ***********************************************/
-	public HouseSaleRecord(House h, double p) {
+	public HouseSaleRecord(House h, double price) {
+		super(price);
+		if(Double.isNaN(price)) {
+			System.out.println("Error: Initial price of HouseSaleRecord is NaN!");
+		}
 		house = h;
-		setPrice(p);
+//		setPrice(p);
 		initialListedPrice = price;
-		quality = house.quality;
+//		quality = house.quality;
 		tInitialListing = Model.t;
 		matchedBids = new ArrayList<>(8);
 	}
@@ -34,9 +38,9 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	 * 
 	 * @param p The list-price.
 	 **********************************************/
-	public void setPrice(double p) {
-		price = Math.round(p*100.0)/100.0; // round to nearest penny
-	}
+//	public void setPrice(double p) {
+//		price = Math.round(p*100.0)/100.0; // round to nearest penny
+//	}
 
 //	public double doubleValue() {
 //		return(currentPrice);
@@ -44,12 +48,12 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	
 	@Override
 	public int getQuality() {
-		return(quality);
+		return(house.getQuality());
 	}
-
+	
 	@Override
-	public int getId() {
-		return house.id;
+	public double getYield() {
+		return 0.0;
 	}
 	
 	public void matchWith(HouseBuyerRecord bid) {
@@ -57,7 +61,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	}
 	
 	public House 	house;
-	public int		quality;
+//	public int		quality;
 	public double 	initialListedPrice;
 //	public double	price;
 	public int		tInitialListing; // time of initial listing

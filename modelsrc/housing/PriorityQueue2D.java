@@ -3,7 +3,7 @@ package housing;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
-import java.util.function.Consumer;
+// import java.util.function.Consumer; Java 8
 
 /***
  * A 2-dimensional priority queue: The items in the queue have two unrelated orderings:
@@ -98,7 +98,8 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 	public E poll(E xGreatestBoundary) {
 		E head = peek(xGreatestBoundary);
 		if(head == null) return(null);
-		removeUncovered(head);
+		ySortedElements.remove(head);
+		removeFromUncovered(head);
 		return(head);
 	}
 
@@ -110,44 +111,51 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 	 * @return the Y-greatest entry that is not X-greater than xGreatestBoundary.
 	 */
 	public E peek(E xGreatestBoundary) {
-		return(uncoveredElements.floor(xGreatestBoundary));		
+		return(uncoveredElements.floor(xGreatestBoundary));
 	}
 	
 	@SuppressWarnings("unchecked")
 	public boolean remove(Object element) {
-		if(uncoveredElements.contains(element)) {
-			removeUncovered((E)element);
-		} else {
-			ySortedElements.remove(element);
-		}
+		ySortedElements.remove(element);
+//		if(uncoveredElements.contains(element)) {
+			removeFromUncovered((E)element);
+//		}
 		return(true);
 	}
 	
 	/***
-	 * Removes element. Element must be an uncovered member of
-	 * this set. Removing an uncovered element may uncover other elements,
-	 * which then need to be added to the uncoveredElements container. This
-	 * is done 
+	 * Removes element from the set of uncovered elements.
+	 * Removing an uncovered element may uncover other elements,
+	 * which then need to be added to the uncoveredElements container.
+	 * Potentially uncovered elements are the ones that were covered
+	 * by the removed element but not covered by the element's x-neighbours
+	 * in the set of uncovered elements.
+	 * 
 	 * 
 	 * @param element Element to remove (must be an uncovered member of this set).
 	 */
-	protected void removeUncovered(E element) {
-		uncoveredElements.remove(element);
-		ySortedElements.remove(element);
+	protected void removeFromUncovered(E element) {
+		if(uncoveredElements.remove(element) == false) return;
 		if(ySortedElements.size() == 0) return;
 		boolean inclusive = false;
+		System.out.println("Starting removal");
 		E nextxLower = uncoveredElements.lower(element);
-		if(nextxLower == null) { // removing the lowest uncovered element
+		if(nextxLower == null) { // we're removing the x-lowest uncovered element
 			inclusive = true;
 			nextxLower = ySortedElements.first();
-			if(comparator.YCompare(element, nextxLower) == -1) { // y-least element doesn't cover anything
+			if(comparator.YCompare(element, nextxLower) == -1) { // element was the y-least element, which doesn't cover anything
 				return;
 			}
+			System.out.println("Is lowest");
 		}
 		E nextxHigher = uncoveredElements.higher(element);
-		if(nextxHigher == null) { // removing the highest uncovered element (must be tail of ySortedElements)
+		if(nextxHigher == null) { // removing the highest uncovered element (must be the last element of ySortedElements)
 			nextxHigher = ySortedElements.last();
 			uncoveredElements.add(nextxHigher);
+			System.out.println("Is highest");
+		}
+		if(comparator.YCompare(nextxLower, element) == 1) {
+			System.out.println("From = "+nextxLower+" to = "+element+" compare = "+comparator.YCompare(nextxLower, element));
 		}
 		for(E e : ySortedElements.subSet(nextxLower, inclusive, element, true).descendingSet()) {
 			if(comparator.XCompare(e, nextxHigher) == -1) {
@@ -155,13 +163,36 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 				nextxHigher = e;
 			}
 		}
+		checkConsistency();
+		System.out.println("done");
+	}
+	
+	/*** testing only */
+	public boolean checkConsistency() {
+		E last = null;
+		for(E element : uncoveredElements) {
+			if(last != null) {
+				if(comparator.YCompare(element, last) != 1) {
+					System.out.println("uncovered elements are not monotonically increasing");
+					return(false);
+				}
+				last = element;
+			}
+		}
+		for(E element : ySortedElements) {
+			if(isUncovered(element) && !uncoveredElements.contains(element)) {
+				System.out.println("uncovered elements are missing memebers");
+				return(false);
+			}
+		}
+		return(true);
 	}
 	
 	/***
 	 * An element, a, is said to be "covered" by and element, b, iff
 	 * b is Y-greater than a and b is X-less than a.
 	 * 
-	 * By construction, if a is covered by an element is must also
+	 * By construction, if a is covered by an element it must also
 	 * be covered by an uncovered element.
 	 * 
 	 * @param element
@@ -212,14 +243,14 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 		@Override
 		public void remove() {
 			it.remove();
-			PriorityQueue2D.this.uncoveredElements.remove(last);
+			if(last != null) PriorityQueue2D.this.removeFromUncovered(last);
 		}
-
+/** Java 8...
 		@Override
 		public void forEachRemaining(Consumer<? super E> action) {
 			it.forEachRemaining(action);
 		}
-		
+**/	
 		Iterator<E> it;
 		E last;
 	}

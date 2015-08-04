@@ -21,7 +21,7 @@ public class House implements Comparable<House> {
 	}
 	
 	public boolean isOnMarket() {
-		return saleRecord == null;
+		return saleRecord != null;
 	}
 	
 	public HouseSaleRecord getSaleRecord() {
@@ -33,7 +33,7 @@ public class House implements Comparable<House> {
 	}
 	
 	public boolean isOnRentalMarket() {
-		return rentalRecord == null;
+		return rentalRecord != null;
 	}
 
 	public void putForSale(HouseSaleRecord saleRecord) {
@@ -49,8 +49,13 @@ public class House implements Comparable<House> {
 	public void resetRentalRecord() {
 		rentalRecord = null;
 	}
-			
-	public int 				quality;
+
+	public int getQuality() {
+		return quality;
+	}
+
+	private int				quality;
+
 	public IHouseOwner  	owner;
 	public Household		resident;
 	public int				id;

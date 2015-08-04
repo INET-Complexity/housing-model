@@ -25,7 +25,7 @@ public class Construction implements IHouseOwner {
 			newBuild = new House();
 			newBuild.owner = this;
 			++housingStock;
-			price = HousingMarket.referencePrice(newBuild.quality);
+			price = HousingMarket.referencePrice(newBuild.getQuality());
 //			if(Model.rand.nextDouble() < 0.9) {
 				Model.housingMarket.offer(newBuild, price);
 //			} else {

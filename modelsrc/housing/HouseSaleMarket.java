@@ -17,6 +17,7 @@ public class HouseSaleMarket extends HousingMarket {
 	 */
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		super.completeTransaction(purchase, sale);
+		sale.house.saleRecord = null;
 		Household buyer = purchase.buyer;		
 		if(buyer == sale.house.owner) return;
 		sale.house.owner.completeHouseSale(sale);
@@ -37,7 +38,7 @@ public class HouseSaleMarket extends HousingMarket {
 		super.removeOffer(hsr);
 		hsr.house.resetSaleRecord();
 	}
-	
+		
 	/*******************************************
 	 * Make a bid on the market as a Buy-to-let investor
 	 *  (i.e. make an offer on a (yet to be decided) house).

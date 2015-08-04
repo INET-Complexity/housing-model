@@ -36,7 +36,7 @@ public class ModelGUI extends GUIState implements Steppable {
 	public ScatterPlotGenerator
 //		housingChart,
 		housePriceChart,
-//		bankBalanceChart,
+	//	bankBalanceChart,
 		mortgageStatsChart,
 		mortgagePhaseChart;
             

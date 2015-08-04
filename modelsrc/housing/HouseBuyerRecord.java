@@ -12,20 +12,15 @@ import java.util.Comparator;
  **********************************************/
 public class HouseBuyerRecord extends HousingMarketRecord {
 	
-	public HouseBuyerRecord(Household h, double p) {
+	public HouseBuyerRecord(Household h, double price) {
+		super(price);
 		buyer = h;
-		price = p;
 	}
 	
-	@Override
-	public int getId() {
-		return buyer.id;
-	}
-
 	public static class PComparator implements Comparator<HouseBuyerRecord> {
 		@Override
 		public int compare(HouseBuyerRecord arg0, HouseBuyerRecord arg1) {
-			double diff = arg0.price - arg1.price;
+			double diff = arg0.getPrice() - arg1.getPrice();
 			if(diff == 0.0) {
 				diff = arg0.getId() - arg1.getId();
 			}
@@ -33,9 +28,17 @@ public class HouseBuyerRecord extends HousingMarketRecord {
 		}
 	}
 	
+	
 
 	/////////////////////////////////////////////////////////////////
 	
 	public Household buyer; // Who wants to buy the house
-	public double    price; // how much he is willing to pay
+
+
+
+	@Override
+	public int getQuality() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
 }

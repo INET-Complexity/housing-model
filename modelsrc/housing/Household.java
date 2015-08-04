@@ -106,7 +106,7 @@ public class Household implements IHouseOwner {
 	 * Receive income, pay rent/mortgage, make consumption decision
 	 * and make decision to buy/sell house.
 	 ********************************************************/
-	public void preHouseSaleStep() {
+	public void preSaleClearingStep() {
 		double disposableIncome;
 		
 		lifecycle.step();
@@ -160,6 +160,9 @@ public class Household implements IHouseOwner {
 		}
 		
 		makeHousingDecision();
+		if(behaviour.isPropertyInvestor() && housePayments.size() <= behaviour.nDesiredBTLProperties()) {
+			houseMarket.BTLbid(this, bank.getMaxMortgage(this, false));
+		}
 	}
 
 	/********************************************************
@@ -170,11 +173,9 @@ public class Household implements IHouseOwner {
 	 * This is also where investors get to bid for buy-to-let
 	 * housing.
 	 ********************************************************/
-	public void preHouseLettingStep() {
+	public void preRentalClearingStep() {
 		if(isHomeless()) {
 			rentalMarket.bid(this, behaviour.desiredRent(getMonthlyEmploymentIncome()));
-		} else if(behaviour.isPropertyInvestor()) { // this is a buy-to-let investor
-			houseMarket.bid(this, bank.getMaxMortgage(this, false));
 		}
 	}
 	
@@ -206,7 +207,7 @@ public class Household implements IHouseOwner {
 				forRent = h.getRentalRecord();
 				if(forRent != null) {
 					newPrice = behaviour.rethinkBuyToLetRent(forRent);
-					rentalMarket.updateOffer(h.getRentalRecord(), newPrice);		
+					rentalMarket.updateOffer(forRent, newPrice);		
 				}
 			}
 		}
@@ -219,7 +220,7 @@ public class Household implements IHouseOwner {
 
 	protected void putHouseForSale(House h) {
 		houseMarket.offer(h, behaviour.initialSalePrice(
-				houseMarket.averageSalePrice[h.quality],
+				houseMarket.averageSalePrice[h.getQuality()],
 				houseMarket.averageDaysOnMarket,
 				housePayments.get(h).principal
 		));
@@ -244,12 +245,12 @@ public class Household implements IHouseOwner {
 			if(home != sale.house) home.owner.endOfLettingAgreement(home);
 			endTenancy();
 		}
-		MortgageApproval mortgage = bank.requestLoan(this, sale.price, behaviour.downPayment(bankBalance), home == null);
+		MortgageApproval mortgage = bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(bankBalance), home == null);
 		if(mortgage == null) {
 			// TODO: need to either provide a way for house sales to fall through or to
 			// TODO: ensure that pre-approvals are always satisfiable
 			System.out.println("Can't afford to buy house: strange");
-			System.out.println("Want "+sale.price+" but can only get "+bank.getMaxMortgage(this,home==null));
+			System.out.println("Want "+sale.getPrice()+" but can only get "+bank.getMaxMortgage(this,home==null));
 			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyDiscretionaryIncome());
 			System.out.println("Annual income is "+ getMonthlyEmploymentIncome() *12.0);
 			if(isRenting()) System.out.println("Is renting");
@@ -275,10 +276,10 @@ public class Household implements IHouseOwner {
 	 * Do all stuff necessary when this household sells a house
 	 ********************************************************/
 	public void completeHouseSale(HouseSaleRecord sale) {
-		double profit = sale.price - housePayments.get(sale.house).payoff(bankBalance+sale.price);
+		double profit = sale.getPrice() - housePayments.get(sale.house).payoff(bankBalance+sale.getPrice());
 		if(profit < 0) System.out.println("Strange: Profit is negative.");
 		bankBalance += profit;
-		if(sale.house.isOnMarket()) {
+		if(sale.house.isOnRentalMarket()) {
 			rentalMarket.removeOffer(sale);
 		}
 		if(housePayments.get(sale.house).nPayments == 0) {
@@ -316,6 +317,9 @@ public class Household implements IHouseOwner {
 	 * and becomes homeless (possibly temporarily)
 	 **********************************************************/
 	public void endTenancy() {
+		if(home == null) {
+			System.out.println("Strange: got endTenancy but I'm homeless");			
+		}
 		if(home.owner == this) {
 			System.out.println("Strange: got endTenancy on a home I own");
 		}
@@ -333,7 +337,7 @@ public class Household implements IHouseOwner {
 		if(sale.house.owner != this) { // if renting own house, no need for contract
 			MortgageApproval rent = new MortgageApproval();
 			rent.downPayment = 0.0;
-			rent.monthlyPayment = sale.price;
+			rent.monthlyPayment = sale.getPrice();
 			rent.monthlyInterestRate = 0.0;
 			rent.nPayments = (int)(12.0*rand.nextDouble()+1);
 			rent.principal = rent.monthlyPayment*rent.nPayments;
@@ -432,7 +436,7 @@ public class Household implements IHouseOwner {
 
 	public double buyToLetRent(House h) {
 		return(behaviour.buyToLetRent(
-				rentalMarket.getAverageSalePrice(h.quality), 
+				rentalMarket.getAverageSalePrice(h.getQuality()), 
 				rentalMarket.averageDaysOnMarket,
 				housePayments.get(h).monthlyPayment));
 	}
@@ -476,7 +480,7 @@ public class Household implements IHouseOwner {
 		double valuation = 0.0;
 		for(House h : housePayments.keySet()) {
 			if(h.owner == this && h != home && !h.isOnMarket()) {
-				valuation += houseMarket.getAverageSalePrice(h.quality);
+				valuation += houseMarket.getAverageSalePrice(h.getQuality());
 			}
 		}
 		return(valuation);

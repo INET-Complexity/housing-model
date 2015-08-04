@@ -1,6 +1,7 @@
 package housing;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -40,14 +41,17 @@ public class HousingMarket {
 		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market
 		public static final double G = Math.exp(-1.0/8); // Decay const for averageListPrice averaging
 	}
+	
+	static public class Authority {
+		private Authority() {}
+	}
 
 	
 	public HousingMarket() {
-		init();
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
 		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());	
-//		matches = new HashMap<>(Demographics.TARGET_POPULATION/16);
 		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
+		init();
 	}
 	
 	public void init() {
@@ -84,9 +88,12 @@ public class HousingMarket {
 	 * @param newPrice The new price of the house.
 	 ******************************************/
 	public void updateOffer(HouseSaleRecord hsr, double newPrice) {
+//		if(!offersPQ.checkConsistency()) {
+//			System.out.println("Inconsistent offersPQ!");
+//		}
 		offersPQ.remove(hsr);
 		offersPY.remove(hsr);
-		hsr.price = newPrice;
+		hsr.setPrice(newPrice, authority);
 		offersPQ.add(hsr);
 		offersPY.add(hsr);
 	}
@@ -142,38 +149,50 @@ public class HousingMarket {
 		GeometricDistribution geomDist;
 		int nBids;
 		double pSuccessfulBid;
+		double salePrice;
 		int winningBid;
 		Iterator<HousingMarketRecord> record = offersPQ.iterator();
+		System.out.println("starting clearing");
 		while(record.hasNext()) {
 			offer = (HouseSaleRecord)record.next();
+//			System.out.println("Offer quality "+offer.getQuality());
 			nBids = offer.matchedBids.size();
 			if(nBids > 0) {
 				// bid up the price
 				pSuccessfulBid = Math.exp(-nBids*Config.UNDEROFFER);
 				geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
-				offer.price *= Math.pow(Config.BIDUP, geomDist.sample());
+				salePrice = offer.getPrice() * Math.pow(Config.BIDUP, geomDist.sample());
 				// choose a bid above the new price
-				offer.matchedBids.sort(new HouseBuyerRecord.PComparator());
-				if(offer.matchedBids.get(0).price < offer.price) {
-					offer.price = offer.matchedBids.get(0).price;
-					winningBid = 0;
+				Collections.sort(offer.matchedBids, new HouseBuyerRecord.PComparator()); // highest price last
+				--nBids;
+				if(offer.matchedBids.get(nBids).getPrice() < salePrice) {
+					salePrice = offer.matchedBids.get(nBids).getPrice();
+					winningBid = nBids;
 				} else {
-					nBids = offer.matchedBids.size()-1;
-					while(offer.matchedBids.get(nBids).price < offer.price) {
+					while(nBids >=0 && offer.matchedBids.get(nBids).getPrice() > salePrice) {
 						--nBids;
 					}
-					winningBid = Model.rand.nextInt(nBids+1);
+					++nBids;
+					winningBid = nBids + Model.rand.nextInt(offer.matchedBids.size()-nBids);
 				}
-				completeTransaction(offer.matchedBids.get(winningBid), offer);
 				record.remove();
 				offersPY.remove(offer);
+				offer.setPrice(salePrice, authority);
+				completeTransaction(offer.matchedBids.get(winningBid), offer);
+//				System.out.println("PQ size = "+offersPQ.size()+" PY size = "+offersPY.size());
 				// put failed bids back on array
 				bids.addAll(offer.matchedBids.subList(0, winningBid));
 				bids.addAll(offer.matchedBids.subList(winningBid+1, offer.matchedBids.size()));			
 			}
 		}
 		
+//		for(HousingMarketRecord r : offersPQ) {
+//			if(((HouseSaleRecord)r).matchedBids.size() != 0) {
+//				System.out.println("Strange, got some residual matched bids");
+//			}
+//		}
 		
+		bids.clear();
 		
 		/***
 		HouseBuyerRecord buyer;
@@ -219,7 +238,7 @@ public class HousingMarket {
 	public void completeTransaction(HouseBuyerRecord b, HouseSaleRecord sale) {
 		// --- update sales statistics		
 		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.t - sale.tInitialListing);
-		averageSalePrice[sale.quality] = Config.G*averageSalePrice[sale.quality] + (1.0-Config.G)*sale.price;
+		averageSalePrice[sale.getQuality()] = Config.G*averageSalePrice[sale.getQuality()] + (1.0-Config.G)*sale.getPrice();
 	}
 	
 	/***************************************************
@@ -247,6 +266,8 @@ public class HousingMarket {
 	 * @return the average sale price of houses of the given quality
 	 */
 	public double getAverageSalePrice(int q) {
+		double price = averageSalePrice[q];
+		if(price <= 0.0) price = 0.01;
 		return(averageSalePrice[q]);
 	}
 
@@ -281,6 +302,7 @@ public class HousingMarket {
 	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	
 //	protected HashMap<HouseSaleRecord, ArrayList<HouseBuyerRecord> > matches;
 	protected ArrayList<HouseBuyerRecord> bids;
+	private static Authority authority = new Authority();
 
 //	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	

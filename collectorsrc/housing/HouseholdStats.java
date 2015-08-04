@@ -14,7 +14,7 @@ public class HouseholdStats {
     			++nHomeless;
     		} else if(h.isRenting()) {
     			++nRenting;
-    			rentalYield += h.housePayments.get(h.home).monthlyPayment*12.0/Model.housingMarket.getAverageSalePrice(h.home.quality);
+    			rentalYield += h.housePayments.get(h.home).monthlyPayment*12.0/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
     		}
     	}
     	if(rentalYield > 0.0) rentalYield /= nRenting;
@@ -80,7 +80,7 @@ public class HouseholdStats {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(h.isRenting() && i<nRenting) {
-				result[i++] = h.housePayments.get(h.home).monthlyPayment*12.0/Model.housingMarket.getAverageSalePrice(h.home.quality);
+				result[i++] = h.housePayments.get(h.home).monthlyPayment*12.0/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
 			}
 		}
 		return(result);

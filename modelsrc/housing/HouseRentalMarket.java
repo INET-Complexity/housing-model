@@ -20,6 +20,7 @@ public class HouseRentalMarket extends HousingMarket {
 	@Override
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		super.completeTransaction(purchase, sale);
+		sale.house.rentalRecord = null;
 		purchase.buyer.completeHouseRental(sale);
 		sale.house.owner.completeHouseLet(sale.house);
 		Collectors.rentalMarketStats.recordSale(purchase, sale);

@@ -36,7 +36,7 @@ public class HousingMarketStats {
 		// ---------------------------
 		averageBidPrice = 0.0;
 		for(HouseBuyerRecord buyer : market.bids) {
-			averageBidPrice += buyer.price;
+			averageBidPrice += buyer.getPrice();
 		}
 		if(market.bids.size() > 0) averageBidPrice /= market.bids.size();
 
@@ -44,7 +44,7 @@ public class HousingMarketStats {
 		// -----------------------------
 		averageOfferPrice = 0.0;
 		for(HousingMarketRecord sale : market.offersPQ) {
-			averageOfferPrice += sale.price;
+			averageOfferPrice += sale.getPrice();
 		}
 		if(market.offersPQ.size() > 0) averageOfferPrice /= market.offersPQ.size();
 		recordOfferPrices();
@@ -60,7 +60,7 @@ public class HousingMarketStats {
 	
 	public void recordSale(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		if(sale.initialListedPrice > 0.01) {
-			averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.price/sale.initialListedPrice;
+			averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.getPrice()/sale.initialListedPrice;
 		}
 		saleCount += 1;
 		MortgageApproval mortgage = purchase.buyer.housePayments.get(sale.house);
@@ -76,7 +76,7 @@ public class HousingMarketStats {
 		offerPrices = new double[market.offersPQ.size()];
 		int i = 0;
 		for(HousingMarketRecord sale : market.offersPQ) {
-			offerPrices[i] = sale.price;
+			offerPrices[i] = sale.getPrice();
 			++i;
 		}
 	}
@@ -86,7 +86,7 @@ public class HousingMarketStats {
 		int i = 0;
 		
 		for(HouseBuyerRecord bid : market.bids) {
-			bidPrices[i] = bid.price;
+			bidPrices[i] = bid.getPrice();
 			++i;
 		}
 	}

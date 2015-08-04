@@ -89,7 +89,7 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * @param sale The HouseSaleRecord of the house that is on the market.
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
-		return(sale.price *0.95);
+		return(sale.getPrice() *0.95);
 		/*** BoE calibrated reprice
 		if(rand.nextDouble() > 0.944) {
 			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
@@ -176,9 +176,9 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
 		if(rand.nextDouble() > 0.944) {
 			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
-			return(sale.price * (1.0-Math.exp(logReduction)));
+			return(sale.getPrice() * (1.0-Math.exp(logReduction)));
 		}
-		return(sale.price);
+		return(sale.getPrice());
 	}
 
 	/********************************************************
@@ -186,7 +186,7 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 ********************************************************/
 	public boolean decideToBuyBuyToLet(House h, Household me, double price) {
 		// --- give preference to cheaper properties
-		if(Model.rand.nextDouble() < (h.quality*1.0/House.Config.N_QUALITY)-0.5) return(false);
+		if(Model.rand.nextDouble() < (h.getQuality()*1.0/House.Config.N_QUALITY)-0.5) return(false);
 		if(price <= Model.bank.getMaxMortgage(me, false)) {
 			MortgageApproval mortgage;
 			mortgage = Model.bank.requestApproval(me, price, 0.0, false); // maximise leverege with min downpayment
@@ -216,6 +216,11 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 
 	public boolean isPropertyInvestor() {
 		return(desiredBTLProperties > 0);
+	}
+
+	@Override
+	public int nDesiredBTLProperties() {
+		return desiredBTLProperties;
 	}
 
 
