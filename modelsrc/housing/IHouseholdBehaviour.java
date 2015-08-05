@@ -52,7 +52,7 @@ public interface IHouseholdBehaviour {
 	 * @return Does an investor decide to sell a buy-to-let property
 	 */
 	boolean decideToSellInvestmentProperty(House h, Household me);
-	boolean decideToBuyBuyToLet(House h, Household me, double price);
+//	boolean decideToBuyBuyToLet(House h, Household me, double price);
 	boolean isPropertyInvestor();
 	int nDesiredBTLProperties();
 

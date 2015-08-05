@@ -58,6 +58,9 @@ public abstract class HousingMarketRecord {
 		@Override
 		public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
 			double diff = arg0.price - arg1.price;
+			if(Double.isNaN(diff)) {
+				System.out.println("Got price NaN in PYComparator");
+			}
 			if(diff == 0.0) {
 				diff = arg0.getId() - arg1.getId();
 			}
@@ -67,6 +70,9 @@ public abstract class HousingMarketRecord {
 		@Override
 		public int YCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
 			double diff = arg0.getYield() - arg1.getYield();
+			if(Double.isNaN(diff)) {
+				System.out.println("Got yield NaN in PYComparator");
+			}
 			if(diff == 0.0) {
 				diff = arg0.getId() - arg1.getId();
 			}

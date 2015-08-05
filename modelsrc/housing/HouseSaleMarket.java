@@ -3,6 +3,7 @@ package housing;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 /*******************************************************
  * Class that represents market for houses for-sale.
@@ -11,6 +12,16 @@ import java.util.TreeSet;
  *
  *****************************************************/
 public class HouseSaleMarket extends HousingMarket {
+		
+	public HouseSaleMarket() {
+		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
+	}
+	
+	@Override
+	public void init() {
+		super.init();
+		if(offersPY != null) offersPY.clear();
+	}
 		
 	/**
 	 * This method deals with doing all the stuff necessary whenever a house gets sold.
@@ -28,11 +39,8 @@ public class HouseSaleMarket extends HousingMarket {
 
 	@Override
 	public HouseSaleRecord offer(House house, double price) {
-		if(house.isOnRentalMarket()) {
-			System.out.println("Got offer on sale market of house already on rental market");			
-		}
-
 		HouseSaleRecord hsr = super.offer(house, price);
+		offersPY.add(hsr);
 		house.putForSale(hsr);
 		return(hsr);
 	}
@@ -40,9 +48,60 @@ public class HouseSaleMarket extends HousingMarket {
 	@Override
 	public void removeOffer(HouseSaleRecord hsr) {
 		super.removeOffer(hsr);
+		offersPY.remove(hsr);
 		hsr.house.resetSaleRecord();
 	}
-		
+	
+	@Override
+	public void updateOffer(HouseSaleRecord hsr, double newPrice) {
+		offersPY.remove(hsr);
+		super.updateOffer(hsr, newPrice);
+		offersPY.add(hsr);
+	}
+	
+	@Override
+	protected HouseSaleRecord getBestOffer(HouseBuyerRecord bid) {
+		if(bid.getClass() == HouseBuyerRecord.class) { // OO buyer (quality driven)
+			return super.getBestOffer(bid);
+		} else { // BTL buyer (yield driven)
+			return (HouseSaleRecord)offersPY.peek(bid);
+		}
+	}
+	/*
+	@Override
+	protected void clearMatches() {
+		offersPY.checkConsistency();
+		super.clearMatches();
+		// sync offersPY with offersPQ to remove cleared offers
+		HousingMarketRecord offer;
+		Iterator<HousingMarketRecord> pyOffer = offersPY.iterator();
+		offersPY.checkConsistency();
+		while(pyOffer.hasNext()) {
+			offer = pyOffer.next();
+			if(!offersPQ.contains(offer)) pyOffer.remove();
+		}
+	}
+		*/
+	
+	public Iterator<HousingMarketRecord> offersIterator() {
+		final PriorityQueue2D<HousingMarketRecord>.Iter underlyingIterator = (PriorityQueue2D<HousingMarketRecord>.Iter)super.offersIterator();
+		return(new Iterator<HousingMarketRecord>() {
+			@Override
+			public boolean hasNext() {
+				return underlyingIterator.hasNext();
+			}
+			@Override
+			public HousingMarketRecord next() {
+				return underlyingIterator.next();
+			}
+			@Override
+			public void remove() {
+				underlyingIterator.remove();
+				if(underlyingIterator.last != null) HouseSaleMarket.this.offersPY.remove(underlyingIterator.last);
+			}
+		});
+	}
+	
 	/*******************************************
 	 * Make a bid on the market as a Buy-to-let investor
 	 *  (i.e. make an offer on a (yet to be decided) house).
@@ -53,6 +112,8 @@ public class HouseSaleMarket extends HousingMarket {
 	public void BTLbid(Household buyer, double price) {
 		bids.add(new BTLBuyerRecord(buyer, price));
 	}
+
+	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	
 
 	/**
 	 * Buy to let investors get randomly offered the chance to buy houses that

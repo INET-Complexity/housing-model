@@ -24,6 +24,8 @@ public class HousingMarketStats {
         	referencePriceData[1][i] = Model.housingMarket.referencePrice(i);
         }
         market = m;
+        
+        nEmpty = 0;
 	}
 
 	public void record() {
@@ -31,6 +33,7 @@ public class HousingMarketStats {
 		nFTBSales = ftbSaleCount; ftbSaleCount = 0;
 		nBTLSales = btlSaleCount; btlSaleCount = 0;
 		nNewBuild = 0;
+		nEmpty = 0;
 		nSellers = market.offersPQ.size();
 		nBuyers = market.bids.size();
 
@@ -48,6 +51,8 @@ public class HousingMarketStats {
 		for(HousingMarketRecord sale : market.offersPQ) {
 			averageOfferPrice += sale.getPrice();
 			if(((HouseSaleRecord)sale).house.owner == Model.construction) nNewBuild++;
+			if(((HouseSaleRecord)sale).house.resident == null) nEmpty++;
+			
 		}
 		if(market.offersPQ.size() > 0) averageOfferPrice /= market.offersPQ.size();
 		recordOfferPrices();
@@ -109,10 +114,15 @@ public class HousingMarketStats {
 	double [] bidPrices;
 	HousingMarket market;
 
+	public int 	nEmpty;
 
 	///////////////////////////////////////////////////////////////////////////////////////
 	// Getters and setters for Mason
 	///////////////////////////////////////////////////////////////////////////////////////
+	
+	public double getAverageDaysOnMarket() {
+		return market.averageDaysOnMarket;
+	}
 	
 	public double[] getOfferPrices() {
 		return(offerPrices);
@@ -199,4 +209,9 @@ public class HousingMarketStats {
 	public String desHPA() {
 		return("House price growth year-on-year");
 	}
+
+	public double getnEmpty() {
+		return nEmpty;
+	}
+
 }

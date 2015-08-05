@@ -153,16 +153,16 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 			uncoveredElements.add(nextxHigher);
 //			System.out.println("Is highest");
 		}
-//		if(comparator.YCompare(nextxLower, element) == 1) {
-//			System.out.println("From = "+nextxLower+" to = "+element+" compare = "+comparator.YCompare(nextxLower, element));
-//		}
+		if(comparator.YCompare(nextxLower, element) == 1) {
+			System.out.println("From = "+nextxLower+" to = "+element+" compare = "+comparator.YCompare(nextxLower, element));
+		}
 		for(E e : ySortedElements.subSet(nextxLower, inclusive, element, true).descendingSet()) {
 			if(comparator.XCompare(e, nextxHigher) == -1) {
 				uncoveredElements.add(e);
 				nextxHigher = e;
 			}
 		}
-//		checkConsistency();
+		checkConsistency();
 //		System.out.println("done");
 	}
 	
@@ -219,7 +219,7 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 	}
 
 	@Override
-	public Iterator<E> iterator() {
+	public Iter iterator() {
 		return this.new Iter();
 	}
 	

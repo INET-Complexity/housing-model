@@ -93,8 +93,9 @@ public class Demographics {
 	 * Probability that a household 'dies' per year given age of the representative householder
 	 * Death of a household may occur by marriage, death of single occupant, moving together
 	 */
-	public static double probDeathGivenAge(double age) {
-		return(futureBirthRate(0)*1.0/TARGET_POPULATION);
+	public static double probDeathGivenAge(double ageInYears) {
+		double averageDeathRate = futureBirthRate(0)*1.0/TARGET_POPULATION;
+		return(averageDeathRate*ageInYears*ageInYears/7500.0);
 	}
 	
 	/**

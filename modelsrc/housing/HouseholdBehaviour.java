@@ -165,15 +165,12 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 */
 	@Override
 	public double buyToLetRent(double pbar, double d, double mortgagePayment) {
-		final double C = 0.02;//0.095;	// initial markup from average price
-		final double D = 0.0;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
+		final double C = 0.01;//0.095;	// initial markup from average price
+		final double D = 0.02;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 //		return(Math.max(Math.exp(exponent), mortgagePayment));
 		double result = Math.exp(exponent);
-		if(Double.isNaN(result)) {
-			System.out.println("buyToLetRent Not-a-number");
-		}
 		return(result);
 //		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
 	}
@@ -185,46 +182,46 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * house-sale market, calibrated against sales on the zoopla dataset)
 	 */
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
-//		return(0.95*sale.getPrice());
-		if(rand.nextDouble() > 0.944) {
-			double logReduction = Math.min(4.6, 1.603+(rand.nextGaussian()*0.6173));
-			return(sale.getPrice() * (1.0-0.01*Math.exp(logReduction)));
-		}
-		return(sale.getPrice());
+		return(0.95*sale.getPrice());
+//		if(rand.nextDouble() > 0.944) {
+//			double logReduction = Math.min(4.6, 1.603+(rand.nextGaussian()*0.6173));
+//			return(sale.getPrice() * (1.0-0.01*Math.exp(logReduction)));
+//		}
+//		return(sale.getPrice());
 	}
 
 	/********************************************************
 	 * Decide whether to buy a house as a buy-to-let investment
 	 ********************************************************/
-	public boolean decideToBuyBuyToLet(House h, Household me, double price) {
+//	public boolean decideToBuyBuyToLet(House h, Household me, double price) {
 		// --- give preference to cheaper properties
-		if(Model.rand.nextDouble() < (h.getQuality()*1.0/House.Config.N_QUALITY)-0.5) return(false);
-		if(price <= Model.bank.getMaxMortgage(me, false)) {
-			MortgageApproval mortgage;
-			mortgage = Model.bank.requestApproval(me, price, 0.0, false); // maximise leverege with min downpayment
-			return(buyToLetPurchaseDecision(price, mortgage.monthlyPayment, mortgage.downPayment));
+//		if(Model.rand.nextDouble() < (h.getQuality()*1.0/House.Config.N_QUALITY)-0.5) return(false);
+//		if(price <= Model.bank.getMaxMortgage(me, false)) {
+//			MortgageApproval mortgage;
+//			mortgage = Model.bank.requestApproval(me, price, 0.0, false); // maximise leverege with min downpayment
+//			return(buyToLetPurchaseDecision(price, mortgage.monthlyPayment, mortgage.downPayment));
 
-		}
+//		}
 //		System.out.println("BTL refused mortgage on "+price+" can get "+Model.bank.getMaxMortgage(me, false));
-		return(false);
-	}
+//		return(false);
+//	}
 	/**
 	 * @param price The asking price of the house
 	 * @param monthlyPayment The monthly payment on a mortgage for this house
 	 * @param downPayment The minimum downpayment on a mortgage for this house
 	 * @return will the investor decide to buy this house?
 	 */
-	public boolean buyToLetPurchaseDecision(double price, double monthlyPayment, double downPayment) {
-		double yield;
-		yield = (monthlyPayment*12*RENT_PROFIT_MARGIN + Model.housingMarket.housePriceAppreciation()*price)/
-				downPayment;
-		if(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp( - yield*4.0))) {
+//	public boolean buyToLetPurchaseDecision(double price, double monthlyPayment, double downPayment) {
+//		double yield;
+//		yield = (monthlyPayment*12*RENT_PROFIT_MARGIN + Model.housingMarket.housePriceAppreciation()*price)/
+//				downPayment;
+//		if(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp( - yield*4.0))) {
 //			System.out.println("BTL: bought");
-			return(true);
-		}
+//			return(true);
+//		}
 //		System.out.println("BTL: didn't buy");
-		return(false);
-	}
+//		return(false);
+//	}
 
 	public boolean isPropertyInvestor() {
 		return(desiredBTLProperties > 0);

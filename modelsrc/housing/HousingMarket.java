@@ -49,7 +49,6 @@ public class HousingMarket {
 	
 	public HousingMarket() {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
-		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());	
 		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
 		init();
 	}
@@ -64,7 +63,6 @@ public class HousingMarket {
 		HPIAppreciation = 0.0;
 		averageDaysOnMarket = 30;
 		offersPQ.clear();
-		offersPY.clear();
 //		matches.clear();
 	}
 	
@@ -74,12 +72,8 @@ public class HousingMarket {
 	 * @param price List price for the house.
 	 ******************************************/
 	public HouseSaleRecord offer(House house, double price) {
-		if(price < 0.0) {
-			System.out.println("Got -ve price in market offer");
-		}
 		HouseSaleRecord hsr = new HouseSaleRecord(house, price);
 		offersPQ.add(hsr);
-		offersPY.add(hsr);
 		return(hsr);
 	}
 	
@@ -91,17 +85,9 @@ public class HousingMarket {
 	 * @param newPrice The new price of the house.
 	 ******************************************/
 	public void updateOffer(HouseSaleRecord hsr, double newPrice) {
-//		if(!offersPQ.checkConsistency()) {
-//			System.out.println("Inconsistent offersPQ!");
-//		}
-		if(newPrice < 0.0) {
-			System.out.println("Got -ve price in market offer update");
-		}
 		offersPQ.remove(hsr);
-		offersPY.remove(hsr);
 		hsr.setPrice(newPrice, authority);
 		offersPQ.add(hsr);
-		offersPY.add(hsr);
 	}
 	
 	/*******************************************
@@ -111,7 +97,6 @@ public class HousingMarket {
 	 *******************************************/
 	public void removeOffer(HouseSaleRecord hsr) {
 		offersPQ.remove(hsr);
-		offersPY.remove(hsr);
 	}
 
 	/*******************************************
@@ -129,17 +114,22 @@ public class HousingMarket {
 	protected void matchBidsWithOffers() {
 		HouseSaleRecord offer;
 		for(HouseBuyerRecord bid : bids) {
-			if(bid.getClass() == HouseBuyerRecord.class) { // OO buyer (quality driven)
-				offer = (HouseSaleRecord)offersPQ.peek(bid);
-			} else { // BTL buyer (yield driven)
-				offer = (HouseSaleRecord)offersPY.peek(bid);
-			}
+			offer = getBestOffer(bid);
 			if(offer != null && (offer.house.owner != bid.buyer)) {
 				offer.matchWith(bid);
 			}
 		}
 		bids.clear();		
 	}
+	
+	protected HouseSaleRecord getBestOffer(HouseBuyerRecord bid) {
+		return (HouseSaleRecord)offersPQ.peek(bid);
+	}
+	
+	public Iterator<HousingMarketRecord> offersIterator() {
+		return(offersPQ.iterator());
+	}
+
 	
 	protected void clearMatches() {
 		// --- clear and resolve oversubscribed offers
@@ -150,7 +140,7 @@ public class HousingMarket {
 		double pSuccessfulBid;
 		double salePrice;
 		int winningBid;
-		Iterator<HousingMarketRecord> record = offersPQ.iterator();
+		Iterator<HousingMarketRecord> record = offersIterator();
 		while(record.hasNext()) {
 			offer = (HouseSaleRecord)record.next();
 			nBids = offer.matchedBids.size();
@@ -173,7 +163,6 @@ public class HousingMarket {
 					winningBid = nBids + Model.rand.nextInt(offer.matchedBids.size()-nBids);
 				}
 				record.remove();
-				offersPY.remove(offer);
 				offer.setPrice(salePrice, authority);
 				completeTransaction(offer.matchedBids.get(winningBid), offer);
 				// put failed bids back on array
@@ -334,7 +323,6 @@ public class HousingMarket {
 	//protected Map<House, HouseSaleRecord> 	onMarket = new TreeMap<House, HouseSaleRecord>();
 
 	protected PriorityQueue2D<HousingMarketRecord>	offersPQ;
-	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	
 //	protected HashMap<HouseSaleRecord, ArrayList<HouseBuyerRecord> > matches;
 	protected ArrayList<HouseBuyerRecord> bids;
 	private static Authority authority = new Authority();

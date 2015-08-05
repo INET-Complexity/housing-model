@@ -349,7 +349,7 @@ public class Household implements IHouseOwner {
 			rent.downPayment = 0.0;
 			rent.monthlyPayment = sale.getPrice();
 			rent.monthlyInterestRate = 0.0;
-			rent.nPayments = (int)(12.0*rand.nextDouble()+1);
+			rent.nPayments = (int)(18.0 + 6.0*rand.nextDouble()); // ARLA - Members survey of the Private Rented Sector Q4 2013
 			rent.principal = rent.monthlyPayment*rent.nPayments;
 			rent.purchasePrice = 0.0;
 			housePayments.put(sale.house, rent);
@@ -433,9 +433,9 @@ public class Household implements IHouseOwner {
 	/********************************************************
 	 * Decide whether to buy a house as a buy-to-let investment
 	 ********************************************************/
-	public boolean decideToBuyBuyToLet(House h, double price) {
-		return(behaviour.decideToBuyBuyToLet(h, this, price));
-	}
+//	public boolean decideToBuyBuyToLet(House h, double price) {
+//		return(behaviour.decideToBuyBuyToLet(h, this, price));
+//	}
 
 	@Override
 	public void completeHouseLet(House house) {
