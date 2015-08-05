@@ -89,14 +89,12 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * @param sale The HouseSaleRecord of the house that is on the market.
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
-		return(sale.getPrice() *0.95);
-		/*** BoE calibrated reprice
+//		return(sale.getPrice() *0.95);
 		if(rand.nextDouble() > 0.944) { // Danger: this can lead to -ve price!
-			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
-			return(sale.currentPrice * (1.0-Math.exp(-logReduction)));
+			double logReduction = Math.min(4.6, 1.603+(rand.nextGaussian()*0.6173));
+			return(sale.getPrice() * (1.0-0.01*Math.exp(logReduction)));
 		}
-		return(sale.currentPrice);
-		***/
+		return(sale.getPrice());
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -147,13 +145,16 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 //				(me.getPropertyInvestmentValuation() - me.houseMarket.getAverageSalePrice(h.quality))) {
 //			return(true);
 //		}
+		/*
 		if(me.housePayments.size()+1 > desiredBTLProperties) {
 			// only count properties on market if necessary as it's a slow operation
 			if(me.housePayments.size()+1 > desiredBTLProperties - me.nPropertiesForSale()) {
 				return(true);
 			}
 		}
-		return(rand.nextDouble() < P_SELL);
+		//return(rand.nextDouble() < P_SELL);
+		 */
+		return(false);
 	}
 	
 
@@ -177,13 +178,19 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 //		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
 	}
 
+	/***
+	 * Decide how to reduce offered monthly rent when a house is
+	 * on the rental market and does not get matched to a tennant.
+	 * (The figures used here are copied from the behaviour on the
+	 * house-sale market, calibrated against sales on the zoopla dataset)
+	 */
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
-		return(0.95*sale.getPrice());
-//		if(rand.nextDouble() > 0.944) { // Danger: this can lead to -ve price!
-//			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
-//			return(sale.getPrice() * (1.0-Math.exp(-logReduction)));
-//		}
-//		return(sale.getPrice());
+//		return(0.95*sale.getPrice());
+		if(rand.nextDouble() > 0.944) {
+			double logReduction = Math.min(4.6, 1.603+(rand.nextGaussian()*0.6173));
+			return(sale.getPrice() * (1.0-0.01*Math.exp(logReduction)));
+		}
+		return(sale.getPrice());
 	}
 
 	/********************************************************

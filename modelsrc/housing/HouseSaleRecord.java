@@ -21,15 +21,13 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	 ***********************************************/
 	public HouseSaleRecord(House h, double price) {
 		super(price);
-		if(Double.isNaN(price)) {
-			System.out.println("Error: Initial price of HouseSaleRecord is NaN!");
-		}
 		house = h;
 //		setPrice(p);
 		initialListedPrice = price;
 //		quality = house.quality;
 		tInitialListing = Model.t;
 		matchedBids = new ArrayList<>(8);
+		yield = Model.rentalMarket.getExpectedGrossYield(house.getQuality());
 	}
 	
 	/***********************************************
@@ -51,9 +49,13 @@ public class HouseSaleRecord extends HousingMarketRecord {
 		return(house.getQuality());
 	}
 	
+	/***
+	 * expected gross yield of this house (at time of initial listing
+	 * as this needs to stay constant)
+	 */
 	@Override
 	public double getYield() {
-		return 0.0;
+		return yield;
 	}
 	
 	public void matchWith(HouseBuyerRecord bid) {
@@ -63,9 +65,8 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	}
 	
 	public House 	house;
-//	public int		quality;
 	public double 	initialListedPrice;
-//	public double	price;
 	public int		tInitialListing; // time of initial listing
 	public ArrayList<HouseBuyerRecord> matchedBids;
+	private double	yield;
 }

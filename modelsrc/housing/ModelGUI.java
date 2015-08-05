@@ -15,6 +15,8 @@ import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.util.media.chart.ScatterPlotGenerator;
 import sim.util.media.chart.ScatterPlotSeriesAttributes;
+import sim.util.media.chart.TimeSeriesAttributes;
+import sim.util.media.chart.TimeSeriesChartGenerator;
 import sim.display.ChartUtilities;
 
 /********************************************
@@ -39,7 +41,14 @@ public class ModelGUI extends GUIState implements Steppable {
 	//	bankBalanceChart,
 		mortgageStatsChart,
 		mortgagePhaseChart;
+	
+//	public TimeSeriesChartGenerator
+//		marketStats;
             
+//    public TimeSeriesAttributes 	
+//	hpi,
+// 	daysOnMarket;
+
     protected ArrayList<TimeSeriesPlot> timeSeriesPlots;
     
     /** Create an instance of MySecondModelGUI */
@@ -51,15 +60,26 @@ public class ModelGUI extends GUIState implements Steppable {
     
     public void load(final SimState state) {
     	super.start();
+
+ //       ChartUtilities.scheduleSeries(this, hpi, new sim.util.Valuable() {
+  //      	public double doubleValue() {return Model.housingMarket.housePriceIndex; }});
+        
+ //       ChartUtilities.scheduleSeries(this, daysOnMarket, new sim.util.Valuable() {
+  //      	public double doubleValue() {return Model.housingMarket.averageDaysOnMarket; }});
+        
     }
         
     /** Called once, to initialise display windows. */
     @Override
     public void init(Controller controller) {
         super.init(controller);
-        myChartFrame = new JFrame("My Graphs");            		
+        myChartFrame = new JFrame("My Graphs");
         controller.registerFrame(myChartFrame);
-       
+        
+ //       marketStats = ChartUtilities.buildTimeSeriesChartGenerator(this, "Market statistics", "Time");
+  //      marketStats.setYAxisLabel("Index");
+   //     hpi = ChartUtilities.addSeries(marketStats, "House Price Index");
+    //    daysOnMarket = ChartUtilities.addSeries(marketStats, "Days on market");
         // Create a tab interface
         JTabbedPane newTabPane = new JTabbedPane();
 //        housingChart = makeScatterPlot(newTabPane, "Housing stats", "Probability", "Household Income");
@@ -122,6 +142,13 @@ public class ModelGUI extends GUIState implements Steppable {
     @Override
     public void start() {
         super.start();
+  //      marketStats.clearAllSeries(); /// NOTE THIS ISN'T IN LOAD(...)
+        
+   //     ChartUtilities.scheduleSeries(this, hpi, new sim.util.Valuable() {
+    //    	public double doubleValue() {return Model.housingMarket.housePriceIndex; }});
+        
+      //  ChartUtilities.scheduleSeries(this, daysOnMarket, new sim.util.Valuable() {
+        //	public double doubleValue() {return Model.housingMarket.averageDaysOnMarket; }});
         
         addSeries(housePriceChart, "Modelled prices", Collectors.housingMarketStats.priceData);
         addSeries(mortgageStatsChart, "Owner-occupier LTV distribution", Collectors.creditSupply.oo_ltv_distribution);
@@ -134,7 +161,7 @@ public class ModelGUI extends GUIState implements Steppable {
         scheduleRepeatingImmediatelyAfter(this);
 
     }
-    
+
     
     /** Called after each simulation step. */
     @Override

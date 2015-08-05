@@ -14,6 +14,7 @@ public class HousingMarketStats {
 		nSales = 0;
 		nBuyers = 0;
 		nSellers = 0;
+		nNewBuild = 0;
         priceData = new double[2][House.Config.N_QUALITY];
         referencePriceData = new double[2][House.Config.N_QUALITY];
         int i;
@@ -29,6 +30,7 @@ public class HousingMarketStats {
 		nSales = saleCount; saleCount = 0;
 		nFTBSales = ftbSaleCount; ftbSaleCount = 0;
 		nBTLSales = btlSaleCount; btlSaleCount = 0;
+		nNewBuild = 0;
 		nSellers = market.offersPQ.size();
 		nBuyers = market.bids.size();
 
@@ -45,6 +47,7 @@ public class HousingMarketStats {
 		averageOfferPrice = 0.0;
 		for(HousingMarketRecord sale : market.offersPQ) {
 			averageOfferPrice += sale.getPrice();
+			if(((HouseSaleRecord)sale).house.owner == Model.construction) nNewBuild++;
 		}
 		if(market.offersPQ.size() > 0) averageOfferPrice /= market.offersPQ.size();
 		recordOfferPrices();
@@ -99,6 +102,7 @@ public class HousingMarketStats {
 	public int	  nBTLSales, btlSaleCount;	  // number of sales to first-time-buyers
 	public int    nBuyers;
 	public int    nSellers;
+	public int 	  nNewBuild;
     public double [][]    priceData;
     public double [][]    referencePriceData;
 	double [] offerPrices;
@@ -143,6 +147,13 @@ public class HousingMarketStats {
 	}
 	public String namenSales() {
 		return("Number of sales");
+	}
+
+	public int getnNewBuild() {
+		return nNewBuild;
+	}
+	public String namenNewBuild() {
+		return("Number of new-build houses on market");
 	}
 
 	public int getnBuyers() {

@@ -143,7 +143,7 @@ public class Household implements IHouseOwner {
 		
 		// --- consume
 //		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
-		bankBalance += disposableIncome - behaviour.desiredConsumptionB(getMonthlyEmploymentIncome(),bankBalance);
+		bankBalance += disposableIncome - behaviour.desiredConsumptionB(annualEmploymentIncome/12.0,bankBalance);
 //		bankBalance += -config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
 		
 		if(bankBalance < 0.0) {
@@ -176,8 +176,11 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	public void preRentalClearingStep() {
 		if(isHomeless()) {
-			rentalMarket.bid(this, behaviour.desiredRent(getMonthlyEmploymentIncome()));
+			rentalMarket.bid(this, behaviour.desiredRent(annualEmploymentIncome/12.0));
 		}
+		
+		
+		
 	}
 	
 	/********************************************************
@@ -201,7 +204,7 @@ public class Household implements IHouseOwner {
 							rentalMarket.offer(h, buyToLetRent(h));
 						}
 					}
-				} else if(decideToSellHouse(h)) { // put house on market
+				} else if(decideToSellHouse(h)) { // put house on market?
 					if(h.isOnRentalMarket()) rentalMarket.removeOffer(h.getRentalRecord());
 					putHouseForSale(h);
 				}
@@ -258,7 +261,7 @@ public class Household implements IHouseOwner {
 			System.out.println("Can't afford to buy house: strange");
 			System.out.println("Want "+sale.getPrice()+" but can only get "+bank.getMaxMortgage(this,home==null));
 			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyDiscretionaryIncome());
-			System.out.println("Annual income is "+ getMonthlyEmploymentIncome() *12.0);
+			System.out.println("Annual income is "+ annualEmploymentIncome);
 			if(isRenting()) System.out.println("Is renting");
 			if(isHomeowner()) System.out.println("Is homeowner");
 			if(isHomeless()) System.out.println("Is homeless");
@@ -547,21 +550,7 @@ public class Household implements IHouseOwner {
 	 * @return monthly disposable (i.e., after tax) income
 	 */
 	public double getMonthlyDisposableIncome() {
-		return getMonthlyTotalIncome() - getMonthlyTotalTax();
-	}
-
-	/**
-	 * @return gross monthly employment (i.e., before tax) income
-	 */
-	public double getMonthlyEmploymentIncome() {
-		return annualEmploymentIncome / 12.0;
-	}
-
-	/**
-	 * @return monthly interest income
-	 */
-	public double getMonthlyInterestIncome() {
-		return bankBalance * RETURN_ON_FINANCIAL_WEALTH;
+		return getMonthlyTotalIncome() - getAnnualTotalTax() / 12.0;
 	}
 
 	/**
@@ -583,8 +572,8 @@ public class Household implements IHouseOwner {
 	 * @return gross monthly total income
 	 */
 	public double getMonthlyTotalIncome() {
-		double monthlyTotalIncome = (getMonthlyEmploymentIncome() +
-				getMonthlyPropertyIncome() + getMonthlyInterestIncome());
+		double monthlyTotalIncome = ((annualEmploymentIncome/12.0) +
+				getMonthlyPropertyIncome() + bankBalance * RETURN_ON_FINANCIAL_WEALTH);
 		return monthlyTotalIncome;
 	}
 
@@ -631,14 +620,6 @@ public class Household implements IHouseOwner {
 		}
 		return totalPrincipalPayments;
 	}
-
-	/**
-	 * @return total monthly taxes due
-	 */
-	public double getMonthlyTotalTax() {
-		return getAnnualTotalTax() / 12.0;
-	}
-
 	
 	///////////////////////////////////////////////
 	
@@ -647,7 +628,7 @@ public class Household implements IHouseOwner {
 	HouseSaleMarket		houseMarket;
 	HouseRentalMarket	rentalMarket;
 
-	protected double 	annualEmploymentIncome;
+	public double	 	annualEmploymentIncome;
 	protected double 	bankBalance;
 	protected House		home; // current home
 	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned

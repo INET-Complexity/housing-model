@@ -31,7 +31,7 @@ public class HousingMarket {
 	 */
 	static public class Config {
 		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
-		public static final double BIDUP = 1.01; // smallest proportion increase in price that can cause a gazump
+		public static final double BIDUP = 1.005; // smallest proportion increase in price that can cause a gazump
 		public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
 		public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
 		public static final double HPI_MEAN = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
@@ -126,6 +126,63 @@ public class HousingMarket {
 		// match bid with current offers
 	}
 	
+	protected void matchBidsWithOffers() {
+		HouseSaleRecord offer;
+		for(HouseBuyerRecord bid : bids) {
+			if(bid.getClass() == HouseBuyerRecord.class) { // OO buyer (quality driven)
+				offer = (HouseSaleRecord)offersPQ.peek(bid);
+			} else { // BTL buyer (yield driven)
+				offer = (HouseSaleRecord)offersPY.peek(bid);
+			}
+			if(offer != null && (offer.house.owner != bid.buyer)) {
+				offer.matchWith(bid);
+			}
+		}
+		bids.clear();		
+	}
+	
+	protected void clearMatches() {
+		// --- clear and resolve oversubscribed offers
+		// 
+		HouseSaleRecord offer;
+		GeometricDistribution geomDist;
+		int nBids;
+		double pSuccessfulBid;
+		double salePrice;
+		int winningBid;
+		Iterator<HousingMarketRecord> record = offersPQ.iterator();
+		while(record.hasNext()) {
+			offer = (HouseSaleRecord)record.next();
+			nBids = offer.matchedBids.size();
+			if(nBids > 0) {
+				// bid up the price
+				pSuccessfulBid = Math.exp(-nBids*Config.UNDEROFFER);
+				geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
+				salePrice = offer.getPrice() * Math.pow(Config.BIDUP, geomDist.sample());
+				// choose a bid above the new price
+				Collections.sort(offer.matchedBids, new HouseBuyerRecord.PComparator()); // highest price last
+				--nBids;
+				if(offer.matchedBids.get(nBids).getPrice() < salePrice) {
+					salePrice = offer.matchedBids.get(nBids).getPrice();
+					winningBid = nBids;
+				} else {
+					while(nBids >=0 && offer.matchedBids.get(nBids).getPrice() > salePrice) {
+						--nBids;
+					}
+					++nBids;
+					winningBid = nBids + Model.rand.nextInt(offer.matchedBids.size()-nBids);
+				}
+				record.remove();
+				offersPY.remove(offer);
+				offer.setPrice(salePrice, authority);
+				completeTransaction(offer.matchedBids.get(winningBid), offer);
+				// put failed bids back on array
+				bids.addAll(offer.matchedBids.subList(0, winningBid));
+				bids.addAll(offer.matchedBids.subList(winningBid+1, offer.matchedBids.size()));			
+			}
+		}		
+	}
+	
 	/**************************************************
 	 * Clears all current bids and offers on the housing market.
 	 * 
@@ -135,7 +192,13 @@ public class HousingMarket {
 		// offersPY contains Price-Yeild 2D-priority queue of offers
 		// bids contains bids (HouseBuyerRecords) in an array
 		
-		
+		recordMarketStats();
+		for(int i=0; i<2; ++i) {
+			matchBidsWithOffers();
+			clearMatches();
+		}
+		bids.clear();
+		/*
 		// --- create matches
 		HouseSaleRecord offer;
 		for(HouseBuyerRecord bid : bids) {
@@ -185,52 +248,12 @@ public class HousingMarket {
 				offersPY.remove(offer);
 				offer.setPrice(salePrice, authority);
 				completeTransaction(offer.matchedBids.get(winningBid), offer);
-//				System.out.println("PQ size = "+offersPQ.size()+" PY size = "+offersPY.size());
-				// put failed bids back on array
 				bids.addAll(offer.matchedBids.subList(0, winningBid));
 				bids.addAll(offer.matchedBids.subList(winningBid+1, offer.matchedBids.size()));			
 			}
-		}
-		
-//		for(HousingMarketRecord r : offersPQ) {
-//			if(((HouseSaleRecord)r).matchedBids.size() != 0) {
-//				System.out.println("Strange, got some residual matched bids");
-//			}
-//		}
-		
+		}		
 		bids.clear();
-		
-		/***
-		HouseBuyerRecord buyer;
-		HouseSaleRecord  seller;
-		HouseSaleRecord	 ceilingSeller = new HouseSaleRecord(new House(), 0.0);
-
-		recordMarketStats();
-
-		// --- create set of sellers, sorted by quality then price
-		// --- (TODO: better computational complexity with R-tree (or KD-tree))
-		// ---
-		TreeSet<HouseSaleRecord> sellers = new TreeSet<HouseSaleRecord>();
-		for(HouseSaleRecord sale : onMarket.values()) {
-			sellers.add(sale);
-		}
-		
-		while(!buyers.isEmpty()) {
-			buyer = buyers.poll();
-			ceilingSeller.quality = House.Config.N_QUALITY;
-			seller = sellers.lower(ceilingSeller); // cheapest seller at this quality
-			while(seller != null && 
-				(seller.price > buyer.price || seller.house.owner == buyer.buyer)) {
-				ceilingSeller.quality = seller.quality-1;
-				seller = sellers.lower(ceilingSeller); // cheapest seller at this quality
-			}
-			if(seller != null) {
-				removeOffer(seller.house);
-				completeTransaction(buyer, seller);
-				sellers.remove(seller);
-			}
-		}
-		***/
+		*/
 	}
 
 		
