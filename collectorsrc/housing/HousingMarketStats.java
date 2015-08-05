@@ -18,9 +18,9 @@ public class HousingMarketStats {
         referencePriceData = new double[2][House.Config.N_QUALITY];
         int i;
         for(i=0; i<House.Config.N_QUALITY; ++i) {
-        	priceData[0][i] = HousingMarket.referencePrice(i);
-        	referencePriceData[0][i] = HousingMarket.referencePrice(i);
-        	referencePriceData[1][i] = HousingMarket.referencePrice(i);
+        	priceData[0][i] = Model.housingMarket.referencePrice(i);
+        	referencePriceData[0][i] = Model.housingMarket.referencePrice(i);
+        	referencePriceData[1][i] = Model.housingMarket.referencePrice(i);
         }
         market = m;
 	}

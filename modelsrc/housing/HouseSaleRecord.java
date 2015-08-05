@@ -57,7 +57,9 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	}
 	
 	public void matchWith(HouseBuyerRecord bid) {
-		matchedBids.add(bid);
+//		if(house.owner != bid.buyer) {
+			matchedBids.add(bid);
+//		}
 	}
 	
 	public House 	house;

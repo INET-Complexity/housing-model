@@ -28,6 +28,10 @@ public class HouseSaleMarket extends HousingMarket {
 
 	@Override
 	public HouseSaleRecord offer(House house, double price) {
+		if(house.isOnRentalMarket()) {
+			System.out.println("Got offer on sale market of house already on rental market");			
+		}
+
 		HouseSaleRecord hsr = super.offer(house, price);
 		house.putForSale(hsr);
 		return(hsr);

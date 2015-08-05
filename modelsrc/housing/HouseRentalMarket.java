@@ -7,15 +7,6 @@ package housing;
  *
  **********************************************/
 public class HouseRentalMarket extends HousingMarket {
-		
-	@Override
-	public void init() {
-		super.init();
-		int i;
-		for(i = 0; i<House.Config.N_QUALITY; ++i) {
-			averageSalePrice[i] *= 0.03/12.0; // assume 3% gross yield on house price
-		}
-	}
 	
 	@Override
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
@@ -27,6 +18,12 @@ public class HouseRentalMarket extends HousingMarket {
 	}
 	
 	public HouseSaleRecord offer(House house, double price) {
+		if(house.resident != null) {
+			System.out.println("Got offer on rental market of house with resident");
+		}
+		if(house.isOnMarket()) {
+			System.out.println("Got offer on rental market of house already on sale market");			
+		}
 		HouseSaleRecord hsr = super.offer(house, price);
 		house.putForRent(hsr);
 		return(hsr);
@@ -38,5 +35,9 @@ public class HouseRentalMarket extends HousingMarket {
 		hsr.house.resetRentalRecord();
 	}
 
+	@Override
+	public double referencePrice(int quality) {
+		return(super.referencePrice(quality)*0.03/12.0); // assume 3% gross yield on house price
+	}
 
 }

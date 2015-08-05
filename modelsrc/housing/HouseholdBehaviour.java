@@ -91,9 +91,9 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
 		return(sale.getPrice() *0.95);
 		/*** BoE calibrated reprice
-		if(rand.nextDouble() > 0.944) {
+		if(rand.nextDouble() > 0.944) { // Danger: this can lead to -ve price!
 			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
-			return(sale.currentPrice * (1.0-Math.exp(logReduction)));
+			return(sale.currentPrice * (1.0-Math.exp(-logReduction)));
 		}
 		return(sale.currentPrice);
 		***/
@@ -169,16 +169,21 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 //		return(Math.max(Math.exp(exponent), mortgagePayment));
-		return(Math.exp(exponent));
+		double result = Math.exp(exponent);
+		if(Double.isNaN(result)) {
+			System.out.println("buyToLetRent Not-a-number");
+		}
+		return(result);
 //		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
 	}
 
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
-		if(rand.nextDouble() > 0.944) {
-			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
-			return(sale.getPrice() * (1.0-Math.exp(logReduction)));
-		}
-		return(sale.getPrice());
+		return(0.95*sale.getPrice());
+//		if(rand.nextDouble() > 0.944) { // Danger: this can lead to -ve price!
+//			double logReduction = 1.603+(rand.nextGaussian()*0.6173);
+//			return(sale.getPrice() * (1.0-Math.exp(-logReduction)));
+//		}
+//		return(sale.getPrice());
 	}
 
 	/********************************************************

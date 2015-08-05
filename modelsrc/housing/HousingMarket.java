@@ -74,6 +74,9 @@ public class HousingMarket {
 	 * @param price List price for the house.
 	 ******************************************/
 	public HouseSaleRecord offer(House house, double price) {
+		if(price < 0.0) {
+			System.out.println("Got -ve price in market offer");
+		}
 		HouseSaleRecord hsr = new HouseSaleRecord(house, price);
 		offersPQ.add(hsr);
 		offersPY.add(hsr);
@@ -91,6 +94,9 @@ public class HousingMarket {
 //		if(!offersPQ.checkConsistency()) {
 //			System.out.println("Inconsistent offersPQ!");
 //		}
+		if(newPrice < 0.0) {
+			System.out.println("Got -ve price in market offer update");
+		}
 		offersPQ.remove(hsr);
 		offersPY.remove(hsr);
 		hsr.setPrice(newPrice, authority);
@@ -138,7 +144,7 @@ public class HousingMarket {
 			} else { // BTL buyer (yield driven)
 				offer = (HouseSaleRecord)offersPY.peek(bid);
 			}
-			if(offer != null) {
+			if(offer != null && (offer.house.owner != bid.buyer)) {
 				offer.matchWith(bid);
 			}
 		}
@@ -152,7 +158,7 @@ public class HousingMarket {
 		double salePrice;
 		int winningBid;
 		Iterator<HousingMarketRecord> record = offersPQ.iterator();
-		System.out.println("starting clearing");
+//		System.out.println("starting clearing");
 		while(record.hasNext()) {
 			offer = (HouseSaleRecord)record.next();
 //			System.out.println("Offer quality "+offer.getQuality());
@@ -239,6 +245,9 @@ public class HousingMarket {
 		// --- update sales statistics		
 		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.t - sale.tInitialListing);
 		averageSalePrice[sale.getQuality()] = Config.G*averageSalePrice[sale.getQuality()] + (1.0-Config.G)*sale.getPrice();
+		if(averageSalePrice[sale.getQuality()] < 0.0) {
+			System.out.println("Average sale price "+sale.getQuality()+" is "+averageSalePrice[sale.getQuality()]);
+		}
 	}
 	
 	/***************************************************
@@ -256,7 +265,7 @@ public class HousingMarket {
 	 * 
 	 * @param q quality of the house
 	************************************************/
-	static public double referencePrice(int q) {
+	public double referencePrice(int q) {
 		return(Config.listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY) * 0.9);
 	}
 
@@ -267,8 +276,11 @@ public class HousingMarket {
 	 */
 	public double getAverageSalePrice(int q) {
 		double price = averageSalePrice[q];
-		if(price <= 0.0) price = 0.01;
-		return(averageSalePrice[q]);
+		if(price <= 0.0) {
+			price = 0.01;
+			System.out.println("Average sale price "+q+" is "+averageSalePrice[q]);
+		}
+		return(price);
 	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////

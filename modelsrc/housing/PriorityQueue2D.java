@@ -138,7 +138,6 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 		if(uncoveredElements.remove(element) == false) return;
 		if(ySortedElements.size() == 0) return;
 		boolean inclusive = false;
-		System.out.println("Starting removal");
 		E nextxLower = uncoveredElements.lower(element);
 		if(nextxLower == null) { // we're removing the x-lowest uncovered element
 			inclusive = true;
@@ -146,25 +145,25 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 			if(comparator.YCompare(element, nextxLower) == -1) { // element was the y-least element, which doesn't cover anything
 				return;
 			}
-			System.out.println("Is lowest");
+//			System.out.println("Is lowest");
 		}
 		E nextxHigher = uncoveredElements.higher(element);
 		if(nextxHigher == null) { // removing the highest uncovered element (must be the last element of ySortedElements)
 			nextxHigher = ySortedElements.last();
 			uncoveredElements.add(nextxHigher);
-			System.out.println("Is highest");
+//			System.out.println("Is highest");
 		}
-		if(comparator.YCompare(nextxLower, element) == 1) {
-			System.out.println("From = "+nextxLower+" to = "+element+" compare = "+comparator.YCompare(nextxLower, element));
-		}
+//		if(comparator.YCompare(nextxLower, element) == 1) {
+//			System.out.println("From = "+nextxLower+" to = "+element+" compare = "+comparator.YCompare(nextxLower, element));
+//		}
 		for(E e : ySortedElements.subSet(nextxLower, inclusive, element, true).descendingSet()) {
 			if(comparator.XCompare(e, nextxHigher) == -1) {
 				uncoveredElements.add(e);
 				nextxHigher = e;
 			}
 		}
-		checkConsistency();
-		System.out.println("done");
+//		checkConsistency();
+//		System.out.println("done");
 	}
 	
 	/*** testing only */
