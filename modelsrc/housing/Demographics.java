@@ -10,6 +10,9 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
+import utilities.DoubleUnaryOperator;
+import utilities.Pdf;
+
 public class Demographics {
 		
 	/***
@@ -55,8 +58,8 @@ public class Demographics {
 		
 		// --- setup vectors
 		for(i=0; i<SPINUP_YEARS; ++i) {
-			birthDist.setEntry(i, pdfAgeOfNewHousehold.p(baseAge+i));
-			targetDemographic.setEntry(i,pdfAge.p(baseAge+i));
+			birthDist.setEntry(i, pdfAgeOfNewHousehold.density(baseAge+i));
+			targetDemographic.setEntry(i,data.Demographics.pdfAge.density(baseAge+i));
 		}
 		
 		// --- setup timestep matrix
@@ -104,9 +107,9 @@ public class Demographics {
 	 * New households can be formed by, e.g., children leaving home,
 	 * divorce, separation, people leaving an HMO.
 	 */
-	public static Pdf pdfAgeOfNewHousehold = new Pdf(18.0, 28.0, new DoubleUnaryOperator() {
+	public static Pdf pdfAgeOfNewHousehold = new Pdf(15.0, 28.0, new DoubleUnaryOperator() {
 		public double applyAsDouble(double age) {
-			if(age>=18.0 && age < 19.0) {
+			if(age>=15.0 && age < 16.0) {
 				return(1.0);
 			}
 //			if(age>=18.0 && age<28.0) 
@@ -119,6 +122,7 @@ public class Demographics {
 	 * Target probability density of age of representative householder
 	 * at time t=0
 	 */
+	/*
 	public static Pdf pdfAge = new Pdf(18.0, 100.0, new DoubleUnaryOperator() {
 		public double applyAsDouble(double age) {
 			if(age > 18.0 && age < 50.0) {
@@ -130,7 +134,7 @@ public class Demographics {
 			return(0.0);	
 		}
 	});
-	
+	*/
 	public static final int TARGET_POPULATION = 5000;  	// target number of households
 	public static final int SPINUP_YEARS = 80;			// number of years to spinup
 	public static RealVector spinupBirthRatePerHousehold = spinupBirthRate(); // birth rate per year by year per household-at-year-0

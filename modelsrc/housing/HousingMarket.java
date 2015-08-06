@@ -13,6 +13,8 @@ import org.apache.commons.math3.distribution.GeometricDistribution;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 
+import utilities.PriorityQueue2D;
+
 /**********************************************************
  * Implementation of the mechanism of the house-sale and
  * house-rental markets.

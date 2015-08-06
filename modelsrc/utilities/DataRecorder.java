@@ -1,4 +1,4 @@
-package housing;
+package utilities;
 
 import java.lang.reflect.Field;
 
@@ -18,7 +18,7 @@ public class DataRecorder extends XYSeries {
 	static public int MAX_DATA_LEN = 400;	// Maximum number of data points to remember
 	static public int CHUNK_SIZE = 5;		// number of datapoints to delete at a time
 	
-	static interface Transform {
+	public static interface Transform {
 		public double exec(double x);
 	}
 

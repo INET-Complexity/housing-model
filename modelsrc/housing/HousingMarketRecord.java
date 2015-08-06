@@ -1,5 +1,7 @@
 package housing;
 
+import utilities.PriorityQueue2D;
+
 public abstract class HousingMarketRecord {
 	private double	price;
 	private int		id;	// in order to get a unique, repeatable ordering

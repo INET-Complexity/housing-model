@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 
+import utilities.PriorityQueue2D;
+
 /*******************************************************
  * Class that represents market for houses for-sale.
  * 

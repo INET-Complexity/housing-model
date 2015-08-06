@@ -18,6 +18,8 @@ import sim.util.media.chart.ScatterPlotSeriesAttributes;
 import sim.util.media.chart.TimeSeriesAttributes;
 import sim.util.media.chart.TimeSeriesChartGenerator;
 import sim.display.ChartUtilities;
+import utilities.DataRecorder;
+import utilities.TimeSeriesPlot;
 
 /********************************************
  * Interface to the Mason Graphic Interface for the housing market simulation.

@@ -21,9 +21,17 @@ public class Lifecycle {
 	 * @return Household income given age and percentile of population
 	 */
 	public double annualIncome() {
-		double income = incomeByAge[(int)Math.min(age,99)].inverseCumulativeProbability(incomePercentile);
+		double boundAge = age;
+		if(boundAge < data.Lifecycle.lnIncomeGivenAge.getSupportMin()) {
+			boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportMin();
+		}
+		else if(boundAge > data.Lifecycle.lnIncomeGivenAge.getSupportMax()) {
+			boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportMax() - 1e-7;
+		}
+		double income = data.Lifecycle.lnIncomeGivenAge.getBinAt(boundAge).inverseCumulativeProbability(incomePercentile);
+		income = Math.exp(income)*52.0;
 		if(income < 6000.0) income = 6000.0; // income support
-		return(incomeByAge[(int)Math.min(age,99)].inverseCumulativeProbability(incomePercentile));
+		return(income);
 	}
 
 	public static LogNormalDistribution [] setupIncomeByAge() {

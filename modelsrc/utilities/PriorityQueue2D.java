@@ -1,4 +1,4 @@
-package housing;
+package utilities;
 
 import java.util.Comparator;
 import java.util.Iterator;
@@ -251,7 +251,7 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 		}
 **/	
 		Iterator<E> it;
-		E last;
+		public E last;
 	}
 	//////////////////////////////////////////////
 	
