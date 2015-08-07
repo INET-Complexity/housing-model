@@ -68,17 +68,17 @@ public class Pdf {
 			public double applyAsDouble(double operand) {
 				return data.getBinAt(operand)/data.getBinWidth();
 			}};
-		start = data.getSupportMin();
-		end = data.getSupportMax();
+		start = data.getSupportLowerBound();
+		end = data.getSupportUpperBound();
 		nSamples = DEFAULT_CDF_SAMPLES;
 		initInverseCDF();		
 	}
 	
-	public double getSupportMin() {
+	public double getSupportLowerBound() {
 		return start;
 	}
 
-	public double getSupportMax() {
+	public double getSupportUpperBound() {
 		return end;
 	}
 

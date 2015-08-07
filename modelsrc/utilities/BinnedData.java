@@ -10,11 +10,11 @@ public class BinnedData<DATA> extends ArrayList<DATA> {
 		this.binWidth = binWidth;
 	}
 	
-	public double getSupportMin() {
+	public double getSupportLowerBound() {
 		return(firstBinMin);
 	}
 
-	public double getSupportMax() {
+	public double getSupportUpperBound() {
 		return(firstBinMin + size()*binWidth);
 	}
 

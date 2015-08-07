@@ -36,14 +36,14 @@ public class Lifecycle {
 			if(records.hasNext()) {
 				record = records.next();
 			    data.setFirstBinMin(Double.valueOf(record.get(givenMinCol)));
-			    data.setBinWidth(Double.valueOf(record.get(givenMaxCol))-data.getSupportMin());
+			    data.setBinWidth(Double.valueOf(record.get(givenMaxCol))-data.getSupportLowerBound());
 			    pdfBinMin = Double.valueOf(record.get(varMinCol));
 			    pdfBinWidth = Double.valueOf(record.get(varMaxCol)) - pdfBinMin;
 			    pdf = new BinnedDataDouble(pdfBinMin, pdfBinWidth);
 			    pdfData.add(pdf);
 			    pdf.add(Double.valueOf(record.get(probCol)));
 			
-			    lastBinMin = data.getSupportMin();
+			    lastBinMin = data.getSupportLowerBound();
 			    while(records.hasNext()) {
 			    	record = records.next();
 			    	if(Double.valueOf(record.get(givenMinCol)) != lastBinMin) {

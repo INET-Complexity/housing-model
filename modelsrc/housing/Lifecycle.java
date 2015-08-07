@@ -22,11 +22,11 @@ public class Lifecycle {
 	 */
 	public double annualIncome() {
 		double boundAge = age;
-		if(boundAge < data.Lifecycle.lnIncomeGivenAge.getSupportMin()) {
-			boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportMin();
+		if(boundAge < data.Lifecycle.lnIncomeGivenAge.getSupportLowerBound()) {
+			boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportLowerBound();
 		}
-		else if(boundAge > data.Lifecycle.lnIncomeGivenAge.getSupportMax()) {
-			boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportMax() - 1e-7;
+		else if(boundAge > data.Lifecycle.lnIncomeGivenAge.getSupportUpperBound()) {
+			boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportUpperBound() - 1e-7;
 		}
 		double income = data.Lifecycle.lnIncomeGivenAge.getBinAt(boundAge).inverseCumulativeProbability(incomePercentile);
 		income = Math.exp(income)*52.0;

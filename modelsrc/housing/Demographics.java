@@ -24,12 +24,15 @@ public class Demographics {
 		if(Model.t < spinupYears*12) {
 			// --- still in spinup phase of simulation
 			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.t/12.0))*data.Demographics.TARGET_POPULATION/12.0 + 0.5);
+			while(--nBirths >= 0) {
+				Model.households.add(new Household(data.Demographics.pdfSpinupHouseholdAgeAtBirth.nextDouble()));
+			}
 		} else {
 			// --- in projection phase of simulation
 			nBirths = (int)(data.Demographics.futureBirthRate(Model.t)/12.0 + 0.5);
-		}
-		while(--nBirths >= 0) {
-			Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
+			while(--nBirths >= 0) {
+				Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
+			}
 		}
 		
 		// --- death
@@ -53,12 +56,12 @@ public class Demographics {
 		RealVector birthDist 		 = new ArrayRealVector(spinupYears);
 		RealMatrix M			 	 = new Array2DRowRealMatrix(spinupYears, spinupYears);
 		RealMatrix timeStep 		 = new Array2DRowRealMatrix(spinupYears, spinupYears);
-		double baseAge	= data.Demographics.pdfHouseholdAgeAtBirth.getSupportMin();
+		double baseAge	= data.Demographics.pdfSpinupHouseholdAgeAtBirth.getSupportLowerBound();
 		int i,j;
 		
 		// --- setup vectors
 		for(i=0; i<spinupYears; ++i) {
-			birthDist.setEntry(i, data.Demographics.pdfHouseholdAgeAtBirth.density(baseAge+i));
+			birthDist.setEntry(i, data.Demographics.pdfSpinupHouseholdAgeAtBirth.density(baseAge+i));
 			targetDemographic.setEntry(i,data.Demographics.pdfAge.density(baseAge+i));
 		}
 		
@@ -83,6 +86,6 @@ public class Demographics {
 		return(solver.solve(targetDemographic));
 	}
 	
-	public static int spinupYears = (int)Math.ceil(data.Demographics.pdfAge.getSupportMax()-data.Demographics.pdfAge.getSupportMin());			// number of years to spinup
+	public static int spinupYears = (int)Math.ceil(data.Demographics.pdfAge.getSupportUpperBound()-data.Demographics.pdfAge.getSupportLowerBound());			// number of years to spinup
 	public static RealVector spinupBirthRatePerHousehold = spinupBirthRate(); // birth rate per year by year per household-at-year-0
 }
