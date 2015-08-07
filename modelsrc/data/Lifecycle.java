@@ -74,5 +74,8 @@ public class Lifecycle {
 		return(data);
 	}
 	
+	/***
+	 * Calibrated against LCFS 2012 data
+	 */
 	public static BinnedData<Pdf> lnIncomeGivenAge = loadIncomePDFGivenAge();
 }

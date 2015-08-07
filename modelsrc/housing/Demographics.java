@@ -21,22 +21,22 @@ public class Demographics {
 	public void step() {
 		// --- birth
 		int nBirths;
-		if(Model.t < SPINUP_YEARS*12) {
+		if(Model.t < spinupYears*12) {
 			// --- still in spinup phase of simulation
-			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.t/12.0))*TARGET_POPULATION/12.0 + 0.5);
+			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.t/12.0))*data.Demographics.TARGET_POPULATION/12.0 + 0.5);
 		} else {
 			// --- in projection phase of simulation
-			nBirths = (int)(futureBirthRate(Model.t)/12.0 + 0.5);
+			nBirths = (int)(data.Demographics.futureBirthRate(Model.t)/12.0 + 0.5);
 		}
 		while(--nBirths >= 0) {
-			Model.households.add(new Household(pdfAgeOfNewHousehold.nextDouble()));
+			Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
 		}
 		
 		// --- death
 		Iterator<Household> iterator = Model.households.iterator();
 		while(iterator.hasNext()) {
 		    Household h = iterator.next();
-			if(Model.rand.nextDouble() < probDeathGivenAge(h.lifecycle.age)/12.0) {
+			if(Model.rand.nextDouble() < data.Demographics.probDeathGivenAge(h.lifecycle.age)/12.0) {
 				// --- inheritance
 				iterator.remove();
 				h.transferAllWealthTo(Model.households.get(Model.rand.nextInt(Model.households.size())));
@@ -49,24 +49,24 @@ public class Demographics {
 	 * of spinup period we hit the target population and age distribution
 	 */
 	public static RealVector spinupBirthRate() {
-		RealVector targetDemographic = new ArrayRealVector(SPINUP_YEARS);
-		RealVector birthDist 		 = new ArrayRealVector(SPINUP_YEARS);
-		RealMatrix M			 	 = new Array2DRowRealMatrix(SPINUP_YEARS, SPINUP_YEARS);
-		RealMatrix timeStep 		 = new Array2DRowRealMatrix(SPINUP_YEARS, SPINUP_YEARS);
-		double baseAge	= pdfAgeOfNewHousehold.start;
+		RealVector targetDemographic = new ArrayRealVector(spinupYears);
+		RealVector birthDist 		 = new ArrayRealVector(spinupYears);
+		RealMatrix M			 	 = new Array2DRowRealMatrix(spinupYears, spinupYears);
+		RealMatrix timeStep 		 = new Array2DRowRealMatrix(spinupYears, spinupYears);
+		double baseAge	= data.Demographics.pdfHouseholdAgeAtBirth.getSupportMin();
 		int i,j;
 		
 		// --- setup vectors
-		for(i=0; i<SPINUP_YEARS; ++i) {
-			birthDist.setEntry(i, pdfAgeOfNewHousehold.density(baseAge+i));
+		for(i=0; i<spinupYears; ++i) {
+			birthDist.setEntry(i, data.Demographics.pdfHouseholdAgeAtBirth.density(baseAge+i));
 			targetDemographic.setEntry(i,data.Demographics.pdfAge.density(baseAge+i));
 		}
 		
 		// --- setup timestep matrix
-		for(i=0; i<SPINUP_YEARS; ++i) {
-			for(j=0; j<SPINUP_YEARS; ++j) {
+		for(i=0; i<spinupYears; ++i) {
+			for(j=0; j<spinupYears; ++j) {
 				if(i == j+1) {
-					timeStep.setEntry(i,j,1.0-probDeathGivenAge(j + baseAge));
+					timeStep.setEntry(i,j,1.0-data.Demographics.probDeathGivenAge(j + baseAge));
 				} else {
 					timeStep.setEntry(i,j,0.0);					
 				}
@@ -74,7 +74,7 @@ public class Demographics {
 		}
 		
 		// --- setup aged birth distribution matrix
-		for(i=0; i<SPINUP_YEARS; ++i) {
+		for(i=0; i<spinupYears; ++i) {
 			M.setColumnVector(i, birthDist);
 			birthDist = timeStep.operate(birthDist);
 		}
@@ -83,59 +83,6 @@ public class Demographics {
 		return(solver.solve(targetDemographic));
 	}
 	
-	/****
-	 * Birth rates into the future
-	 * @param t	time (months) into the future
-	 * @return number of births per year
-	 */
-	public static double futureBirthRate(double t) {
-		return(TARGET_POPULATION * 0.012);
-	}
-	
-	/***
-	 * Probability that a household 'dies' per year given age of the representative householder
-	 * Death of a household may occur by marriage, death of single occupant, moving together
-	 */
-	public static double probDeathGivenAge(double ageInYears) {
-		double averageDeathRate = futureBirthRate(0)*1.0/TARGET_POPULATION;
-		return(averageDeathRate*ageInYears*ageInYears/7500.0);
-	}
-	
-	/**
-	 * Probability density by age of the representative household given that
-	 * the household is newly formed.
-	 * New households can be formed by, e.g., children leaving home,
-	 * divorce, separation, people leaving an HMO.
-	 */
-	public static Pdf pdfAgeOfNewHousehold = new Pdf(15.0, 28.0, new DoubleUnaryOperator() {
-		public double applyAsDouble(double age) {
-			if(age>=15.0 && age < 16.0) {
-				return(1.0);
-			}
-//			if(age>=18.0 && age<28.0) 
-//				return(0.1);
-			return(0.0);
-		}	
-	});
-	
-	/**
-	 * Target probability density of age of representative householder
-	 * at time t=0
-	 */
-	/*
-	public static Pdf pdfAge = new Pdf(18.0, 100.0, new DoubleUnaryOperator() {
-		public double applyAsDouble(double age) {
-			if(age > 18.0 && age < 50.0) {
-				return(0.01125 + 0.0002734375*(age-18.0));
-			}
-			if(age <100.0) {
-				return(0.02-0.0004*(age-50.0));
-			}
-			return(0.0);	
-		}
-	});
-	*/
-	public static final int TARGET_POPULATION = 5000;  	// target number of households
-	public static final int SPINUP_YEARS = 80;			// number of years to spinup
+	public static int spinupYears = (int)Math.ceil(data.Demographics.pdfAge.getSupportMax()-data.Demographics.pdfAge.getSupportMin());			// number of years to spinup
 	public static RealVector spinupBirthRatePerHousehold = spinupBirthRate(); // birth rate per year by year per household-at-year-0
 }

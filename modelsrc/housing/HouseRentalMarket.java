@@ -45,7 +45,7 @@ public class HouseRentalMarket extends HousingMarket {
 
 	@Override
 	public double referencePrice(int quality) {
-		return(super.referencePrice(quality)*0.03/12.0); // assume 3% gross yield on house price
+		return(data.HouseRentalMarket.referencePrice(quality)); // assume 3% gross yield on house price
 	}
 	
 	/***

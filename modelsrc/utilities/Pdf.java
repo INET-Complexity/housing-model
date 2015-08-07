@@ -74,6 +74,14 @@ public class Pdf {
 		initInverseCDF();		
 	}
 	
+	public double getSupportMin() {
+		return start;
+	}
+
+	public double getSupportMax() {
+		return end;
+	}
+
 	/***
 	 * Get probability density P(x)
 	 * @param x 

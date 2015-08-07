@@ -24,7 +24,7 @@ import utilities.PriorityQueue2D;
  * @author daniel
  *
  *********************************************************/
-public class HousingMarket {
+public abstract class HousingMarket {
 
 	/**
 	 * Configuration for the housing market.
@@ -34,10 +34,6 @@ public class HousingMarket {
 	static public class Config {
 		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
 		public static final double BIDUP = 1.005; // smallest proportion increase in price that can cause a gazump
-		public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
-		public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
-		public static final double HPI_MEAN = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
-		public static LogNormalDistribution listPriceDistribution = new LogNormalDistribution(HPI_LOG_MEDIAN, HPI_SHAPE);
 		public static final double T = 200.0; // characteristic number of data-points over which to average market statistics
 		public static final double F = Math.exp(-1.0/12.0); // House Price Index appreciation decay const (in market clearings)
 		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market
@@ -51,7 +47,7 @@ public class HousingMarket {
 	
 	public HousingMarket() {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
-		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
+		bids = new ArrayList<>(data.Demographics.TARGET_POPULATION/16);
 		init();
 	}
 	
@@ -142,13 +138,15 @@ public class HousingMarket {
 		double pSuccessfulBid;
 		double salePrice;
 		int winningBid;
+		int enoughBids; // upper bounded number of bids on one house
 		Iterator<HousingMarketRecord> record = offersIterator();
 		while(record.hasNext()) {
 			offer = (HouseSaleRecord)record.next();
 			nBids = offer.matchedBids.size();
 			if(nBids > 0) {
 				// bid up the price
-				pSuccessfulBid = Math.exp(-nBids*Config.UNDEROFFER);
+				enoughBids = Math.min(4, nBids);
+				pSuccessfulBid = Math.exp(-enoughBids*Config.UNDEROFFER);
 				geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
 				salePrice = offer.getPrice() * Math.pow(Config.BIDUP, geomDist.sample());
 				// choose a bid above the new price
@@ -279,9 +277,7 @@ public class HousingMarket {
 	 * 
 	 * @param q quality of the house
 	************************************************/
-	public double referencePrice(int q) {
-		return(Config.listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY) * 0.9);
-	}
+	public abstract double referencePrice(int quality);
 
 	/***
 	 * 
@@ -308,7 +304,7 @@ public class HousingMarket {
 		for(Double price : averageSalePrice) {
 			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
 		}
-		housePriceIndex /= House.Config.N_QUALITY*Config.HPI_MEAN;
+		housePriceIndex /= House.Config.N_QUALITY*data.HouseSaleMarket.HPI_REFERENCE;
 		HPIAppreciation += (1.0-Config.F)*housePriceIndex;
 
 	}

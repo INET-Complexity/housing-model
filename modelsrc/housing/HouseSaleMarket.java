@@ -1,10 +1,8 @@
 package housing;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.TreeSet;
-import java.util.function.Consumer;
+import housing.HousingMarket.Config;
 
+import java.util.Iterator;
 import utilities.PriorityQueue2D;
 
 /*******************************************************
@@ -103,6 +101,11 @@ public class HouseSaleMarket extends HousingMarket {
 			}
 		});
 	}
+	
+	public double referencePrice(int quality) {
+		return(data.HouseSaleMarket.referencePrice(quality));
+	}
+
 	
 	/*******************************************
 	 * Make a bid on the market as a Buy-to-let investor

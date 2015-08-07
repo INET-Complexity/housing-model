@@ -12,7 +12,7 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
 	public double P_SELL = 1.0/(7.0*12.0);  // monthly probability of selling home
-	public double P_INVESTOR = 0.03; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)
+	public double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)
 	protected MersenneTwisterFast 	rand = Model.rand;
 	LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
 
