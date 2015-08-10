@@ -9,9 +9,9 @@ package housing;
  * @author daniel, davidrpugh
  *
  ***************************************************/
-public class MortgageApproval {
+public class PaymentAgreement {
 
-	public MortgageApproval() {
+	public PaymentAgreement() {
 		isBuyToLet = false;
 		isFirstTimeBuyer = false;
 	}
@@ -54,7 +54,7 @@ public class MortgageApproval {
 	
 	public int 		nPayments;
 	public double 	monthlyPayment;
-	public double	principal;
+	public double	principal;			// remaining principal to be paid off
 	public double 	monthlyInterestRate;
 	public double	downPayment;
 	public double	purchasePrice;

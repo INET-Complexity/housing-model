@@ -4,14 +4,14 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
 
-public class HouseholdBehaviour implements IHouseholdBehaviour {
+public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	public static double RENT_PROFIT_MARGIN = 0.03;//0.05; // profit margin for buy-to-let investors 
 	// Yield on rent had average 6% between 2009/01 and 2015/01, 
 	// minimum in 2009/10 maximum in 2012/04 peak-to-peak amplitude of 0.4%
 	// source: Bank of England, unpublished analysis based on Zoopla/Land reg matching, Philippe Bracke 
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
-	public double P_SELL = 1.0/(7.0*12.0);  // monthly probability of selling home
+	public double P_SELL = 1.0/(11.0*12.0);  // monthly probability of Owner-Occupier selling home (British housing survey 2008)
 	public double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)
 	protected MersenneTwisterFast 	rand = Model.rand;
 	LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
@@ -33,7 +33,6 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * @author daniel
 	 *
 	 ********************************/
-	@Override
 	public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
 		return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*Model.rand.nextGaussian())),0.0));
 	}
@@ -42,7 +41,6 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * Decide on desired purchase price as a function of monthly income and current
 	 *  of house price appreciation.
 	 ****************************/
-	@Override
 	public double desiredPurchasePrice(double monthlyIncome, double hpa) {
 		final double A = 0.0;//0.48;			// sensitivity to house price appreciation
 		final double EPSILON = 0.36;//0.36;//0.48;//0.365; // S.D. of noise
@@ -56,7 +54,6 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * @param principal amount of principal left on any mortgage on this house
 	 * @return initial sale price of a house 
 	 ********************************/
-	@Override
 	public double initialSalePrice(double pbar, double d, double principal) {
 		final double C = 0.02;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
 		final double D = 0.00;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
@@ -69,13 +66,16 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	/**
 	 * @return Does an owner-occupier decide to sell house?
 	 */
-	@Override
-	public boolean decideToSellHome() {
-		if(rand.nextDouble() < P_SELL) return(true);
+	public boolean decideToSellHome(Household me) {
+		// sell if I can get buy a better house
+		if(Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true)) > me.home.getQuality()) {
+			return(true);
+		}
+//		if(rand.nextDouble() < P_SELL) return(true);
+		// TODO: ################## ADD PROPORTION OF PEOPLE FORCED TO SELL, AND PROBABILITY OF MOVING GIVEN BETTER QUALITY
 		return false;
 	}
 
-	@Override
 	public double downPayment(double bankBalance) {
 		return(bankBalance*DOWNPAYMENT_FRACTION);
 	}
@@ -101,13 +101,12 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	// Renter behaviour
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	
-	@Override
 	public boolean renterPurchaseDecision(Household h, double housePrice, double annualRent) {
 		final double COST_OF_RENTING = 600; // Annual psychological cost of renting
 		final double FTB_K = 1.0/600.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		double costOfHouse;
 //			costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());
-		costOfHouse = housePrice*(Model.bank.loanToValue(h,true)*Model.bank.getMortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
+		costOfHouse = housePrice*(Model.bank.loanToValue(h.isFirstTimeBuyer(),true)*Model.bank.getMortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
 		return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
 	}
 
@@ -138,7 +137,6 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * @param me The investor
 	 * @return Does an investor decide to sell a buy-to-let property
 	 */
-	@Override
 	public boolean decideToSellInvestmentProperty(House h, Household me) {
 //		System.out.println(me.desiredPropertyInvestmentFraction + " " + me.getDesiredPropertyInvestmentValue() + " -> "+me.getPropertyInvestmentValuation());
 //		if(me.getDesiredPropertyInvestmentValue() < 
@@ -163,7 +161,6 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 	 * @param pbar average rent for house of this quality
 	 * @param d average days on market
 	 */
-	@Override
 	public double buyToLetRent(double pbar, double d, double mortgagePayment) {
 		final double C = 0.01;//0.095;	// initial markup from average price
 		final double D = 0.02;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
@@ -175,12 +172,6 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 //		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
 	}
 
-	/***
-	 * Decide how to reduce offered monthly rent when a house is
-	 * on the rental market and does not get matched to a tennant.
-	 * (The figures used here are copied from the behaviour on the
-	 * house-sale market, calibrated against sales on the zoopla dataset)
-	 */
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
 		return(0.95*sale.getPrice());
 //		if(rand.nextDouble() > 0.944) {
@@ -190,9 +181,13 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 //		return(sale.getPrice());
 	}
 
-	/********************************************************
-	 * Decide whether to buy a house as a buy-to-let investment
-	 ********************************************************/
+	public boolean decideToBuyBuyToLet(Household me) {
+		return(isPropertyInvestor() && (me.nInvestmentProperties() < nDesiredBTLProperties()));
+	}
+	
+	public double btlPurchaseBid(Household me) {
+		return(Model.bank.getMaxMortgage(me, false));
+	}
 //	public boolean decideToBuyBuyToLet(House h, Household me, double price) {
 		// --- give preference to cheaper properties
 //		if(Model.rand.nextDouble() < (h.getQuality()*1.0/House.Config.N_QUALITY)-0.5) return(false);
@@ -227,7 +222,6 @@ public class HouseholdBehaviour implements IHouseholdBehaviour {
 		return(desiredBTLProperties > 0);
 	}
 
-	@Override
 	public int nDesiredBTLProperties() {
 		return desiredBTLProperties;
 	}

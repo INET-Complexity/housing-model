@@ -29,9 +29,9 @@ public class CentralBank {
 //		}
 	}
 	
-	public double loanToIncomeRegulation(Household h, boolean isHome) {
+	public double loanToIncomeRegulation(boolean firstTimeBuyer, boolean isHome) {
 		if(isHome) {
-			if(h.isFirstTimeBuyer()) {
+			if(firstTimeBuyer) {
 				return(firstTimeBuyerLTILimit);
 			}
 			return(ownerOccupierLTILimit);
@@ -39,9 +39,9 @@ public class CentralBank {
 		return(buyToLetLTILimit);
 	}
 
-	public double loanToValueRegulation(Household h, boolean isHome) {
+	public double loanToValueRegulation(boolean firstTimeBuyer, boolean isHome) {
 		if(isHome) {
-			if(h.isFirstTimeBuyer()) {
+			if(firstTimeBuyer) {
 				return(firstTimeBuyerLTVLimit);
 			}
 			return(ownerOccupierLTVLimit);

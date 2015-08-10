@@ -1,6 +1,6 @@
 package housing;
 
-public class HouseholdStats {
+public class HouseholdStats extends CollectorBase {
 
 	public void step() {
 		totalDisposableIncome = 0.0;
@@ -9,7 +9,7 @@ public class HouseholdStats {
     	nHouseholds = Model.households.size();
     	rentalYield = 0.0;
     	for(Household h : Model.households) {
-			totalDisposableIncome += h.getMonthlyDisposableIncome();
+			totalDisposableIncome += h.getMonthlyPostTaxIncome();
     		if(h.isHomeless()) {
     			++nHomeless;
     		} else if(h.isRenting()) {

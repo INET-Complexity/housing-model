@@ -48,13 +48,13 @@ public class Construction implements IHouseOwner {
 	}
 
 	@Override
-	public void endOfLettingAgreement(House h) {
+	public void endOfLettingAgreement(House h, PaymentAgreement p) {
 		// TODO Auto-generated method stub
 
 	}
 
 	@Override
-	public void completeHouseLet(House house) {
+	public void completeHouseLet(HouseSaleRecord sale) {
 		// TODO Auto-generated method stub		
 	}
 

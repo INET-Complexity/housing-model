@@ -2,9 +2,10 @@ package housing;
 
 import housing.HousingMarket.Config;
 
-public class HousingMarketStats {
+public class HousingMarketStats extends CollectorBase {
 
 	public HousingMarketStats(HousingMarket m) {
+		setActive(true);
 		averageSoldPriceToOLP = 1.0;
 		saleCount = 0;
 		ftbSaleCount = 0;
@@ -71,7 +72,7 @@ public class HousingMarketStats {
 			averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.getPrice()/sale.initialListedPrice;
 		}
 		saleCount += 1;
-		MortgageApproval mortgage = purchase.buyer.housePayments.get(sale.house);
+		PaymentAgreement mortgage = purchase.buyer.housePayments.get(sale.house);
 		if(mortgage.isFirstTimeBuyer) {
 			ftbSaleCount += 1;
 		} else if(mortgage.isBuyToLet) {

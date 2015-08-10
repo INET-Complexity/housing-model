@@ -42,8 +42,14 @@ public interface IHouseholdBehaviour {
 	/**
 	 * How much rent does an investor decide to charge on a buy-to-let house? 
 	 */
-//	public abstract double buyToLetRent(double mortgagePayment);
 	double buyToLetRent(double pbar, double d, double mortgagePayment);
+
+	/***
+	 * Decide how to reduce offered monthly rent when a house is
+	 * on the rental market and does not get matched to a tennant.
+	 * (The figures used here are copied from the behaviour on the
+	 * house-sale market, calibrated against sales on the zoopla dataset)
+	 */
 	double rethinkBuyToLetRent(HouseSaleRecord sale);
 
 	/**
@@ -52,7 +58,15 @@ public interface IHouseholdBehaviour {
 	 * @return Does an investor decide to sell a buy-to-let property
 	 */
 	boolean decideToSellInvestmentProperty(House h, Household me);
-//	boolean decideToBuyBuyToLet(House h, Household me, double price);
+	
+	/***
+	 * Decide whether to buy a house as a buy-to-let investment.
+	 * Returns the price to bid
+	 ***/
+	boolean decideToBuyBuyToLet(Household me);
+	
+	/** @return amount to bid on the sale market for a new investment property */
+	double btlPurchaseBid(Household me);
 	boolean isPropertyInvestor();
 	int nDesiredBTLProperties();
 

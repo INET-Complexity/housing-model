@@ -39,16 +39,17 @@ public class ModelGUI extends GUIState implements Steppable {
     
 	public ScatterPlotGenerator
 //		housingChart,
-		housePriceChart,
+		housePriceChart;
 	//	bankBalanceChart,
-		mortgageStatsChart,
-		mortgagePhaseChart;
+	//	mortgageStatsChart,
+	//	mortgagePhaseChart;
 	
 //	public TimeSeriesChartGenerator
 //		marketStats;
             
-//    public TimeSeriesAttributes 	
+ //   public TimeSeriesAttributes 	
 //	hpi,
+//    nBuyers;
 // 	daysOnMarket;
 
     protected ArrayList<TimeSeriesPlot> timeSeriesPlots;
@@ -65,7 +66,10 @@ public class ModelGUI extends GUIState implements Steppable {
 
  //       ChartUtilities.scheduleSeries(this, hpi, new sim.util.Valuable() {
   //      	public double doubleValue() {return Model.housingMarket.housePriceIndex; }});
-        
+
+ //   	ChartUtilities.scheduleSeries(this, nBuyers, new sim.util.Valuable() {
+  //  		public double doubleValue() {return Collectors.housingMarketStats.getnBuyers();}});
+
  //       ChartUtilities.scheduleSeries(this, daysOnMarket, new sim.util.Valuable() {
   //      	public double doubleValue() {return Model.housingMarket.averageDaysOnMarket; }});
         
@@ -78,8 +82,9 @@ public class ModelGUI extends GUIState implements Steppable {
         myChartFrame = new JFrame("My Graphs");
         controller.registerFrame(myChartFrame);
         
- //       marketStats = ChartUtilities.buildTimeSeriesChartGenerator(this, "Market statistics", "Time");
+  //      marketStats = ChartUtilities.buildTimeSeriesChartGenerator(this, "Market statistics", "Time");
   //      marketStats.setYAxisLabel("Index");
+  //      nBuyers = ChartUtilities.addSeries(marketStats, "no. of buyers");
    //     hpi = ChartUtilities.addSeries(marketStats, "House Price Index");
     //    daysOnMarket = ChartUtilities.addSeries(marketStats, "Days on market");
         // Create a tab interface
@@ -87,10 +92,10 @@ public class ModelGUI extends GUIState implements Steppable {
 //        housingChart = makeScatterPlot(newTabPane, "Housing stats", "Probability", "Household Income");
         housePriceChart = makeScatterPlot(newTabPane, "House prices", "Modelled Price", "Reference Price");
 //        bankBalanceChart = makeScatterPlot(newTabPane, "Bank balances", "Balance", "Income");
-        mortgageStatsChart = makeScatterPlot(newTabPane, "Mortgage stats", "Frequency", "Ratio");
-        mortgagePhaseChart = makeScatterPlot(newTabPane, "Mortgage phase",  "Down-payment/Income", "Loan to Income ratio");
-        mortgagePhaseChart.setXAxisRange(0.0, 8.0);
-        mortgagePhaseChart.setYAxisRange(0.0, 8.0);
+//        mortgageStatsChart = makeScatterPlot(newTabPane, "Mortgage stats", "Frequency", "Ratio");
+ //       mortgagePhaseChart = makeScatterPlot(newTabPane, "Mortgage phase",  "Down-payment/Income", "Loan to Income ratio");
+  //      mortgagePhaseChart.setXAxisRange(0.0, 8.0);
+   //     mortgagePhaseChart.setYAxisRange(0.0, 8.0);
                 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Market Statistics","Time (years)","Value")
@@ -123,13 +128,13 @@ public class ModelGUI extends GUIState implements Steppable {
 //        			.addVariable(HousingMarketTest.bank.diagnostics,"affordability", "Affordability")
 //    	);
 
-        timeSeriesPlots.add(
-        		new TimeSeriesPlot("Tenure quantities","Time (years)","number")
-        			.addVariable(Collectors.householdStats,"nHomeless", "Social-Housing")
-        			.addVariable(Collectors.householdStats,"nNonOwner", "Non Owners")
-        			.addVariable(Collectors.householdStats,"nEmpty", "Empty Houses")
-        			.addVariable(Collectors.householdStats,"nHouseholds", "Total")
-    	);
+ //       timeSeriesPlots.add(
+  //      		new TimeSeriesPlot("Tenure quantities","Time (years)","number")
+   //     			.addVariable(Collectors.householdStats,"nHomeless", "Social-Housing")
+    //    			.addVariable(Collectors.householdStats,"nNonOwner", "Non Owners")
+     //   			.addVariable(Collectors.householdStats,"nEmpty", "Empty Houses")
+      //  			.addVariable(Collectors.householdStats,"nHouseholds", "Total")
+    //	);
         
         for(TimeSeriesPlot plot : timeSeriesPlots) {
         	plot.addToPane(newTabPane);
@@ -144,7 +149,10 @@ public class ModelGUI extends GUIState implements Steppable {
     @Override
     public void start() {
         super.start();
+
   //      marketStats.clearAllSeries(); /// NOTE THIS ISN'T IN LOAD(...)
+  //  	ChartUtilities.scheduleSeries(this, nBuyers, new sim.util.Valuable() {
+  //  		public double doubleValue() {return Collectors.housingMarketStats.getnBuyers();}});
         
    //     ChartUtilities.scheduleSeries(this, hpi, new sim.util.Valuable() {
     //    	public double doubleValue() {return Model.housingMarket.housePriceIndex; }});
@@ -153,9 +161,9 @@ public class ModelGUI extends GUIState implements Steppable {
         //	public double doubleValue() {return Model.housingMarket.averageDaysOnMarket; }});
         
         addSeries(housePriceChart, "Modelled prices", Collectors.housingMarketStats.priceData);
-        addSeries(mortgageStatsChart, "Owner-occupier LTV distribution", Collectors.creditSupply.oo_ltv_distribution);
-        addSeries(mortgageStatsChart, "Owner-occupier LTI distribution (x0.1)", Collectors.creditSupply.oo_lti_distribution);
-        addSeries(mortgagePhaseChart, "Approved mortgages", Collectors.creditSupply.approved_mortgages);
+    //    addSeries(mortgageStatsChart, "Owner-occupier LTV distribution", Collectors.creditSupply.oo_ltv_distribution);
+     //   addSeries(mortgageStatsChart, "Owner-occupier LTI distribution (x0.1)", Collectors.creditSupply.oo_lti_distribution);
+      //  addSeries(mortgagePhaseChart, "Approved mortgages", Collectors.creditSupply.approved_mortgages);
         
         housePriceChart.addSeries(Collectors.housingMarketStats.referencePriceData, "Reference price", null);
 

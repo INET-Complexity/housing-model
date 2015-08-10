@@ -13,7 +13,7 @@ package housing;
  * @author daniel
  *
  */
-public class CoreIndicators {
+public class CoreIndicators extends CollectorBase {
 	
 	public void step() {
 	}

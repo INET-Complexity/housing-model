@@ -21,14 +21,14 @@ public class HouseRentalMarket extends HousingMarket {
 		daysOnMarket[sale.house.getQuality()] = Config.E*daysOnMarket[sale.house.getQuality()] + (1.0-Config.E)*(Model.t - sale.tInitialListing);
 		sale.house.rentalRecord = null;
 		purchase.buyer.completeHouseRental(sale);
-		sale.house.owner.completeHouseLet(sale.house);
+		sale.house.owner.completeHouseLet(sale);
 		Collectors.rentalMarketStats.recordSale(purchase, sale);
 	}
 	
 	public HouseSaleRecord offer(House house, double price) {
-		if(house.resident != null) {
-			System.out.println("Got offer on rental market of house with resident");
-		}
+//		if(house.resident != null) {
+//			System.out.println("Got offer on rental market of house with resident");
+//		}
 		if(house.isOnMarket()) {
 			System.out.println("Got offer on rental market of house already on sale market");			
 		}

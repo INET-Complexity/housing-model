@@ -22,8 +22,10 @@ public class HouseSaleMarket {
 	}
 /*
  * NOTES ON AGGREGATE CALIBRATION
- * Number of mortgage approvals: roughly 100000/month = 0.37% of pop
+ * HMRC land transaction returns (stamp duty) a month: roughly 120000/month = 0.45% of pop
+ * ((land an buildings transaction tax in scotland) not applicable to inheritance/gift)
  * Ratio of monthly sales to stock: roughly 0.11
+ * Variation in stock of houses on market roughly +- 20%
  * Number of households: 26.7 million (2014 ONS Families and Households)
  */
 }

@@ -292,6 +292,18 @@ public abstract class HousingMarket {
 		}
 		return(price);
 	}
+	
+	/***
+	 * @param price
+	 * @return 	 The best quality of house you would expect to get
+	 * for the given price. If return value is -1, can't afford
+	 * even lowest quality house.
+	 */
+	public int maxQualityGivenPrice(double price) {
+		int q=House.Config.N_QUALITY-1;
+		while(q >= 0 && averageSalePrice[q] > price) --q;
+		return(q);
+	}
 
 	/////////////////////////////////////////////////////////////////////////////////////////////////
 	/////////////////////////////////////////////////////////////////////////////////////////////////

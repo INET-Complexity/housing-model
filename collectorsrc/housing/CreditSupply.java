@@ -1,6 +1,6 @@
 package housing;
 
-public class CreditSupply {
+public class CreditSupply extends CollectorBase {
 
 	public CreditSupply() {
 		for(int i=0; i<HISTOGRAM_NBINS; ++i) { // set up x-values for distribution
@@ -34,7 +34,7 @@ public class CreditSupply {
         double oldTotalCredit = totalOOCredit + totalBTLCredit;
         totalOOCredit = 0.0;
         totalBTLCredit = 0.0;
-        for(MortgageApproval m : Model.bank.mortgages) {
+        for(PaymentAgreement m : Model.bank.mortgages) {
         	if(m.isBuyToLet) {
             	totalBTLCredit += m.principal;
         	} else {
@@ -55,7 +55,7 @@ public class CreditSupply {
 	 * @param h
 	 * @param approval
 	 */
-	public void recordLoan(Household h, MortgageApproval approval) {
+	public void recordLoan(Household h, PaymentAgreement approval) {
 		double housePrice;
 		if(DIAGNOSTICS_ACTIVE) {
 			housePrice = approval.principal + approval.downPayment;

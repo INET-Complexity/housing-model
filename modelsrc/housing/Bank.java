@@ -25,7 +25,7 @@ public class Bank {
 	 * pre-computed values.
 	 ********************************/
 	public Bank(CentralBank c) {
-		mortgages = new HashSet<MortgageApproval>();
+		mortgages = new HashSet<PaymentAgreement>();
 		centralBank = c;
 		init();
 	}
@@ -119,8 +119,8 @@ public class Bank {
 	 * @param isHome true if 'h' plans to live in the house.
 	 * @return The MortgageApproval object, or NULL if the mortgage is declined
 	 ****************************/
-	public MortgageApproval requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
-		MortgageApproval approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
+	public PaymentAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+		PaymentAgreement approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
 		if(approval == null) return(null);
 		// --- if all's well, go ahead and arrange mortgage
 		supplyVal += approval.principal;
@@ -128,10 +128,10 @@ public class Bank {
 		Collectors.creditSupply.recordLoan(h, approval);
 		++nLoans;
 		if(isHome) {
-			if(approval.principal/h.annualEmploymentIncome > centralBank.loanToIncomeRegulation(h,isHome)) {
+			if(approval.principal/h.annualEmploymentIncome > centralBank.loanToIncomeRegulation(h.isFirstTimeBuyer(),isHome)) {
 				++nOverLTICapLoans;
 			}
-			if(approval.principal/(approval.principal + approval.downPayment) > centralBank.loanToValueRegulation(h,isHome)) {
+			if(approval.principal/(approval.principal + approval.downPayment) > centralBank.loanToValueRegulation(h.isFirstTimeBuyer(),isHome)) {
 				++nOverLTVCapLoans;
 			}
 		}
@@ -139,7 +139,7 @@ public class Bank {
 	}
 	
 	
-	public void endMortgageContract(MortgageApproval mortgage) {
+	public void endMortgageContract(PaymentAgreement mortgage) {
 		mortgages.remove(mortgage);
 	}
 
@@ -153,31 +153,34 @@ public class Bank {
 	 * @param isHome 		does 'h' plan to live in the house?
 	 * @return A MortgageApproval object, or NULL if the mortgage is declined
 	 */
-	public MortgageApproval requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
-		MortgageApproval approval = new MortgageApproval();
+	public PaymentAgreement requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+		PaymentAgreement approval = new PaymentAgreement();
 		double r = getMortgageInterestRate()/12.0; // monthly interest rate
 		double ltv_principal, lti_principal;
+		double liquidWealth = h.bankBalance;
+		
+		if(isHome == true) liquidWealth += h.getHomeEquity();		
 
 		// --- calculate maximum allowable principal
-		approval.principal = Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
+		approval.principal = Math.max(0.0,h.getMonthlyPostTaxIncome())/monthlyPaymentFactor();
 
-		ltv_principal = housePrice*loanToValue(h, isHome);
+		ltv_principal = housePrice*loanToValue(h.isFirstTimeBuyer(), isHome);
 		approval.principal = Math.min(approval.principal, ltv_principal);
 
-		lti_principal = h.getMonthlyTotalIncome()*12.0 * loanToIncome(h,isHome);
+		lti_principal = h.getMonthlyPreTaxIncome()*12.0 * loanToIncome(h.isFirstTimeBuyer(),isHome);
 		approval.principal = Math.min(approval.principal, lti_principal);
 
 		approval.downPayment = housePrice - approval.principal;
 		
-		if(h.bankBalance < approval.downPayment) {
-			System.out.println("Failed down-payment constraint: bank balance = "+h.bankBalance+" Downpayment = "+approval.downPayment);
+		if(liquidWealth < approval.downPayment) {
+			System.out.println("Failed down-payment constraint: bank balance = "+liquidWealth+" Downpayment = "+approval.downPayment);
 			System.out.println("isHome = "+isHome+" isFirstTimeBuyer = "+h.isFirstTimeBuyer());
-			approval.downPayment = h.bankBalance;
+			approval.downPayment = liquidWealth;
 //			return(null);
 		}
 		// --- allow larger downpayments
 		if(desiredDownPayment < 0.0) desiredDownPayment = 0.0;
-		if(desiredDownPayment > h.bankBalance) desiredDownPayment = h.bankBalance;
+		if(desiredDownPayment > liquidWealth) desiredDownPayment = liquidWealth;
 		if(desiredDownPayment > housePrice) desiredDownPayment = housePrice;
 		if(desiredDownPayment > approval.downPayment) {
 			approval.downPayment = desiredDownPayment;
@@ -193,12 +196,12 @@ public class Bank {
 		return(approval);
 	}
 
-	
+
 	/*****************************************
 	 * Find the maximum mortgage that this mortgage-lender will approve
 	 * to a household.
 	 * 
-	 * @param h The household who is applying for the mortgage
+	 * @param Household household who is applying for the mortgage
 	 * @param isHome true if 'h' plans to live in the house
 	 * @return The maximum value of house that this mortgage-lender is willing
 	 * to approve a mortgage for.
@@ -207,13 +210,16 @@ public class Bank {
 		double ltv_max; // loan to value constraint
 		double pdi_max; // disposable income constraint
 		double lti_max; // loan to income constraint
+		double liquidWealth = h.bankBalance;
 
-		pdi_max = h.bankBalance + Math.max(0.0,h.getMonthlyDisposableIncome())/monthlyPaymentFactor();
+		if(isHome == true) liquidWealth += h.getHomeEquity();
 		
-		ltv_max = h.bankBalance/(1.0 - loanToValue(h, isHome));
+		pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/monthlyPaymentFactor();
+		
+		ltv_max = liquidWealth/(1.0 - loanToValue(h.isFirstTimeBuyer(), isHome));
 		pdi_max = Math.min(pdi_max, ltv_max);
 
-		lti_max = h.getMonthlyTotalIncome()*12.0* loanToIncome(h,isHome)/loanToValue(h,isHome);
+		lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer(),isHome)/loanToValue(h.isFirstTimeBuyer(),isHome);
 		pdi_max = Math.min(pdi_max, lti_max);
 		
 		pdi_max = Math.floor(pdi_max*100.0)/100.0; // round down to nearest penny
@@ -227,7 +233,7 @@ public class Bank {
 	 * @param isHome true if 'h' plans to live in the house
 	 * @return The loan-to-value ratio applicable to the given household.
 	 *********************************************/
-	public double loanToValue(Household h, boolean isHome) {
+	public double loanToValue(boolean firstTimeBuyer, boolean isHome) {
 		double limit;
 		if(isHome) {
 			limit = MAX_OO_LTV;
@@ -235,12 +241,12 @@ public class Bank {
 			limit = MAX_BTL_LTV;
 		}
 		if((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > centralBank.proportionOverLTVLimit) {
-			limit = Math.min(limit, centralBank.loanToValueRegulation(h,isHome));
+			limit = Math.min(limit, centralBank.loanToValueRegulation(firstTimeBuyer, isHome));
 		}
 		return(limit);
 	}
 
-	public double loanToIncome(Household h, boolean isHome) {
+	public double loanToIncome(boolean firstTimeBuyer, boolean isHome) {
 		double limit;
 		if(isHome) {
 			limit = MAX_OO_LTI;
@@ -248,14 +254,14 @@ public class Bank {
 			limit = MAX_BTL_LTI;
 		}
 		if((nOverLTICapLoans+1.0)/(nLoans + 1.0) > centralBank.proportionOverLTILimit) {
-			limit = Math.min(limit, centralBank.loanToIncomeRegulation(h,isHome));
+			limit = Math.min(limit, centralBank.loanToIncomeRegulation(firstTimeBuyer,isHome));
 		}
 		return(limit);
 	}
 
 	public CentralBank 		centralBank;
 	
-	public HashSet<MortgageApproval>		mortgages;	// all unpaid mortgage contracts supplied by the bank
+	public HashSet<PaymentAgreement>		mortgages;	// all unpaid mortgage contracts supplied by the bank
 	public double 		k; 				// principal to monthly payment factor
 	public double		interestSpread;	// current mortgage interest spread above base rate (monthly rate*12)
 	public double		baseRate;

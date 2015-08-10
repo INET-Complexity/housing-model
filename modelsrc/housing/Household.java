@@ -36,6 +36,7 @@ public class Household implements IHouseOwner {
 		behaviour = new HouseholdBehaviour(lifecycle.incomePercentile);
 		annualEmploymentIncome = lifecycle.annualIncome();
 		bankBalance = Math.exp(4.07*Math.log(annualEmploymentIncome)-33.1);
+		monthlyPropertyIncome = 0.0;
 	}
 
 
@@ -44,6 +45,7 @@ public class Household implements IHouseOwner {
 	/////////////////////////////////////////////////////////
 
 	public void transferAllWealthTo(Household beneficiary) {
+		if(beneficiary == this) System.out.println("Strange: I'm transfering all my wealth to myself");
 		for(House h : housePayments.keySet()) {
 			if(home == h) {
 				h.resident = null;
@@ -54,7 +56,7 @@ public class Household implements IHouseOwner {
 				if(h.isOnMarket()) houseMarket.removeOffer(h.getSaleRecord());
 				beneficiary.inheritHouse(h);
 			} else {
-				h.owner.endOfLettingAgreement(h);
+				h.owner.endOfLettingAgreement(h, housePayments.get(h));
 			}
 		}
 		housePayments.clear();
@@ -66,7 +68,7 @@ public class Household implements IHouseOwner {
 	 * @param h House to inherit
 	 */
 	public void inheritHouse(House h) {
-		MortgageApproval nullMortgage = new MortgageApproval();
+		PaymentAgreement nullMortgage = new PaymentAgreement();
 		nullMortgage.nPayments = 0;
 		nullMortgage.downPayment = 0.0;
 		nullMortgage.monthlyInterestRate = 0.0;
@@ -79,8 +81,8 @@ public class Household implements IHouseOwner {
 			// move into house if not already a homeowner
 			if(isRenting()) {
 				House hom = home;
+				hom.owner.endOfLettingAgreement(hom,housePayments.get(h));
 				endTenancy();				
-				hom.owner.endOfLettingAgreement(hom);
 			}
 			if(h.resident != null) {
 				h.resident.endTenancy();
@@ -91,7 +93,8 @@ public class Household implements IHouseOwner {
 			if(decideToSellHouse(h)) {
 				putHouseForSale(h);
 			} else if(h.resident == null) {
-				endOfLettingAgreement(h); // put inherited house on rental market
+				// endOfLettingAgreement(h); // put inherited house on rental market
+				rentalMarket.offer(h, buyToLetRent(h));
 			}
 		} else {
 			putHouseForSale(h);
@@ -112,28 +115,22 @@ public class Household implements IHouseOwner {
 		
 		lifecycle.step();
 		annualEmploymentIncome = lifecycle.annualIncome();
-		disposableIncome = getMonthlyDisposableIncome() - 0.8 * Government.Config.INCOME_SUPPORT;
+		disposableIncome = getMonthlyPostTaxIncome() - 0.8 * Government.Config.INCOME_SUPPORT;
 
-//		System.out.println("income = "+monthlyIncome+" disposable = "+disposableIncome );
-		
 		// ---- Pay rent/mortgage(s)
-		Iterator<Map.Entry<House,MortgageApproval> > mapIt = housePayments.entrySet().iterator();
-		Map.Entry<House,MortgageApproval> payment;
+		Iterator<Map.Entry<House,PaymentAgreement> > mapIt = housePayments.entrySet().iterator();
+		Map.Entry<House,PaymentAgreement> payment;
 		while(mapIt.hasNext()) {
 			payment = mapIt.next();
 			if(payment.getValue().nPayments > 0) {
 				disposableIncome -= payment.getValue().makeMonthlyPayment();
-				if(isCollectingRentFrom(payment.getKey())) {
-					// profit from rent collection
-					//disposableIncome += payment.getValue().monthlyPayment*(1.0+config.RENT_PROFIT_MARGIN);
-				}
 				if(payment.getValue().nPayments == 0) { // do paid-off stuff
 					if(payment.getKey().owner != this) { // renting
 						if(home == null) System.out.println("Strange: paying rent and homeless");
 						if(payment.getKey() != home) System.out.println("Strange: I seem to be renting a house but not living in it");
 						if(home.resident != this) System.out.println("home/resident link is broken");
+						payment.getKey().owner.endOfLettingAgreement(payment.getKey(), payment.getValue());
 						home.resident = null;
-						payment.getKey().owner.endOfLettingAgreement(payment.getKey());
 						home = null;
 						mapIt.remove();
 					}
@@ -142,9 +139,7 @@ public class Household implements IHouseOwner {
 		}
 		
 		// --- consume
-//		bankBalance += disposableIncome - config.consumptionEqn.desiredConsumption(disposableIncome,bankBalance);
 		bankBalance += disposableIncome - behaviour.desiredConsumptionB(annualEmploymentIncome/12.0,bankBalance);
-//		bankBalance += -config.consumptionEqn.desiredConsumptionB(monthlyIncome,bankBalance);
 		
 		if(bankBalance < 0.0) {
 			// bankrupt behaviour
@@ -161,8 +156,8 @@ public class Household implements IHouseOwner {
 		}
 		
 		makeHousingDecision();
-		if(behaviour.isPropertyInvestor() && housePayments.size() <= behaviour.nDesiredBTLProperties()) {
-			houseMarket.BTLbid(this, bank.getMaxMortgage(this, false));
+		if(behaviour.decideToBuyBuyToLet(this)) {
+			houseMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
 		}
 	}
 
@@ -178,9 +173,6 @@ public class Household implements IHouseOwner {
 		if(isHomeless()) {
 			rentalMarket.bid(this, behaviour.desiredRent(annualEmploymentIncome/12.0));
 		}
-		
-		
-		
 	}
 	
 	/********************************************************
@@ -250,17 +242,17 @@ public class Household implements IHouseOwner {
 				System.out.println("Strange: I've just bought a house I'm renting out");
 			} else {
 				House h = home;
+				h.owner.endOfLettingAgreement(h,housePayments.get(h));
 				endTenancy();
-				h.owner.endOfLettingAgreement(h);
 			}
 		}
-		MortgageApproval mortgage = bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(bankBalance), home == null);
+		PaymentAgreement mortgage = bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(bankBalance), home == null);
 		if(mortgage == null) {
 			// TODO: need to either provide a way for house sales to fall through or to
 			// TODO: ensure that pre-approvals are always satisfiable
 			System.out.println("Can't afford to buy house: strange");
-			System.out.println("Want "+sale.getPrice()+" but can only get "+bank.getMaxMortgage(this,home==null));
-			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyDiscretionaryIncome());
+//			System.out.println("Want "+sale.getPrice()+" but can only get "+bank.getMaxMortgage(this,home==null));
+			System.out.println("Bank balance is "+bankBalance+". DisposableIncome is "+ getMonthlyPostTaxIncome());
 			System.out.println("Annual income is "+ annualEmploymentIncome);
 			if(isRenting()) System.out.println("Is renting");
 			if(isHomeowner()) System.out.println("Is homeowner");
@@ -276,7 +268,8 @@ public class Household implements IHouseOwner {
 			home = sale.house;
 			sale.house.resident = this;
 		} else if(sale.house.resident == null) { // put empty buy-to-let house on rental market
-			endOfLettingAgreement(sale.house);
+			rentalMarket.offer(sale.house, buyToLetRent(sale.house));
+//			endOfLettingAgreement(sale.house);
 		}
 		isFirstTimeBuyer = false;
 	}
@@ -304,20 +297,22 @@ public class Household implements IHouseOwner {
 	}
 	
 	/********************************************************
-	 * A household receives this message when a tenant moves
+	 * A BTL investor receives this message when a tenant moves
 	 * out of one of its buy-to-let houses.
 	 * 
 	 * The household simply puts the house back on the rental
 	 * market.
 	 ********************************************************/
 	@Override
-	public void endOfLettingAgreement(House h) {
+	public void endOfLettingAgreement(House h, PaymentAgreement contract) {
+		monthlyPropertyIncome -= contract.monthlyPayment;
+
 		// put house back on rental market
 		if(!housePayments.containsKey(h)) {
-			System.out.println("I don't own this house: strange");
+			System.out.println("Strange: I don't own this house in endOfLettingAgreement");
 		}
-		if(h.resident != null) System.out.println("Strange: renting out a house that has a resident");		
-		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");		
+//		if(h.resident != null) System.out.println("Strange: renting out a house that has a resident");		
+//		if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");		
 		if(h.isOnRentalMarket()) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
 		if(!h.isOnMarket()) rentalMarket.offer(h, buyToLetRent(h));
 	}
@@ -345,7 +340,7 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	public void completeHouseRental(HouseSaleRecord sale) {
 		if(sale.house.owner != this) { // if renting own house, no need for contract
-			MortgageApproval rent = new MortgageApproval();
+			PaymentAgreement rent = new PaymentAgreement();
 			rent.downPayment = 0.0;
 			rent.monthlyPayment = sale.getPrice();
 			rent.monthlyInterestRate = 0.0;
@@ -378,9 +373,9 @@ public class Household implements IHouseOwner {
 	 * given that it can afford a mortgage.
 	 ****************************************/
 	protected void bidOnHousingMarket(double p) {
-		double desiredPrice = behaviour.desiredPurchasePrice(getMonthlyTotalIncome(), houseMarket.housePriceAppreciation());
+		double desiredPrice = behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
-		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(this,true)/bank.loanToValue(this, true); // ##### TEST #####
+		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(isFirstTimeBuyer(),true)/bank.loanToValue(isFirstTimeBuyer(), true); // ##### TEST #####
 		if(desiredPrice > ltiConstraint) desiredPrice = ltiConstraint - 1.0; // ##### TEST #####
 //		if(desiredPrice > maxMortgage) desiredPrice = maxMortgage - 1;
 		if(desiredPrice <= maxMortgage) {
@@ -402,9 +397,9 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	protected void decideToStopRenting() {
 		double costOfRent;
-		double housePrice = behaviour.desiredPurchasePrice(getMonthlyTotalIncome(), houseMarket.housePriceAppreciation());
+		double housePrice = behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
-		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(this,true)/bank.loanToValue(this, true); // ##### TEST #####
+		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(isFirstTimeBuyer(),true)/bank.loanToValue(isFirstTimeBuyer(), true); // ##### TEST #####
 		if(housePrice > ltiConstraint) housePrice = ltiConstraint - 1.0; // ##### TEST #####
 		if(housePrice <= maxMortgage) {
 			if(home != null) {
@@ -424,7 +419,7 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	private boolean decideToSellHouse(House h) {
 		if(h == home) {
-			return(behaviour.decideToSellHome());
+			return(behaviour.decideToSellHome(this));
 		}
 		return(behaviour.decideToSellInvestmentProperty(h, this));
 	}
@@ -437,11 +432,16 @@ public class Household implements IHouseOwner {
 //		return(behaviour.decideToBuyBuyToLet(h, this, price));
 //	}
 
+	/***
+	 * Do stuff necessary when BTL investor lets out a rental
+	 * property
+	 */
 	@Override
-	public void completeHouseLet(House house) {
-		if(house.isOnMarket()) {
-			houseMarket.removeOffer(house.getSaleRecord());
+	public void completeHouseLet(HouseSaleRecord sale) {
+		if(sale.house.isOnMarket()) {
+			houseMarket.removeOffer(sale.house.getSaleRecord());
 		}
+		monthlyPropertyIncome += sale.getPrice();
 	}
 
 	public double buyToLetRent(House h) {
@@ -514,111 +514,36 @@ public class Household implements IHouseOwner {
 		return(n);
 	}
 	
-	public boolean isCollectingRentFrom(House h) {
-		return(h.owner == this && h != home && h.resident != null);
-	}
-
-	/**
-	 * @return total annual income tax due
-	 */
-	public double getAnnualIncomeTax() {
-		return Model.government.incomeTaxDue(annualEmploymentIncome);
-	}
-
-	/**
-	 * @return total annual national insurance contributions
-	 */
-	public double getAnnualNationalInsuranceTax() {
-		return Model.government.class1NICsDue(annualEmploymentIncome);
-	}
-
-	/**
-	 * @return total annual taxes due
-	 */
-	public double getAnnualTotalTax() {
-		return getAnnualIncomeTax() + getAnnualNationalInsuranceTax();
-	}
-
-	/**
-	 * @return discretionary income is disposable income less any mortgage payments
-	 */
-	public double getMonthlyDiscretionaryIncome() {
-		return getMonthlyDisposableIncome() - getMonthlyTotalMortgagePayments();
-	}
+//	public boolean isCollectingRentFrom(House h) {
+//		return(h.owner == this && h != home && h.resident != null);
+//	}
 
 	/**
 	 * @return monthly disposable (i.e., after tax) income
 	 */
-	public double getMonthlyDisposableIncome() {
-		return getMonthlyTotalIncome() - getAnnualTotalTax() / 12.0;
+	public double getMonthlyPostTaxIncome() {
+		return getMonthlyPreTaxIncome() - (Model.government.incomeTaxDue(annualEmploymentIncome) + Model.government.class1NICsDue(annualEmploymentIncome)) / 12.0;
 	}
-
-	/**
-	 * @return gross property income will be zero for most households
-	 */
-	public double getMonthlyPropertyIncome() {
-		double propertyIncome = 0.0;
-		House h;
-		for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-			h = payment.getKey();
-			if (isCollectingRentFrom(h)) {
-				propertyIncome += h.resident.housePayments.get(h).monthlyPayment;
-			}
-		}
-		return propertyIncome;
-	}
-
+	
 	/**
 	 * @return gross monthly total income
 	 */
-	public double getMonthlyTotalIncome() {
+	public double getMonthlyPreTaxIncome() {
 		double monthlyTotalIncome = ((annualEmploymentIncome/12.0) +
-				getMonthlyPropertyIncome() + bankBalance * RETURN_ON_FINANCIAL_WEALTH);
+				monthlyPropertyIncome + bankBalance * RETURN_ON_FINANCIAL_WEALTH);
 		return monthlyTotalIncome;
 	}
-
-	/**
-	 * @return monthly total monthly interest payments for all houses owned
-	 */
-	public double getMonthlyTotalInterestPayments() {
-		double totalInterestPayments = 0.0;
-		double interestPayment;
-		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
-				totalInterestPayments += interestPayment;
-			}
-		}
-		return totalInterestPayments;
+	
+	public int nInvestmentProperties() {
+		return(housePayments.size()-1);
 	}
-
-	/**
-	 * @return monthly total monthly mortgage payments for all houses owned
+	
+	/***
+	 * @return Current mark-to-market equity in this household's home.
 	 */
-	public double getMonthlyTotalMortgagePayments() {
-		double totalMortgagePayments = 0.0;
-		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-				totalMortgagePayments += payment.getValue().monthlyPayment;
-			}
-		}
-		return totalMortgagePayments;
-	}
-
-	/**
-	 * @return monthly total monthly principal payments for all houses owned
-	 */
-	public double getMonthlyTotalPrincipalPayments() {
-		double totalPrincipalPayments = 0.0;
-		double interestPayment, mortgagePayment;
-		if (! isRenting()) {
-			for (Map.Entry<House, MortgageApproval> payment : housePayments.entrySet()) {
-				mortgagePayment = payment.getValue().monthlyPayment;
-				interestPayment = payment.getValue().principal * payment.getValue().monthlyInterestRate;
-				totalPrincipalPayments += mortgagePayment - interestPayment;
-			}
-		}
-		return totalPrincipalPayments;
+	public double getHomeEquity() {
+		if(!isHomeowner()) return(0.0);
+		return(Model.housingMarket.getAverageSalePrice(home.getQuality()) - housePayments.get(home).principal);
 	}
 	
 	///////////////////////////////////////////////
@@ -631,7 +556,8 @@ public class Household implements IHouseOwner {
 	public double	 	annualEmploymentIncome;
 	protected double 	bankBalance;
 	protected House		home; // current home
-	protected Map<House, MortgageApproval> 		housePayments = new TreeMap<House, MortgageApproval>(); // houses owned
+	protected Map<House, PaymentAgreement> 		housePayments = new TreeMap<House, PaymentAgreement>(); // houses owned
+	protected double	monthlyPropertyIncome;
 	private boolean		isFirstTimeBuyer;
 //	public	double		desiredPropertyInvestmentFraction;
 	Bank				bank;
@@ -639,7 +565,7 @@ public class Household implements IHouseOwner {
 	protected MersenneTwisterFast 	rand;
 	
 	public Lifecycle	lifecycle;	// lifecycle plugin
-	public IHouseholdBehaviour behaviour;
+	public HouseholdBehaviour behaviour;
 	
 //	static Diagnostics	diagnostics = new Diagnostics(Model.households);
 	static int		 id_pool;

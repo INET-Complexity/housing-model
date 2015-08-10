@@ -8,10 +8,10 @@ public class Collectors {
 	}
 	
 	public void step() {
-		creditSupply.step();
-		householdStats.step();
-		housingMarketStats.step();
-		rentalMarketStats.step();
+		if(creditSupply.isActive()) creditSupply.step();
+		if(householdStats.isActive()) householdStats.step();
+		if(housingMarketStats.isActive()) housingMarketStats.step();
+		if(rentalMarketStats.isActive()) rentalMarketStats.step();
 	}
 	
 	public static CreditSupply		creditSupply 	= new CreditSupply();

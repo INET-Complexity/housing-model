@@ -145,7 +145,7 @@ public class Model extends SimState implements Steppable {
 	
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
-	public boolean recordCoreIndicators = true;
+	public boolean recordCoreIndicators = false;
 	
 	public static int	nSimulation; // number of simulations run
 	public static int	t; // time (months)
