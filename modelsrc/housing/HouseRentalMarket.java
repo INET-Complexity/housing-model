@@ -51,11 +51,12 @@ public class HouseRentalMarket extends HousingMarket {
 	/***
 	 * @param quality Quality of the house
 	 * @return Expected fraction of time that the house will be occupied, based on
-	 *         a 12 month rental contract and the average number of days on the rental
-	 *         market of a house of this quality.
+	 *         a 18 month average tenant stay (ARLA figures) and the average number
+	 *         of days on the rental market of a house of this quality.
+	 *         TODO: Take the 18 out as data
 	 */
 	public double expectedOccupancy(int quality) {
-		return(12.0*30.0/(12.0*30.0 + daysOnMarket[quality]));
+		return(18.0*30.0/(18.0*30.0 + daysOnMarket[quality]));
 	}
 
 	public double getExpectedGrossYield(int quality) {
