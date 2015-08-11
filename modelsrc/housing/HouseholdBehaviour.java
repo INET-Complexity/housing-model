@@ -5,10 +5,6 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 import ec.util.MersenneTwisterFast;
 
 public class HouseholdBehaviour {// implements IHouseholdBehaviour {
-	public static double RENT_PROFIT_MARGIN = 0.03;//0.05; // profit margin for buy-to-let investors 
-	// Yield on rent had average 6% between 2009/01 and 2015/01, 
-	// minimum in 2009/10 maximum in 2012/04 peak-to-peak amplitude of 0.4%
-	// source: Bank of England, unpublished analysis based on Zoopla/Land reg matching, Philippe Bracke 
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 
 	public double P_SELL = 1.0/(11.0*12.0);  // monthly probability of Owner-Occupier selling home (British housing survey 2008)
