@@ -6,22 +6,20 @@ import ec.util.MersenneTwisterFast;
 
 public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
-
-	public double P_SELL = 1.0/(11.0*12.0);  // monthly probability of Owner-Occupier selling home (British housing survey 2008)
-	public double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)
 	protected MersenneTwisterFast 	rand = Model.rand;
-	LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
-
-	public int			desiredBTLProperties;	// number of properties
+	public int						desiredBTLProperties;	// number of properties
 
 	
 	public HouseholdBehaviour(double incomePercentile) {
-		if( incomePercentile > 0.5 && rand.nextDouble() < P_INVESTOR*2.0) {
-			desiredBTLProperties = (int)buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble());
+		if( incomePercentile > 0.5 && rand.nextDouble() < data.Households.P_INVESTOR*2.0) {
+			desiredBTLProperties = (int)data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble());
 		} else {
 			desiredBTLProperties = 0;
 		}
 	}
+	///////////////////////////////////////////////////////////////////////////////////////////////
+	// Owner-Ocupier behaviour
+	///////////////////////////////////////////////////////////////////////////////////////////////
 
 	/********************************
 	 * How much a household consumes
@@ -51,8 +49,8 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 * @return initial sale price of a house 
 	 ********************************/
 	public double initialSalePrice(double pbar, double d, double principal) {
-		final double C = 0.02;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
-		final double D = 0.00;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
+		final double C = 0.002;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
+		final double D = 0.02;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
@@ -63,13 +61,12 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 * @return Does an owner-occupier decide to sell house?
 	 */
 	public boolean decideToSellHome(Household me) {
-		// sell if I can get buy a better house
-		if(Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true)) > me.home.getQuality()) {
-			return(true);
-		}
-//		if(rand.nextDouble() < P_SELL) return(true);
-		// TODO: ################## ADD PROPORTION OF PEOPLE FORCED TO SELL, AND PROBABILITY OF MOVING GIVEN BETTER QUALITY
-		return false;
+		// Am I forced to move because of job change etc?
+		if(rand.nextDouble() < data.Households.P_FORCEDTOMOVE) return(true);
+		// I can get a better house by moving?
+		int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
+		double p_move = data.Households.P_FORCEDTOMOVE + (2.0*data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(5.0-2.0*potentialQualityChange));
+		return(rand.nextDouble() < p_move);
 	}
 
 	public double downPayment(double bankBalance) {
@@ -86,9 +83,9 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
 //		return(sale.getPrice() *0.95);
-		if(rand.nextDouble() > 0.944) { // Danger: this can lead to -ve price!
-			double logReduction = Math.min(4.6, 1.603+(rand.nextGaussian()*0.6173));
-			return(sale.getPrice() * (1.0-0.01*Math.exp(logReduction)));
+		if(rand.nextDouble() > data.Households.P_SALEPRICEREDUCE) {
+			double logReduction = Math.min(-5.1e-3, data.Households.REDUCTION_MU+(rand.nextGaussian()*data.Households.REDUCTION_SIGMA));
+			return(sale.getPrice() * (1.0-Math.exp(logReduction)));
 		}
 		return(sale.getPrice());
 	}

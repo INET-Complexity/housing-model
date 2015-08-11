@@ -32,7 +32,7 @@ public class Model extends SimState implements Steppable {
 		government = new Government();
 		construction = new Construction();
 		demographics = new Demographics();
-		households = new ArrayList<Household>(data.Demographics.TARGET_POPULATION*2);
+		households = new ArrayList<Household>(Demographics.TARGET_POPULATION*2);
 		housingMarket = new HouseSaleMarket();
 		rentalMarket = new HouseRentalMarket();
 		collectors = new Collectors();

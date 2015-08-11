@@ -34,10 +34,10 @@ public abstract class HousingMarket {
 	static public class Config {
 		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
 		public static final double BIDUP = 1.005; // smallest proportion increase in price that can cause a gazump
-		public static final double T = 200.0; // characteristic number of data-points over which to average market statistics
+		public static final double T = 0.04*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
 		public static final double F = Math.exp(-1.0/12.0); // House Price Index appreciation decay const (in market clearings)
-		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market
-		public static final double G = Math.exp(-1.0/8); // Decay const for averageListPrice averaging
+		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market (in transactions)
+		public static final double G = Math.exp(-House.Config.N_QUALITY*0.5/T); // Decay const for averageListPrice averaging (in transactions)
 	}
 	
 	static public class Authority {
@@ -47,7 +47,7 @@ public abstract class HousingMarket {
 	
 	public HousingMarket() {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
-		bids = new ArrayList<>(data.Demographics.TARGET_POPULATION/16);
+		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
 		init();
 	}
 	

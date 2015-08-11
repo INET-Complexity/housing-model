@@ -375,9 +375,10 @@ public class Household implements IHouseOwner {
 	protected void bidOnHousingMarket(double p) {
 		double desiredPrice = behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
-		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(isFirstTimeBuyer(),true)/bank.loanToValue(isFirstTimeBuyer(), true); // ##### TEST #####
-		if(desiredPrice > ltiConstraint) desiredPrice = ltiConstraint - 1.0; // ##### TEST #####
-//		if(desiredPrice > maxMortgage) desiredPrice = maxMortgage - 1;
+//		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(isFirstTimeBuyer(),true)/bank.loanToValue(isFirstTimeBuyer(), true); // ##### TEST #####
+//		if(desiredPrice > ltiConstraint) desiredPrice = ltiConstraint - 1.0; // ##### TEST #####
+		if(desiredPrice > maxMortgage) desiredPrice = maxMortgage - 1;
+//		desiredPrice = maxMortgage-1; // ####################### TEST!!!!!
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
 				if(rand.nextDouble() < p) houseMarket.bid(this, desiredPrice);

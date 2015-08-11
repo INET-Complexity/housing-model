@@ -14,7 +14,8 @@ import utilities.DoubleUnaryOperator;
 import utilities.Pdf;
 
 public class Demographics {
-		
+	public static final int TARGET_POPULATION = 10000;  	// target number of households
+
 	/***
 	 * Add newly 'born' households to the model and remove households that 'die'
 	 */
@@ -23,13 +24,13 @@ public class Demographics {
 		int nBirths;
 		if(Model.t < spinupYears*12) {
 			// --- still in spinup phase of simulation
-			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.t/12.0))*data.Demographics.TARGET_POPULATION/12.0 + 0.5);
+			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.t/12.0))*TARGET_POPULATION/12.0 + 0.5);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfSpinupHouseholdAgeAtBirth.nextDouble()));
 			}
 		} else {
 			// --- in projection phase of simulation
-			nBirths = (int)(data.Demographics.futureBirthRate(Model.t)/12.0 + 0.5);
+			nBirths = (int)(TARGET_POPULATION*data.Demographics.futureBirthRate(Model.t)/12.0 + 0.5);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
 			}

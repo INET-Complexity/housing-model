@@ -6,7 +6,6 @@ import utilities.DoubleUnaryOperator;
 import utilities.Pdf;
 
 public class Demographics {
-	public static final int TARGET_POPULATION = 5000;  	// target number of households
 	//public static final int SPINUP_YEARS = 80;			// number of years to spinup
 	public static final BetaDistribution betaDist = new BetaDistribution(null,2,2);
 	/**
@@ -49,11 +48,11 @@ public class Demographics {
 	/****
 	 * Birth rates into the future (roughly calibrated against current individual birth rate)
 	 * @param t	time (months) into the future
-	 * @return number of births per year
+	 * @return number of births per year per capita
 	 * Calibrated against flux of FTBs, Council of Mortgage Lenders Regulated Mortgage Survey (2015)
 	 */
 	public static double futureBirthRate(double t) {
-		return(TARGET_POPULATION * 0.0102);
+		return(0.0102);
 	}
 
 	/***
@@ -62,7 +61,7 @@ public class Demographics {
 	 * TODO: ************** UNCALIBRATED ********************
 	 */
 	public static double probDeathGivenAge(double ageInYears) {
-		double averageDeathRate = futureBirthRate(0)*1.0/TARGET_POPULATION;
+		double averageDeathRate = futureBirthRate(0);
 		return(averageDeathRate*ageInYears*ageInYears/7500.0);
 	}
 
