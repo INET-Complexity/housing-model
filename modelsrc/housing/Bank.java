@@ -18,7 +18,7 @@ public class Bank {
 	public double MAX_OO_LTV = 1.0;		// maximum LTV bank will give to owner-occupier when not regulated	
 	public double MAX_BTL_LTV = 0.6;	// maximum LTV bank will give to BTL when not regulated
 	public double MAX_OO_LTI = 6.5;		// maximum LTI bank will give to owner-occupier when not regulated	
-	public double MAX_BTL_LTI = 10.0;	// maximum LTI bank will give to BTL when not regulated
+//	public double MAX_BTL_LTI = 10.0;	// maximum LTI bank will give to BTL when not regulated
 
 	/********************************
 	 * Constructor. This just sets up a few
@@ -107,8 +107,12 @@ public class Bank {
 	 * Get the monthly payment on a mortgage as a fraction of the mortgage principle.
 	 * @return The monthly payment fraction.
 	 *******************************/
-	public double monthlyPaymentFactor() {
-		return(k);
+	public double monthlyPaymentFactor(boolean isHome) {
+		if(isHome) {
+			return(k); // Pay off in N_PAYMENTS
+		} else {
+			return(getMortgageInterestRate()/12.0); // interest only
+		}
 	}
 
 	/*****************************
@@ -128,7 +132,7 @@ public class Bank {
 		Collectors.creditSupply.recordLoan(h, approval);
 		++nLoans;
 		if(isHome) {
-			if(approval.principal/h.annualEmploymentIncome > centralBank.loanToIncomeRegulation(h.isFirstTimeBuyer(),isHome)) {
+			if(approval.principal/h.annualEmploymentIncome > centralBank.loanToIncomeRegulation(h.isFirstTimeBuyer())) {
 				++nOverLTICapLoans;
 			}
 			if(approval.principal/(approval.principal + approval.downPayment) > centralBank.loanToValueRegulation(h.isFirstTimeBuyer(),isHome)) {
@@ -162,14 +166,16 @@ public class Bank {
 		if(isHome == true) liquidWealth += h.getHomeEquity();		
 
 		// --- calculate maximum allowable principal
-		approval.principal = Math.max(0.0,h.getMonthlyPostTaxIncome())/monthlyPaymentFactor();
+		approval.principal = Math.max(0.0,h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 
 		ltv_principal = housePrice*loanToValue(h.isFirstTimeBuyer(), isHome);
 		approval.principal = Math.min(approval.principal, ltv_principal);
 
-		lti_principal = h.getMonthlyPreTaxIncome()*12.0 * loanToIncome(h.isFirstTimeBuyer(),isHome);
-		approval.principal = Math.min(approval.principal, lti_principal);
-
+		if(isHome) {
+			lti_principal = h.getMonthlyPreTaxIncome()*12.0 * loanToIncome(h.isFirstTimeBuyer());
+			approval.principal = Math.min(approval.principal, lti_principal);
+		}
+		
 		approval.downPayment = housePrice - approval.principal;
 		
 		if(liquidWealth < approval.downPayment) {
@@ -187,7 +193,7 @@ public class Bank {
 			approval.principal = housePrice - desiredDownPayment;
 		}
 		
-		approval.monthlyPayment = approval.principal*monthlyPaymentFactor();		
+		approval.monthlyPayment = approval.principal*monthlyPaymentFactor(isHome);		
 		approval.nPayments = N_PAYMENTS;
 		approval.monthlyInterestRate = r;
 		approval.isBuyToLet = !isHome;
@@ -210,17 +216,22 @@ public class Bank {
 		double ltv_max; // loan to value constraint
 		double pdi_max; // disposable income constraint
 		double lti_max; // loan to income constraint
+//		double icr_max; // interest coverage ratio
 		double liquidWealth = h.bankBalance;
 
-		if(isHome == true) liquidWealth += h.getHomeEquity();
+		if(isHome == true) {
+			liquidWealth += h.getHomeEquity();
+		}
 		
-		pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/monthlyPaymentFactor();
+		pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 		
 		ltv_max = liquidWealth/(1.0 - loanToValue(h.isFirstTimeBuyer(), isHome));
 		pdi_max = Math.min(pdi_max, ltv_max);
 
-		lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer(),isHome)/loanToValue(h.isFirstTimeBuyer(),isHome);
-		pdi_max = Math.min(pdi_max, lti_max);
+		if(isHome) { // no LTI for BtL investors
+			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer())/loanToValue(h.isFirstTimeBuyer(),isHome);
+			pdi_max = Math.min(pdi_max, lti_max);
+		}
 		
 		pdi_max = Math.floor(pdi_max*100.0)/100.0; // round down to nearest penny
 		return(pdi_max);
@@ -246,17 +257,17 @@ public class Bank {
 		return(limit);
 	}
 
-	public double loanToIncome(boolean firstTimeBuyer, boolean isHome) {
+	public double loanToIncome(boolean firstTimeBuyer) {
 		double limit;
-		if(isHome) {
-			limit = MAX_OO_LTI;
-		} else {
-			limit = MAX_BTL_LTI;
-		}
+		limit = MAX_OO_LTI;
 		if((nOverLTICapLoans+1.0)/(nLoans + 1.0) > centralBank.proportionOverLTILimit) {
-			limit = Math.min(limit, centralBank.loanToIncomeRegulation(firstTimeBuyer,isHome));
+			limit = Math.min(limit, centralBank.loanToIncomeRegulation(firstTimeBuyer));
 		}
 		return(limit);
+	}
+	
+	public double interestCoverageRatio() {
+		return(centralBank.interestCoverageRatioRegulation());
 	}
 
 	public CentralBank 		centralBank;

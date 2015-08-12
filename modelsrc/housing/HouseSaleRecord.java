@@ -27,7 +27,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 //		quality = house.quality;
 		tInitialListing = Model.t;
 		matchedBids = new ArrayList<>(8);
-		yield = Model.rentalMarket.getExpectedGrossYield(house.getQuality());
+		recalcYield();
 	}
 	
 	/***********************************************
@@ -50,18 +50,33 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	}
 	
 	/***
-	 * expected gross yield of this house (at time of initial listing
-	 * as this needs to stay constant)
+	 * expected gross yield of this house (including expected vacancy period)
 	 */
 	@Override
 	public double getYield() {
 		return yield;
 	}
 	
+	/*** returns gross yield */
+	public double getGrossYield() {
+		return(Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0/getPrice());
+	}
+
+	public void setPrice(double newPrice, HousingMarket.Authority auth) {
+		super.setPrice(newPrice, auth);
+		recalcYield();
+	}
+
+	
 	public void matchWith(HouseBuyerRecord bid) {
 //		if(house.owner != bid.buyer) {
 			matchedBids.add(bid);
 //		}
+	}
+	
+	protected void recalcYield() {
+		int q = house.getQuality();
+		yield = Model.rentalMarket.getExpectedGrossYield(q)*Model.housingMarket.getAverageSalePrice(q)/getPrice();		
 	}
 	
 	public House 	house;

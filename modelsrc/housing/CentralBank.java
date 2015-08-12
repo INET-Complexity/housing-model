@@ -10,7 +10,7 @@ public class CentralBank {
 		
 		firstTimeBuyerLTILimit = 6.5;
 		ownerOccupierLTILimit = 6.5;
-		buyToLetLTILimit = 1000.0; // unregulated
+//		buyToLetLTILimit = 1000.0; // unregulated
 
 		proportionOverLTILimit= 0.15;
 		proportionOverLTVLimit= 0.0;		
@@ -29,14 +29,11 @@ public class CentralBank {
 //		}
 	}
 	
-	public double loanToIncomeRegulation(boolean firstTimeBuyer, boolean isHome) {
-		if(isHome) {
-			if(firstTimeBuyer) {
-				return(firstTimeBuyerLTILimit);
-			}
-			return(ownerOccupierLTILimit);
+	public double loanToIncomeRegulation(boolean firstTimeBuyer) {
+		if(firstTimeBuyer) {
+			return(firstTimeBuyerLTILimit);
 		}
-		return(buyToLetLTILimit);
+		return(ownerOccupierLTILimit);
 	}
 
 	public double loanToValueRegulation(boolean firstTimeBuyer, boolean isHome) {
@@ -47,6 +44,10 @@ public class CentralBank {
 			return(ownerOccupierLTVLimit);
 		}
 		return(buyToLetLTVLimit);
+	}
+	
+	public double interestCoverageRatioRegulation() {
+		return(1.25);
 	}
 
 	public double ownerOccupierLTILimit;	// LTI upper limit for owner-occupiers
