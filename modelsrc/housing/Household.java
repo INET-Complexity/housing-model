@@ -68,7 +68,7 @@ public class Household implements IHouseOwner {
 	 * @param h House to inherit
 	 */
 	public void inheritHouse(House h) {
-		PaymentAgreement nullMortgage = new PaymentAgreement();
+		MortgageAgreement nullMortgage = new MortgageAgreement(this,false);
 		nullMortgage.nPayments = 0;
 		nullMortgage.downPayment = 0.0;
 		nullMortgage.monthlyInterestRate = 0.0;
@@ -82,10 +82,10 @@ public class Household implements IHouseOwner {
 			if(isRenting()) {
 				House hom = home;
 				hom.owner.endOfLettingAgreement(hom,housePayments.get(h));
-				endTenancy();				
+				endTenancyEarly();				
 			}
 			if(h.resident != null) {
-				h.resident.endTenancy();
+				h.resident.endTenancyEarly();
 			}
 			home = h;
 			h.resident = this;
@@ -124,16 +124,10 @@ public class Household implements IHouseOwner {
 			payment = mapIt.next();
 			if(payment.getValue().nPayments > 0) {
 				disposableIncome -= payment.getValue().makeMonthlyPayment();
-				if(payment.getValue().nPayments == 0) { // do paid-off stuff
-					if(payment.getKey().owner != this) { // renting
-						if(home == null) System.out.println("Strange: paying rent and homeless");
-						if(payment.getKey() != home) System.out.println("Strange: I seem to be renting a house but not living in it");
-						if(home.resident != this) System.out.println("home/resident link is broken");
-						payment.getKey().owner.endOfLettingAgreement(payment.getKey(), payment.getValue());
-						home.resident = null;
-						home = null;
-						mapIt.remove();
-					}
+				if(payment.getValue().nPayments == 0 && payment.getKey().owner != this) { // end of rental period for renter
+					payment.getKey().owner.endOfLettingAgreement(payment.getKey(), payment.getValue());
+					endOfTenancyAgreement(payment.getKey(), payment.getValue());
+					mapIt.remove();
 				}
 			}
 		}
@@ -142,15 +136,7 @@ public class Household implements IHouseOwner {
 		bankBalance += disposableIncome - behaviour.desiredConsumptionB(annualEmploymentIncome/12.0,bankBalance);
 		
 		if(bankBalance < 0.0) {
-			// bankrupt behaviour
-//			System.out.println("Household gone bankrupt!");
-//			System.out.println("...Houses = "+housePayments.size());
-//			int i = 0;
-//			for(House h : housePayments.keySet()) {
-//				if(h.resident == null) ++i;
-//			}
-//			System.out.println("...Empty = "+i);
-				
+			// bankrupt behaviour				
 			// TODO: cash injection for now...
 			bankBalance = 1.0;
 		}
@@ -188,7 +174,7 @@ public class Household implements IHouseOwner {
 				forSale = h.getSaleRecord();
 				if(forSale != null) { // reprice house for sale
 					newPrice = behaviour.rethinkHouseSalePrice(forSale);
-					if(newPrice > housePayments.get(h).principal) {
+					if(newPrice > mortgageFor(h).principal) {
 						houseMarket.updateOffer(forSale, newPrice);						
 					} else {
 						houseMarket.removeOffer(forSale);
@@ -216,10 +202,17 @@ public class Household implements IHouseOwner {
 	}
 
 	protected void putHouseForSale(House h) {
+		double principal;
+		MortgageAgreement mortgage = mortgageFor(h);
+		if(mortgage != null) {
+			principal = mortgage.principal;
+		} else {
+			principal = 0.0;
+		}
 		houseMarket.offer(h, behaviour.initialSalePrice(
 				houseMarket.averageSalePrice[h.getQuality()],
 				houseMarket.averageDaysOnMarket,
-				housePayments.get(h).principal
+				principal
 		));
 	}
 	
@@ -243,10 +236,10 @@ public class Household implements IHouseOwner {
 			} else {
 				House h = home;
 				h.owner.endOfLettingAgreement(h,housePayments.get(h));
-				endTenancy();
+				endTenancyEarly();
 			}
 		}
-		PaymentAgreement mortgage = bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(bankBalance), home == null);
+		MortgageAgreement mortgage = bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(bankBalance), home == null);
 		if(mortgage == null) {
 			// TODO: need to either provide a way for house sales to fall through or to
 			// TODO: ensure that pre-approvals are always satisfiable
@@ -278,7 +271,7 @@ public class Household implements IHouseOwner {
 	 * Do all stuff necessary when this household sells a house
 	 ********************************************************/
 	public void completeHouseSale(HouseSaleRecord sale) {
-		double profit = sale.getPrice() - housePayments.get(sale.house).payoff(bankBalance+sale.getPrice());
+		double profit = sale.getPrice() - mortgageFor(sale.house).payoff(bankBalance+sale.getPrice());
 		if(profit < 0) System.out.println("Strange: Profit is negative.");
 		bankBalance += profit;
 		if(sale.house.isOnRentalMarket()) {
@@ -292,7 +285,7 @@ public class Household implements IHouseOwner {
 			home = null;
 			bidOnHousingMarket(1.0);
 		} else if(sale.house.resident != null) { // evict current renter
-			sale.house.resident.endTenancy();
+			sale.house.resident.endTenancyEarly();
 		}
 	}
 	
@@ -321,7 +314,7 @@ public class Household implements IHouseOwner {
 	 * This household moves out of current rented accommodation
 	 * and becomes homeless (possibly temporarily)
 	 **********************************************************/
-	public void endTenancy() {
+	public void endTenancyEarly() {
 		if(home == null) {
 			System.out.println("Strange: got endTenancy but I'm homeless");			
 		}
@@ -333,6 +326,20 @@ public class Household implements IHouseOwner {
 		home = null;		
 	}
 
+	/***
+	 * This gets called when we are a renter and a tenancy
+	 * agreement has come to an end.
+	 */
+	public void endOfTenancyAgreement(House house, PaymentAgreement rentalContract) {
+		if(home == null) System.out.println("Strange: paying rent and homeless");
+		if(house != home) System.out.println("Strange: I seem to have been renting a house but not living in it");
+		if(home.resident != this) System.out.println("home/resident link is broken");
+		home.resident = null;
+		home = null;
+
+		
+	}
+	
 	/********************************************************
 	 * Do all the stuff necessary when this household moves
 	 * in to rented accommodation (i.e. set up a regular
@@ -340,13 +347,10 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	public void completeHouseRental(HouseSaleRecord sale) {
 		if(sale.house.owner != this) { // if renting own house, no need for contract
-			PaymentAgreement rent = new PaymentAgreement();
-			rent.downPayment = 0.0;
+			RentalAgreement rent = new RentalAgreement();
 			rent.monthlyPayment = sale.getPrice();
-			rent.monthlyInterestRate = 0.0;
-			rent.nPayments = (int)(18.0 + 6.0*rand.nextDouble()); // ARLA - Members survey of the Private Rented Sector Q4 2013
-			rent.principal = rent.monthlyPayment*rent.nPayments;
-			rent.purchasePrice = 0.0;
+			rent.nPayments = data.HouseRentalMarket.AVERAGE_TENANCY_LENGTH + rand.nextInt(13) - 6;
+//			rent.principal = rent.monthlyPayment*rent.nPayments;
 			housePayments.put(sale.house, rent);
 		}
 		if(home != null) System.out.println("Strange: I'm renting a house but not homeless");
@@ -377,7 +381,7 @@ public class Household implements IHouseOwner {
 		double maxMortgage = bank.getMaxMortgage(this, true);
 //		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(isFirstTimeBuyer(),true)/bank.loanToValue(isFirstTimeBuyer(), true); // ##### TEST #####
 //		if(desiredPrice > ltiConstraint) desiredPrice = ltiConstraint - 1.0; // ##### TEST #####
-		if(desiredPrice > maxMortgage) desiredPrice = maxMortgage - 1;
+		if(desiredPrice >= maxMortgage) desiredPrice = maxMortgage - 1;
 //		desiredPrice = maxMortgage-1; // ####################### TEST!!!!!
 		if(desiredPrice <= maxMortgage) {
 			if(p<1.0) {
@@ -400,17 +404,17 @@ public class Household implements IHouseOwner {
 		double costOfRent;
 		double housePrice = behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
 		double maxMortgage = bank.getMaxMortgage(this, true);
-		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(isFirstTimeBuyer(),true)/bank.loanToValue(isFirstTimeBuyer(), true); // ##### TEST #####
-		if(housePrice > ltiConstraint) housePrice = ltiConstraint - 1.0; // ##### TEST #####
-		if(housePrice <= maxMortgage) {
-			if(home != null) {
-				costOfRent = housePayments.get(home).monthlyPayment*12;
-			} else {
-				costOfRent = rentalMarket.averageSalePrice[0]*12;
-			}
-			if(behaviour.renterPurchaseDecision(this, housePrice, costOfRent)) {
-				houseMarket.bid(this, housePrice);
-			}
+//		double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(isFirstTimeBuyer(),true)/bank.loanToValue(isFirstTimeBuyer(), true); // ##### TEST #####
+//		if(housePrice > ltiConstraint) housePrice = ltiConstraint - 1.0; // ##### TEST #####
+		if(housePrice >= maxMortgage) housePrice = maxMortgage - 1.0;
+		if(Model.housingMarket.getAverageSalePrice(0)*0.85 > housePrice) return; // I can't afford a house anyway
+		if(home != null) {
+			costOfRent = housePayments.get(home).monthlyPayment*12;
+		} else {
+			costOfRent = rentalMarket.averageSalePrice[0]*12;
+		}
+		if(behaviour.renterPurchaseDecision(this, housePrice, costOfRent)) {
+			houseMarket.bid(this, housePrice);
 		}
 	}
 	
@@ -544,7 +548,15 @@ public class Household implements IHouseOwner {
 	 */
 	public double getHomeEquity() {
 		if(!isHomeowner()) return(0.0);
-		return(Model.housingMarket.getAverageSalePrice(home.getQuality()) - housePayments.get(home).principal);
+		return(Model.housingMarket.getAverageSalePrice(home.getQuality()) - mortgageFor(home).principal);
+	}
+	
+	public MortgageAgreement mortgageFor(House h) {
+		PaymentAgreement payment = housePayments.get(h);
+		if(payment instanceof MortgageAgreement) {
+			return((MortgageAgreement)payment);
+		}
+		return(null);
 	}
 	
 	///////////////////////////////////////////////
@@ -567,6 +579,7 @@ public class Household implements IHouseOwner {
 	
 	public Lifecycle	lifecycle;	// lifecycle plugin
 	public HouseholdBehaviour behaviour;
+	public int 			desiredQuality;
 	
 //	static Diagnostics	diagnostics = new Diagnostics(Model.households);
 	static int		 id_pool;

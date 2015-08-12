@@ -25,7 +25,7 @@ public class Bank {
 	 * pre-computed values.
 	 ********************************/
 	public Bank(CentralBank c) {
-		mortgages = new HashSet<PaymentAgreement>();
+		mortgages = new HashSet<>();
 		centralBank = c;
 		init();
 	}
@@ -119,8 +119,8 @@ public class Bank {
 	 * @param isHome true if 'h' plans to live in the house.
 	 * @return The MortgageApproval object, or NULL if the mortgage is declined
 	 ****************************/
-	public PaymentAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
-		PaymentAgreement approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
+	public MortgageAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+		MortgageAgreement approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
 		if(approval == null) return(null);
 		// --- if all's well, go ahead and arrange mortgage
 		supplyVal += approval.principal;
@@ -139,7 +139,7 @@ public class Bank {
 	}
 	
 	
-	public void endMortgageContract(PaymentAgreement mortgage) {
+	public void endMortgageContract(MortgageAgreement mortgage) {
 		mortgages.remove(mortgage);
 	}
 
@@ -153,8 +153,8 @@ public class Bank {
 	 * @param isHome 		does 'h' plan to live in the house?
 	 * @return A MortgageApproval object, or NULL if the mortgage is declined
 	 */
-	public PaymentAgreement requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
-		PaymentAgreement approval = new PaymentAgreement();
+	public MortgageAgreement requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+		MortgageAgreement approval = new MortgageAgreement(h, !isHome);
 		double r = getMortgageInterestRate()/12.0; // monthly interest rate
 		double ltv_principal, lti_principal;
 		double liquidWealth = h.bankBalance;
@@ -261,7 +261,7 @@ public class Bank {
 
 	public CentralBank 		centralBank;
 	
-	public HashSet<PaymentAgreement>		mortgages;	// all unpaid mortgage contracts supplied by the bank
+	public HashSet<MortgageAgreement>		mortgages;	// all unpaid mortgage contracts supplied by the bank
 	public double 		k; 				// principal to monthly payment factor
 	public double		interestSpread;	// current mortgage interest spread above base rate (monthly rate*12)
 	public double		baseRate;

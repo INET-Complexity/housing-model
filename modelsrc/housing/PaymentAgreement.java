@@ -10,11 +10,6 @@ package housing;
  *
  ***************************************************/
 public class PaymentAgreement {
-
-	public PaymentAgreement() {
-		isBuyToLet = false;
-		isFirstTimeBuyer = false;
-	}
 	
 	/********************************************
 	 * Updates internal variables to simulate a payment
@@ -25,39 +20,9 @@ public class PaymentAgreement {
 	public double makeMonthlyPayment() {
 		if(nPayments == 0) return(0.0);
 		nPayments -= 1;
-		principal = principal*(1.0 + monthlyInterestRate) - monthlyPayment;
-		if(nPayments == 0) Model.bank.endMortgageContract(this);
 		return(monthlyPayment);
 	}
-
-	/*******************************************
-	 * Use this to pay off the mortgage early or make
-	 * a one-off payment.
-	 * 
-	 * @param amount Desired amount to pay off
-	 * @return Amount that was actually payed off.
-	 *******************************************/
-	public double payoff(double amount) {
-		if(amount >= principal) {
-			principal = 0.0;
-			monthlyPayment = 0.0;
-			nPayments = 0;
-			Model.bank.endMortgageContract(this);
-			return(principal);
-		}
-		monthlyPayment *= (principal-amount)/principal;
-		principal -= amount;
-		return(amount);
-	}
-
-
 	
 	public int 		nPayments;
 	public double 	monthlyPayment;
-	public double	principal;			// remaining principal to be paid off
-	public double 	monthlyInterestRate;
-	public double	downPayment;
-	public double	purchasePrice;
-	public boolean	isBuyToLet;
-	public boolean	isFirstTimeBuyer;
 }

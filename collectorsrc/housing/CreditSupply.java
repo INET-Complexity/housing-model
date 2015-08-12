@@ -34,7 +34,7 @@ public class CreditSupply extends CollectorBase {
         double oldTotalCredit = totalOOCredit + totalBTLCredit;
         totalOOCredit = 0.0;
         totalBTLCredit = 0.0;
-        for(PaymentAgreement m : Model.bank.mortgages) {
+        for(MortgageAgreement m : Model.bank.mortgages) {
         	if(m.isBuyToLet) {
             	totalBTLCredit += m.principal;
         	} else {
@@ -55,7 +55,7 @@ public class CreditSupply extends CollectorBase {
 	 * @param h
 	 * @param approval
 	 */
-	public void recordLoan(Household h, PaymentAgreement approval) {
+	public void recordLoan(Household h, MortgageAgreement approval) {
 		double housePrice;
 		if(DIAGNOSTICS_ACTIVE) {
 			housePrice = approval.principal + approval.downPayment;

@@ -72,13 +72,14 @@ public class HousingMarketStats extends CollectorBase {
 			averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.getPrice()/sale.initialListedPrice;
 		}
 		saleCount += 1;
-		PaymentAgreement mortgage = purchase.buyer.housePayments.get(sale.house);
-		if(mortgage.isFirstTimeBuyer) {
-			ftbSaleCount += 1;
-		} else if(mortgage.isBuyToLet) {
-			btlSaleCount += 1;
+		MortgageAgreement mortgage = purchase.buyer.mortgageFor(sale.house);
+		if(mortgage != null) {
+			if(mortgage.isFirstTimeBuyer) {
+				ftbSaleCount += 1;
+			} else if(mortgage.isBuyToLet) {
+				btlSaleCount += 1;
+			}
 		}
-		
 	}
 		
 	protected void recordOfferPrices() {
