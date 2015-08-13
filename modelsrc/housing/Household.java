@@ -99,12 +99,13 @@ public class Household implements IHouseOwner {
 	 * This is also where investors get to bid for buy-to-let
 	 * housing.
 	 ********************************************************/
-	public void preRentalClearingStep() {
-	}
+//	public void preRentalClearingStep() {
+//	}
 	
 	/********************************************************
 	 *  Make decision to buy/sell houses
 	 ********************************************************/
+	/*
 	void makeHousingDecision() {
 		// --- add and manage houses for sale
 		HouseSaleRecord forSale, forRent;
@@ -136,7 +137,7 @@ public class Household implements IHouseOwner {
 			}
 		}		
 	}
-	
+	*/
 	protected void manageHouse(House h) {
 		HouseSaleRecord forSale, forRent;
 		double newPrice;
