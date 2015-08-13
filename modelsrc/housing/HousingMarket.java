@@ -182,7 +182,7 @@ public abstract class HousingMarket {
 		// bids contains bids (HouseBuyerRecords) in an array
 		
 		recordMarketStats();
-		for(int i=0; i<2; ++i) {
+		for(int i=0; i<3; ++i) {
 			matchBidsWithOffers();
 			clearMatches();
 		}

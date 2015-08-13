@@ -49,8 +49,8 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 * @return initial sale price of a house 
 	 ********************************/
 	public double initialSalePrice(double pbar, double d, double principal) {
-		final double C = 0.09;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
-		final double D = 0.02;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
+		final double C = 0.03;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
+		final double D = 0.001;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
