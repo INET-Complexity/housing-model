@@ -110,8 +110,28 @@ public class HouseholdStats extends CollectorBase {
 		return(result);
 	}
 
+    public int getnRenting() {
+		return nRenting;
+	}
+
+	public int getnHomeless() {
+		return nHomeless;
+	}
+
+	public int getnNonOwner() {
+		return nNonOwner;
+	}
+
+	public int getnHouseholds() {
+		return nHouseholds;
+	}
+
+	public int getnEmpty() {
+		return nEmpty;
+	}
+	
     public int 		  nRenting;
-    public int 		  nHomeless;
+	public int 		  nHomeless;
     public int 		  nNonOwner;
     public int		  nHouseholds;
     public int		  nEmpty;

@@ -38,7 +38,7 @@ public class ModelGUI extends GUIState implements Steppable {
     // Chart generators
     
 	public ScatterPlotGenerator
-//		housingChart,
+	//	housingChart,
 		housePriceChart;
 	//	bankBalanceChart,
 	//	mortgageStatsChart,
@@ -89,7 +89,7 @@ public class ModelGUI extends GUIState implements Steppable {
     //    daysOnMarket = ChartUtilities.addSeries(marketStats, "Days on market");
         // Create a tab interface
         JTabbedPane newTabPane = new JTabbedPane();
-//        housingChart = makeScatterPlot(newTabPane, "Housing stats", "Probability", "Household Income");
+  //      housingChart = makeScatterPlot(newTabPane, "Housing stats", "Probability", "Household Income");
         housePriceChart = makeScatterPlot(newTabPane, "House prices", "Modelled Price", "Reference Price");
 //        bankBalanceChart = makeScatterPlot(newTabPane, "Bank balances", "Balance", "Income");
 //        mortgageStatsChart = makeScatterPlot(newTabPane, "Mortgage stats", "Frequency", "Ratio");

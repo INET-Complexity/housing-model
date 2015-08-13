@@ -38,7 +38,7 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	public double desiredPurchasePrice(double monthlyIncome, double hpa) {
 		final double A = 0.0;//0.48;			// sensitivity to house price appreciation
 		final double EPSILON = 0.36;//0.36;//0.48;//0.365; // S.D. of noise
-		final double SIGMA = 8.6*12.0;//5.6;	// scale
+		final double SIGMA = 5.6*12.0;//5.6;	// scale
 		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*hpa));
 	}
 
@@ -99,6 +99,8 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 		final double FTB_K = 1.0/600.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		double costOfHouse;
 		
+		if(Model.housingMarket.getAverageSalePrice(0)*0.85 > housePrice) return(false); // can't afford a house anyway?
+
 		if(Model.rand.nextDouble() < 0.5) return false; // ########### TEST
 		
 //			costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());

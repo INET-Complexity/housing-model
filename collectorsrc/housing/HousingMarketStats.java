@@ -53,7 +53,6 @@ public class HousingMarketStats extends CollectorBase {
 			averageOfferPrice += sale.getPrice();
 			if(((HouseSaleRecord)sale).house.owner == Model.construction) nNewBuild++;
 			if(((HouseSaleRecord)sale).house.resident == null) nEmpty++;
-			
 		}
 		if(market.offersPQ.size() > 0) averageOfferPrice /= market.offersPQ.size();
 		recordOfferPrices();
@@ -215,5 +214,7 @@ public class HousingMarketStats extends CollectorBase {
 	public double getnEmpty() {
 		return nEmpty;
 	}
+
+	
 
 }

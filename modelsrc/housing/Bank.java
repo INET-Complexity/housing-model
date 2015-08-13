@@ -229,7 +229,8 @@ public class Bank {
 		pdi_max = Math.min(pdi_max, ltv_max);
 
 		if(isHome) { // no LTI for BtL investors
-			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer())/loanToValue(h.isFirstTimeBuyer(),isHome);
+//			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer())/loanToValue(h.isFirstTimeBuyer(),isHome);
+			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
 			pdi_max = Math.min(pdi_max, lti_max);
 		}
 		
