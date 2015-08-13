@@ -80,8 +80,6 @@ public class Household implements IHouseOwner {
 		if(!isHomeowner()) {
 			// move into house if not already a homeowner
 			if(isRenting()) {
-				House hom = home;
-				hom.owner.endOfLettingAgreement(hom,housePayments.get(h));
 				endTenancyEarly();				
 			}
 			if(h.resident != null) {
@@ -125,7 +123,6 @@ public class Household implements IHouseOwner {
 			if(payment.getValue().nPayments > 0) {
 				disposableIncome -= payment.getValue().makeMonthlyPayment();
 				if(payment.getValue().nPayments == 0 && payment.getKey().owner != this) { // end of rental period for renter
-					payment.getKey().owner.endOfLettingAgreement(payment.getKey(), payment.getValue());
 					endOfTenancyAgreement(payment.getKey(), payment.getValue());
 					mapIt.remove();
 				}
@@ -234,8 +231,6 @@ public class Household implements IHouseOwner {
 			if(home == sale.house) {
 				System.out.println("Strange: I've just bought a house I'm renting out");
 			} else {
-				House h = home;
-				h.owner.endOfLettingAgreement(h,housePayments.get(h));
 				endTenancyEarly();
 			}
 		}
@@ -272,7 +267,7 @@ public class Household implements IHouseOwner {
 	 ********************************************************/
 	public void completeHouseSale(HouseSaleRecord sale) {
 		double profit = sale.getPrice() - mortgageFor(sale.house).payoff(bankBalance+sale.getPrice());
-		if(profit < 0) System.out.println("Strange: Profit is negative.");
+		if(profit < 0) System.out.println("Negative equity in house.");
 		bankBalance += profit;
 		if(sale.house.isOnRentalMarket()) {
 			rentalMarket.removeOffer(sale);
@@ -285,7 +280,7 @@ public class Household implements IHouseOwner {
 			home = null;
 			bidOnHousingMarket(1.0);
 		} else if(sale.house.resident != null) { // evict current renter
-			sale.house.resident.endTenancyEarly();
+			sale.house.resident.getEvicted();
 		}
 	}
 	
@@ -312,14 +307,20 @@ public class Household implements IHouseOwner {
 
 	/**********************************************************
 	 * This household moves out of current rented accommodation
-	 * and becomes homeless (possibly temporarily)
+	 * and becomes homeless (possibly temporarily). Move out,
+	 * inform landlord and delete rental agreement.
 	 **********************************************************/
 	public void endTenancyEarly() {
+		endOfTenancyAgreement(home, housePayments.remove(home));
+	}
+	
+	/*** Landlord has told this household to get out: leave without informing landlord */
+	public void getEvicted() {
 		if(home == null) {
-			System.out.println("Strange: got endTenancy but I'm homeless");			
+			System.out.println("Strange: got evicted but I'm homeless");			
 		}
 		if(home.owner == this) {
-			System.out.println("Strange: got endTenancy on a home I own");
+			System.out.println("Strange: got evicted from a home I own");
 		}
 		housePayments.remove(home);
 		home.resident = null;
@@ -328,7 +329,8 @@ public class Household implements IHouseOwner {
 
 	/***
 	 * This gets called when we are a renter and a tenancy
-	 * agreement has come to an end.
+	 * agreement has come to an end. Move out and inform landlord.
+	 * Don't delete rental agreement because we're probably iterating over payments.
 	 */
 	public void endOfTenancyAgreement(House house, PaymentAgreement rentalContract) {
 		if(home == null) System.out.println("Strange: paying rent and homeless");
@@ -336,8 +338,7 @@ public class Household implements IHouseOwner {
 		if(home.resident != this) System.out.println("home/resident link is broken");
 		home.resident = null;
 		home = null;
-
-		
+		house.owner.endOfLettingAgreement(house, rentalContract);		
 	}
 	
 	/********************************************************
