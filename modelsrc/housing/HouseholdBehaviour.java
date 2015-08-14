@@ -50,7 +50,7 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 ********************************/
 	public double initialSalePrice(double pbar, double d, double principal) {
 		final double C = 0.03;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
-		final double D = 0.001;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
+		final double D = 0.02;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
@@ -62,10 +62,10 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 */
 	public boolean decideToSellHome(Household me) {
 		// Am I forced to move because of job change etc?
-		if(rand.nextDouble() < data.Households.P_FORCEDTOMOVE) return(true);
+		// if(rand.nextDouble() < data.Households.P_FORCEDTOMOVE) return(true);
 		// I can get a better house by moving?
 		int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
-		double p_move = data.Households.P_FORCEDTOMOVE + (2.0*data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(5.0-2.0*potentialQualityChange));
+		double p_move = data.Households.P_FORCEDTOMOVE + (data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(5.0-2.0*potentialQualityChange));
 		return(rand.nextDouble() < p_move);
 	}
 
@@ -96,15 +96,17 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	
 	public boolean renterPurchaseDecision(Household h, double housePrice, double annualRent) {
 		final double COST_OF_RENTING = 600; // Annual psychological cost of renting
-		final double FTB_K = 1.0/600.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
+		final double FTB_K = 1.0/2000.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		double costOfHouse;
 		
 		if(Model.housingMarket.getAverageSalePrice(0)*0.85 > housePrice) return(false); // can't afford a house anyway?
 
-		if(Model.rand.nextDouble() < 0.5) return false; // ########### TEST
-		
-//			costOfHouse = housePrice*((1.0-HousingMarketTest.bank.config.THETA_FTB)*HousingMarketTest.bank.mortgageInterestRate() - HousingMarketTest.housingMarket.housePriceAppreciation());
+//		if(Model.rand.nextDouble() < 0.5) return false; // ########### TEST
+		int q = 0;
+		if(h.home != null) q = h.home.getQuality();
+		housePrice = Model.housingMarket.getAverageSalePrice(q); // ############ TEST compare same quality
 		costOfHouse = housePrice*(Model.bank.loanToValue(h.isFirstTimeBuyer(),true)*Model.bank.getMortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
+//		costOfHouse = housePrice*(Model.bank.loanToValue(h.isFirstTimeBuyer(),true)*Model.bank.getMortgageInterestRate());
 		return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
 	}
 
