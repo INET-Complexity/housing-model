@@ -58,8 +58,12 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	}
 	
 	/*** returns gross yield */
-	public double getGrossYield() {
-		return(Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0/getPrice());
+//	public double getGrossYield() {
+//		return(getExpectedAnnualRent()/getPrice());
+//	}
+	
+	public double getExpectedAnnualRent() {
+		return(Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0);
 	}
 
 	public void setPrice(double newPrice, HousingMarket.Authority auth) {

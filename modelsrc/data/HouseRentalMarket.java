@@ -10,8 +10,10 @@ public class HouseRentalMarket {
 	static public double referencePrice(int quality) {
 		return(HouseSaleMarket.referencePrice(quality)*RENT_PROFIT_MARGIN/12.0);
 	}
+	
 /*
  * NOTES ON AGGREGATE DATA:
  * 57% of home moves in 2008/09 were private renters English Housing Survey report 08-09
+ * 13% of households privately rent / 18% social housing (Social Trends:Housing 2011 ONS)
  */
 }

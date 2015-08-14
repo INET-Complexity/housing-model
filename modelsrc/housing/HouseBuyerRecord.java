@@ -34,8 +34,6 @@ public class HouseBuyerRecord extends HousingMarketRecord {
 	
 	public Household buyer; // Who wants to buy the house
 
-
-
 	@Override
 	public int getQuality() {
 		// TODO Auto-generated method stub

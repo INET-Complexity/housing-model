@@ -10,7 +10,7 @@ public class HouseholdStats extends CollectorBase {
     	rentalYield = 0.0;
     	for(Household h : Model.households) {
 			totalDisposableIncome += h.getMonthlyPostTaxIncome();
-    		if(h.isHomeless()) {
+    		if(h.isInSocialHousing()) {
     			++nHomeless;
     		} else if(h.isRenting()) {
     			++nRenting;
@@ -96,7 +96,7 @@ public class HouseholdStats extends CollectorBase {
 		double [] result = new double[Model.households.size()];
 		int i = 0;
 		for(Household h : Model.households) {
-			result[i++] = h.annualEmploymentIncome;
+			result[i++] = h.annualEmploymentIncome();
 		}
 		return(result);
 	}

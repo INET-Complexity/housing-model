@@ -59,18 +59,18 @@ public class CreditSupply extends CollectorBase {
 		double housePrice;
 		if(DIAGNOSTICS_ACTIVE) {
 			housePrice = approval.principal + approval.downPayment;
-			affordability = AFFORDABILITY_DECAY*affordability + (1.0-AFFORDABILITY_DECAY)*approval.monthlyPayment/(h.annualEmploymentIncome/12.0);
+			affordability = AFFORDABILITY_DECAY*affordability + (1.0-AFFORDABILITY_DECAY)*approval.monthlyPayment/(h.monthlyEmploymentIncome);
 			if(approval.principal > 1.0) {
 				if(approval.isBuyToLet) {
-					btl_lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome,100.0)] += 1.0-STATS_DECAY;
+					btl_lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome(),100.0)] += 1.0-STATS_DECAY;
 					btl_ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-STATS_DECAY)/10.0;
 				} else {
-					oo_lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome,100.0)] += 1.0-STATS_DECAY;
+					oo_lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome(),100.0)] += 1.0-STATS_DECAY;
 					oo_ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-STATS_DECAY)/10.0;
 				}
 			}
-			approved_mortgages[0][approved_mortgages_index] = approval.principal/(h.annualEmploymentIncome);
-			approved_mortgages[1][approved_mortgages_index] = approval.downPayment/(h.annualEmploymentIncome);
+			approved_mortgages[0][approved_mortgages_index] = approval.principal/(h.annualEmploymentIncome());
+			approved_mortgages[1][approved_mortgages_index] = approval.downPayment/(h.annualEmploymentIncome());
 			approved_mortgages_index += 1;
 			if(approved_mortgages_index == ARCHIVE_LEN) approved_mortgages_index = 0;
 			mortgageCounter += 1;

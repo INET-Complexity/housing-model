@@ -61,10 +61,15 @@ public class HouseSaleMarket extends HousingMarket {
 	
 	@Override
 	protected HouseSaleRecord getBestOffer(HouseBuyerRecord bid) {
-		if(bid.getClass() == HouseBuyerRecord.class) { // OO buyer (quality driven)
+		if(bid.getClass() == BtLBuyerRecord.class) { // BTL buyer (yield driven)
+			HouseSaleRecord bestOffer = (HouseSaleRecord)offersPY.peek(bid);
+			if(bestOffer != null && 
+					bestOffer.getExpectedAnnualRent()/(bestOffer.getPrice()-bid.buyer.bankBalance) >= Model.bank.interestCoverageRatio()*Model.bank.getMortgageInterestRate()) {
+				return(bestOffer);
+			}
+			return(null);
+		} else { // must be OO buyer (quality driven)
 			return super.getBestOffer(bid);
-		} else { // BTL buyer (yield driven)
-			return (HouseSaleRecord)offersPY.peek(bid);
 		}
 	}
 	/*
@@ -114,8 +119,8 @@ public class HouseSaleMarket extends HousingMarket {
 	 * @param buyer The household that is making the bid.
 	 * @param price The price that the household is willing to pay.
 	 ******************************************/
-	public void BTLbid(Household buyer, double price) {
-		bids.add(new BTLBuyerRecord(buyer, price));
+	public void BTLbid(Household buyer, double maxPrice) {
+		bids.add(new BtLBuyerRecord(buyer, maxPrice));
 	}
 
 	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	

@@ -8,11 +8,13 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 	protected MersenneTwisterFast 	rand = Model.rand;
 	public int						desiredBTLProperties;	// number of properties
+	public double propensityToSave;
 
 	
 	public HouseholdBehaviour(double incomePercentile) {
+		propensityToSave = 0.1*Model.rand.nextGaussian();
 		if( incomePercentile > 0.5 && rand.nextDouble() < data.Households.P_INVESTOR*2.0) {
-			desiredBTLProperties = (int)data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble());
+			desiredBTLProperties = (int)(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
 		} else {
 			desiredBTLProperties = 0;
 		}
@@ -28,7 +30,7 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 *
 	 ********************************/
 	public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
-		return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + 0.2*Model.rand.nextGaussian())),0.0));
+		return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + propensityToSave)),0.0));
 	}
 
 	/***************************
@@ -83,7 +85,7 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
 //		return(sale.getPrice() *0.95);
-		if(rand.nextDouble() > data.Households.P_SALEPRICEREDUCE) {
+		if(rand.nextDouble() < data.Households.P_SALEPRICEREDUCE) {
 			double logReduction = Math.min(-5.1e-3, data.Households.REDUCTION_MU+(rand.nextGaussian()*data.Households.REDUCTION_SIGMA));
 			return(sale.getPrice() * (1.0-Math.exp(logReduction)));
 		}
@@ -94,20 +96,36 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	// Renter behaviour
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	
-	public boolean renterPurchaseDecision(Household h, double housePrice, double annualRent) {
-		final double COST_OF_RENTING = 600; // Annual psychological cost of renting
-		final double FTB_K = 1.0/2000.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
+	/*** renters or OO after selling home decide whether to rent or buy
+	 * N.B. even though the HH may not decide to rent a house of the
+	 * same quality as they would buy, the cash value of the difference in quality
+	 *  is assumed to be the difference in rental price between the two qualities.
+	 *  @return true if we should buy a house, false if we should rent
+	 */
+	public boolean rentOrPurchaseDecision(Household h, double maxMortgage) {
+		final double SCALE = 1.0;//1.25
+		double COST_OF_RENTING; // annual psychological cost of renting
+		double FTB_K; // = 1.0/2000.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		double costOfHouse;
+		int quality = h.desiredQuality;
+		double housePrice = Model.housingMarket.getAverageSalePrice(quality);//behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
+		if(housePrice > maxMortgage) {
+			quality = Model.housingMarket.maxQualityGivenPrice(maxMortgage);
+			if(quality < 0) return(false); // can't afford a house of any quality (BtL will buy 0 quality houses)
+			housePrice = Model.housingMarket.getAverageSalePrice(quality);
+		}
 		
-		if(Model.housingMarket.getAverageSalePrice(0)*0.85 > housePrice) return(false); // can't afford a house anyway?
+		double costOfRent = Model.rentalMarket.getAverageSalePrice(quality)*12;
 
-//		if(Model.rand.nextDouble() < 0.5) return false; // ########### TEST
-		int q = 0;
-		if(h.home != null) q = h.home.getQuality();
-		housePrice = Model.housingMarket.getAverageSalePrice(q); // ############ TEST compare same quality
-		costOfHouse = housePrice*(Model.bank.loanToValue(h.isFirstTimeBuyer(),true)*Model.bank.getMortgageInterestRate() - Model.housingMarket.housePriceAppreciation());
-//		costOfHouse = housePrice*(Model.bank.loanToValue(h.isFirstTimeBuyer(),true)*Model.bank.getMortgageInterestRate());
-		return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(annualRent + COST_OF_RENTING - costOfHouse))));
+		if(h.isFirstTimeBuyer()) {
+			COST_OF_RENTING = SCALE*0.25; // expressed as fraction of monthly employment income
+		} else {
+			COST_OF_RENTING = SCALE*2.5;
+		}
+		FTB_K = SCALE/h.monthlyEmploymentIncome; // money is relative
+		
+		costOfHouse = Math.max(0.0,housePrice-h.bankBalance)*Model.bank.getMortgageInterestRate() - housePrice*Model.housingMarket.housePriceAppreciation();
+		return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(COST_OF_RENTING-FTB_K*(costOfRent - costOfHouse))));
 	}
 
 	/********************************************************

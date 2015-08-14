@@ -6,7 +6,7 @@ import java.util.HashSet;
 public class Construction implements IHouseOwner {
 
 	public Construction() {
-		housesPerHousehold = 4100.0/5000.0;
+		housesPerHousehold = 82.0/100.0;
 		housingStock = 0;
 		onMarket = new HashSet<>();
 //		for(j = 0; j<Nh; ++j) { // setup houses
