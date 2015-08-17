@@ -30,7 +30,11 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 *
 	 ********************************/
 	public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
-		return(0.1*Math.max((bankBalance - Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 + propensityToSave)),0.0));
+		return(0.1*Math.max(bankBalance - desiredBankBalance(monthlyIncome),0.0));
+	}
+	
+	public double desiredBankBalance(double monthlyIncome) {
+		return(Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 - propensityToSave));
 	}
 
 	/***************************
@@ -71,8 +75,8 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 		return(rand.nextDouble() < p_move);
 	}
 
-	public double downPayment(double bankBalance) {
-		return(bankBalance*DOWNPAYMENT_FRACTION);
+	public double downPayment(Household me) {
+		return(me.bankBalance - (1.0 - DOWNPAYMENT_FRACTION)*desiredBankBalance(me.monthlyEmploymentIncome));
 	}
 
 	
@@ -170,6 +174,15 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 		}
 		//return(rand.nextDouble() < P_SELL);
 		 */
+		// sell if not selling on rental market at interest coverage ratio of 1.0
+		MortgageAgreement mortgage = me.mortgageFor(h);
+		if(mortgage == null) {
+			System.out.println("Strange: deciding to sell investment property that I don't own");
+			return(false);
+		}
+		if(h.isOnRentalMarket() && (h.rentalRecord.getPrice()-mortgage.nextPayment())< 0.0) {
+			return(true);
+		}
 		return(false);
 	}
 	
@@ -243,6 +256,5 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	public int nDesiredBTLProperties() {
 		return desiredBTLProperties;
 	}
-
 
 }

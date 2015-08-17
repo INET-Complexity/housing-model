@@ -23,6 +23,11 @@ public class PaymentAgreement {
 		return(monthlyPayment);
 	}
 	
+	public double nextPayment() {
+		if(nPayments == 0) return(0.0);
+		return(monthlyPayment);
+	}
+	
 	public int 		nPayments;
 	public double 	monthlyPayment;
 }

@@ -16,7 +16,7 @@ public class Bank {
 	public int    N_PAYMENTS = 12*25; // number of monthly repayments
 	public double INITIAL_BASE_RATE = 0.5; // Bank base-rate
 	public double MAX_OO_LTV = 1.0;		// maximum LTV bank will give to owner-occupier when not regulated	
-	public double MAX_BTL_LTV = 0.6;	// maximum LTV bank will give to BTL when not regulated
+	public double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
 	public double MAX_OO_LTI = 6.5;		// maximum LTI bank will give to owner-occupier when not regulated
 	public double INTEREST_MARGIN = 3.0; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
 	
@@ -169,18 +169,20 @@ public class Bank {
 	public MortgageAgreement requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
 		MortgageAgreement approval = new MortgageAgreement(h, !isHome);
 		double r = getMortgageInterestRate()/12.0; // monthly interest rate
-		double ltv_principal, lti_principal;
+		double lti_principal, affordable_principal;
 		double liquidWealth = h.bankBalance;
 		
 		if(isHome == true) liquidWealth += h.getHomeEquity();		
 
-		// --- calculate maximum allowable principal
-		approval.principal = Math.max(0.0,h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
-
-		ltv_principal = housePrice*loanToValue(h.isFirstTimeBuyer(), isHome);
-		approval.principal = Math.min(approval.principal, ltv_principal);
+		// --- LTV constraint
+		approval.principal = housePrice*loanToValue(h.isFirstTimeBuyer(), isHome);
 
 		if(isHome) {
+			// --- affordability constraint TODO: affordability for BtL
+			affordable_principal = Math.max(0.0,h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
+			approval.principal = Math.min(approval.principal, affordable_principal);
+
+			// --- lti constraint
 			lti_principal = h.getMonthlyPreTaxIncome()*12.0 * loanToIncome(h.isFirstTimeBuyer());
 			approval.principal = Math.min(approval.principal, lti_principal);
 		}
@@ -222,7 +224,7 @@ public class Bank {
 	 * to approve a mortgage for.
 	 ****************************************/
 	public double getMaxMortgage(Household h, boolean isHome) {
-		double ltv_max; // loan to value constraint
+		double max;
 		double pdi_max; // disposable income constraint
 		double lti_max; // loan to income constraint
 		double liquidWealth = h.bankBalance;
@@ -231,18 +233,18 @@ public class Bank {
 			liquidWealth += h.getHomeEquity(); // assume h will sell current home
 		}
 		
-		pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
-		ltv_max = liquidWealth/(1.0 - loanToValue(h.isFirstTimeBuyer(), isHome));
-		pdi_max = Math.min(pdi_max, ltv_max);
+		max = liquidWealth/(1.0 - loanToValue(h.isFirstTimeBuyer(), isHome)); // LTV constraint
 
 		if(isHome) { // no LTI for BtL investors
 //			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer())/loanToValue(h.isFirstTimeBuyer(),isHome);
+			pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
+			max = Math.min(max, pdi_max);
 			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
-			pdi_max = Math.min(pdi_max, lti_max);
+			max = Math.min(max, lti_max);
 		}
 		
-		pdi_max = Math.floor(pdi_max*100.0)/100.0; // round down to nearest penny
-		return(pdi_max);
+		max = Math.floor(max*100.0)/100.0; // round down to nearest penny
+		return(max);
 	}
 
 	/**********************************************

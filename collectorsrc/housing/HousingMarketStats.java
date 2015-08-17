@@ -1,5 +1,7 @@
 package housing;
 
+import sim.util.Double2D;
+import sim.util.MutableDouble2D;
 import housing.HousingMarket.Config;
 
 public class HousingMarketStats extends CollectorBase {
@@ -20,9 +22,9 @@ public class HousingMarketStats extends CollectorBase {
         referencePriceData = new double[2][House.Config.N_QUALITY];
         int i;
         for(i=0; i<House.Config.N_QUALITY; ++i) {
-        	priceData[0][i] = Model.housingMarket.referencePrice(i);
-        	referencePriceData[0][i] = Model.housingMarket.referencePrice(i);
-        	referencePriceData[1][i] = Model.housingMarket.referencePrice(i);
+        	priceData[0][i] = m.referencePrice(i);
+        	referencePriceData[0][i] = m.referencePrice(i);
+        	referencePriceData[1][i] = m.referencePrice(i);
         }
         market = m;
         
@@ -62,7 +64,7 @@ public class HousingMarketStats extends CollectorBase {
 	public void step() {
         int i;
         for(i=0; i<House.Config.N_QUALITY; ++i) {
-        	priceData[1][i] = Model.housingMarket.averageSalePrice[i];
+        	priceData[1][i] = market.averageSalePrice[i];
         }
 	}
 	
@@ -110,7 +112,7 @@ public class HousingMarketStats extends CollectorBase {
 	public int    nSellers;
 	public int 	  nNewBuild;
     public double [][]    priceData;
-    public double [][]    referencePriceData;
+	public double [][]    referencePriceData;
 	double [] offerPrices;
 	double [] bidPrices;
 	HousingMarket market;
@@ -202,7 +204,7 @@ public class HousingMarketStats extends CollectorBase {
 	}
 	
 	public double getHPA() {
-		return(Model.housingMarket.housePriceAppreciation());
+		return(market.housePriceAppreciation());
 	}
 	public String nameHPA() {
 		return("Annualised house price growth");
@@ -213,6 +215,21 @@ public class HousingMarketStats extends CollectorBase {
 
 	public double getnEmpty() {
 		return nEmpty;
+	}
+
+    public Double2D [] getmasonPriceData() {
+    	Double2D [] data = new Double2D[House.Config.N_QUALITY];
+    	for(int i=0; i<House.Config.N_QUALITY; ++i) {
+    		data[i] = new Double2D(priceData[0][i], priceData[1][i]);    		
+    	}
+		return data;
+	}
+    
+	public String namemasonPriceData() {
+		return("Average Transaction Price / Reference Price");
+	}
+	public String desmasonPriceData() {
+		return("Average Transaction Price / Reference Price");
 	}
 
 	

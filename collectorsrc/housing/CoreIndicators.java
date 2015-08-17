@@ -1,5 +1,7 @@
 package housing;
 
+import utilities.MeanAboveMedian;
+
 /***
  * This is a "Collector" class in the model-collector-observer architecture.
  * This class collects the information contained in the Bank of England
@@ -19,13 +21,8 @@ public class CoreIndicators extends CollectorBase {
 	}
 	
 	
-	/***
-	 * @return Owner-occupier mortgage LTV ratio (mean above the median)
-	 */
 	public double getOwnerOccupierLTIMeanAboveMedian() {
-		double [] ltiValues = Collectors.creditSupply.oo_lti_distribution[0];		
-		double [] ltiDist = Collectors.creditSupply.oo_lti_distribution[1];
-		return(linearInterpolate(ltiValues, meanAboveMedian(ltiDist)));
+		return(Collectors.creditSupply.oo_lti.apply(new MeanAboveMedian()));
 	}
 	public String desOwnerOccupierLTIMeanAboveMedian() {
 		return("Owner-occupier mortage LTI ratio (mean above the median)");
@@ -34,12 +31,18 @@ public class CoreIndicators extends CollectorBase {
 		return("Owner-occupier mortage LTI ratio");
 	}
 
-	/***
-	 * 
-	 */
+	public double getOwnerOccupierLTVMeanAboveMedian() {
+		return(Collectors.creditSupply.oo_ltv.apply(new MeanAboveMedian()));
+	}
+	public String desOwnerOccupierLTVMeanAboveMedian() {
+		return("Owner-occupier mortage LTV ratio (mean above the median)");
+	}
+	public String nameOwnerOccupierLTVMeanAboveMedian() {
+		return("Owner-occupier mortage LTV ratio (%)");
+	}
+
 	public double getBuyToLetLTVMean() {
-		return(linearInterpolate(Collectors.creditSupply.btl_ltv_distribution[0],
-					mean(Collectors.creditSupply.btl_ltv_distribution[1])));
+		return(Collectors.creditSupply.btl_ltv.getMean());
 	}
 	public String desBuyToLetLTVMean() {
 		return("Buy-to-let loan-to-value ratio (mean)");
@@ -48,9 +51,6 @@ public class CoreIndicators extends CollectorBase {
 		return("Buy-to-let LTV ratio");
 	}
 	
-	/***
-	 * 
-	 */
 	public double getHouseholdCreditGrowth() {
 		return(Collectors.creditSupply.netCreditGrowth*12.0);
 	}
@@ -61,9 +61,6 @@ public class CoreIndicators extends CollectorBase {
 		return("Household credit growth");
 	}
 	
-	/***
-	 * 
-	 */
 	public double getDebtToIncome() {
 		return((Collectors.creditSupply.totalBTLCredit + Collectors.creditSupply.totalOOCredit)/Collectors.householdStats.totalDisposableIncome);
 	}
@@ -193,6 +190,7 @@ public class CoreIndicators extends CollectorBase {
 	 * @return 		The index in which the median of the given distribution
 	 * lies. If all values are zero the result is 0
 	 */
+	/*
 	protected int median(double [] d) {
 		// count up from bottom and down from the top
 		// median is where they meet in the middle
@@ -210,6 +208,7 @@ public class CoreIndicators extends CollectorBase {
 		}
 		return(bottom);
 	}
+	*/
 	
 	/***
 	 * 
@@ -218,6 +217,7 @@ public class CoreIndicators extends CollectorBase {
 	 * is assumed to consist of bars, centred around the index (like a bar-graph or histogram).
 	 * 
 	 */
+	/*
 	protected double meanAboveMedian(double [] d) {
 		if(d.length == 0) return(0.0);
 		double total;
@@ -232,8 +232,8 @@ public class CoreIndicators extends CollectorBase {
 		}
 		return(mean/total);
 	}
-
-	
+*/
+	/*
 	protected double mean(double [] d) {
 		int i = 0;
 		double mean = 0.0;
@@ -245,7 +245,7 @@ public class CoreIndicators extends CollectorBase {
 		}
 		return(mean/total);
 	}
-	
+	*/
 	
 	/***
 	 * 
@@ -253,11 +253,12 @@ public class CoreIndicators extends CollectorBase {
 	 * @param index 	A non-integer index on d
 	 * @return 			The value of d, linearly interpolated between indices
 	 */
+	/*
 	protected double linearInterpolate(double [] d, double index) {
 		int 	i = (int)index;
 		double 	frac = index - i;
 		return((1.0-frac)*d[i] + frac*d[i+1]);		
 	}
-
+*/
 	static final double UK_HOUSEHOLDS = 26.5e6; // approx number of households in UK
 }

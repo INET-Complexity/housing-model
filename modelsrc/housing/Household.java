@@ -59,7 +59,7 @@ public class Household implements IHouseOwner {
 		}
 		// --- consume based on disposable income after house payments
 		bankBalance += disposableIncome;
-		bankBalance -= behaviour.desiredConsumptionB(monthlyEmploymentIncome,bankBalance);
+		bankBalance -= behaviour.desiredConsumptionB(getMonthlyPreTaxIncome(),bankBalance);
 		if(bankBalance < 0.0) { // bankrupt behaviour				
 			bankBalance = 1.0;	// TODO: cash injection for now...
 		}
@@ -152,7 +152,7 @@ public class Household implements IHouseOwner {
 				endTenancy();
 			}
 		}
-		MortgageAgreement mortgage = bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(bankBalance), home == null);
+		MortgageAgreement mortgage = bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(this), home == null);
 		if(mortgage == null) {
 			// TODO: need to either provide a way for house sales to fall through or to
 			// TODO: ensure that pre-approvals are always satisfiable

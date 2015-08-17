@@ -1,20 +1,17 @@
 package housing;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
+import sim.util.Double2D;
+
 public class CreditSupply extends CollectorBase {
 
 	public CreditSupply() {
-		for(int i=0; i<HISTOGRAM_NBINS; ++i) { // set up x-values for distribution
-			btl_ltv_distribution[0][i] = i/(HISTOGRAM_NBINS-1.0);
-			oo_ltv_distribution[0][i] = i/(HISTOGRAM_NBINS-1.0);
-			oo_lti_distribution[0][i] = i/(HISTOGRAM_NBINS-1.0);
-			btl_lti_distribution[0][i] = i/(HISTOGRAM_NBINS-1.0);
-			btl_ltv_distribution[1][i] = 0.0;
-			oo_ltv_distribution[1][i] = 0.0;
-			oo_lti_distribution[1][i] = 0.0;
-			btl_lti_distribution[1][i] = 0.0;
-		}
+		oo_lti = new DescriptiveStatistics(ARCHIVE_LEN);
+		oo_ltv = new DescriptiveStatistics(ARCHIVE_LEN);
+		btl_ltv = new DescriptiveStatistics(ARCHIVE_LEN);
 		mortgageCounter = 0;
-		approved_mortgages_index = 0;
+//		approved_mortgages_index = 0;
 		ftbCounter = 0;
 		btlCounter = 0;
 	}
@@ -24,12 +21,6 @@ public class CreditSupply extends CollectorBase {
 	 */
 	public void step() {
 		int i;
-        for(i=0; i<HISTOGRAM_NBINS; ++i) {
-			btl_ltv_distribution[1][i] *= STATS_DECAY;
-			oo_ltv_distribution[1][i] *= STATS_DECAY;
-			oo_lti_distribution[1][i] *= STATS_DECAY;
-			btl_lti_distribution[1][i] *= STATS_DECAY;
-        }
         
         double oldTotalCredit = totalOOCredit + totalBTLCredit;
         totalOOCredit = 0.0;
@@ -62,17 +53,16 @@ public class CreditSupply extends CollectorBase {
 			affordability = AFFORDABILITY_DECAY*affordability + (1.0-AFFORDABILITY_DECAY)*approval.monthlyPayment/(h.monthlyEmploymentIncome);
 			if(approval.principal > 1.0) {
 				if(approval.isBuyToLet) {
-					btl_lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome(),100.0)] += 1.0-STATS_DECAY;
-					btl_ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-STATS_DECAY)/10.0;
+					btl_ltv.addValue(100.0*approval.principal/housePrice);
 				} else {
-					oo_lti_distribution[1][(int)Math.min(10.0*approval.principal/h.annualEmploymentIncome(),100.0)] += 1.0-STATS_DECAY;
-					oo_ltv_distribution[1][(int)(100.0*approval.principal/housePrice)] += (1.0-STATS_DECAY)/10.0;
+					oo_ltv.addValue(100.0*approval.principal/housePrice);
+					oo_lti.addValue(approval.principal/h.annualEmploymentIncome());
 				}
 			}
-			approved_mortgages[0][approved_mortgages_index] = approval.principal/(h.annualEmploymentIncome());
-			approved_mortgages[1][approved_mortgages_index] = approval.downPayment/(h.annualEmploymentIncome());
-			approved_mortgages_index += 1;
-			if(approved_mortgages_index == ARCHIVE_LEN) approved_mortgages_index = 0;
+//			approved_mortgages[0][approved_mortgages_index] = approval.principal/(h.annualEmploymentIncome());
+//			approved_mortgages[1][approved_mortgages_index] = approval.downPayment/(h.annualEmploymentIncome());
+//			approved_mortgages_index += 1;
+//			if(approved_mortgages_index == ARCHIVE_LEN) approved_mortgages_index = 0;
 			mortgageCounter += 1;
 			if(approval.isFirstTimeBuyer) ftbCounter += 1;
 			if(approval.isBuyToLet) btlCounter += 1;
@@ -93,20 +83,24 @@ public class CreditSupply extends CollectorBase {
 	public void setBaseRate(double rate) {
 		Model.bank.setBaseRate(rate);
 	}
+	
+    public double [] getOOLTVDistribution() {return(oo_ltv.getValues());}
+    public double [] getOOLTIDistribution() {return(oo_lti.getValues());}
+    public double [] getBTLLTVDistribution() {return(btl_ltv.getValues());}
+
 
 	public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
 	public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
 	public int ARCHIVE_LEN = 1000; // number of mortgage approvals to remember
-	public boolean DIAGNOSTICS_ACTIVE = true; // record mortgage statistics?		
+	public boolean DIAGNOSTICS_ACTIVE = true; // record mortgage statistics?
 	public int 	HISTOGRAM_NBINS = 101;
 	
 	public double affordability = 0.0;
-	public double [][] btl_ltv_distribution = new double[2][HISTOGRAM_NBINS]; // buy to let Loan to value ratio. index/100 = LTV
-	public double [][] oo_ltv_distribution = new double[2][HISTOGRAM_NBINS]; // owner-occupier Loan to value ratio. index/100 = LTV
-	public double [][] btl_lti_distribution = new double[2][HISTOGRAM_NBINS]; // buy to let Loan to income. index/10 = LTI
-	public double [][] oo_lti_distribution = new double[2][HISTOGRAM_NBINS]; // owner occupier Loan to income index/10 = LTI
-	public double [][] approved_mortgages = new double [2][ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
-	public int approved_mortgages_index;
+	public DescriptiveStatistics oo_lti;
+	public DescriptiveStatistics oo_ltv;
+	public DescriptiveStatistics btl_ltv;	
+//	public double [][] approved_mortgages = new double [2][ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
+//	public int approved_mortgages_index;
 	public int mortgageCounter;
 	public int ftbCounter;	
 	public int btlCounter;	

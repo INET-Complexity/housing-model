@@ -6,7 +6,7 @@ public class CentralBank {
 		// Setup initial values
 		firstTimeBuyerLTVLimit = 0.95;
 		ownerOccupierLTVLimit= 0.9;
-		buyToLetLTVLimit = 0.6;
+		buyToLetLTVLimit = 0.8;
 		
 		firstTimeBuyerLTILimit = 6.5;
 		ownerOccupierLTILimit = 6.5;
