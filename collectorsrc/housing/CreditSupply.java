@@ -20,8 +20,6 @@ public class CreditSupply extends CollectorBase {
 	 * collect information for this timestep
 	 */
 	public void step() {
-		int i;
-        
         double oldTotalCredit = totalOOCredit + totalBTLCredit;
         totalOOCredit = 0.0;
         totalBTLCredit = 0.0;

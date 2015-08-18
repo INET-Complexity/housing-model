@@ -3,13 +3,13 @@ package housing;
 public class HouseholdStats extends CollectorBase {
 
 	public void step() {
-		totalDisposableIncome = 0.0;
+		totalAnnualIncome = 0.0;
 		nRenting = 0;
     	nHomeless = 0;
     	nHouseholds = Model.households.size();
     	rentalYield = 0.0;
     	for(Household h : Model.households) {
-			totalDisposableIncome += h.getMonthlyPostTaxIncome();
+			totalAnnualIncome += h.getMonthlyPreTaxIncome();
     		if(h.isInSocialHousing()) {
     			++nHomeless;
     		} else if(h.isRenting()) {
@@ -20,7 +20,7 @@ public class HouseholdStats extends CollectorBase {
     	if(rentalYield > 0.0) rentalYield /= nRenting;
     	nNonOwner = nHomeless + nRenting;
     	nEmpty = Model.construction.housingStock + nHomeless - nHouseholds;
-    	totalDisposableIncome *= 12.0; // annualise
+    	totalAnnualIncome *= 12.0; // annualise
 	}
 
 	public double [] getNonOwnerAges() {
@@ -135,6 +135,6 @@ public class HouseholdStats extends CollectorBase {
     public int 		  nNonOwner;
     public int		  nHouseholds;
     public int		  nEmpty;
-	public double	  totalDisposableIncome;
+	public double	  totalAnnualIncome;
 	public double	  rentalYield; // gross annual yield on occupied rental properties
 }

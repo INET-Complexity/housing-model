@@ -14,12 +14,12 @@ import java.util.HashSet;
 public class Bank {
 
 	public int    N_PAYMENTS = 12*25; // number of monthly repayments
-	public double INITIAL_BASE_RATE = 0.5; // Bank base-rate
+	public double INITIAL_BASE_RATE = 0.005; // Bank base-rate (0.5%)
 	public double MAX_OO_LTV = 1.0;		// maximum LTV bank will give to owner-occupier when not regulated	
 	public double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
 	public double MAX_OO_LTI = 6.5;		// maximum LTI bank will give to owner-occupier when not regulated
 	public double INTEREST_MARGIN = 3.0; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
-	
+	public double CREDIT_SUPPLY_TARGET = 490.0; // target supply of credit per household per month
 	
 	/********************************
 	 * Constructor. This just sets up a few
@@ -35,7 +35,7 @@ public class Bank {
 		mortgages.clear();
 		baseRate = INITIAL_BASE_RATE;
 		dDemand_dInterest = 10*1e10;
-		setMortgageInterestRate(0.03);
+		setMortgageInterestRate(0.02);
 		resetMonthlyCounters();
 	}
 	
@@ -43,7 +43,7 @@ public class Bank {
 	 * This is where the bank gets to do its monthly calculations
 	 */
 	public void step() {
-		supplyTarget = 1000.0 * Model.households.size();
+		supplyTarget = CREDIT_SUPPLY_TARGET * Model.households.size();
 		setMortgageInterestRate(recalcInterestRate());
 		resetMonthlyCounters();
 	}

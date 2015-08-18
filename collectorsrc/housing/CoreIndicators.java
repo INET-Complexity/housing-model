@@ -20,6 +20,13 @@ public class CoreIndicators extends CollectorBase {
 	public void step() {
 	}
 	
+	@Override
+	public void setActive(boolean active) {
+		super.setActive(active);
+		Collectors.creditSupply.setActive(active);
+		Collectors.housingMarketStats.setActive(active);
+		Collectors.householdStats.setActive(active);
+	}
 	
 	public double getOwnerOccupierLTIMeanAboveMedian() {
 		return(Collectors.creditSupply.oo_lti.apply(new MeanAboveMedian()));
@@ -52,36 +59,36 @@ public class CoreIndicators extends CollectorBase {
 	}
 	
 	public double getHouseholdCreditGrowth() {
-		return(Collectors.creditSupply.netCreditGrowth*12.0);
+		return(Collectors.creditSupply.netCreditGrowth*12.0*100.0);
 	}
 	public String desHouseholdCreditGrowth() {
 		return("Household credit growth (net, annualised, as a proportion of credit in previous step)");
 	}
 	public String nameHouseholdCreditGrowth() {
-		return("Household credit growth");
+		return("Household credit growth (%)");
 	}
 	
 	public double getDebtToIncome() {
-		return((Collectors.creditSupply.totalBTLCredit + Collectors.creditSupply.totalOOCredit)/Collectors.householdStats.totalDisposableIncome);
+		return(100.0*(Collectors.creditSupply.totalBTLCredit + Collectors.creditSupply.totalOOCredit)/Collectors.householdStats.totalAnnualIncome);
 	}
 	public String desDebtToIncome() {
-		return("Household debt to income ratio");
+		return("Household mortgage debt to income ratio (%)");
 	}
 	public String nameDebtToIncome() {
-		return("Household debt to income ratio");
+		return("Household mortgage debt to income ratio (%)");
 	}
 	
 	/***
 	 * 
 	 */
 	public double getOODebtToIncome() {
-		return(Collectors.creditSupply.totalOOCredit/Collectors.householdStats.totalDisposableIncome);
+		return(100.0*Collectors.creditSupply.totalOOCredit/Collectors.householdStats.totalAnnualIncome);
 	}
 	public String desOODebtToIncome() {
-		return("Household debt to income ratio (owner-occupier mortgages only)");
+		return("Household debt to income ratio (owner-occupier mortgages only) (%)");
 	}
 	public String nameOODebtToIncome() {
-		return("Owner-occupier debt to income ratio");
+		return("Owner-occupier mortgage debt to income ratio (%)");
 	}
 	
 	/***
@@ -139,7 +146,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public double getPriceToIncome() {
-		return(Model.housingMarket.housePriceIndex*data.HouseSaleMarket.HPI_REFERENCE/Collectors.householdStats.totalDisposableIncome);
+		return(Model.housingMarket.housePriceIndex*data.HouseSaleMarket.HPI_REFERENCE*Model.households.size()/Collectors.householdStats.totalAnnualIncome);
 	}
 	public String desPriceToIncome() {
 		return("House price to household disposable income ratio");
@@ -149,33 +156,33 @@ public class CoreIndicators extends CollectorBase {
 	}
 	
 	public double getRentalYield() {
-		return(Collectors.householdStats.rentalYield);
+		return(100.0*Collectors.householdStats.rentalYield);
 	}
 	public String desRentalYield() {
 		return("Average gross annual yield on occupied rental properties");
 	}
 	public String nameRentalYield() {
-		return("Rental Yield");
+		return("Rental Yield (%)");
 	}
 
 	public double getHousePriceGrowth() {
-		return(Collectors.housingMarketStats.getHPA());
+		return(100.0*Collectors.housingMarketStats.getHPA());
 	}
 	public String desHousePriceGrowth() {
 		return("Growth of house price index (year on year)");
 	}
 	public String nameHousePriceGrowth() {
-		return("Annual house price growth");
+		return("Annual house price growth (%)");
 	}
 
 	public double getInterestRateSpread() {
-		return(Model.bank.interestSpread);
+		return(100.0*Model.bank.interestSpread);
 	}
 	public String desInterestRateSpread() {
 		return("Spread between mortgage-lender interest rate and bank base-rate");
 	}
 	public String nameInterestRateSpread() {
-		return("Interest Rate Spread");
+		return("Interest Rate Spread (%)");
 	}
 
 
