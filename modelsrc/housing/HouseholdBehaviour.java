@@ -38,14 +38,24 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	}
 
 	/***************************
-	 * Decide on desired purchase price as a function of monthly income and current
-	 *  of house price appreciation.
+	 * After having decided to buy a house, 
+	 * decide on desired purchase price as a function of monthly income and current
+	 * value of house price appreciation.
 	 ****************************/
 	public double desiredPurchasePrice(double monthlyIncome, double hpa) {
 		final double A = 0.0;//0.48;			// sensitivity to house price appreciation
 		final double EPSILON = 0.36;//0.36;//0.48;//0.365; // S.D. of noise
 		final double SIGMA = 5.6*12.0;//5.6;	// scale
 		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*hpa));
+		/*
+		int quality = h.desiredQuality;
+		double housePrice = Model.housingMarket.getAverageSalePrice(quality);//behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
+		if(housePrice > maxMortgage) {
+			quality = Model.housingMarket.maxQualityGivenPrice(maxMortgage);
+			if(quality < 0) return(false); // can't afford a house of any quality (BtL will buy 0 quality houses)
+			housePrice = Model.housingMarket.getAverageSalePrice(quality);
+		}
+*/
 	}
 
 	/********************************
@@ -108,6 +118,7 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 */
 	public boolean rentOrPurchaseDecision(Household h, double maxMortgage) {
 		final double SCALE = 1.0;//1.25
+		double HPA_EXPECTATION_WEIGHT = 0.8; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer)
 		double COST_OF_RENTING; // annual psychological cost of renting
 		double FTB_K; // = 1.0/2000.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		double costOfHouse;
@@ -128,7 +139,7 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 		}
 		FTB_K = SCALE/h.monthlyEmploymentIncome; // money is relative
 		
-		costOfHouse = Math.max(0.0,housePrice-h.bankBalance)*Model.bank.getMortgageInterestRate() - housePrice*Model.housingMarket.housePriceAppreciation();
+		costOfHouse = Math.max(0.0,housePrice-h.bankBalance)*Model.bank.getMortgageInterestRate() - housePrice*HPA_EXPECTATION_WEIGHT*Model.housingMarket.housePriceAppreciation();
 		return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(COST_OF_RENTING-FTB_K*(costOfRent - costOfHouse))));
 	}
 
