@@ -6,6 +6,7 @@ public class HouseholdStats extends CollectorBase {
 		totalAnnualIncome = 0.0;
 		nRenting = 0;
     	nHomeless = 0;
+    	nBtL = 0;
     	nHouseholds = Model.households.size();
     	rentalYield = 0.0;
     	for(Household h : Model.households) {
@@ -16,6 +17,7 @@ public class HouseholdStats extends CollectorBase {
     			++nRenting;
     			rentalYield += h.housePayments.get(h.home).monthlyPayment*12.0/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
     		}
+    		if(h.behaviour.isPropertyInvestor()) ++nBtL;
     	}
     	if(rentalYield > 0.0) rentalYield /= nRenting;
     	nNonOwner = nHomeless + nRenting;
@@ -64,7 +66,28 @@ public class HouseholdStats extends CollectorBase {
 	public String nameOwnerOccupierAges() {
 		return("Ages of owner-occupiers");
 	}
-	
+
+	public double [] getBtLNProperties() {
+		if(isActive()) {
+			double [] result = new double[(int)nBtL];
+			int i = 0;
+			for(Household h : Model.households) {
+				if(h.behaviour.isPropertyInvestor()) {
+					result[i] = h.nInvestmentProperties();
+					++i;
+				}
+			}
+			return(result);
+		}
+		return null;
+	}
+	public String desBtLNProperties() {
+		return("Number of properties owned by BTL investors");
+	}
+	public String nameBtLNProperties() {
+		return("Number of properties owned by BTL investors");
+	}
+
 	public double getBTLProportion() {
 		return(((double)(nEmpty+nRenting))/Model.construction.housingStock);
 	}
@@ -134,7 +157,9 @@ public class HouseholdStats extends CollectorBase {
 	public int 		  nHomeless;
     public int 		  nNonOwner;
     public int		  nHouseholds;
+    public int 		  nBtL;
     public int		  nEmpty;
+    public double []  BtlNProperties; // number of properties owned by buy-to-let investors
 	public double	  totalAnnualIncome;
 	public double	  rentalYield; // gross annual yield on occupied rental properties
 }

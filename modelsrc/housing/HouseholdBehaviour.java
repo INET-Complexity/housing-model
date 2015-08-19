@@ -6,6 +6,7 @@ import ec.util.MersenneTwisterFast;
 
 public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
+	public double HPA_EXPECTATION_WEIGHT = 0.8; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer)
 	protected MersenneTwisterFast 	rand = Model.rand;
 	public int						desiredBTLProperties;	// number of properties
 	public double propensityToSave;
@@ -118,7 +119,6 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	 */
 	public boolean rentOrPurchaseDecision(Household h, double maxMortgage) {
 		final double SCALE = 1.0;//1.25
-		double HPA_EXPECTATION_WEIGHT = 0.8; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer)
 		double COST_OF_RENTING; // annual psychological cost of renting
 		double FTB_K; // = 1.0/2000.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		double costOfHouse;
@@ -139,7 +139,7 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 		}
 		FTB_K = SCALE/h.monthlyEmploymentIncome; // money is relative
 		
-		costOfHouse = Math.max(0.0,housePrice-h.bankBalance)*Model.bank.getMortgageInterestRate() - housePrice*HPA_EXPECTATION_WEIGHT*Model.housingMarket.housePriceAppreciation();
+		costOfHouse = Math.max(0.0,housePrice-h.bankBalance)*Model.bank.getMortgageInterestRate() - housePrice*HPAExpectation();
 		return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(COST_OF_RENTING-FTB_K*(costOfRent - costOfHouse))));
 	}
 
@@ -224,7 +224,23 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 	}
 
 	public boolean decideToBuyBuyToLet(Household me) {
-		return(isPropertyInvestor() && (me.nInvestmentProperties() < nDesiredBTLProperties()));
+		if(!isPropertyInvestor()) return false;
+		// --- calculate expected yield on zero quality house
+		double maxPrice = Model.bank.getMaxMortgage(me, false);
+		double price = Model.housingMarket.getAverageSalePrice(0); // intend to buy lowest quality house
+		if(maxPrice < price) return false;
+		
+		MortgageAgreement m = Model.bank.requestApproval(me, price, 0.0, false); // maximise leverege with min downpayment
+
+		double yield = ((Model.rentalMarket.getAverageSalePrice(0) - m.monthlyPayment)*12.0 + HPAExpectation()*price)/
+		m.downPayment;
+		if(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp( - yield*4.0))) {
+			System.out.println("BTL: bought");
+			return(true);
+		}
+		System.out.println("BTL: didn't buy");
+		return(false);
+//		return(isPropertyInvestor() && (me.nInvestmentProperties() < nDesiredBTLProperties()));
 	}
 	
 	public double btlPurchaseBid(Household me) {
@@ -268,4 +284,8 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 		return desiredBTLProperties;
 	}
 
+	/*** @returns expectation value of HPI in one year's time divided by today's HPI*/
+	public double HPAExpectation() {
+		return(Model.housingMarket.housePriceAppreciation()*HPA_EXPECTATION_WEIGHT);
+	}
 }

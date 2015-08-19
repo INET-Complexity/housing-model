@@ -62,7 +62,7 @@ public class HouseRentalMarket extends HousingMarket {
 	public double getExpectedGrossYield(int quality) {
 		return expectedGrossYield[quality];
 	}
-	
+
 	@Override
 	protected void recordMarketStats() {
 		super.recordMarketStats();
@@ -70,11 +70,14 @@ public class HouseRentalMarket extends HousingMarket {
 	}
 	
 	protected void recalculateExpectedGrossYield() {
+//		bestGrossYield = 0.0;
 		for(int q=0; q < House.Config.N_QUALITY; ++q) {
 			expectedGrossYield[q] = getAverageSalePrice(q)*12.0*expectedOccupancy(q)/Model.housingMarket.getAverageSalePrice(q);
+//			if(expectedGrossYield[q] > bestGrossYield) bestGrossYield = expectedGrossYield[q];
 		}		
 	}
 	
 	public double daysOnMarket[] = new double[House.Config.N_QUALITY];
 	public double expectedGrossYield[] = new double[House.Config.N_QUALITY];
+//	public double bestGrossYield;
 }
