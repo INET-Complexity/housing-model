@@ -1,7 +1,10 @@
 package housing;
 
-public class CentralBank {
-	
+import java.io.Serializable;
+
+public class CentralBank implements Serializable {
+	private static final long serialVersionUID = -2857716547766065142L;
+
 	public CentralBank() {
 		// Setup initial values
 		firstTimeBuyerLTVLimit = 0.95;

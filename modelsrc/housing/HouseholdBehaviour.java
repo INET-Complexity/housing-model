@@ -1,10 +1,13 @@
 package housing;
 
+import java.io.Serializable;
+
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
 
-public class HouseholdBehaviour {// implements IHouseholdBehaviour {
+public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
+	private static final long serialVersionUID = -7785886649432814279L;
 	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 	public double HPA_EXPECTATION_WEIGHT = 0.8; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer)
 	protected MersenneTwisterFast 	rand = Model.rand;
@@ -235,10 +238,10 @@ public class HouseholdBehaviour {// implements IHouseholdBehaviour {
 		double yield = ((Model.rentalMarket.getAverageSalePrice(0) - m.monthlyPayment)*12.0 + HPAExpectation()*price)/
 		m.downPayment;
 		if(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp( - yield*4.0))) {
-			System.out.println("BTL: bought");
+//			System.out.println("BTL: bought");
 			return(true);
 		}
-		System.out.println("BTL: didn't buy");
+//		System.out.println("BTL: didn't buy");
 		return(false);
 //		return(isPropertyInvestor() && (me.nInvestmentProperties() < nDesiredBTLProperties()));
 	}

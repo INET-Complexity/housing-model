@@ -12,7 +12,8 @@ import utilities.PriorityQueue2D;
  *
  *****************************************************/
 public class HouseSaleMarket extends HousingMarket {
-		
+	private static final long serialVersionUID = -2878118108039744432L;
+
 	public HouseSaleMarket() {
 		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
 	}
@@ -34,7 +35,7 @@ public class HouseSaleMarket extends HousingMarket {
 		sale.house.owner.completeHouseSale(sale);
 		buyer.completeHousePurchase(sale);
 		sale.house.owner = buyer;
-		Collectors.housingMarketStats.recordSale(purchase, sale);
+		Model.collectors.housingMarketStats.recordSale(purchase, sale);
 	}
 
 	@Override

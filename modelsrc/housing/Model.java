@@ -27,26 +27,56 @@ public class Model extends SimState implements Steppable {
 
 	public Model(long seed) {
 		super(seed);
-		centralBank = new CentralBank();
-		bank = new Bank(centralBank);
 		government = new Government();
-		construction = new Construction();
 		demographics = new Demographics();
-		households = new ArrayList<Household>(Demographics.TARGET_POPULATION*2);
-		housingMarket = new HouseSaleMarket();
-		rentalMarket = new HouseRentalMarket();
-		collectors = new Collectors();
 		recorder = new Recorder();
 		rand = new MersenneTwister(seed);
+
+		mCentralBank = new CentralBank();
+		mBank = new Bank();
+		mConstruction = new Construction();
+		mHouseholds = new ArrayList<Household>(Demographics.TARGET_POPULATION*2);
+		housingMarket = mHousingMarket = new HouseSaleMarket();
+		rentalMarket = mRentalMarket = new HouseRentalMarket();
+		mCollectors = new Collectors();
+		nSimulation = 0;
+
+	//	root = this;
+				
+		setupStatics();
+		init();
+	}
+	
+	@Override
+	public void awakeFromCheckpoint() {
+		super.awakeFromCheckpoint();
+		setupStatics();
+//		schedule.clear();
+ //       scheduleRepeat = schedule.scheduleRepeating(this);		
+	}
+	
+	protected void setupStatics() {
+		centralBank = mCentralBank;
+		bank = mBank;
+		construction = mConstruction;
+		households = mHouseholds;
+		housingMarket = mHousingMarket;
+		rentalMarket = mRentalMarket;
+		collectors = mCollectors;
+		root = this;
+		System.out.println("Statics setup");
 	}
 
+	
 	public void init() {
 		construction.init();
 		housingMarket.init();
 		rentalMarket.init();
 		bank.init();
 		households.clear();
+		collectors.init();
 		t = 0;
+		System.out.println("Doing init");
 	}
 
 	/**
@@ -56,8 +86,6 @@ public class Model extends SimState implements Steppable {
 	public void start() {
 		super.start();
         scheduleRepeat = schedule.scheduleRepeating(this);
-		nSimulation = 0;
-		init();
 
 		try {
 			recorder.start();
@@ -105,15 +133,18 @@ public class Model extends SimState implements Steppable {
 
 		
 		for(Household h : households) h.preSaleClearingStep();
-		Collectors.housingMarketStats.record();
+		collectors.housingMarketStats.record();
 		housingMarket.clearMarket();
 //		for(Household h : households) h.preRentalClearingStep();
 //		housingMarket.clearBuyToLetMarket();
-		Collectors.rentalMarketStats.record();
+		collectors.rentalMarketStats.record();
 		rentalMarket.clearMarket();
         bank.step();
-        centralBank.step(Collectors.getCoreIndicators());
-        t += 1;		
+        centralBank.step(getCoreIndicators());
+        t += 1;
+        System.out.println("Time = "+t+" "+getTime());
+ //       System.out.println("this = "+this+" "+"Model.root = "+Model.root);
+  //      System.out.println("this mHouseholds = "+this.mHouseholds+" "+"Model.root.mHousehlds = "+Model.root.mHouseholds);        
 	}
 	
 	
@@ -124,6 +155,10 @@ public class Model extends SimState implements Steppable {
 		super.finish();
 	}
 	
+	/*** @return simulated time in months */
+	static public int getTime() {
+		return(Model.root.t);
+	}
 
 	////////////////////////////////////////////////////////////////////////
 
@@ -133,6 +168,15 @@ public class Model extends SimState implements Steppable {
 
 	public Stoppable scheduleRepeat;
 
+	// non-statics for serialization
+	public ArrayList<Household>    	mHouseholds;
+	public Bank						mBank;
+	public CentralBank				mCentralBank;
+	public Construction				mConstruction;
+	public HouseSaleMarket			mHousingMarket;
+	public HouseRentalMarket		mRentalMarket;
+	public Collectors				mCollectors;
+	
 	public static CentralBank		centralBank;
 	public static Bank 				bank;
 	public static Government		government;
@@ -141,14 +185,15 @@ public class Model extends SimState implements Steppable {
 	public static HouseRentalMarket	rentalMarket;
 	public static ArrayList<Household>	households;
 	public static Demographics		demographics;
-	public static MersenneTwister			rand;
+	public static MersenneTwister	rand;
+	public static Model				root;
 	
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
 	public boolean recordCoreIndicators = false;
 	
-	public static int	nSimulation; // number of simulations run
-	public static int	t; // time (months)
+	public int	nSimulation; // number of simulations run
+	public int	t; // time (months)
 //	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
 
 	/*** proxy class to allow us to work with apache.commons distributions */
@@ -163,10 +208,25 @@ public class Model extends SimState implements Steppable {
 	// Getters/setters for MASON console
 	////////////////////////////////////////////////////////////////////////
 	
-	public Collectors getCollectors() {
-		return(collectors);
+	public CreditSupply getCreditSupply() {
+		return collectors.creditSupply;
 	}
-	public String nameCollectors() {return("Diagnostics");}
+
+	public HousingMarketStats getHousingMarketStats() {
+		return collectors.housingMarketStats;
+	}
+
+	public HousingMarketStats getRentalMarketStats() {
+		return collectors.rentalMarketStats;
+	}
+
+	public CoreIndicators getCoreIndicators() {
+		return collectors.coreIndicators;
+	}
+
+	public HouseholdStats getHouseholdStats() {
+		return collectors.householdStats;
+	}	
 	
 	public static int getN_STEPS() {
 		return N_STEPS;

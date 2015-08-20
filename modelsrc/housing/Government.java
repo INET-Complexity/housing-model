@@ -25,8 +25,6 @@ public class Government {
 		public double [] NI_RATES = {.12, .02};
 		
 		static double INCOME_SUPPORT = 113.7*52.0/12.0; // married couple's monthly lower earnings from income support Source: www.nidirect.gov.uk
-
-		public int i;
 	}
 	
 	public Government() {

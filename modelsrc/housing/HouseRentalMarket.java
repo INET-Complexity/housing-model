@@ -7,7 +7,8 @@ package housing;
  *
  **********************************************/
 public class HouseRentalMarket extends HousingMarket {
-	
+	private static final long serialVersionUID = -3039057421808432696L;
+
 	public HouseRentalMarket() {
 		for(int i=0; i< House.Config.N_QUALITY; ++i) {
 			daysOnMarket[i] = 30.0;			
@@ -18,11 +19,11 @@ public class HouseRentalMarket extends HousingMarket {
 	@Override
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		super.completeTransaction(purchase, sale);
-		daysOnMarket[sale.house.getQuality()] = Config.E*daysOnMarket[sale.house.getQuality()] + (1.0-Config.E)*(Model.t - sale.tInitialListing);
+		daysOnMarket[sale.house.getQuality()] = Config.E*daysOnMarket[sale.house.getQuality()] + (1.0-Config.E)*(Model.getTime() - sale.tInitialListing);
 		sale.house.rentalRecord = null;
 		purchase.buyer.completeHouseRental(sale);
 		sale.house.owner.completeHouseLet(sale);
-		Collectors.rentalMarketStats.recordSale(purchase, sale);
+		Model.collectors.rentalMarketStats.recordSale(purchase, sale);
 	}
 	
 	public HouseSaleRecord offer(House house, double price) {

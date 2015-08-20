@@ -1,9 +1,11 @@
 package housing;
 
+import java.io.Serializable;
 import java.util.HashSet;
 
 
-public class Construction implements IHouseOwner {
+public class Construction implements IHouseOwner, Serializable {
+	private static final long serialVersionUID = -6288390048595500248L;
 
 	public Construction() {
 		housesPerHousehold = 82.0/100.0;

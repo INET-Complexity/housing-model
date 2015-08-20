@@ -12,9 +12,9 @@ import org.jfree.data.xy.XYSeries;
  * @author daniel
  *
  */
-@SuppressWarnings("serial")
 public class DataRecorder extends XYSeries {
-	
+	private static final long serialVersionUID = 6740853271859360767L;
+
 	static public int MAX_DATA_LEN = 400;	// Maximum number of data points to remember
 	static public int CHUNK_SIZE = 5;		// number of datapoints to delete at a time
 	

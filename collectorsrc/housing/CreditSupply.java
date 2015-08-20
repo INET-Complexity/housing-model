@@ -5,6 +5,7 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import sim.util.Double2D;
 
 public class CreditSupply extends CollectorBase {
+	private static final long serialVersionUID = 1630707025974306844L;
 
 	public CreditSupply() {
 		oo_lti = new DescriptiveStatistics(ARCHIVE_LEN);

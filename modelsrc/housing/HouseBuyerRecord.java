@@ -11,7 +11,8 @@ import java.util.Comparator;
  *
  **********************************************/
 public class HouseBuyerRecord extends HousingMarketRecord {
-	
+	private static final long serialVersionUID = -4092951887680947486L;
+
 	public HouseBuyerRecord(Household h, double price) {
 		super(price);
 		buyer = h;

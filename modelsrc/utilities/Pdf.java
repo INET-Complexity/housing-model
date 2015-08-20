@@ -1,6 +1,7 @@
 package utilities;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import org.apache.commons.math3.random.RandomGenerator;
 
@@ -16,7 +17,8 @@ import housing.Model;
  * @author daniel
  *
  */
-public class Pdf {
+public class Pdf implements Serializable {
+	private static final long serialVersionUID = 1558047422758004631L;
 
 	/***
 	 * Read the pdf from a binned .csv file. The format should be as specified in

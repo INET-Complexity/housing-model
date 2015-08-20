@@ -12,7 +12,7 @@ import java.util.Comparator;
  *
  *************************************************/
 public class HouseSaleRecord extends HousingMarketRecord {
-	
+	private static final long serialVersionUID = 8626260055548234106L;
 	/***********************************************
 	 * Construct a new record.
 	 * 
@@ -25,7 +25,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 //		setPrice(p);
 		initialListedPrice = price;
 //		quality = house.quality;
-		tInitialListing = Model.t;
+		tInitialListing = Model.getTime();
 		matchedBids = new ArrayList<>(8);
 		recalcYield();
 	}

@@ -1,8 +1,11 @@
 package housing;
 
+import java.io.Serializable;
+
 import utilities.PriorityQueue2D;
 
-public abstract class HousingMarketRecord {
+public abstract class HousingMarketRecord implements Serializable {
+	private static final long serialVersionUID = 942379254469390885L;
 	private double	price;
 	private int		id;	// in order to get a unique, repeatable ordering
 	static int 		id_pool = 0;
@@ -34,7 +37,9 @@ public abstract class HousingMarketRecord {
 		price = newPrice;
 	}
 
-	public static class PQComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord> {
+	public static class PQComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord>, Serializable {
+		private static final long serialVersionUID = 6225466622291609603L;
+
 		@Override
 		public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
 			double diff = arg0.price - arg1.price;
@@ -56,7 +61,10 @@ public abstract class HousingMarketRecord {
 			return Integer.signum(diff);
 		}
 	}
-	public static class PYComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord> {
+	
+	public static class PYComparator implements PriorityQueue2D.XYComparator<HousingMarketRecord>, Serializable {
+		private static final long serialVersionUID = -193994969560422524L;
+
 		@Override
 		public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
 			double diff = arg0.price - arg1.price;

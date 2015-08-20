@@ -1,6 +1,7 @@
 package housing;
 
 public class HouseholdStats extends CollectorBase {
+	private static final long serialVersionUID = -402486195880710795L;
 
 	public void step() {
 		totalAnnualIncome = 0.0;
@@ -68,7 +69,7 @@ public class HouseholdStats extends CollectorBase {
 	}
 
 	public double [] getBtLNProperties() {
-		if(isActive()) {
+		if(isActive() && nBtL > 0) {
 			double [] result = new double[(int)nBtL];
 			int i = 0;
 			for(Household h : Model.households) {

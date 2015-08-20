@@ -30,7 +30,7 @@ public class Recorder {
 	}
 
 	public void step() {
-		if(Model.t > 1) {
+		if(Model.getTime() > 1) {
 			ooLTI.print(", ");
 			btlLTV.print(", ");
 			creditGrowth.print(", ");
@@ -45,7 +45,7 @@ public class Recorder {
 			rentalYield.print(", ");
 			housePriceGrowth.print(", ");			
 			interestRateSpread.print(", ");			
-		} else if(Model.nSimulation > 0) {
+		} else if(Model.root.nSimulation > 0) {
 			ooLTI.println("");
 			btlLTV.println("");
 			creditGrowth.println("");
@@ -61,20 +61,20 @@ public class Recorder {
 			housePriceGrowth.println("");
 			interestRateSpread.println("");
 		}
-        ooLTI.print(Collectors.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
-    	btlLTV.print(Collectors.coreIndicators.getBuyToLetLTVMean());
-    	creditGrowth.print(Collectors.coreIndicators.getHouseholdCreditGrowth());
-    	debtToIncome.print(Collectors.coreIndicators.getDebtToIncome());
-    	ooDebtToIncome.print(Collectors.coreIndicators.getOODebtToIncome());
-    	mortgageApprovals.print(Collectors.coreIndicators.getMortgageApprovals());
-    	housingTransactions.print(Collectors.coreIndicators.getHousingTransactions());
-    	advancesToFTBs.print(Collectors.coreIndicators.getAdvancesToFTBs());
-    	advancesToBTL.print(Collectors.coreIndicators.getAdvancesToBTL());
-    	advancesToHomeMovers.print(Collectors.coreIndicators.getAdvancesToHomeMovers());
-    	priceToIncome.print(Collectors.coreIndicators.getPriceToIncome());
-    	rentalYield.print(Collectors.coreIndicators.getRentalYield());
-    	housePriceGrowth.print(Collectors.coreIndicators.getHousePriceGrowth());
-    	interestRateSpread.print(Collectors.coreIndicators.getInterestRateSpread());
+        ooLTI.print(Model.collectors.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
+    	btlLTV.print(Model.collectors.coreIndicators.getBuyToLetLTVMean());
+    	creditGrowth.print(Model.collectors.coreIndicators.getHouseholdCreditGrowth());
+    	debtToIncome.print(Model.collectors.coreIndicators.getDebtToIncome());
+    	ooDebtToIncome.print(Model.collectors.coreIndicators.getOODebtToIncome());
+    	mortgageApprovals.print(Model.collectors.coreIndicators.getMortgageApprovals());
+    	housingTransactions.print(Model.collectors.coreIndicators.getHousingTransactions());
+    	advancesToFTBs.print(Model.collectors.coreIndicators.getAdvancesToFTBs());
+    	advancesToBTL.print(Model.collectors.coreIndicators.getAdvancesToBTL());
+    	advancesToHomeMovers.print(Model.collectors.coreIndicators.getAdvancesToHomeMovers());
+    	priceToIncome.print(Model.collectors.coreIndicators.getPriceToIncome());
+    	rentalYield.print(Model.collectors.coreIndicators.getRentalYield());
+    	housePriceGrowth.print(Model.collectors.coreIndicators.getHousePriceGrowth());
+    	interestRateSpread.print(Model.collectors.coreIndicators.getInterestRateSpread());
 	}
 	
 	public void finish() {

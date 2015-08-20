@@ -1,5 +1,7 @@
 package housing;
 
+import java.io.Serializable;
+
 /****************************************************
  * This class is created by a mortgage-lender when it approves a mortgage.
  * It acts as a convenient container of information pertaining to a
@@ -9,8 +11,8 @@ package housing;
  * @author daniel, davidrpugh
  *
  ***************************************************/
-public class PaymentAgreement {
-	
+public class PaymentAgreement implements Serializable {
+	private static final long serialVersionUID = -2680643507296169409L;
 	/********************************************
 	 * Updates internal variables to simulate a payment
 	 * being made (Does not move any assets from payer to payee).

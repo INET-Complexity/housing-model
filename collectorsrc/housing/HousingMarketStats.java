@@ -5,8 +5,9 @@ import sim.util.MutableDouble2D;
 import housing.HousingMarket.Config;
 
 public class HousingMarketStats extends CollectorBase {
+	private static final long serialVersionUID = -535310555732796139L;
 
-	public HousingMarketStats(HousingMarket m) {
+	public HousingMarketStats() {
 		setActive(true);
 		averageSoldPriceToOLP = 1.0;
 		saleCount = 0;
@@ -20,17 +21,22 @@ public class HousingMarketStats extends CollectorBase {
 		nNewBuild = 0;
         priceData = new double[2][House.Config.N_QUALITY];
         referencePriceData = new double[2][House.Config.N_QUALITY];
-        int i;
-        for(i=0; i<House.Config.N_QUALITY; ++i) {
-        	priceData[0][i] = m.referencePrice(i);
-        	referencePriceData[0][i] = m.referencePrice(i);
-        	referencePriceData[1][i] = m.referencePrice(i);
-        }
-        market = m;
         
         nEmpty = 0;
 	}
 
+	public void init(HousingMarket m) {
+		market = m;
+        int i;
+        if(market != null) {
+        	for(i=0; i<House.Config.N_QUALITY; ++i) {
+        		priceData[0][i] = market.referencePrice(i);
+        		referencePriceData[0][i] = market.referencePrice(i);
+        		referencePriceData[1][i] = market.referencePrice(i);
+        	}
+        }
+	}
+	
 	public void record() {
 		nSales = saleCount; saleCount = 0;
 		nFTBSales = ftbSaleCount; ftbSaleCount = 0;

@@ -1,5 +1,6 @@
 package housing;
 
+import java.io.Serializable;
 import java.util.HashSet;
 
 /*************************************************
@@ -11,7 +12,8 @@ import java.util.HashSet;
  * @author daniel, davidrpugh
  *
  *************************************************/
-public class Bank {
+public class Bank implements Serializable {
+	private static final long serialVersionUID = -8301089924358306706L;
 
 	public int    N_PAYMENTS = 12*25; // number of monthly repayments
 	public double INITIAL_BASE_RATE = 0.005; // Bank base-rate (0.5%)
@@ -25,9 +27,8 @@ public class Bank {
 	 * Constructor. This just sets up a few
 	 * pre-computed values.
 	 ********************************/
-	public Bank(CentralBank c) {
+	public Bank() {
 		mortgages = new HashSet<>();
-		centralBank = c;
 		init();
 	}
 	
@@ -138,13 +139,13 @@ public class Bank {
 		// --- if all's well, go ahead and arrange mortgage
 		supplyVal += approval.principal;
 		mortgages.add(approval);
-		Collectors.creditSupply.recordLoan(h, approval);
+		Model.collectors.creditSupply.recordLoan(h, approval);
 		++nLoans;
 		if(isHome) {
-			if(approval.principal/h.annualEmploymentIncome() > centralBank.loanToIncomeRegulation(h.isFirstTimeBuyer())) {
+			if(approval.principal/h.annualEmploymentIncome() > Model.centralBank.loanToIncomeRegulation(h.isFirstTimeBuyer())) {
 				++nOverLTICapLoans;
 			}
-			if(approval.principal/(approval.principal + approval.downPayment) > centralBank.loanToValueRegulation(h.isFirstTimeBuyer(),isHome)) {
+			if(approval.principal/(approval.principal + approval.downPayment) > Model.centralBank.loanToValueRegulation(h.isFirstTimeBuyer(),isHome)) {
 				++nOverLTVCapLoans;
 			}
 		}
@@ -261,8 +262,8 @@ public class Bank {
 		} else {
 			limit = MAX_BTL_LTV;
 		}
-		if((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > centralBank.proportionOverLTVLimit) {
-			limit = Math.min(limit, centralBank.loanToValueRegulation(firstTimeBuyer, isHome));
+		if((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > Model.centralBank.proportionOverLTVLimit) {
+			limit = Math.min(limit, Model.centralBank.loanToValueRegulation(firstTimeBuyer, isHome));
 		}
 		return(limit);
 	}
@@ -270,17 +271,15 @@ public class Bank {
 	public double loanToIncome(boolean firstTimeBuyer) {
 		double limit;
 		limit = MAX_OO_LTI;
-		if((nOverLTICapLoans+1.0)/(nLoans + 1.0) > centralBank.proportionOverLTILimit) {
-			limit = Math.min(limit, centralBank.loanToIncomeRegulation(firstTimeBuyer));
+		if((nOverLTICapLoans+1.0)/(nLoans + 1.0) > Model.centralBank.proportionOverLTILimit) {
+			limit = Math.min(limit, Model.centralBank.loanToIncomeRegulation(firstTimeBuyer));
 		}
 		return(limit);
 	}
 	
 	public double interestCoverageRatio() {
-		return(centralBank.interestCoverageRatioRegulation());
+		return(Model.centralBank.interestCoverageRatioRegulation());
 	}
-
-	public CentralBank 		centralBank;
 	
 	public HashSet<MortgageAgreement>		mortgages;	// all unpaid mortgage contracts supplied by the bank
 	public double 		k; 				// principal to monthly payment factor

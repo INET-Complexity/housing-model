@@ -62,8 +62,8 @@ public class ModelGUI extends GUIState implements Steppable {
 
     
     public void load(final SimState state) {
-    	super.start();
-
+    	super.load(state);
+    	
  //       ChartUtilities.scheduleSeries(this, hpi, new sim.util.Valuable() {
   //      	public double doubleValue() {return Model.housingMarket.housePriceIndex; }});
 
@@ -72,6 +72,9 @@ public class ModelGUI extends GUIState implements Steppable {
 
  //       ChartUtilities.scheduleSeries(this, daysOnMarket, new sim.util.Valuable() {
   //      	public double doubleValue() {return Model.housingMarket.averageDaysOnMarket; }});
+
+    	// Execute when each time-step is complete
+        scheduleRepeatingImmediatelyAfter(this);
         
     }
         
@@ -103,24 +106,24 @@ public class ModelGUI extends GUIState implements Steppable {
         			.addVariable(Model.housingMarket,"averageDaysOnMarket", "Years on market", new DataRecorder.Transform() {
         				public double exec(double x) {return(Math.min(x/360.0, 1.0));}
         			})
-        			.addVariable(Collectors.housingMarketStats, "nBuyers", "Buyers (1000s)", new DataRecorder.Transform() {
+        			.addVariable(Model.collectors.housingMarketStats, "nBuyers", "Buyers (1000s)", new DataRecorder.Transform() {
         				public double exec(double x) {return(x/1000.0);}
         			})
 //        			.addVariable(HousingMarketTest.housingMarket.diagnostics,"averageSoldPriceToOLP", "Sold Price/List price")
-        			.addVariable(Collectors.creditSupply,"affordability", "Affordability (Mortgage-payment/income)")
+        			.addVariable(Model.collectors.creditSupply,"affordability", "Affordability (Mortgage-payment/income)")
     	);
 
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Bid/Offer quantities","Time (years)","Number")
-        			.addVariable(Collectors.housingMarketStats,"nSales", "Transactions")
-        			.addVariable(Collectors.housingMarketStats,"nSellers", "Sellers")
-        			.addVariable(Collectors.housingMarketStats,"nBuyers", "Buyers")
+        			.addVariable(Model.collectors.housingMarketStats,"nSales", "Transactions")
+        			.addVariable(Model.collectors.housingMarketStats,"nSellers", "Sellers")
+        			.addVariable(Model.collectors.housingMarketStats,"nBuyers", "Buyers")
     	);
         
         timeSeriesPlots.add(
         		new TimeSeriesPlot("Bid/Offer Prices","Time (years)","Price")
-        			.addVariable(Collectors.housingMarketStats,"averageBidPrice", "Average Bid Price")
-        			.addVariable(Collectors.housingMarketStats,"averageOfferPrice", "Average Offer Price")        			
+        			.addVariable(Model.collectors.housingMarketStats,"averageBidPrice", "Average Bid Price")
+        			.addVariable(Model.collectors.housingMarketStats,"averageOfferPrice", "Average Offer Price")        			
         );
 
 //        timeSeriesPlots.add(
@@ -160,12 +163,12 @@ public class ModelGUI extends GUIState implements Steppable {
       //  ChartUtilities.scheduleSeries(this, daysOnMarket, new sim.util.Valuable() {
         //	public double doubleValue() {return Model.housingMarket.averageDaysOnMarket; }});
         
-        addSeries(housePriceChart, "Modelled prices", Collectors.housingMarketStats.priceData);
+        addSeries(housePriceChart, "Modelled prices", Model.collectors.housingMarketStats.priceData);
     //    addSeries(mortgageStatsChart, "Owner-occupier LTV distribution", Collectors.creditSupply.oo_ltv_distribution);
      //   addSeries(mortgageStatsChart, "Owner-occupier LTI distribution (x0.1)", Collectors.creditSupply.oo_lti_distribution);
       //  addSeries(mortgagePhaseChart, "Approved mortgages", Collectors.creditSupply.approved_mortgages);
         
-        housePriceChart.addSeries(Collectors.housingMarketStats.referencePriceData, "Reference price", null);
+        housePriceChart.addSeries(Model.collectors.housingMarketStats.referencePriceData, "Reference price", null);
 
         // Execute when each time-step is complete
         scheduleRepeatingImmediatelyAfter(this);

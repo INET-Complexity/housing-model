@@ -1,5 +1,6 @@
 package utilities;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -19,8 +20,9 @@ import java.util.TreeSet;
  * @author daniel
  *
  */
-//public class PriorityQueue2D<E extends PriorityQueue2D.Comparable<E>> {
-public class PriorityQueue2D<E> implements Iterable<E> {
+public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
+	private static final long serialVersionUID = -2371013046862291303L;
+
 	public interface Comparable<T> {
 		/***
 		 * @return (-1, 0, 1) if this is (less than, equal to, greater than) other
@@ -29,7 +31,7 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 		public int YCompareTo(T other);
 	}
 
-	public interface XYComparator<T> {
+	public interface XYComparator<T> extends Serializable {
 		/***
 		 * @return (-1, 0, 1) if arg0 is (less than, equal to, greater than) arg1
 		 */
@@ -37,22 +39,24 @@ public class PriorityQueue2D<E> implements Iterable<E> {
 		public int YCompare(T arg0, T arg1);
 	}
 
+	public class XComparator implements Comparator<E>, Serializable {
+		private static final long serialVersionUID = -264394909715934581L;
+		public int compare(E arg0, E arg1) {
+			return(comparator.XCompare(arg0,arg1));
+		}		
+	}
+
+	public class YComparator implements Comparator<E>, Serializable {
+		private static final long serialVersionUID = 175936399605372278L;
+		public int compare(E arg0, E arg1) {
+			return(comparator.YCompare(arg0,arg1));
+		}		
+	}
+
 	public PriorityQueue2D(XYComparator<E> iComparator) {
 		comparator = iComparator;
-		uncoveredElements = new TreeSet<E>(new Comparator<E>() {
-			@Override
-			public int compare(E arg0, E arg1) {
-				return(comparator.XCompare(arg0,arg1));
-			}
-
-		});
-		ySortedElements = new TreeSet<E>(new Comparator<E>() {
-			@Override
-			public int compare(E arg0, E arg1) {
-				return(comparator.YCompare(arg0,arg1));
-			}
-
-		});
+		uncoveredElements = new TreeSet<E>(this.new XComparator());
+		ySortedElements = new TreeSet<E>(this.new YComparator());
 	}
 
 	/***

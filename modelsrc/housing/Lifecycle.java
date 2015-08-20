@@ -1,8 +1,12 @@
 package housing;
 
+import java.io.Serializable;
+
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
-public class Lifecycle {
+public class Lifecycle implements Serializable {
+	private static final long serialVersionUID = -2455155016204679970L;
+
 	public Lifecycle(double iage) {
 		age = iage;
 		incomePercentile = Model.rand.nextDouble();

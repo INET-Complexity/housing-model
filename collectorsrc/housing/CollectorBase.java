@@ -1,6 +1,10 @@
 package housing;
 
-public class CollectorBase {
+import java.io.Serializable;
+
+public class CollectorBase implements Serializable {
+	private static final long serialVersionUID = 6418211605960262874L;
+
 	boolean active = false;
 
 	public boolean isActive() {

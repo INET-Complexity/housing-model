@@ -22,15 +22,15 @@ public class Demographics {
 	public void step() {
 		// --- birth
 		int nBirths;
-		if(Model.t < spinupYears*12) {
+		if(Model.getTime() < spinupYears*12) {
 			// --- still in spinup phase of simulation
-			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.t/12.0))*TARGET_POPULATION/12.0 + 0.5);
+			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.getTime()/12.0))*TARGET_POPULATION/12.0 + 0.5);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfSpinupHouseholdAgeAtBirth.nextDouble()));
 			}
 		} else {
 			// --- in projection phase of simulation
-			nBirths = (int)(TARGET_POPULATION*data.Demographics.futureBirthRate(Model.t)/12.0 + 0.5);
+			nBirths = (int)(TARGET_POPULATION*data.Demographics.futureBirthRate(Model.getTime())/12.0 + 0.5);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
 			}

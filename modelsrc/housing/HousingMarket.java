@@ -1,5 +1,6 @@
 package housing;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,7 +25,8 @@ import utilities.PriorityQueue2D;
  * @author daniel
  *
  *********************************************************/
-public abstract class HousingMarket {
+public abstract class HousingMarket implements Serializable {
+	private static final long serialVersionUID = -7249221876467520088L;
 
 	/**
 	 * Configuration for the housing market.
@@ -255,7 +257,7 @@ public abstract class HousingMarket {
 	 **********************************************/
 	public void completeTransaction(HouseBuyerRecord b, HouseSaleRecord sale) {
 		// --- update sales statistics		
-		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.t - sale.tInitialListing);
+		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.getTime() - sale.tInitialListing);
 		averageSalePrice[sale.getQuality()] = Config.G*averageSalePrice[sale.getQuality()] + (1.0-Config.G)*sale.getPrice();
 		if(averageSalePrice[sale.getQuality()] < 0.0) {
 			System.out.println("Average sale price "+sale.getQuality()+" is "+averageSalePrice[sale.getQuality()]);

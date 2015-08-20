@@ -1,5 +1,7 @@
 package housing;
 
+import java.io.Serializable;
+
 /************************************************
  * Class representing a house.
  * Use this to represent the intrinsic properties of the house.
@@ -7,8 +9,9 @@ package housing;
  * @author daniel
  *
  ************************************************/
-public class House implements Comparable<House> {
-	
+public class House implements Comparable<House>, Serializable {
+	private static final long serialVersionUID = 4538336934216907799L;
+
 	static public class Config {
 		public static int N_QUALITY = 48; // number of quality bands		
 	}
