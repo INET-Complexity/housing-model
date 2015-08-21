@@ -25,22 +25,28 @@ public class Demographics {
 		if(Model.getTime() < spinupYears*12) {
 			// --- still in spinup phase of simulation
 			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.getTime()/12.0))*TARGET_POPULATION/12.0 + 0.5);
+//			System.out.println("Spinup Births = "+nBirths);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfSpinupHouseholdAgeAtBirth.nextDouble()));
 			}
 		} else {
 			// --- in projection phase of simulation
 			nBirths = (int)(TARGET_POPULATION*data.Demographics.futureBirthRate(Model.getTime())/12.0 + 0.5);
+//			System.out.println("Births = "+nBirths);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
 			}
 		}
 		
 		// --- death
+		double pDeath;
 		Iterator<Household> iterator = Model.households.iterator();
+	    double pMult = 1.0;
+	    if(Model.getTime() > spinupYears*12) pMult = Model.households.size()/TARGET_POPULATION;
 		while(iterator.hasNext()) {
 		    Household h = iterator.next();
-			if(Model.rand.nextDouble() < data.Demographics.probDeathGivenAge(h.lifecycle.age)/12.0) {
+		    pDeath = data.Demographics.probDeathGivenAge(h.lifecycle.age)/12.0;
+			if(Model.rand.nextDouble() < pDeath * pMult) {
 				// --- inheritance
 				iterator.remove();
 				h.transferAllWealthTo(Model.households.get(Model.rand.nextInt(Model.households.size())));

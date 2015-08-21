@@ -57,12 +57,18 @@ public class Demographics {
 
 	/***
 	 * Probability that a household 'dies' per year given age of the representative householder
-	 * Death of a household may occur by marriage, death of single occupant, moving together
-	 * TODO: ************** UNCALIBRATED ********************
+	 * Death of a household may occur by marriage, death of single occupant, moving together.
+	 * As first order approx: we use female death rates, assuming singles live at home until marriage,
+	 * there is no divorce and the male always dies first
+	 * TODO: Add marriage/co-habitation
 	 */
 	public static double probDeathGivenAge(double ageInYears) {
-		double averageDeathRate = futureBirthRate(0);
-		return(averageDeathRate*ageInYears*ageInYears/7500.0);
+		double PdeathOfFemale2012 = 3.788e-5*Math.exp(8.642e-2*ageInYears);
+		// ONS Statistical Bulletin: Historic and Projected Mortality. Data from the Period and Cohort
+		// Life Tables, 2012-based, UK, 1981-2062
+		return(PdeathOfFemale2012);
+//		double averageDeathRate = futureBirthRate(0);		
+//		return(averageDeathRate*ageInYears*ageInYears/7500.0);
 	}
 
 	/*

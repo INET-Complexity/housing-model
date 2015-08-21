@@ -26,6 +26,22 @@ public class HouseholdStats extends CollectorBase {
     	totalAnnualIncome *= 12.0; // annualise
 	}
 
+	public double [] getAgeDistribution() {
+		double [] result = new double[(int)nHouseholds];
+		int i = 0;
+		for(Household h : Model.households) {
+			result[i] = h.lifecycle.age;
+			++i;
+		}
+		return(result);
+	}
+	public String desAgeDistribution() {
+		return("Age distribution of all households");
+	}
+	public String nameAgeDistribution() {
+		return("Age distribution of all households");
+	}
+
 	public double [] getNonOwnerAges() {
 		double [] result = new double[(int)nNonOwner];
 		int i = 0;

@@ -41,8 +41,6 @@ public class Model extends SimState implements Steppable {
 		mCollectors = new Collectors();
 		nSimulation = 0;
 
-	//	root = this;
-				
 		setupStatics();
 		init();
 	}
@@ -51,8 +49,6 @@ public class Model extends SimState implements Steppable {
 	public void awakeFromCheckpoint() {
 		super.awakeFromCheckpoint();
 		setupStatics();
-//		schedule.clear();
- //       scheduleRepeat = schedule.scheduleRepeating(this);		
 	}
 	
 	protected void setupStatics() {
@@ -64,7 +60,6 @@ public class Model extends SimState implements Steppable {
 		rentalMarket = mRentalMarket;
 		collectors = mCollectors;
 		root = this;
-		System.out.println("Statics setup");
 	}
 
 	
@@ -76,7 +71,6 @@ public class Model extends SimState implements Steppable {
 		households.clear();
 		collectors.init();
 		t = 0;
-		System.out.println("Doing init");
 	}
 
 	/**
@@ -121,30 +115,17 @@ public class Model extends SimState implements Steppable {
 	}
 
 	public void modelStep() {
-		
-		
 		demographics.step();
-
-//		housingMarket.bid(households.get(0), 100.0);
-//		housingMarket.offer(new House(), 90.0);
-//		housingMarket.clearMarket();
-		
 		construction.step();
-
 		
-		for(Household h : households) h.preSaleClearingStep();
+		for(Household h : households) h.step();
 		collectors.housingMarketStats.record();
 		housingMarket.clearMarket();
-//		for(Household h : households) h.preRentalClearingStep();
-//		housingMarket.clearBuyToLetMarket();
 		collectors.rentalMarketStats.record();
 		rentalMarket.clearMarket();
         bank.step();
         centralBank.step(getCoreIndicators());
         t += 1;
-        System.out.println("Time = "+t+" "+getTime());
- //       System.out.println("this = "+this+" "+"Model.root = "+Model.root);
-  //      System.out.println("this mHouseholds = "+this.mHouseholds+" "+"Model.root.mHousehlds = "+Model.root.mHouseholds);        
 	}
 	
 	

@@ -320,7 +320,6 @@ public abstract class HousingMarket implements Serializable {
 		}
 		housePriceIndex /= House.Config.N_QUALITY*data.HouseSaleMarket.HPI_REFERENCE;
 		HPIAppreciation += (1.0-Config.F)*housePriceIndex;
-
 	}
 
 
@@ -341,5 +340,6 @@ public abstract class HousingMarket implements Serializable {
 	public double HPIAppreciation;
 	public double housePriceIndex;
 	public double lastHousePriceIndex;
-	
+	public double dLogPriceMean;
+	public double dLogPriceSD;
 }

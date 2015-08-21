@@ -46,11 +46,11 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * decide on desired purchase price as a function of monthly income and current
 	 * value of house price appreciation.
 	 ****************************/
-	public double desiredPurchasePrice(double monthlyIncome, double hpa) {
+	public double desiredPurchasePrice(double monthlyIncome) {
 		final double A = 0.0;//0.48;			// sensitivity to house price appreciation
 		final double EPSILON = 0.36;//0.36;//0.48;//0.365; // S.D. of noise
 		final double SIGMA = 5.6*12.0;//5.6;	// scale
-		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*hpa));
+		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*HPAExpectation()));
 		/*
 		int quality = h.desiredQuality;
 		double housePrice = Model.housingMarket.getAverageSalePrice(quality);//behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
@@ -70,7 +70,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 ********************************/
 	public double initialSalePrice(double pbar, double d, double principal) {
 		final double C = 0.03;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
-		final double D = 0.02;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
+		final double D = 0.001;//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
@@ -84,8 +84,24 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		// Am I forced to move because of job change etc?
 		// if(rand.nextDouble() < data.Households.P_FORCEDTOMOVE) return(true);
 		// I can get a better house by moving?
-		int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
-		double p_move = data.Households.P_FORCEDTOMOVE + (data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(5.0-2.0*potentialQualityChange));
+		// TODO: need to add expenditure
+		
+		double p_move = data.Households.P_FORCEDTOMOVE;
+
+		// calc purchase price
+		double purchasePrice = Math.min(desiredPurchasePrice(me.monthlyEmploymentIncome), Model.bank.getMaxMortgage(me, true));
+		MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice, me.getHomeEquity()+downPayment(me), true);
+		int newHouseQuality = Model.housingMarket.maxQualityGivenPrice(purchasePrice);
+		if(newHouseQuality < 0) return(false); // can't afford a house anyway
+		// cost of staying is cost of mortgage - value of living in house of this quality
+		double currentHouseUtility = 0.3;//me.mortgageFor(me.home).nextPayment()/me.getMonthlyPreTaxIncome(); // = cost of current house
+		double newHouseUtility = currentHouseUtility*Model.housingMarket.getAverageSalePrice(newHouseQuality)/Model.housingMarket.getAverageSalePrice(me.home.getQuality());
+		double costOfMove = mortgageApproval.monthlyPayment/me.getMonthlyPreTaxIncome();
+		//		int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(purchasePrice)- me.home.getQuality();
+//		double costOfMove = mortgageApproval.monthlyPayment/me.getMonthlyPreTaxIncome() - Model.rentalMarket.getAverageSalePrice(Model.housingMarket.maxQualityGivenPrice(purchasePrice));
+				//Model.housingMarket.averageDaysOnMarket*0.005; // in units of house quality
+//		System.out.println("Move utility = "+(newHouseUtility-costOfMove));
+		p_move += (data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(5.0-10.0*(newHouseUtility-costOfMove)));
 		return(rand.nextDouble() < p_move);
 	}
 
@@ -120,29 +136,35 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 *  is assumed to be the difference in rental price between the two qualities.
 	 *  @return true if we should buy a house, false if we should rent
 	 */
-	public boolean rentOrPurchaseDecision(Household h, double maxMortgage) {
+	public boolean rentOrPurchaseDecision(Household me, double maxMortgage) {
 		final double SCALE = 1.0;//1.25
 		double COST_OF_RENTING; // annual psychological cost of renting
 		double FTB_K; // = 1.0/2000.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 		double costOfHouse;
-		int quality = h.desiredQuality;
-		double housePrice = Model.housingMarket.getAverageSalePrice(quality);//behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
-		if(housePrice > maxMortgage) {
-			quality = Model.housingMarket.maxQualityGivenPrice(maxMortgage);
-			if(quality < 0) return(false); // can't afford a house of any quality (BtL will buy 0 quality houses)
-			housePrice = Model.housingMarket.getAverageSalePrice(quality);
-		}
-		
-		double costOfRent = Model.rentalMarket.getAverageSalePrice(quality)*12;
 
-		if(h.isFirstTimeBuyer()) {
+		double purchasePrice = Math.min(desiredPurchasePrice(me.monthlyEmploymentIncome), Model.bank.getMaxMortgage(me, true));
+		MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice, downPayment(me), true);
+		int newHouseQuality = Model.housingMarket.maxQualityGivenPrice(purchasePrice);
+		if(newHouseQuality < 0) return(false); // can't afford a house anyway
+		
+//		int quality = h.desiredQuality;
+//		double housePrice = Model.housingMarket.getAverageSalePrice(quality);//behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
+//		if(housePrice > maxMortgage) {
+//			quality = Model.housingMarket.maxQualityGivenPrice(maxMortgage);
+//			if(quality < 0) return(false); // can't afford a house of any quality (BtL will buy 0 quality houses)
+//			housePrice = Model.housingMarket.getAverageSalePrice(quality);
+//		}
+		
+		double costOfRent = Model.rentalMarket.getAverageSalePrice(newHouseQuality)*12;
+
+		if(me.isFirstTimeBuyer()) {
 			COST_OF_RENTING = SCALE*0.25; // expressed as fraction of monthly employment income
 		} else {
 			COST_OF_RENTING = SCALE*2.5;
 		}
-		FTB_K = SCALE/h.monthlyEmploymentIncome; // money is relative
+		FTB_K = SCALE/me.monthlyEmploymentIncome; // money is relative
 		
-		costOfHouse = Math.max(0.0,housePrice-h.bankBalance)*Model.bank.getMortgageInterestRate() - housePrice*HPAExpectation();
+		costOfHouse = mortgageApproval.monthlyPayment - purchasePrice*HPAExpectation();
 		return(Model.rand.nextDouble() < 1.0/(1.0 + Math.exp(COST_OF_RENTING-FTB_K*(costOfRent - costOfHouse))));
 	}
 
@@ -151,7 +173,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
 	 ********************************************************/
 	public double desiredRent(double monthlyIncome) {
-//		return(monthlyIncome * 0.33);
+		return(monthlyIncome * 0.33);
+/*
 		double annualIncome = monthlyIncome*12.0; // TODO: this should be net annual income, not gross
 		double rent;
 		if(annualIncome < 12000.0) {
@@ -161,6 +184,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		}
 		rent *= Math.exp(Model.rand.nextGaussian()*0.0826);
 		return(rent);
+		*/
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +271,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	}
 	
 	public double btlPurchaseBid(Household me) {
-		return(Model.bank.getMaxMortgage(me, false));
+		return(Math.min(Model.bank.getMaxMortgage(me, false), 1.1*Model.housingMarket.getAverageSalePrice(House.Config.N_QUALITY-1)));
 	}
 //	public boolean decideToBuyBuyToLet(House h, Household me, double price) {
 		// --- give preference to cheaper properties

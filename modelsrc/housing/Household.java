@@ -51,7 +51,7 @@ public class Household implements IHouseOwner, Serializable {
 	 * Receive income, pay rent/mortgage, make consumption decision
 	 * and make decision to buy/sell house.
 	 ********************************************************/
-	public void preSaleClearingStep() {
+	public void step() {
 		double disposableIncome;
 		
 		lifecycle.step();
@@ -291,7 +291,7 @@ public class Household implements IHouseOwner, Serializable {
 	protected void bidForAHome() {
 		double maxMortgage = Model.bank.getMaxMortgage(this, true);
 		if(behaviour.rentOrPurchaseDecision(this, maxMortgage)) {
-			double price = behaviour.desiredPurchasePrice(monthlyEmploymentIncome, Model.housingMarket.housePriceAppreciation());
+			double price = behaviour.desiredPurchasePrice(monthlyEmploymentIncome);
 			if(price > maxMortgage - 1.0) {
 				price = maxMortgage -1.0;
 			}

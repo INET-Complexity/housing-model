@@ -124,6 +124,32 @@ public class HouseSaleMarket extends HousingMarket {
 		bids.add(new BtLBuyerRecord(buyer, maxPrice));
 	}
 
+	@Override
+	protected void recordMarketStats() {
+		super.recordMarketStats();
+		
+		double logPrice = 0.0;
+		double logPriceMean;
+		double logPriceVariance;
+		logPriceVariance = 0.0;
+		logPriceMean = 0.0;
+		for(Double price : averageSalePrice) {
+			logPrice += Math.log(price);
+			logPriceMean += logPrice;
+			logPriceVariance += logPrice*logPrice;
+		}
+		logPriceMean /= House.Config.N_QUALITY;
+		logPriceVariance = logPriceVariance/House.Config.N_QUALITY - logPriceMean*logPriceMean;
+		dLogPriceMean = logPriceMean - data.HouseSaleMarket.HPI_REFERENCE;
+		dLogPriceSD = Math.sqrt(logPriceVariance)/data.HouseSaleMarket.HPI_SHAPE;
+
+		final double DECAY = 0.998;
+		for(int q=0; q<House.Config.N_QUALITY; ++q) {
+			averageSalePrice[q] = DECAY*averageSalePrice[q] + (1.0-DECAY)*Math.exp(dLogPriceSD*Math.log(this.referencePrice(q)) + dLogPriceMean);
+		}
+
+	}
+
 	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	
 
 	/**
