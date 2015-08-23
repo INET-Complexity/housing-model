@@ -41,12 +41,12 @@ public class Demographics {
 		// --- death
 		double pDeath;
 		Iterator<Household> iterator = Model.households.iterator();
-	    double pMult = 1.0;
-	    if(Model.getTime() > spinupYears*12) pMult = Model.households.size()/TARGET_POPULATION;
+//	    double pMult = 1.0;
+//	    if(Model.getTime() > spinupYears*12) pMult = Model.households.size()/TARGET_POPULATION;
 		while(iterator.hasNext()) {
 		    Household h = iterator.next();
 		    pDeath = data.Demographics.probDeathGivenAge(h.lifecycle.age)/12.0;
-			if(Model.rand.nextDouble() < pDeath * pMult) {
+			if(Model.rand.nextDouble() < pDeath) {
 				// --- inheritance
 				iterator.remove();
 				h.transferAllWealthTo(Model.households.get(Model.rand.nextInt(Model.households.size())));

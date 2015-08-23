@@ -4,7 +4,7 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 public class Households {
 	static public double P_SELL = 1.0/(11.0*12.0);  // monthly probability of Owner-Occupier selling home (British housing survey 2008)
-	static public double P_FORCEDTOMOVE = P_SELL*0.2;		// monthly probability of an OO being forced to move due to external factors (job change etc)
+	static public double P_FORCEDTOMOVE = P_SELL*0.1;		// monthly probability of an OO being forced to move due to external factors (job change etc)
 	static public double BTL_MU = Math.log(3.44); 	// location parameter for No. of houses owned by BtL
 	static public double BTL_SIGMA = 1.050;			// shape parameter for No. of houses owned by BtL
 	static public double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)

@@ -64,6 +64,7 @@ public class Demographics {
 	 */
 	public static double probDeathGivenAge(double ageInYears) {
 		double PdeathOfFemale2012 = 3.788e-5*Math.exp(8.642e-2*ageInYears);
+//		double tempFudgeFactor = 1.0; // to ensure population doesn't decrease after spinup
 		// ONS Statistical Bulletin: Historic and Projected Mortality. Data from the Period and Cohort
 		// Life Tables, 2012-based, UK, 1981-2062
 		return(PdeathOfFemale2012);
