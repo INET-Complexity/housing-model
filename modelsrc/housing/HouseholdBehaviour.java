@@ -131,6 +131,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
 //		return(sale.getPrice() *0.95);
+
 		if(rand.nextDouble() < data.Households.P_SALEPRICEREDUCE) {
 			double logReduction = Math.min(-5.1e-3, data.Households.REDUCTION_MU+(rand.nextGaussian()*data.Households.REDUCTION_SIGMA));
 			return(sale.getPrice() * (1.0-Math.exp(logReduction)));
@@ -297,8 +298,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 
 	/*** @return as a fraction of pre-tax income */
 	public double utilityOfPurchase(Household me, int q, double downPayment) {
-		double principal = Math.max(0.0,Model.housingMarket.getAverageSalePrice(q)-downPayment);
-		return(utilityOfHome(me,q) - principal*Model.bank.monthlyPaymentFactor(true)/me.getMonthlyPreTaxIncome());
+		double price = Model.housingMarket.getAverageSalePrice(q);
+		double principal = Math.max(0.0, price-downPayment);
+		return(utilityOfHome(me,q) + (price*HPAExpectation()/12.0 - principal*Model.bank.monthlyPaymentFactor(true))/me.getMonthlyPreTaxIncome());
 	}
 
 	public int findBestRentalQuality(Household me) {
