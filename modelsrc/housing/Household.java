@@ -62,7 +62,7 @@ public class Household implements IHouseOwner, Serializable {
 		}
 		// --- consume based on disposable income after house payments
 		bankBalance += disposableIncome;
-		bankBalance -= behaviour.desiredConsumptionB(getMonthlyPreTaxIncome(),bankBalance);
+		bankBalance -= behaviour.desiredConsumptionB(this);//getMonthlyPreTaxIncome(),bankBalance);
 		if(bankBalance < 0.0) { // bankrupt behaviour				
 			bankBalance = 1.0;	// TODO: cash injection for now...
 		}

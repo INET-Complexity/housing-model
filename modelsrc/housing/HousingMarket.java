@@ -13,6 +13,7 @@ import java.util.TreeSet;
 import org.apache.commons.math3.distribution.GeometricDistribution;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import utilities.PriorityQueue2D;
 
@@ -36,10 +37,10 @@ public abstract class HousingMarket implements Serializable {
 	static public class Config {
 		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
 		public static final double BIDUP = 1.0025; // smallest proportion increase in price that can cause a gazump
-		public static final double T = 0.04*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
-		public static final double F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
+		public static final double T = 0.02*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
+		public static final int HPA_LENGTH = 12; // Number of months to take HPA over //F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
 		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market (in transactions)
-		public static final double G = Math.exp(-House.Config.N_QUALITY*0.5/T); // Decay const for averageListPrice averaging (in transactions)
+		public static final double G = Math.exp(-House.Config.N_QUALITY/T); // Decay const for averageListPrice averaging (in transactions)
 	}
 	
 	static public class Authority {
@@ -50,6 +51,7 @@ public abstract class HousingMarket implements Serializable {
 	public HousingMarket() {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
 		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
+		HPIAppreciation = new DescriptiveStatistics(Config.HPA_LENGTH);
 		init();
 	}
 	
@@ -60,8 +62,8 @@ public abstract class HousingMarket implements Serializable {
 		}
 		housePriceIndex = 1.0;
 		lastHousePriceIndex = 1.0;
-		HPIAppreciation = 0.0;
 		averageDaysOnMarket = 30;
+		for(i=0; i<Config.HPA_LENGTH; ++i) HPIAppreciation.addValue(1.0);
 		offersPQ.clear();
 //		matches.clear();
 	}
@@ -184,7 +186,7 @@ public abstract class HousingMarket implements Serializable {
 		// bids contains bids (HouseBuyerRecords) in an array
 		
 		recordMarketStats();
-		for(int i=0; i<3; ++i) {
+		for(int i=0; i<2; ++i) {
 			matchBidsWithOffers();
 			clearMatches();
 		}
@@ -266,12 +268,12 @@ public abstract class HousingMarket implements Serializable {
 	
 	/***************************************************
 	 * Get the annualised appreciation in house price index (HPI is compared to the
-	 * reference HPI_MEAN)
+	 * reference HPI_MEAN) (Compare to same time last year to get rid of seasonality)
 	 * 
 	 * @return Annualised appreciation
 	 ***************************************************/
 	public double housePriceAppreciation() {
-		return(12.0*HPIAppreciation);
+		return(12.0*(HPIAppreciation.getValues()[Config.HPA_LENGTH-1]-HPIAppreciation.getValues()[0])/Config.HPA_LENGTH);
 	}
 	
 	/***********************************************
@@ -313,13 +315,14 @@ public abstract class HousingMarket implements Serializable {
 	protected void recordMarketStats() {
 		// --- House Price Index stuff
 		// ---------------------------
-		HPIAppreciation = Config.F*HPIAppreciation - (1.0-Config.F)*housePriceIndex;
+//		HPIAppreciation = Config.F*HPIAppreciation - (1.0-Config.F)*housePriceIndex;
 		housePriceIndex = 0.0;
 		for(Double price : averageSalePrice) {
 			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
 		}
 		housePriceIndex /= House.Config.N_QUALITY*data.HouseSaleMarket.HPI_REFERENCE;
-		HPIAppreciation += (1.0-Config.F)*housePriceIndex;
+//		HPIAppreciation += (1.0-Config.F)*housePriceIndex;
+		HPIAppreciation.addValue(housePriceIndex);
 	}
 
 
@@ -337,7 +340,7 @@ public abstract class HousingMarket implements Serializable {
 	// ---- statistics
 	public double averageDaysOnMarket;
 	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
-	public double HPIAppreciation;
+	public DescriptiveStatistics HPIAppreciation;
 	public double housePriceIndex;
 	public double lastHousePriceIndex;
 	public double dLogPriceMean;

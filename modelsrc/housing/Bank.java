@@ -19,7 +19,7 @@ public class Bank implements Serializable {
 	public double INITIAL_BASE_RATE = 0.005; // Bank base-rate (0.5%)
 	public double MAX_OO_LTV = 1.0;		// maximum LTV bank will give to owner-occupier when not regulated	
 	public double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
-	public double MAX_OO_LTI = 6.5;		// maximum LTI bank will give to owner-occupier when not regulated
+	public double MAX_OO_LTI = 4.5;		// maximum LTI bank will give to owner-occupier when not regulated
 	public double INTEREST_MARGIN = 3.0; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
 	public double CREDIT_SUPPLY_TARGET = 490.0; // target supply of credit per household per month
 	
@@ -138,15 +138,17 @@ public class Bank implements Serializable {
 		if(approval == null) return(null);
 		// --- if all's well, go ahead and arrange mortgage
 		supplyVal += approval.principal;
-		mortgages.add(approval);
-		Model.collectors.creditSupply.recordLoan(h, approval);
-		++nLoans;
-		if(isHome) {
-			if(approval.principal/h.annualEmploymentIncome() > Model.centralBank.loanToIncomeRegulation(h.isFirstTimeBuyer())) {
-				++nOverLTICapLoans;
-			}
-			if(approval.principal/(approval.principal + approval.downPayment) > Model.centralBank.loanToValueRegulation(h.isFirstTimeBuyer(),isHome)) {
-				++nOverLTVCapLoans;
+		if(approval.principal > 0.0) {
+			mortgages.add(approval);
+			Model.collectors.creditSupply.recordLoan(h, approval);
+			++nLoans;
+			if(isHome) {
+				if(approval.principal/h.annualEmploymentIncome() > Model.centralBank.loanToIncomeRegulation(h.isFirstTimeBuyer())) {
+					++nOverLTICapLoans;
+				}
+				if(approval.principal/(approval.principal + approval.downPayment) > Model.centralBank.loanToValueRegulation(h.isFirstTimeBuyer(),isHome)) {
+					++nOverLTVCapLoans;
+				}
 			}
 		}
 		return(approval);
@@ -208,7 +210,6 @@ public class Bank implements Serializable {
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor(isHome);		
 		approval.nPayments = N_PAYMENTS;
 		approval.monthlyInterestRate = r;
-		approval.isBuyToLet = !isHome;
 		approval.isFirstTimeBuyer = h.isFirstTimeBuyer();
 		approval.purchasePrice = approval.principal + approval.downPayment;
 		return(approval);

@@ -141,6 +141,10 @@ public class Model extends SimState implements Steppable {
 		return(Model.root.t);
 	}
 
+	static public int getMonth() {
+		return(Model.root.t%12 + 1);
+	}
+
 	////////////////////////////////////////////////////////////////////////
 
 	public static int N_STEPS = 12000; // timesteps

@@ -6,7 +6,7 @@ public class MortgageAgreement extends PaymentAgreement {
 	private static final long serialVersionUID = -1610029355056926296L;
 	public double	downPayment;
 	public double	purchasePrice;
-	public boolean	isBuyToLet;
+	public final boolean	isBuyToLet;
 	public boolean	isFirstTimeBuyer;
 	public double	principal;			// remaining principal to be paid off
 	public double 	monthlyInterestRate;

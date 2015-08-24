@@ -127,6 +127,7 @@ public class HouseSaleMarket extends HousingMarket {
 		bids.add(new BtLBuyerRecord(buyer, maxPrice));
 	}
 
+	/*
 	@Override
 	protected void recordMarketStats() {
 		super.recordMarketStats();
@@ -138,12 +139,13 @@ public class HouseSaleMarket extends HousingMarket {
 		}
 		double m = regression.getSlope();
 		double c = regression.getIntercept();
-		final double DECAY = 0.7;
+		final double DECAY = 0.75;
 		for(int q=0; q<House.Config.N_QUALITY; ++q) {
 			averageSalePrice[q] = DECAY*averageSalePrice[q] + (1.0-DECAY)*(m*this.referencePrice(q) + c);
 		}
+		
 	}
-
+*/
 	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	
 
 	/**

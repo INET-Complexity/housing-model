@@ -8,7 +8,7 @@ import ec.util.MersenneTwisterFast;
 
 public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
 	private static final long serialVersionUID = -7785886649432814279L;
-	public double DOWNPAYMENT_FRACTION = 0.1 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
+	public double DOWNPAYMENT_FRACTION = 0.5 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 	public double HPA_EXPECTATION_WEIGHT = 0.8; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer)
 	protected MersenneTwisterFast 	rand = Model.rand;
 	public int						desiredBTLProperties;	// number of properties
@@ -33,12 +33,21 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @author daniel
 	 *
 	 ********************************/
-	public double desiredConsumptionB(double monthlyIncome, double bankBalance) {
-		return(0.1*Math.max(bankBalance - desiredBankBalance(monthlyIncome),0.0));
+	public double desiredConsumptionB(Household me) {//double monthlyIncome, double bankBalance) {
+		double desiredBalance;
+		/*
+		if(me.isInSocialHousing() && !me.isFirstTimeBuyer()) {
+			desiredBalance = Model.housingMarket.getAverageSalePrice(me.desiredQuality); // temporarily between houses
+		} else {
+			desiredBalance = desiredBankBalance(me);
+		}
+		*/
+		desiredBalance = desiredBankBalance(me);
+		return(0.05*Math.max(me.bankBalance - desiredBalance,0.0));
 	}
 	
-	public double desiredBankBalance(double monthlyIncome) {
-		return(Math.exp(4.07*Math.log(monthlyIncome*12.0)-33.1 - propensityToSave));
+	public double desiredBankBalance(Household me) {
+		return(Math.exp(4.07*Math.log(me.getMonthlyPreTaxIncome()*12.0)-33.1 - propensityToSave));
 	}
 
 	/***************************
@@ -48,7 +57,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 ****************************/
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
 //		final double A = 0.0;//0.48;			// sensitivity to house price appreciation
-		final double EPSILON = 0.36;//0.36;//0.48;//0.365; // S.D. of noise
+//		final double EPSILON = 0.36;//0.36;//0.48;//0.365; // S.D. of noise
 //		final double SIGMA = 5.6*12.0;//5.6;	// scale
 //		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*HPAExpectation()));
 		
@@ -60,7 +69,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //			if(quality < 0) return(false); // can't afford a house of any quality (BtL will buy 0 quality houses)
 //			housePrice = Model.housingMarket.getAverageSalePrice(quality);
 //		}
-		return(1.03*housePrice*Math.exp(0.1*Model.rand.nextGaussian()));
+		return(1.0*housePrice*Math.exp(0.1*Model.rand.nextGaussian()));
 	}
 
 	/********************************
@@ -93,7 +102,6 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		
 		
 		// calc purchase price
-		double p_move = data.Households.P_FORCEDTOMOVE;
 		PurchasePlan plan = findBestPurchase(me);
 		if(plan.quality < 0) return(false); // can't afford new home anyway
 		double currentUtility = utilityOfHome(me,me.home.getQuality()) - me.mortgageFor(me.home).nextPayment()/me.getMonthlyPreTaxIncome();
@@ -109,16 +117,15 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //		double costOfMove = mortgageApproval.monthlyPayment/me.getMonthlyPreTaxIncome() - Model.rentalMarket.getAverageSalePrice(Model.housingMarket.maxQualityGivenPrice(purchasePrice));
 				//Model.housingMarket.averageDaysOnMarket*0.005; // in units of house quality
 //	System.out.println("Move utility = "+(plan.utility- currentUtility));
-		
-		
 
-		p_move += 2.0*(data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(2.0-20.0*(plan.utility - currentUtility)));
-		
+		double p_move = data.Households.P_FORCEDTOMOVE;
+		p_move += 2.0*(data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(4.0-20.0*(plan.utility - currentUtility)));
+		p_move *= 1.0 - data.HouseSaleMarket.SEASONAL_VOL_ADJ*Math.cos((2.0*3.141/12.0)*Model.getMonth());
 		return(rand.nextDouble() < p_move);
 	}
 
 	public double downPayment(Household me) {
-		return(me.bankBalance - (1.0 - DOWNPAYMENT_FRACTION)*desiredBankBalance(me.monthlyEmploymentIncome));
+		return(me.bankBalance - (1.0 - DOWNPAYMENT_FRACTION)*desiredBankBalance(me));
 	}
 
 	
@@ -221,7 +228,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 			System.out.println("Strange: deciding to sell investment property that I don't own");
 			return(false);
 		}
-		if(h.isOnRentalMarket() && (h.rentalRecord.getPrice()-mortgage.nextPayment())< 0.0) {
+		if(h.isOnRentalMarket() && (h.rentalRecord.getPrice()-mortgage.nextPayment()) < 0) {//50.0*(Model.rand.nextGaussian()-1.5)) {
 			return(true);
 		}
 		return(false);
@@ -240,12 +247,13 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 //		return(Math.max(Math.exp(exponent), mortgagePayment));
 		double result = Math.exp(exponent);
+//		if(result < mortgagePayment*1.05) result = mortgagePayment*1.05;
 		return(result);
 //		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
 	}
 
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
-		return(0.95*sale.getPrice());
+		return(0.98*sale.getPrice());
 //		if(rand.nextDouble() > 0.944) {
 //			double logReduction = Math.min(4.6, 1.603+(rand.nextGaussian()*0.6173));
 //			return(sale.getPrice() * (1.0-0.01*Math.exp(logReduction)));
