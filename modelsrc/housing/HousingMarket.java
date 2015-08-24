@@ -38,7 +38,7 @@ public abstract class HousingMarket implements Serializable {
 		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
 		public static final double BIDUP = 1.0025; // smallest proportion increase in price that can cause a gazump
 		public static final double T = 0.02*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
-		public static final int HPA_LENGTH = 12; // Number of months to take HPA over //F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
+		public static final int HPI_LENGTH = 15; // Number of months to record HPI //F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
 		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market (in transactions)
 		public static final double G = Math.exp(-House.Config.N_QUALITY/T); // Decay const for averageListPrice averaging (in transactions)
 	}
@@ -51,7 +51,7 @@ public abstract class HousingMarket implements Serializable {
 	public HousingMarket() {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
 		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
-		HPIAppreciation = new DescriptiveStatistics(Config.HPA_LENGTH);
+		HPIRecord = new DescriptiveStatistics(Config.HPI_LENGTH);
 		init();
 	}
 	
@@ -63,7 +63,7 @@ public abstract class HousingMarket implements Serializable {
 		housePriceIndex = 1.0;
 		lastHousePriceIndex = 1.0;
 		averageDaysOnMarket = 30;
-		for(i=0; i<Config.HPA_LENGTH; ++i) HPIAppreciation.addValue(1.0);
+		for(i=0; i<Config.HPI_LENGTH; ++i) HPIRecord.addValue(1.0);
 		offersPQ.clear();
 //		matches.clear();
 	}
@@ -267,13 +267,18 @@ public abstract class HousingMarket implements Serializable {
 	}
 	
 	/***************************************************
-	 * Get the annualised appreciation in house price index (HPI is compared to the
-	 * reference HPI_MEAN) (Compare to same time last year to get rid of seasonality)
+	 * Get the annualised appreciation in house price index
+	 * (Compares the previous quarter to the quarter last year to get rid of seasonality)
 	 * 
 	 * @return Annualised appreciation
 	 ***************************************************/
 	public double housePriceAppreciation() {
-		return(12.0*(HPIAppreciation.getValues()[Config.HPA_LENGTH-1]-HPIAppreciation.getValues()[0])/Config.HPA_LENGTH);
+//		return((HPIRecord.getElement(Config.HPI_LENGTH-1)+HPIRecord.getElement(Config.HPI_LENGTH-2)+HPIRecord.getElement(Config.HPI_LENGTH-3))/
+//				(HPIRecord.getElement(Config.HPI_LENGTH-13)+HPIRecord.getElement(Config.HPI_LENGTH-14)+HPIRecord.getElement(Config.HPI_LENGTH-15))
+//				-1.0);
+		return(HPIRecord.getElement(Config.HPI_LENGTH-1)/
+				HPIRecord.getElement(Config.HPI_LENGTH-13)
+				-1.0);
 	}
 	
 	/***********************************************
@@ -322,7 +327,7 @@ public abstract class HousingMarket implements Serializable {
 		}
 		housePriceIndex /= House.Config.N_QUALITY*data.HouseSaleMarket.HPI_REFERENCE;
 //		HPIAppreciation += (1.0-Config.F)*housePriceIndex;
-		HPIAppreciation.addValue(housePriceIndex);
+		HPIRecord.addValue(housePriceIndex);
 	}
 
 
@@ -340,7 +345,7 @@ public abstract class HousingMarket implements Serializable {
 	// ---- statistics
 	public double averageDaysOnMarket;
 	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
-	public DescriptiveStatistics HPIAppreciation;
+	public DescriptiveStatistics HPIRecord;
 	public double housePriceIndex;
 	public double lastHousePriceIndex;
 	public double dLogPriceMean;
