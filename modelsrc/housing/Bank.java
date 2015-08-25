@@ -19,7 +19,7 @@ public class Bank implements Serializable {
 	public double INITIAL_BASE_RATE = 0.005; // Bank base-rate (0.5%)
 	public double MAX_OO_LTV = 1.0;		// maximum LTV bank will give to owner-occupier when not regulated	
 	public double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
-	public double MAX_OO_LTI = 4.5;		// maximum LTI bank will give to owner-occupier when not regulated
+	public double MAX_OO_LTI = 6.5;		// maximum LTI bank will give to owner-occupier when not regulated
 	public double INTEREST_MARGIN = 3.0; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
 	public double CREDIT_SUPPLY_TARGET = 490.0; // target supply of credit per household per month
 	
@@ -186,7 +186,7 @@ public class Bank implements Serializable {
 			approval.principal = Math.min(approval.principal, affordable_principal);
 
 			// --- lti constraint
-			lti_principal = h.getMonthlyPreTaxIncome()*12.0 * loanToIncome(h.isFirstTimeBuyer());
+			lti_principal = h.annualEmploymentIncome() * loanToIncome(h.isFirstTimeBuyer());
 			approval.principal = Math.min(approval.principal, lti_principal);
 		}
 		
@@ -241,7 +241,7 @@ public class Bank implements Serializable {
 //			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer())/loanToValue(h.isFirstTimeBuyer(),isHome);
 			pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
 			max = Math.min(max, pdi_max);
-			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
+			lti_max = h.annualEmploymentIncome()* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
 			max = Math.min(max, lti_max);
 		}
 		

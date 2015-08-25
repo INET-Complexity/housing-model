@@ -11,8 +11,8 @@ public class CentralBank implements Serializable {
 		ownerOccupierLTVLimit= 0.9;
 		buyToLetLTVLimit = 0.8;
 		
-		firstTimeBuyerLTILimit = 4.5;
-		ownerOccupierLTILimit = 4.5;
+		firstTimeBuyerLTILimit = 6.5;
+		ownerOccupierLTILimit = 6.5;
 //		buyToLetLTILimit = 1000.0; // unregulated
 
 		proportionOverLTILimit= 0.15;

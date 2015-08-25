@@ -176,6 +176,7 @@ public class Household implements IHouseOwner, Serializable {
 		if(home == null) { // move in to house
 			home = sale.house;
 			sale.house.resident = this;
+//			System.out.println((sale.house.getQuality()-desiredQuality)*1.0/House.Config.N_QUALITY);
 			desiredQuality = sale.house.getQuality();
 		} else if(sale.house.resident == null) { // put empty buy-to-let house on rental market
 			Model.rentalMarket.offer(sale.house, buyToLetRent(sale.house));

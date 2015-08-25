@@ -22,7 +22,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public HouseholdBehaviour(double incomePercentile) {
 		propensityToSave = 0.1*Model.rand.nextGaussian();
 		if( incomePercentile > 0.5 && rand.nextDouble() < data.Households.P_INVESTOR*2.0) {
-			desiredBTLProperties = (int)(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
+			desiredBTLProperties = (int)1;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
 		} else {
 			desiredBTLProperties = 0;
 		}
@@ -243,13 +243,13 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 //		return(Math.max(Math.exp(exponent), mortgagePayment));
 		double result = Math.exp(exponent);
-		if(result < mortgagePayment*1.05) result = mortgagePayment*1.05;
+		if(result < mortgagePayment*1.05) result = mortgagePayment*1.05; // TODO: TEST!!
 		return(result);
 //		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
 	}
 
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
-		return(0.98*sale.getPrice());
+		return(0.99*sale.getPrice());
 //		if(rand.nextDouble() > 0.944) {
 //			double logReduction = Math.min(4.6, 1.603+(rand.nextGaussian()*0.6173));
 //			return(sale.getPrice() * (1.0-0.01*Math.exp(logReduction)));
@@ -280,9 +280,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		return(desiredBTLProperties > 0);
 	}
 
-	public int nDesiredBTLProperties() {
-		return desiredBTLProperties;
-	}
+//	public int nDesiredBTLProperties() {
+//		return desiredBTLProperties;
+//	}
 
 	/*** @returns expectation value of HPI in one year's time divided by today's HPI*/
 	public double HPAExpectation() {
