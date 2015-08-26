@@ -109,7 +109,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double currentUtility;// = utilityOfHome(me,me.home.getQuality()) - me.mortgageFor(me.home).nextPayment()/me.getMonthlyPreTaxIncome();
 //		currentUtility = utilityOfHome(me,currentQuality) +(Model.housingMarket.getAverageSalePrice(currentQuality)*HPAExpectation()/12.0 - me.mortgageFor(me.home).nextPayment())/me.getMonthlyPreTaxIncome();
 		double currentLeftForConsumption = 1.0 - (me.mortgageFor(me.home).nextPayment() - Model.housingMarket.getAverageSalePrice(currentQuality)*HPAExpectation()/12.0)/me.getMonthlyPreTaxIncome();
-		currentUtility = (currentQuality-me.desiredQuality)/House.Config.N_QUALITY + qualityOfLiving(currentLeftForConsumption);
+//		currentUtility = (currentQuality-me.desiredQuality)/House.Config.N_QUALITY + qualityOfLiving(currentLeftForConsumption);
+		currentUtility = utilityOfHome(me, currentQuality) + qualityOfLiving(currentLeftForConsumption);
 //	System.out.println("Move utility = "+(plan.utility- currentUtility));
 
 		double p_move = data.Households.P_FORCEDTOMOVE;
@@ -179,7 +180,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //		costOfHouse = utilityOfPurchase(me, purchase.quality, purchase.);//-purchase.utility - Model.housingMarket.getAverageSalePrice(purchase.quality)*HPAExpectation()/(12*me.getMonthlyPreTaxIncome());
 //		costOfRent  = COST_OF_RENTING-utilityOfRenting(me, rentQuality);
 		double pBuy = 1.0/(1.0 + Math.exp(-INTENSITY_OF_CHOICE*(COST_OF_RENTING - utilityOfRenting(me, rentQuality) + purchase.utility)));
-//		System.out.println(utilityOfRenting(me, rentQuality) + " : "+purchase.utility+" ... "+pBuy);
+		System.out.println(utilityOfRenting(me, rentQuality) + " : "+purchase.utility+" ... "+pBuy);
 		return(Model.rand.nextDouble() < pBuy);
 	}
 
@@ -294,7 +295,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public double utilityOfRenting(Household me, int q) {
 //		return(utilityOfHome(me,q) - Model.rentalMarket.getAverageSalePrice(q)/me.getMonthlyPreTaxIncome());
 		double leftForConsumption = 1.0 - Model.rentalMarket.getAverageSalePrice(q)/me.getMonthlyPreTaxIncome();
-		return((q-me.desiredQuality)*1.0/House.Config.N_QUALITY + qualityOfLiving(leftForConsumption));
+//		return((q-me.desiredQuality)*1.0/House.Config.N_QUALITY + qualityOfLiving(leftForConsumption));
+		return(utilityOfHome(me,q) + qualityOfLiving(leftForConsumption));
 	}
 
 
@@ -343,7 +345,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double principal = price - mortgage.downPayment;
 //		return(utilityOfHome(me,q) + (price*HPAExpectation()/12.0 - principal*Model.bank.monthlyPaymentFactor(true))/me.getMonthlyPreTaxIncome());
 		double leftForConsumption = 1.0 - (principal*Model.bank.monthlyPaymentFactor(true) - price*HPAExpectation()/12.0)/me.getMonthlyPreTaxIncome();
-		return((q-me.desiredQuality)*1.0/House.Config.N_QUALITY + qualityOfLiving(leftForConsumption));
+//		return((q-me.desiredQuality)*1.0/House.Config.N_QUALITY + qualityOfLiving(leftForConsumption));
+		return(utilityOfHome(me,q) + qualityOfLiving(leftForConsumption));
+		
 	}
 	
 	public PurchasePlan findBestPurchase(Household me) {
@@ -395,14 +399,17 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	}
 
 	/*** @return the value this household gives to living in a house of quality q as a fraction of pre-tax income */
-//	public double utilityOfHome(Household me, int q) {
+	public double utilityOfHome(Household me, int q) {
 //		final double K = 10.0;
 //		final double M = 0.6;
 //		return(M/(1.0+Math.exp(-MATERIALISM*(q-me.desiredQuality)/House.Config.N_QUALITY)));
-//	}
+		double Pref = 0.05*Model.housingMarket.referencePrice(q)/me.annualEmploymentIncome();
+		return(4.0*Pref - Pref*Pref/0.6);
+	}
 	
 	public double qualityOfLiving(double consumptionFraction) {
-		if(consumptionFraction <= 0.01) consumptionFraction = 0.01;
-		return(0.7*(1.0 - 1.0/consumptionFraction) +0.33);
+//		if(consumptionFraction <= 0.01) consumptionFraction = 0.01;
+	//	return(0.7*(1.0 - 1.0/consumptionFraction) +0.33);
+		return(3.0*consumptionFraction);
 	}
 }

@@ -182,7 +182,7 @@ public class Bank implements Serializable {
 
 		if(isHome) {
 			// --- affordability constraint TODO: affordability for BtL
-			affordable_principal = Math.max(0.0,h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
+			affordable_principal = Math.max(0.0,0.5*h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
 			approval.principal = Math.min(approval.principal, affordable_principal);
 
 			// --- lti constraint
