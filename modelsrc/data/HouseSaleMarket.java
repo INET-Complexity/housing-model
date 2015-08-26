@@ -30,5 +30,10 @@ public class HouseSaleMarket {
  * Number of households: 26.7 million (2014 ONS Families and Households)
  * 
  * 37% of households own with mortgage, 32% own outright (Social Trends:Housing 2011 ONS)
+ * 
+ * LTI ratio mean = median = 2.9, SD = 1.15 (2013) Home-movers (not FTB) (Bank of England data)
+ * LTI ratio mean = 2.99, median = 3.04, SD = 1.15 (2014) Home-movers (not FTB) (Bank of England data)
+ * LTI ratio mean = 3.32[3.37], median = 3.35[3.42], SD = 0.99[0.97] (2013[2014]) Home-movers (not FTB) (Bank of England data)
+ * 
  */
 }
