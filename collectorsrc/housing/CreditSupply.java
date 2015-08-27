@@ -11,6 +11,7 @@ public class CreditSupply extends CollectorBase {
 		oo_lti = new DescriptiveStatistics(ARCHIVE_LEN);
 		oo_ltv = new DescriptiveStatistics(ARCHIVE_LEN);
 		btl_ltv = new DescriptiveStatistics(ARCHIVE_LEN);
+		downpayments = new DescriptiveStatistics(ARCHIVE_LEN);
 		mortgageCounter = 0;
 //		approved_mortgages_index = 0;
 		ftbCounter = 0;
@@ -57,6 +58,7 @@ public class CreditSupply extends CollectorBase {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);
 					oo_lti.addValue(approval.principal/h.annualEmploymentIncome());
 				}
+				downpayments.addValue(approval.downPayment);
 			}
 //			approved_mortgages[0][approved_mortgages_index] = approval.principal/(h.annualEmploymentIncome());
 //			approved_mortgages[1][approved_mortgages_index] = approval.downPayment/(h.annualEmploymentIncome());
@@ -86,6 +88,8 @@ public class CreditSupply extends CollectorBase {
     public double [] getOOLTVDistribution() {return(oo_ltv.getValues());}
     public double [] getOOLTIDistribution() {return(oo_lti.getValues());}
     public double [] getBTLLTVDistribution() {return(btl_ltv.getValues());}
+    public double [] getDownpaymentDistribution() {return(downpayments.getValues());}
+    
 
 
 	public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
@@ -97,7 +101,8 @@ public class CreditSupply extends CollectorBase {
 	public double affordability = 0.0;
 	public DescriptiveStatistics oo_lti;
 	public DescriptiveStatistics oo_ltv;
-	public DescriptiveStatistics btl_ltv;	
+	public DescriptiveStatistics btl_ltv;
+	public DescriptiveStatistics downpayments;
 //	public double [][] approved_mortgages = new double [2][ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
 //	public int approved_mortgages_index;
 	public int mortgageCounter;

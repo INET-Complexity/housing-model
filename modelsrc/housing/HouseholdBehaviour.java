@@ -8,12 +8,13 @@ import ec.util.MersenneTwisterFast;
 
 public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
 	private static final long serialVersionUID = -7785886649432814279L;
-	public double DOWNPAYMENT_FRACTION = 0.5 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
-	public double HPA_EXPECTATION_WEIGHT = 0.8; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer)
+	public double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
+	public double HPA_EXPECTATION_WEIGHT = 0.7; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer)
 	public double BTL_LOSS_TOLERANCE = 0.2 + 0.1*Model.rand.nextGaussian(); // loss as proportion of rent at which 50% per month chance of selling a BtL house on the rental market 
 	public double BTL_YIELD_SENSITIVITY = 100.0 + 50*Model.rand.nextGaussian(); // sensitivity to yield when buying BtL property
+	public double BTL_CAPITAL_GAIN_SENSITIVITY = 1.0; // sensitivity to HPAexpectation in decision to buy or sell BtL property
 //	public double MATERIALISM = 10.0 + Model.rand.nextGaussian(); // sensitivity to property quality
-	public double INTENSITY_OF_CHOICE = 10.0;
+	public double INTENSITY_OF_CHOICE = 2.0;
 	protected MersenneTwisterFast 	rand = Model.rand;
 	public int						desiredBTLProperties;	// number of properties
 	public double 					propensityToSave;
@@ -21,7 +22,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	
 	public HouseholdBehaviour(double incomePercentile) {
 		propensityToSave = 0.1*Model.rand.nextGaussian();
-		if( incomePercentile > 0.5 && rand.nextDouble() < data.Households.P_INVESTOR*2.0) {
+		if( incomePercentile > 0.5 && rand.nextDouble() < data.Households.P_INVESTOR) {
 			desiredBTLProperties = (int)1;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
 		} else {
 			desiredBTLProperties = 0;
@@ -48,7 +49,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	}
 	
 	public double desiredBankBalance(Household me) {
-		return(Math.exp(4.07*Math.log(me.getMonthlyPreTaxIncome()*12.0)-33.1 - propensityToSave));
+		return(2.0*Math.exp(4.07*Math.log(me.getMonthlyPreTaxIncome()*12.0)-33.1 - propensityToSave)); // TODO: TEST x2 bank balance
 	}
 
 	/***************************
@@ -116,6 +117,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double p_move = data.Households.P_FORCEDTOMOVE;
 		p_move += 2.0*(data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(4.0-INTENSITY_OF_CHOICE*(plan.utility - currentUtility)));
 		p_move *= 1.0 - data.HouseSaleMarket.SEASONAL_VOL_ADJ*Math.cos((2.0*3.141/12.0)*Model.getMonth());
+//		System.out.println("Move utility = "+(plan.utility- currentUtility)+"  "+p_move);
 		return(rand.nextDouble() < p_move);
 	}
 
@@ -172,15 +174,15 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		int rentQuality = findBestRentalQuality(me);
 		
 		if(me.isFirstTimeBuyer()) {
-			COST_OF_RENTING = 0.0; // expressed as fraction of quality
+			COST_OF_RENTING = 0.05;
 		} else {
-			COST_OF_RENTING = 0.2;
+			COST_OF_RENTING = 0.5;
 		}
 		
 //		costOfHouse = utilityOfPurchase(me, purchase.quality, purchase.);//-purchase.utility - Model.housingMarket.getAverageSalePrice(purchase.quality)*HPAExpectation()/(12*me.getMonthlyPreTaxIncome());
 //		costOfRent  = COST_OF_RENTING-utilityOfRenting(me, rentQuality);
 		double pBuy = 1.0/(1.0 + Math.exp(-INTENSITY_OF_CHOICE*(COST_OF_RENTING - utilityOfRenting(me, rentQuality) + purchase.utility)));
-		System.out.println(utilityOfRenting(me, rentQuality) + " : "+purchase.utility+" ... "+pBuy);
+//		System.out.println(utilityOfRenting(me, rentQuality) + " : "+purchase.utility+" : "+(COST_OF_RENTING - utilityOfRenting(me, rentQuality) + purchase.utility)+" ... "+pBuy);
 		return(Model.rand.nextDouble() < pBuy);
 	}
 
@@ -225,6 +227,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 			System.out.println("Strange: deciding to sell investment property that I don't own");
 			return(false);
 		}
+		// TODO: add transaction costs to expected capital gain
+//		double icr = (h.rentalRecord.getPrice()-mortgage.nextPayment())/h.rentalRecord.getPrice();
+//		double capitalGain = HPAExpectation()*Model.housingMarket.getAverageSalePrice(h.getQuality()) - me.mortgageFor(h).nextPayment()*12.0;
 		if(h.isOnRentalMarket() && (h.rentalRecord.getPrice()-mortgage.nextPayment())/h.rentalRecord.getPrice() < (0.1*Model.rand.nextGaussian()-BTL_LOSS_TOLERANCE)) {
 			return(true);
 		}
@@ -267,7 +272,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		
 		MortgageAgreement m = Model.bank.requestApproval(me, price, 0.0, false); // maximise leverege with min downpayment
 
-		double yield = ((Model.rentalMarket.getAverageSalePrice(0) - m.monthlyPayment)*12.0 + HPAExpectation()*price)/
+		double yield = ((Model.rentalMarket.getAverageSalePrice(0) - m.monthlyPayment)*12.0 + BTL_CAPITAL_GAIN_SENSITIVITY*HPAExpectation()*price)/
 		m.downPayment;
 		double pBuy = 1.0/(1.0 + Math.exp(-BTL_YIELD_SENSITIVITY*(yield-0.05)));
 		return(Model.rand.nextDouble() < pBuy);
@@ -403,8 +408,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //		final double K = 10.0;
 //		final double M = 0.6;
 //		return(M/(1.0+Math.exp(-MATERIALISM*(q-me.desiredQuality)/House.Config.N_QUALITY)));
+		final double refHousingSpend = 0.3;
 		double Pref = 0.05*Model.housingMarket.referencePrice(q)/me.annualEmploymentIncome();
-		return(4.0*Pref - Pref*Pref/0.6);
+		return(4.0*Pref - Pref*Pref/(2*refHousingSpend));
 	}
 	
 	public double qualityOfLiving(double consumptionFraction) {

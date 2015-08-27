@@ -12,15 +12,24 @@ public class HouseSaleMarket {
 	public static LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
 	public static double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)
 	public static double SEASONAL_VOL_ADJ = 0.2; // amplitude of seasonal oscillation of volume of sales on market (approximated from HM Revenue and Customs UK Property Transactions Count - July 2015)
-	
+	public static double [] refPrice = setupRefPrice();
 	/***
 	 * Based on current price distribution
 	 * @param quality
 	 * @return
 	 */
 	static public double referencePrice(int quality) {
-		return(listPriceDistribution.inverseCumulativeProbability((quality+0.5)/House.Config.N_QUALITY));
+		return(refPrice[quality]);
 	}
+	
+	static public double [] setupRefPrice() {
+		double [] result = new double[House.Config.N_QUALITY];
+		for(int q=0; q<House.Config.N_QUALITY; ++q) {
+			result[q] = listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY);
+		}
+		return(result);
+	}
+	
 /*
  * NOTES ON AGGREGATE CALIBRATION
  * HMRC land transaction returns (stamp duty) a month: roughly 120000/month = 0.45% of pop
