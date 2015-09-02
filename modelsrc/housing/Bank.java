@@ -19,7 +19,7 @@ public class Bank implements Serializable {
 	public double INITIAL_BASE_RATE = 0.005; // Bank base-rate (0.5%)
 	public double MAX_OO_LTV = 0.9;		// maximum LTV bank will give to owner-occupier when not regulated	
 	public double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
-	public double MAX_OO_LTI = 6.5;		// maximum LTI bank will give to owner-occupier when not regulated
+	public double MAX_OO_LTI = 4.5;		// maximum LTI bank will give to owner-occupier when not regulated
 	public double INTEREST_MARGIN = 3.0; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
 	public double CREDIT_SUPPLY_TARGET = 490.0; // target supply of credit per household per month
 	

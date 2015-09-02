@@ -145,7 +145,8 @@ public class HouseSaleMarket extends HousingMarket {
 		}
 		
 	}
-*/
+	 */
+	
 	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	
 
 	/**

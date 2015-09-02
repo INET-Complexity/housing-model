@@ -13,7 +13,7 @@ public class Demographics {
 	 * at time t=0
 	 * Calibrated against (LCFS 2012)
 	 */
-	public static Pdf pdfAge = new Pdf("modelsrc/data/AgeMarginalPDF.csv");
+	public static Pdf pdfAge = new Pdf("modelsrc/data/AgeMarginalPDFstatic.csv");
 
 	/**
 	 * Probability density by age of the representative householder given that
@@ -64,10 +64,10 @@ public class Demographics {
 	 */
 	public static double probDeathGivenAge(double ageInYears) {
 		double PdeathOfFemale2012 = 3.788e-5*Math.exp(8.642e-2*ageInYears);
-//		double tempFudgeFactor = 1.0; // to ensure population doesn't decrease after spinup
+		double tempFudgeFactor = 0.0002*Math.exp(6.2e-2*ageInYears); // to ensure population doesn't decrease after spinup
 		// ONS Statistical Bulletin: Historic and Projected Mortality. Data from the Period and Cohort
 		// Life Tables, 2012-based, UK, 1981-2062
-		return(PdeathOfFemale2012);
+		return(tempFudgeFactor*PdeathOfFemale2012);
 //		double averageDeathRate = futureBirthRate(0);		
 //		return(averageDeathRate*ageInYears*ageInYears/7500.0);
 	}

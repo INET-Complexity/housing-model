@@ -36,7 +36,7 @@ public abstract class HousingMarket implements Serializable {
 	 */
 	static public class Config {
 		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
-		public static final double BIDUP = 1.015; // smallest proportion increase in price that can cause a gazump
+		public static final double BIDUP = 1.0; // smallest proportion increase in price that can cause a gazump
 		public static final double T = 0.02*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
 		public static final int HPI_LENGTH = 15; // Number of months to record HPI //F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
 		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market (in transactions)
@@ -133,6 +133,7 @@ public abstract class HousingMarket implements Serializable {
 	}
 
 	
+	@SuppressWarnings("unused")
 	protected void clearMatches() {
 		// --- clear and resolve oversubscribed offers
 		// 
@@ -149,10 +150,14 @@ public abstract class HousingMarket implements Serializable {
 			nBids = offer.matchedBids.size();
 			if(nBids > 0) {
 				// bid up the price
-				enoughBids = Math.min(4, nBids);
-				pSuccessfulBid = Math.exp(-enoughBids*Config.UNDEROFFER);
-				geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
-				salePrice = offer.getPrice() * Math.pow(Config.BIDUP, geomDist.sample());
+				if(Config.BIDUP != 1.0) {
+					enoughBids = Math.min(4, nBids);
+					pSuccessfulBid = Math.exp(-enoughBids*Config.UNDEROFFER);
+					geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
+					salePrice = offer.getPrice() * Math.pow(Config.BIDUP, geomDist.sample());
+				} else {
+					salePrice = offer.getPrice();					
+				}
 				// choose a bid above the new price
 				Collections.sort(offer.matchedBids, new HouseBuyerRecord.PComparator()); // highest price last
 				--nBids;

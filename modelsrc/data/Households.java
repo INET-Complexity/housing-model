@@ -11,8 +11,8 @@ public class Households {
 //	static public LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(BTL_MU, BTL_SIGMA); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
 
 	// House price reduction behaviour. Calibrated against Zoopla data at BoE
-	static public double P_SALEPRICEREDUCE = 1.0-0.944; 	// monthly probability of reducing the price of house on market
-	static public double REDUCTION_MU = -3.002; 	// log-normal location parameter of house price reductions for houses on the market. 
-	static public double REDUCTION_SIGMA = 0.6173;		// log-normal scale parameter of house price reductions for houses on the market
+	static public double P_SALEPRICEREDUCE = 1.0-0.945; 	// monthly probability of reducing the price of house on market
+	static public double REDUCTION_MU = 1.0-0.016; 	// mean of house price %age reductions for houses on the market. 
+	static public double REDUCTION_SIGMA = 0.006173;		// SD of house price %age reductions for houses on the market
 	
 }

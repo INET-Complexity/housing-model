@@ -35,7 +35,7 @@ public class Household implements IHouseOwner, Serializable {
 		lifecycle = new Lifecycle(age);
 		behaviour = new HouseholdBehaviour(lifecycle.incomePercentile);
 		monthlyEmploymentIncome = lifecycle.annualIncome()/12.0;
-		bankBalance = Math.exp(4.07*Math.log(monthlyEmploymentIncome/12.0)-33.1);
+		bankBalance = behaviour.desiredBankBalance(this);
 		monthlyPropertyIncome = 0.0;
 		desiredQuality = 0;
 	}

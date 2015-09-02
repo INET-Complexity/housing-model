@@ -22,7 +22,12 @@ public class Construction implements IHouseOwner, Serializable {
 	}
 	
 	public void step() {
-		int targetStock = (int)(Model.households.size()*housesPerHousehold);
+		int targetStock;
+		if(Model.households.size() < Demographics.TARGET_POPULATION) {
+			targetStock = (int)(Model.households.size()*housesPerHousehold);
+		} else {
+			targetStock = (int)(Demographics.TARGET_POPULATION*housesPerHousehold);			
+		}
 		int shortFall = targetStock - housingStock;
 		House newBuild;
 		double price;
