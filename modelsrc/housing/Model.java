@@ -125,7 +125,7 @@ public class Model extends SimState implements Steppable {
 		rentalMarket.clearMarket();
         bank.step();
         centralBank.step(getCoreIndicators());
-        t += 1;
+        t += 1;        
 	}
 	
 	

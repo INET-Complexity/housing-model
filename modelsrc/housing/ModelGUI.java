@@ -37,6 +37,8 @@ public class ModelGUI extends GUIState implements Steppable {
     
     // Chart generators
     
+    public ChartUtilities marketStats;
+    
 	public ScatterPlotGenerator
 	//	housingChart,
 		housePriceChart;
@@ -82,6 +84,9 @@ public class ModelGUI extends GUIState implements Steppable {
     @Override
     public void init(Controller controller) {
         super.init(controller);
+        
+        
+        
         myChartFrame = new JFrame("My Graphs");
         controller.registerFrame(myChartFrame);
         

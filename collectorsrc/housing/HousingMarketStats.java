@@ -67,12 +67,14 @@ public class HousingMarketStats extends CollectorBase {
 		recordBidPrices();
 	}
 	
+	/*
 	public void step() {
         int i;
         for(i=0; i<House.Config.N_QUALITY; ++i) {
         	priceData[1][i] = market.averageSalePrice[i];
         }
 	}
+	*/
 	
 	public void recordSale(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		if(sale.initialListedPrice > 0.01) {
@@ -223,13 +225,15 @@ public class HousingMarketStats extends CollectorBase {
 		return nEmpty;
 	}
 
+	
     public Double2D [] getmasonPriceData() {
     	Double2D [] data = new Double2D[House.Config.N_QUALITY];
     	for(int i=0; i<House.Config.N_QUALITY; ++i) {
-    		data[i] = new Double2D(priceData[0][i], priceData[1][i]);    		
+    		data[i] = new Double2D(market.referencePrice(i), market.getAverageSalePrice(i));    		
     	}
-		return data;
+    	return data;
 	}
+    
     
 	public String namemasonPriceData() {
 		return("Average Transaction Price / Reference Price");
@@ -237,6 +241,14 @@ public class HousingMarketStats extends CollectorBase {
 	public String desmasonPriceData() {
 		return("Average Transaction Price / Reference Price");
 	}
+
+    public double [][] priceData() {
+        int i;
+        for(i=0; i<House.Config.N_QUALITY; ++i) {
+        	priceData[1][i] = market.averageSalePrice[i];
+        }
+        return(priceData);
+    }
 
 	
 

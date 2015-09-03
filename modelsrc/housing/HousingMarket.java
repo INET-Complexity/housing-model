@@ -36,8 +36,8 @@ public abstract class HousingMarket implements Serializable {
 	 */
 	static public class Config {
 		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
-		public static final double BIDUP = 1.0; // smallest proportion increase in price that can cause a gazump
-		public static final double T = 0.02*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
+		public static final double BIDUP = 1.005; // smallest proportion increase in price that can cause a gazump
+		public static final double T = 0.01*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
 		public static final int HPI_LENGTH = 15; // Number of months to record HPI //F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
 		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market (in transactions)
 		public static final double G = Math.exp(-House.Config.N_QUALITY/T); // Decay const for averageListPrice averaging (in transactions)

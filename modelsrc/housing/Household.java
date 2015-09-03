@@ -20,7 +20,8 @@ public class Household implements IHouseOwner, Serializable {
 	//////////////////////////////////////////////////////////////////////////////////////
 
 	private static final long serialVersionUID = -5042897399316333745L;
-
+	public static final boolean BTL_ENABLED = true;
+	
 	/********************************************************
 	 * Constructor.
 	 ********************************************************/
@@ -74,12 +75,14 @@ public class Household implements IHouseOwner, Serializable {
 				endTenancy();
 				bidForAHome();
 			}			
-		} else if(isPropertyInvestor()) {
+		} else if(behaviour.isPropertyInvestor()) {
 			for(House h : housePayments.keySet()) {
 				manageHouse(h);
 			}
-			if(behaviour.decideToBuyBuyToLet(this)) {
-				Model.housingMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
+			if(BTL_ENABLED) {
+				if(behaviour.decideToBuyBuyToLet(this)) {
+					Model.housingMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
+				}
 			}
 			
 		} else if(isHomeowner()) {
@@ -155,7 +158,7 @@ public class Household implements IHouseOwner, Serializable {
 				endTenancy();
 			}
 		}
-		MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(this), home == null);
+		MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(this,sale.getPrice()), home == null);
 		if(mortgage == null) {
 			// TODO: need to either provide a way for house sales to fall through or to
 			// TODO: ensure that pre-approvals are always satisfiable
@@ -310,7 +313,8 @@ public class Household implements IHouseOwner, Serializable {
 		if(h == home) {
 			return(behaviour.decideToSellHome(this));
 		}
-		return(behaviour.decideToSellInvestmentProperty(h, this));
+		if(BTL_ENABLED) return(behaviour.decideToSellInvestmentProperty(h, this));
+		return(false);
 	}
 
 		
@@ -331,7 +335,7 @@ public class Household implements IHouseOwner, Serializable {
 		return(behaviour.buyToLetRent(
 				Model.rentalMarket.getAverageSalePrice(h.getQuality()), 
 				Model.rentalMarket.averageDaysOnMarket,
-				housePayments.get(h).monthlyPayment));
+				mortgageFor(h)));
 	}
 
 	/////////////////////////////////////////////////////////
@@ -340,16 +344,20 @@ public class Household implements IHouseOwner, Serializable {
 
 	public void transferAllWealthTo(Household beneficiary) {
 		if(beneficiary == this) System.out.println("Strange: I'm transfering all my wealth to myself");
+		boolean isHome;
 		for(House h : housePayments.keySet()) {
 			if(h == home) {
+				isHome = true;
 				h.resident = null;
 				home = null;
+			} else {
+				isHome = false;
 			}
 			if(h.owner == this) {
 				if(h.isOnRentalMarket()) Model.rentalMarket.removeOffer(h.getRentalRecord());
 				if(h.isOnMarket()) Model.housingMarket.removeOffer(h.getSaleRecord());
 				if(h.resident != null) h.resident.getEvicted();
-				beneficiary.inheritHouse(h);
+				beneficiary.inheritHouse(h, isHome);
 			} else {
 				h.owner.endOfLettingAgreement(h, housePayments.get(h));
 			}
@@ -362,7 +370,7 @@ public class Household implements IHouseOwner, Serializable {
 	 * 
 	 * @param h House to inherit
 	 */
-	public void inheritHouse(House h) {
+	public void inheritHouse(House h, boolean wasHome) {
 		MortgageAgreement nullMortgage = new MortgageAgreement(this,false);
 		nullMortgage.nPayments = 0;
 		nullMortgage.downPayment = 0.0;
@@ -376,7 +384,7 @@ public class Household implements IHouseOwner, Serializable {
 			System.out.println("Strange: inheriting a house with a resident");
 		}
 		if(!isHomeowner()) {
-			// move into house if not already a homeowner
+			// move into house if renting or homeless
 			if(isRenting()) {
 				endTenancy();				
 			}
@@ -384,13 +392,29 @@ public class Household implements IHouseOwner, Serializable {
 			h.resident = this;
 			desiredQuality = h.getQuality();
 		} else if(behaviour.isPropertyInvestor()) {
-			if(decideToSellHouse(h)) {
-				putHouseForSale(h);
+			if(BTL_ENABLED) {
+				if(decideToSellHouse(h)) {
+					putHouseForSale(h);
+				} else if(h.resident == null) {
+					Model.rentalMarket.offer(h, buyToLetRent(h));
+				}
 			} else if(h.resident == null) {
 				Model.rentalMarket.offer(h, buyToLetRent(h));
 			}
 		} else {
-			putHouseForSale(h);
+			// I'm an owner-occupier
+			if(BTL_ENABLED) {
+				putHouseForSale(h);
+			} else {
+				if(wasHome) {
+					putHouseForSale(h);
+				} else {
+					behaviour.setPropertyInvestor(true);
+					if(h.resident == null) {
+						Model.rentalMarket.offer(h, buyToLetRent(h));
+					}					
+				}
+			}
 		}
 	}
 	
@@ -417,10 +441,6 @@ public class Household implements IHouseOwner, Serializable {
 		return isFirstTimeBuyer;
 	}
 	
-	public boolean isPropertyInvestor() {
-		return(this.behaviour.isPropertyInvestor());
-	}
-
 	/***
 	 * @return Number of properties this household currently has on the sale market
 	 */

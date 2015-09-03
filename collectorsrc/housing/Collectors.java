@@ -13,8 +13,8 @@ public class Collectors implements Serializable {
 	public void step() {
 		if(creditSupply.isActive()) creditSupply.step();
 		if(householdStats.isActive()) householdStats.step();
-		if(housingMarketStats.isActive()) housingMarketStats.step();
-		if(rentalMarketStats.isActive()) rentalMarketStats.step();
+//		if(housingMarketStats.isActive()) housingMarketStats.step();
+//		if(rentalMarketStats.isActive()) rentalMarketStats.step();
 	}
 		
 	public CreditSupply		creditSupply 	= new CreditSupply();
