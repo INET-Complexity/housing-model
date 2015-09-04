@@ -71,7 +71,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 	
 	public double getDebtToIncome() {
-		return(100.0*(Model.collectors.creditSupply.totalBTLCredit + Model.collectors.creditSupply.totalOOCredit)/Model.collectors.householdStats.totalAnnualIncome);
+		return(100.0*(Model.collectors.creditSupply.totalBTLCredit + Model.collectors.creditSupply.totalOOCredit)/(Model.collectors.householdStats.OOTotalAnnualIncome+Model.collectors.householdStats.BtLTotalAnnualIncome+Model.collectors.householdStats.NonOwnerTotalAnnualIncome));
 	}
 	public String desDebtToIncome() {
 		return("Household mortgage debt to income ratio (%)");
@@ -84,7 +84,7 @@ public class CoreIndicators extends CollectorBase {
 	 * 
 	 */
 	public double getOODebtToIncome() {
-		return(100.0*Model.collectors.creditSupply.totalOOCredit/Model.collectors.householdStats.totalAnnualIncome);
+		return(100.0*Model.collectors.creditSupply.totalOOCredit/Model.collectors.householdStats.OOTotalAnnualIncome);
 	}
 	public String desOODebtToIncome() {
 		return("Household debt to income ratio (owner-occupier mortgages only) (%)");
@@ -148,7 +148,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public double getPriceToIncome() {
-		return(Model.housingMarket.housePriceIndex*data.HouseSaleMarket.HPI_REFERENCE*Model.households.size()/Model.collectors.householdStats.totalAnnualIncome);
+		return(Model.housingMarket.housePriceIndex*data.HouseSaleMarket.HPI_REFERENCE*Model.households.size()/(Model.collectors.householdStats.OOTotalAnnualIncome+Model.collectors.householdStats.BtLTotalAnnualIncome+Model.collectors.householdStats.NonOwnerTotalAnnualIncome));
 	}
 	public String desPriceToIncome() {
 		return("House price to household disposable income ratio");

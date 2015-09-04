@@ -35,7 +35,7 @@ public class Lifecycle implements Serializable {
 		double income = data.Lifecycle.lnIncomeGivenAge.getBinAt(boundAge).inverseCumulativeProbability(incomePercentile);
 		income = Math.exp(income)*52.0;
 		if(income < 6000.0) income = 6000.0; // income support
-		return(income);
+		return(1.4*income);
 	}
 
 	public static LogNormalDistribution [] setupIncomeByAge() {

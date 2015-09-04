@@ -11,7 +11,7 @@ public class HouseRentalMarket extends HousingMarket {
 
 	public HouseRentalMarket() {
 		for(int i=0; i< House.Config.N_QUALITY; ++i) {
-			daysOnMarket[i] = 30.0;			
+			daysOnMarket[i] = 5.0;			
 		}
 		recalculateExpectedGrossYield();
 	}

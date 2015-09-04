@@ -191,7 +191,7 @@ public class ModelGUI extends GUIState implements Steppable {
         	plot.recordValues(t);
         }
         
-        Model.collectors.step();
+       // Model.collectors.step();
     }
         
     

@@ -335,7 +335,7 @@ public class Household implements IHouseOwner, Serializable {
 		return(behaviour.buyToLetRent(
 				Model.rentalMarket.getAverageSalePrice(h.getQuality()), 
 				Model.rentalMarket.averageDaysOnMarket,
-				mortgageFor(h)));
+				mortgageFor(h),h));
 	}
 
 	/////////////////////////////////////////////////////////

@@ -53,7 +53,7 @@ public class ModelGUI2 extends GUIState implements Steppable {
         marketStats = ChartUtilities.buildTimeSeriesChartGenerator(this, "Market statistics", "Time");
         marketStats.setYAxisLabel("Index");
         hpi = ChartUtilities.addSeries(marketStats, "House Price Index");
-        daysOnMarket = ChartUtilities.addSeries(marketStats, "Days on market");
+        daysOnMarket = ChartUtilities.addSeries(marketStats, "Years on market");
 
 //        housePriceChart = ChartUtilities.buildScatterPlotGenerator(this, "House Prices", "Reference Price", "Modelled Price");
 //        housePrices = ChartUtilities.addSeries(housePriceChart,"Modelled prices");

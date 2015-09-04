@@ -166,7 +166,7 @@ public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
 				nextxHigher = e;
 			}
 		}
-		checkConsistency();
+//		checkConsistency();
 //		System.out.println("done");
 	}
 	

@@ -1,7 +1,7 @@
 package data;
 
 public class HouseRentalMarket {
-	public static double RENT_PROFIT_MARGIN = 0.05; // profit margin for buy-to-let investors 
+	public static double RENT_PROFIT_MARGIN = 0.06; // profit margin for buy-to-let investors 
 	// Yield on rent had average 6% between 2009/01 and 2015/01, 
 	// minimum in 2009/10 maximum in 2012/04 peak-to-peak amplitude of 0.4%
 	// source: Bank of England, unpublished analysis based on Zoopla/Land reg matching, Philippe Bracke 

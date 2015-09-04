@@ -89,7 +89,9 @@ public class CreditSupply extends CollectorBase {
     public double [] getOOLTIDistribution() {return(oo_lti.getValues());}
     public double [] getBTLLTVDistribution() {return(btl_ltv.getValues());}
     public double [] getDownpaymentDistribution() {return(downpayments.getValues());}
-    
+    public int getNRegisteredMortgages() {
+    	return(Model.bank.mortgages.size());
+    }
 
 
 	public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability

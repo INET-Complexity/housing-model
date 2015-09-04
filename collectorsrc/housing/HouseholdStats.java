@@ -4,30 +4,40 @@ public class HouseholdStats extends CollectorBase {
 	private static final long serialVersionUID = -402486195880710795L;
 
 	public void step() {
-		totalAnnualIncome = 0.0;
+		BtLTotalAnnualIncome = 0.0;
+    	OOTotalAnnualIncome = 0.0;
+    	NonOwnerTotalAnnualIncome = 0.0;
 		nRenting = 0;
     	nHomeless = 0;
     	nBtL = 0;
     	nHouseholds = Model.households.size();
     	rentalYield = 0.0;
     	for(Household h : Model.households) {
-			totalAnnualIncome += h.getMonthlyPreTaxIncome();
-    		if(h.isInSocialHousing()) {
+    		if(h.behaviour.isPropertyInvestor()) {
+    			++nBtL;
+    			BtLTotalAnnualIncome += h.getMonthlyPreTaxIncome();
+    		} else if(h.isInSocialHousing()) {
     			++nHomeless;
+    	    	NonOwnerTotalAnnualIncome += h.monthlyEmploymentIncome;
     		} else if(h.isRenting()) {
     			++nRenting;
     			rentalYield += h.housePayments.get(h.home).monthlyPayment*12.0/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
+    	    	NonOwnerTotalAnnualIncome += h.monthlyEmploymentIncome;
+    		} else {
+    			OOTotalAnnualIncome += h.monthlyEmploymentIncome;
     		}
-    		if(h.behaviour.isPropertyInvestor()) ++nBtL;
     	}
     	if(rentalYield > 0.0) rentalYield /= nRenting;
     	nNonOwner = nHomeless + nRenting;
     	nEmpty = Model.construction.housingStock + nHomeless - nHouseholds;
-    	totalAnnualIncome *= 12.0; // annualise
+    	BtLTotalAnnualIncome *= 12.0; // annualise
+    	OOTotalAnnualIncome *= 12.0;
+    	NonOwnerTotalAnnualIncome *= 12.0;
+
 	}
 
 	public double [] getAgeDistribution() {
-		double [] result = new double[(int)nHouseholds];
+		double [] result = new double[Model.households.size()];
 		int i = 0;
 		for(Household h : Model.households) {
 			result[i] = h.lifecycle.age;
@@ -47,8 +57,7 @@ public class HouseholdStats extends CollectorBase {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(!h.isHomeowner() && i < nNonOwner) {
-				result[i] = h.lifecycle.age;
-				++i;
+				result[i++] = h.lifecycle.age;
 			}
 		}
 		while(i < nNonOwner) {
@@ -89,7 +98,7 @@ public class HouseholdStats extends CollectorBase {
 			double [] result = new double[(int)nBtL];
 			int i = 0;
 			for(Household h : Model.households) {
-				if(h.behaviour.isPropertyInvestor()) {
+				if(h.behaviour.isPropertyInvestor() && i<nBtL) {
 					result[i] = h.nInvestmentProperties();
 					++i;
 				}
@@ -99,10 +108,10 @@ public class HouseholdStats extends CollectorBase {
 		return null;
 	}
 	public String desBtLNProperties() {
-		return("Number of properties owned by BTL investors");
+		return("Dist of Number of properties owned by BTL investors");
 	}
 	public String nameBtLNProperties() {
-		return("Number of properties owned by BTL investors");
+		return("Dist of Number of properties owned by BTL investors");
 	}
 
 	public double getBTLProportion() {
@@ -132,20 +141,20 @@ public class HouseholdStats extends CollectorBase {
 		return("Rental Yields");
 	}
 	
-	public double [] getIncomes() {
+	public double [] getLogIncomes() {
 		double [] result = new double[Model.households.size()];
 		int i = 0;
 		for(Household h : Model.households) {
-			result[i++] = h.annualEmploymentIncome();
+			result[i++] = Math.log(h.annualEmploymentIncome());
 		}
 		return(result);
 	}
 
-	public double [] getBankBalances() {
+	public double [] getLogBankBalances() {
 		double [] result = new double[Model.households.size()];
 		int i = 0;
 		for(Household h : Model.households) {
-			result[i++] = h.bankBalance;
+			result[i++] = Math.log(Math.max(0.0, h.bankBalance));
 		}
 		return(result);
 	}
@@ -169,7 +178,17 @@ public class HouseholdStats extends CollectorBase {
 	public int getnEmpty() {
 		return nEmpty;
 	}
-	
+
+	public int getnBtL() {
+		return nBtL;
+	}
+	public String desnBtL() {
+		return("Number of BtL investors");
+	}
+	public String namenBtL() {
+		return("Number of BtL investors");
+	}
+
     public int 		  nRenting;
 	public int 		  nHomeless;
     public int 		  nNonOwner;
@@ -177,6 +196,8 @@ public class HouseholdStats extends CollectorBase {
     public int 		  nBtL;
     public int		  nEmpty;
     public double []  BtlNProperties; // number of properties owned by buy-to-let investors
-	public double	  totalAnnualIncome;
+	public double	  BtLTotalAnnualIncome;
+	public double	  OOTotalAnnualIncome;
+	public double	  NonOwnerTotalAnnualIncome;	
 	public double	  rentalYield; // gross annual yield on occupied rental properties
 }

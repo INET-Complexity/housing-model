@@ -112,6 +112,7 @@ public class Model extends SimState implements Steppable {
 		}
 		modelStep();
 		if(recordCoreIndicators) recorder.step();
+		collectors.step();
 	}
 
 	public void modelStep() {
