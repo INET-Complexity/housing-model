@@ -1,7 +1,9 @@
 package housing;
 
 import java.io.Serializable;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.TreeMap;
 import ec.util.MersenneTwisterFast;
 
@@ -192,13 +194,13 @@ public class Household implements IHouseOwner, Serializable {
 	 * Do all stuff necessary when this household sells a house
 	 ********************************************************/
 	public void completeHouseSale(HouseSaleRecord sale) {
-		double profit = sale.getPrice() - mortgageFor(sale.house).payoff(bankBalance+sale.getPrice());
-		if(profit < 0) System.out.println("Negative equity in house.");
-		bankBalance += profit;
+		MortgageAgreement mortgage = mortgageFor(sale.house);
+		bankBalance += sale.getPrice();
+		bankBalance -= mortgage.payoff(bankBalance);
 		if(sale.house.isOnRentalMarket()) {
 			Model.rentalMarket.removeOffer(sale);
 		}
-		if(housePayments.get(sale.house).nPayments == 0) {
+		if(mortgage.nPayments == 0) {
 			housePayments.remove(sale.house);
 		}
 		if(sale.house == home) { // move out of home and become (temporarily) homeless
@@ -345,7 +347,14 @@ public class Household implements IHouseOwner, Serializable {
 	public void transferAllWealthTo(Household beneficiary) {
 		if(beneficiary == this) System.out.println("Strange: I'm transfering all my wealth to myself");
 		boolean isHome;
-		for(House h : housePayments.keySet()) {
+		Iterator<Entry<House, PaymentAgreement>> paymentIt = housePayments.entrySet().iterator();
+		Entry<House, PaymentAgreement> entry;
+		House h;
+		PaymentAgreement payment;
+		while(paymentIt.hasNext()) {
+			entry = paymentIt.next();
+			h = entry.getKey();
+			payment = entry.getValue();
 			if(h == home) {
 				isHome = true;
 				h.resident = null;
@@ -361,9 +370,12 @@ public class Household implements IHouseOwner, Serializable {
 			} else {
 				h.owner.endOfLettingAgreement(h, housePayments.get(h));
 			}
+			if(payment instanceof MortgageAgreement) {
+				bankBalance -= ((MortgageAgreement) payment).payoff();
+			}
+			paymentIt.remove();
 		}
-		housePayments.clear();
-		beneficiary.bankBalance += bankBalance;
+		beneficiary.bankBalance += Math.max(0.0, bankBalance);
 	}
 	
 	/**

@@ -53,5 +53,8 @@ public class MortgageAgreement extends PaymentAgreement {
 		return(amount);
 	}
 
+	public double payoff() {
+		return(payoff(principal));
+	}
 
 }
