@@ -105,7 +105,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean decideToSellHome(Household me) {
 		// TODO: need to add expenditure
 
-		return(rand.nextDouble() < data.Households.P_SELL *(1.0 + 5.0*(0.05 - Model.housingMarket.offersPQ.size()*1.0/Model.households.size())));
+		return(rand.nextDouble() < data.Households.P_SELL *(1.0 + 5.0*(0.05 - Model.housingMarket.offersPQ.size()*1.0/Model.households.size())) + 10.0*(0.02-Model.bank.getMortgageInterestRate()));
 		
 		// reference 
 		//int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
@@ -136,11 +136,11 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //		return(me.bankBalance - (1.0 - DOWNPAYMENT_FRACTION)*desiredBankBalance(me));
 		if(me.bankBalance > housePrice) return(housePrice);
 		if(me.isFirstTimeBuyer()) {
-			return(Model.housingMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(me.lifecycle.incomePercentile));
+			return(Model.housingMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,(me.lifecycle.incomePercentile-0.3)/0.7)));
 		} else if(isPropertyInvestor()) {
 			return(housePrice*0.30*(1.0+0.2*rand.nextGaussian()));
 		}
-		return(Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(me.lifecycle.incomePercentile));		
+		return(Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0, (me.lifecycle.incomePercentile-0.3)/0.7)));		
 	}
 
 	
@@ -247,7 +247,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 */
 	public boolean decideToSellInvestmentProperty(House h, Household me) {
 		final double INTENSITY = 50.0; // intensity of choice on effective yield
-		final double AGGREGATE_RATE = 1.0/6.0; // controls the average rate of sales
+		final double AGGREGATE_RATE = 1.0/12.0; // controls the average rate of sales
 		// sell if not selling on rental market at interest coverage ratio of 1.0
 		if(!h.isOnRentalMarket()) return(false);
 		MortgageAgreement mortgage = me.mortgageFor(h);
@@ -258,12 +258,13 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		// TODO: add transaction costs to expected capital gain
 //		double icr = (h.rentalRecord.getPrice()-mortgage.nextPayment())/h.rentalRecord.getPrice();
 		double equity = Math.max(0.01, Model.housingMarket.getAverageSalePrice(h.getQuality()) - mortgage.principal);
-		double capitalGainRate = (HPAExpectation()*Model.housingMarket.getAverageSalePrice(h.getQuality()) - mortgage.nextPayment()*12.0)/equity;
-		double rentalYield = (h.rentalRecord.getPrice()-mortgage.nextPayment())*12.0/equity;
-		double effectiveYield = rentalYield + BTL_CAP_GAIN_COEFF*capitalGainRate;
-		double pSell = AGGREGATE_RATE/(1.0 + Math.exp(-INTENSITY*(effectiveYield-0.18)));
-	//	System.out.println((-INTENSITY*(effectiveYield-0.18))+" "+pSell);
-		return(Model.rand.nextDouble() < pSell);
+		double capitalGainRate = HPAExpectation()*Model.housingMarket.getAverageSalePrice(h.getQuality())/equity;
+		double rentalYield = h.rentalRecord.getPrice()*12.0/equity;
+		double mortgageRate = mortgage.nextPayment()*12.0/equity;
+		double effectiveYield = (rentalYield-0.04) + BTL_CAP_GAIN_COEFF*(capitalGainRate-0.04) - mortgageRate;
+		double pKeep = Math.pow(1.0/(1.0 + Math.exp(-INTENSITY*effectiveYield)),AGGREGATE_RATE);
+//		System.out.println("DontSell = "+(-INTENSITY*(effectiveYield-0.05))+" "+pKeep);
+		return(Model.rand.nextDouble() < (1.0-pKeep));
 	}
 	
 
@@ -318,10 +319,12 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		
 		double leverage = m.purchasePrice/m.downPayment;
 		double rentalYield = Model.rentalMarket.averageSoldGrossYield*leverage;
-		double capitalGainRate = (HPAExpectation() - m.monthlyPayment*12.0/m.purchasePrice)*leverage;
-		double pBuy = AGGREGATE_RATE/(1.0 + Math.exp(-INTENSITY*(rentalYield + BTL_CAP_GAIN_COEFF*capitalGainRate - 0.15)));
-		System.out.println((rentalYield + BTL_CAP_GAIN_COEFF*capitalGainRate-0.15) + " " + pBuy);
-		return(Model.rand.nextDouble() < pBuy);
+		double capitalGainRate = HPAExpectation()*leverage;
+		double mortgageRate = m.monthlyPayment*12.0/m.downPayment;
+		double effectiveYield = (rentalYield-0.04) + BTL_CAP_GAIN_COEFF*(capitalGainRate - 0.04) - mortgageRate;
+		double pDontBuy = Math.pow(1.0/(1.0 + Math.exp(INTENSITY*effectiveYield)),AGGREGATE_RATE);
+//		System.out.println("DontBuy = "+(INTENSITY*effectiveYield) + " " + pDontBuy);
+		return(Model.rand.nextDouble() < (1.0-pDontBuy));
 	}
 	
 	public double btlPurchaseBid(Household me) {

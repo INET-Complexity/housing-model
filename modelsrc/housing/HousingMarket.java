@@ -191,7 +191,8 @@ public abstract class HousingMarket implements Serializable {
 		// bids contains bids (HouseBuyerRecords) in an array
 		
 		recordMarketStats();
-		for(int i=0; i<2; ++i) {
+		int rounds = Math.min(10,1 + (offersPQ.size()+bids.size())/500);
+		for(int i=0; i<rounds; ++i) {
 			matchBidsWithOffers();
 			clearMatches();
 		}
