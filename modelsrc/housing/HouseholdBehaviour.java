@@ -26,8 +26,6 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean					BTLInvestor;
 	public double 					propensityToSave;
 	public double					desiredBalance;
-
-
 	
 	public HouseholdBehaviour(double incomePercentile) {
 		propensityToSave = 0.1*Model.rand.nextGaussian();
