@@ -8,12 +8,14 @@ package housing;
  **********************************************/
 public class HouseRentalMarket extends HousingMarket {
 	private static final long serialVersionUID = -3039057421808432696L;
+	static final double K = Math.exp(-1.0/50.0); // decay rate for averageGrossYield
 
 	public HouseRentalMarket() {
 		for(int i=0; i< House.Config.N_QUALITY; ++i) {
 			daysOnMarket[i] = 5.0;			
 		}
 		recalculateExpectedGrossYield();
+		averageSoldGrossYield = 0.05;
 	}
 	
 	@Override
@@ -24,6 +26,7 @@ public class HouseRentalMarket extends HousingMarket {
 		purchase.buyer.completeHouseRental(sale);
 		sale.house.owner.completeHouseLet(sale);
 		Model.collectors.rentalMarketStats.recordSale(purchase, sale);
+		averageSoldGrossYield = averageSoldGrossYield*K + (1.0-K)*sale.getPrice()*12.0/Model.housingMarket.getAverageSalePrice(sale.house.getQuality());
 	}
 	
 	public HouseSaleRecord offer(House house, double price) {
@@ -80,5 +83,6 @@ public class HouseRentalMarket extends HousingMarket {
 	
 	public double daysOnMarket[] = new double[House.Config.N_QUALITY];
 	public double expectedGrossYield[] = new double[House.Config.N_QUALITY];
+	public double averageSoldGrossYield;
 //	public double bestGrossYield;
 }
