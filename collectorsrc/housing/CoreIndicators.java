@@ -168,13 +168,22 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public double getHousePriceGrowth() {
-		return(100.0*Model.collectors.housingMarketStats.getHPA());
+//		return(100.0*Model.collectors.housingMarketStats.getHPA());
+		double lastHPI = 
+				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-4) +
+				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-5) +
+				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-6);
+		double HPI = 
+				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-1) +
+				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-2) +
+				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-3);
+		return(100.0*(HPI - lastHPI)/lastHPI);
 	}
 	public String desHousePriceGrowth() {
-		return("Growth of house price index (year on year)");
+		return("Growth of house price index (3 month by 3 month)");
 	}
 	public String nameHousePriceGrowth() {
-		return("Annual house price growth (%)");
+		return("3 month house price growth (%)");
 	}
 
 	public double getInterestRateSpread() {

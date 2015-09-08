@@ -12,7 +12,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public static LogNormalDistribution OO_DOWNPAYMENT = new LogNormalDistribution(null, 11.155, 0.7538);
 	
 	public double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
-	public double HPA_EXPECTATION_WEIGHT = 0.9; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer)
+	public double HPA_EXPECTATION_WEIGHT = 1.0; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer: less than 1)
 	
 //	public double BTL_LOSS_TOLERANCE = 0.2 + 0.1*Model.rand.nextGaussian(); // loss as proportion of rent at which 50% per month chance of selling a BtL house on the rental market 
 //	public double BTL_YIELD_SENSITIVITY = 10.0 + 2.5*Model.rand.nextGaussian(); // sensitivity to yield when buying BtL property
@@ -71,7 +71,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * value of house price appreciation.
 	 ****************************/
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
-		final double A = 0.48;//0.48;			// sensitivity to house price appreciation
+		final double A = 0.8;//0.48;			// sensitivity to house price appreciation
 		final double EPSILON = 0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
 		final double SIGMA = 4.0*12.0;//5.6;	// scale
 		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*HPAExpectation()));
