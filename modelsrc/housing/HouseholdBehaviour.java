@@ -72,8 +72,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 ****************************/
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
 		final double A = 0.48;//0.48;			// sensitivity to house price appreciation
-		final double EPSILON = 0.3;//0.36;//0.48;//0.365; // S.D. of noise
-		final double SIGMA = 3.8*12.0;//5.6;	// scale
+		final double EPSILON = 0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
+		final double SIGMA = 4.0*12.0;//5.6;	// scale
 		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*HPAExpectation()));
 		
 //		PurchasePlan plan = findBestPurchase(me);
@@ -88,7 +88,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @return initial sale price of a house 
 	 ********************************/
 	public double initialSalePrice(double pbar, double d, double principal) {
-		final double C = 0.07;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
+		final double C = 0.02;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
 		final double M = 6.0; // equilibrium months on market 
 		final double D = C/Math.log(M);//0.024;//0.01;//0.001;		// Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
@@ -103,7 +103,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean decideToSellHome(Household me) {
 		// TODO: need to add expenditure
 
-		return(rand.nextDouble() < data.Households.P_SELL *(1.0 + 5.0*(0.05 - Model.housingMarket.offersPQ.size()*1.0/Model.households.size())) + 10.0*(0.02-Model.bank.getMortgageInterestRate()));
+		return(rand.nextDouble() < data.Households.P_SELL *(1.0 + 4.0*(0.05 - Model.housingMarket.offersPQ.size()*1.0/Model.households.size())) + 5.0*(0.03-Model.bank.getMortgageInterestRate()));
 		
 		// reference 
 		//int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
@@ -132,13 +132,16 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 
 	public double downPayment(Household me, double housePrice) {
 //		return(me.bankBalance - (1.0 - DOWNPAYMENT_FRACTION)*desiredBankBalance(me));
-		if(me.bankBalance > housePrice) return(housePrice);
+		if(me.bankBalance > housePrice*1.25) {
+			return(housePrice);
+		}
 		if(me.isFirstTimeBuyer()) {
 			return(Model.housingMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,(me.lifecycle.incomePercentile-0.3)/0.7)));
 		} else if(isPropertyInvestor()) {
 			return(housePrice*0.30*(1.0+0.2*rand.nextGaussian()));
 		}
 		return(Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0, (me.lifecycle.incomePercentile-0.3)/0.7)));		
+//		return(Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(me.lifecycle.incomePercentile));	
 	}
 
 	
@@ -173,22 +176,21 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean rentOrPurchaseDecision(Household me, double maxMortgage) {
 		if(isPropertyInvestor()) return(true);
 //		final double SCALE = 1.0;//1.25
-		double COST_OF_RENTING; // annual psychological cost of renting
-		double FTB_K = 1.0/20000.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
+		final double COST_OF_RENTING = 1.5/12.0; // annual psychological cost of renting
+		final double FTB_K = 1.0/3500.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 //		double costOfHouse;
 //		double costOfRent;
 
-		COST_OF_RENTING = 500;
 		double purchasePrice = Math.min(desiredPurchasePrice(me, me.monthlyEmploymentIncome), Model.bank.getMaxMortgage(me, true));
 		MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice, downPayment(me,purchasePrice), true);
 		int newHouseQuality = Model.housingMarket.maxQualityGivenPrice(purchasePrice);
-		int rentalQuality = Model.rentalMarket.maxQualityGivenPrice(desiredRent(me, me.monthlyEmploymentIncome));
+//		int rentalQuality = Model.rentalMarket.maxQualityGivenPrice(desiredRent(me, me.monthlyEmploymentIncome));
 //		if(rentalQuality > newHouseQuality+House.Config.N_QUALITY/8) return(false); // better quality to rent
 		if(newHouseQuality < 0) return(false); // can't afford a house anyway
 		double costOfHouse = mortgageApproval.monthlyPayment*12 - purchasePrice*HPAExpectation();
 		double costOfRent = Model.rentalMarket.getAverageSalePrice(newHouseQuality)*12;
 //		System.out.println(FTB_K*(costOfRent + COST_OF_RENTING - costOfHouse));
-		return(rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent + COST_OF_RENTING - costOfHouse))));
+		return(rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent*(1.0+COST_OF_RENTING) - costOfHouse))));
 
 		/*
 		
@@ -272,18 +274,19 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @param d average days on market
 	 */
 	public double buyToLetRent(double pbar, double d, MortgageAgreement mortgagePayment, House h) {
-		/*
-		final double C = 0.06;
+		final double C = 0.015; // markup over market price when zero days on market
 		final double M = 6.0; // equilibrium months on market 
 		final double D = C/Math.log(M); // Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 		double result = Math.exp(exponent);
+		double minAcceptable = Model.housingMarket.getAverageSalePrice(h.getQuality())*0.048/12.0;
+		if(result < minAcceptable) result = minAcceptable;
 		return(result);
-		*/	
+
 	//	if(result < mortgagePayment.purchasePrice*0.050/12.0) result = mortgagePayment.purchasePrice*0.050/12.0; // TODO: TEST!!
 //		return(mortgagePayment*(1.0+RENT_PROFIT_MARGIN));
-		return(Model.housingMarket.getAverageSalePrice(h.getQuality())*0.051/12.0);
+//		return(Model.housingMarket.getAverageSalePrice(h.getQuality())*0.051/12.0);
 	}
 
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {

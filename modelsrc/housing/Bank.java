@@ -21,7 +21,7 @@ public class Bank implements Serializable {
 	public double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
 	public double MAX_OO_LTI = 5.0;		// maximum LTI bank will give to owner-occupier when not regulated
 	public double INTEREST_MARGIN = 3.0; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
-	public double CREDIT_SUPPLY_TARGET = 400;//490.0; // target supply of credit per household per month
+	public double CREDIT_SUPPLY_TARGET = 380;//490.0; // target supply of credit per household per month
 	
 	/********************************
 	 * Constructor. This just sets up a few
