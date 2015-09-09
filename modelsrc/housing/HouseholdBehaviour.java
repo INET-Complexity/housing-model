@@ -142,7 +142,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		if(me.isFirstTimeBuyer()) {
 			downpayment = Model.housingMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,(me.lifecycle.incomePercentile-0.3)/0.7));
 		} else if(isPropertyInvestor()) {
-			downpayment = housePrice*(Math.max(0.0, 0.25+0.125*rand.nextGaussian()));
+			downpayment = housePrice*(Math.max(0.0, 0.26+0.08*rand.nextGaussian())); // calibrated...
 		} else {
 			downpayment = Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0, (me.lifecycle.incomePercentile-0.3)/0.7));
 		}
@@ -282,7 +282,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @param d average days on market
 	 */
 	public double buyToLetRent(double pbar, double d, MortgageAgreement mortgagePayment, House h) {
-		final double C = 0.005; // markup over market price when zero days on market
+		final double C = 0.00; // markup over market price when zero days on market
 		final double M = 6.0; // equilibrium months on market 
 		final double D = C/Math.log(M); // Size of Days-on-market effect
 		final double E = 0.05; //0.05;	// SD of noise

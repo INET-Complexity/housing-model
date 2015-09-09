@@ -2,6 +2,7 @@ package housing;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -71,6 +72,10 @@ public class Model extends SimState implements Steppable {
 		households.clear();
 		collectors.init();
 		t = 0;
+		if(monteCarloCheckpoint != "") {
+			File f = new File(monteCarloCheckpoint);
+			readFromCheckpoint(f);
+		}
 	}
 
 	/**
@@ -82,6 +87,10 @@ public class Model extends SimState implements Steppable {
         scheduleRepeat = schedule.scheduleRepeating(this);
 
 		try {
+			if(monteCarloCheckpoint != "") {
+				File f = new File(monteCarloCheckpoint);
+				readFromCheckpoint(f);
+			}
 			recorder.start();
 		} catch (FileNotFoundException | UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -108,6 +117,7 @@ public class Model extends SimState implements Steppable {
 				simulationStateNow.kill();
 				return;
 			}
+			recorder.endOfSim();
 			init();
 		}
 		modelStep();
@@ -232,6 +242,17 @@ public class Model extends SimState implements Steppable {
 		N_SIMS = n_SIMS;
 	}
 	public String nameN_SIMS() {return("Number of monte-carlo runs");}
+
+	String monteCarloCheckpoint = "";
+	
+	
+	public String getMonteCarloCheckpoint() {
+		return monteCarloCheckpoint;
+	}
+
+	public void setMonteCarloCheckpoint(String monteCarloCheckpoint) {
+		this.monteCarloCheckpoint = monteCarloCheckpoint;
+	}
 
 	public boolean isRecordCoreIndicators() {
 		return recordCoreIndicators;
