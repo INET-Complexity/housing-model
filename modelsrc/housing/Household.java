@@ -85,8 +85,7 @@ public class Household implements IHouseOwner, Serializable {
 				if(behaviour.decideToBuyBuyToLet(this)) {
 					Model.housingMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
 				}
-			}
-			
+			}		
 		} else if(isHomeowner()) {
 			manageHouse(home);
 		} else {
@@ -160,7 +159,7 @@ public class Household implements IHouseOwner, Serializable {
 				endTenancy();
 			}
 		}
-		MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(this,sale.getPrice()), home == null);
+		MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(this,sale.getPrice()), home == null, sale.house);
 		if(mortgage == null) {
 			// TODO: need to either provide a way for house sales to fall through or to
 			// TODO: ensure that pre-approvals are always satisfiable
@@ -410,8 +409,12 @@ public class Household implements IHouseOwner, Serializable {
 				} else if(h.resident == null) {
 					Model.rentalMarket.offer(h, buyToLetRent(h));
 				}
-			} else if(h.resident == null) {
-				Model.rentalMarket.offer(h, buyToLetRent(h));
+			} else {
+				if(wasHome) {
+					putHouseForSale(h);
+				} else if(h.resident == null) {
+					Model.rentalMarket.offer(h, buyToLetRent(h));
+				}
 			}
 		} else {
 			// I'm an owner-occupier

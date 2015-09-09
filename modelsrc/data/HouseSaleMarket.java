@@ -5,6 +5,7 @@ import housing.House;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 public class HouseSaleMarket {
+	public static final double INITIAL_HPI = 0.8;
 	public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
 	public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
 	public static final double HPI_REFERENCE = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0); // Mean of reference house prices
@@ -25,7 +26,7 @@ public class HouseSaleMarket {
 	static public double [] setupRefPrice() {
 		double [] result = new double[House.Config.N_QUALITY];
 		for(int q=0; q<House.Config.N_QUALITY; ++q) {
-			result[q] = listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY);
+			result[q] = INITIAL_HPI*listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY);
 		}
 		return(result);
 	}

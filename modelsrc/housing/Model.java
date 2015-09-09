@@ -112,6 +112,7 @@ public class Model extends SimState implements Steppable {
 		}
 		modelStep();
 		if(recordCoreIndicators) recorder.step();
+//		if(this.getTime() % 1200) this.writeToCheckpoint("file");
 		collectors.step();
 	}
 
@@ -148,7 +149,7 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
-	public static int N_STEPS = 12000; // timesteps
+	public static int N_STEPS = 12*10000; // timesteps
 	public static int N_SIMS = 1; // number of simulations to run (monte-carlo) 
 
 
@@ -238,6 +239,16 @@ public class Model extends SimState implements Steppable {
 
 	public void setRecordCoreIndicators(boolean recordCoreIndicators) {
 		this.recordCoreIndicators = recordCoreIndicators;
+		if(recordCoreIndicators) {
+			try {
+				recorder.start();
+			} catch (FileNotFoundException | UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			recorder.finish();
+		}
 	}
 	public String nameRecordCoreIndicators() {return("Record core indicators");}
 

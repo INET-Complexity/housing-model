@@ -14,10 +14,10 @@ public class HouseRentalMarket extends HousingMarket {
 
 	public HouseRentalMarket() {
 		for(int i=0; i< House.Config.N_QUALITY; ++i) {
-			daysOnMarket[i] = 5.0;			
+			daysOnMarket[i] = 0.0;			
 		}
 		recalculateExpectedGrossYield();
-		averageSoldGrossYield = 0.05;
+		averageSoldGrossYield = data.HouseRentalMarket.RENT_GROSS_YIELD;
 	}
 	
 	@Override
