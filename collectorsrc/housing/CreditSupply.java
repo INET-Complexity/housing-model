@@ -124,6 +124,7 @@ public class CreditSupply extends CollectorBase {
 		oo_lti = new DescriptiveStatistics(archiveLength);
 		oo_ltv = new DescriptiveStatistics(archiveLength);
 		btl_ltv = new DescriptiveStatistics(archiveLength);
+		btl_icr = new DescriptiveStatistics(archiveLength);
 		downpayments = new DescriptiveStatistics(archiveLength);
 	}
 
