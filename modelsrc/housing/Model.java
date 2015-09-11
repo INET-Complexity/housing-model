@@ -33,7 +33,7 @@ public class Model extends SimState implements Steppable {
 		recorder = new Recorder();
 		rand = new MersenneTwister(seed);
 
-		mCentralBank = new CentralBank();
+		centralBank = new CentralBank();
 		mBank = new Bank();
 		mConstruction = new Construction();
 		mHouseholds = new ArrayList<Household>(Demographics.TARGET_POPULATION*2);
@@ -53,7 +53,7 @@ public class Model extends SimState implements Steppable {
 	}
 	
 	protected void setupStatics() {
-		centralBank = mCentralBank;
+//		centralBank = mCentralBank;
 		bank = mBank;
 		construction = mConstruction;
 		households = mHouseholds;
@@ -168,7 +168,7 @@ public class Model extends SimState implements Steppable {
 	// non-statics for serialization
 	public ArrayList<Household>    	mHouseholds;
 	public Bank						mBank;
-	public CentralBank				mCentralBank;
+//	public CentralBank				mCentralBank;
 	public Construction				mConstruction;
 	public HouseSaleMarket			mHousingMarket;
 	public HouseRentalMarket		mRentalMarket;
