@@ -1,5 +1,12 @@
 package housing;
 
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import sim.util.Double2D;
@@ -8,14 +15,10 @@ public class CreditSupply extends CollectorBase {
 	private static final long serialVersionUID = 1630707025974306844L;
 
 	public CreditSupply() {
-		oo_lti = new DescriptiveStatistics(ARCHIVE_LEN);
-		oo_ltv = new DescriptiveStatistics(ARCHIVE_LEN);
-		btl_ltv = new DescriptiveStatistics(ARCHIVE_LEN);
-		downpayments = new DescriptiveStatistics(ARCHIVE_LEN);
 		mortgageCounter = 0;
-//		approved_mortgages_index = 0;
 		ftbCounter = 0;
 		btlCounter = 0;
+		setArchiveLength(1000);
 	}
 
 	/***
@@ -89,17 +92,46 @@ public class CreditSupply extends CollectorBase {
     public double [] getOOLTIDistribution() {return(oo_lti.getValues());}
     public double [] getBTLLTVDistribution() {return(btl_ltv.getValues());}
     public double [] getDownpaymentDistribution() {return(downpayments.getValues());}
+    
+    public boolean getSaveLTIDistribution() { return(false);}
+    public void setSaveLTIDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
+        PrintWriter ooLTI = new PrintWriter("ooLTIVals.csv", "UTF-8");
+        double [] ltiVals = getOOLTIDistribution();
+        if(ltiVals.length > 0) {
+        	ooLTI.print(ltiVals[0]);
+        	for(int i=1; i<ltiVals.length; ++i) {
+        		ooLTI.print(", "+ltiVals[i]);
+        	}
+        }
+        ooLTI.close();
+    }
+    
+
     public int getNRegisteredMortgages() {
     	return(Model.bank.mortgages.size());
     }
 
+	public int getArchiveLength() {
+		return archiveLength;
+	}
+
+	public void setArchiveLength(int archiveLength) {
+		this.archiveLength = archiveLength;
+		oo_lti = new DescriptiveStatistics(archiveLength);
+		oo_ltv = new DescriptiveStatistics(archiveLength);
+		btl_ltv = new DescriptiveStatistics(archiveLength);
+		downpayments = new DescriptiveStatistics(archiveLength);
+	}
+
+
+
 
 	public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
 	public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
-	public int ARCHIVE_LEN = 1000; // number of mortgage approvals to remember
 	public boolean DIAGNOSTICS_ACTIVE = true; // record mortgage statistics?
 	public int 	HISTOGRAM_NBINS = 101;
-	
+
+	public int archiveLength; // number of mortgage approvals to remember
 	public double affordability = 0.0;
 	public DescriptiveStatistics oo_lti;
 	public DescriptiveStatistics oo_ltv;

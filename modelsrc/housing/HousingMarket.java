@@ -61,7 +61,6 @@ public abstract class HousingMarket implements Serializable {
 			averageSalePrice[i] = referencePrice(i);
 		}
 		housePriceIndex = 1.0;
-		lastHousePriceIndex = 1.0;
 		averageDaysOnMarket = 30;
 		for(i=0; i<Config.HPI_LENGTH; ++i) HPIRecord.addValue(1.0);
 		offersPQ.clear();
@@ -353,7 +352,6 @@ public abstract class HousingMarket implements Serializable {
 	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
 	public DescriptiveStatistics HPIRecord;
 	public double housePriceIndex;
-	public double lastHousePriceIndex;
 	public double dLogPriceMean;
 	public double dLogPriceSD;
 }

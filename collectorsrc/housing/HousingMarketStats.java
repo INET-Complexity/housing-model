@@ -221,6 +221,16 @@ public class HousingMarketStats extends CollectorBase {
 		return("House price growth year-on-year");
 	}
 
+	public double getHPI() {
+		return(market.housePriceIndex);
+	}
+	public String nameHPI() {
+		return("House price index");
+	}
+	public String desHPI() {
+		return("House price index");
+	}
+
 	public double getnEmpty() {
 		return nEmpty;
 	}
