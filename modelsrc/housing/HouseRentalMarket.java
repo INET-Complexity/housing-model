@@ -1,5 +1,7 @@
 package housing;
 
+import org.apache.commons.math3.stat.regression.SimpleRegression;
+
 /***********************************************
  * Class that represents the market for houses for rent.
  * 
@@ -12,10 +14,10 @@ public class HouseRentalMarket extends HousingMarket {
 
 	public HouseRentalMarket() {
 		for(int i=0; i< House.Config.N_QUALITY; ++i) {
-			daysOnMarket[i] = 5.0;			
+			daysOnMarket[i] = 0.0;			
 		}
 		recalculateExpectedGrossYield();
-		averageSoldGrossYield = 0.05;
+		averageSoldGrossYield = data.HouseRentalMarket.RENT_GROSS_YIELD;
 	}
 	
 	@Override
@@ -67,11 +69,6 @@ public class HouseRentalMarket extends HousingMarket {
 		return expectedGrossYield[quality];
 	}
 
-	@Override
-	protected void recordMarketStats() {
-		super.recordMarketStats();
-		recalculateExpectedGrossYield();
-	}
 	
 	protected void recalculateExpectedGrossYield() {
 //		bestGrossYield = 0.0;
@@ -80,6 +77,32 @@ public class HouseRentalMarket extends HousingMarket {
 //			if(expectedGrossYield[q] > bestGrossYield) bestGrossYield = expectedGrossYield[q];
 		}		
 	}
+
+	//	@Override
+//	protected void recordMarketStats() {
+//		super.recordMarketStats();
+//		recalculateExpectedGrossYield();
+//	}
+	
+	@Override
+	protected void recordMarketStats() {
+		super.recordMarketStats();
+		recalculateExpectedGrossYield();
+	
+		SimpleRegression regression = new SimpleRegression();
+		int i = 0;
+		for(Double price : averageSalePrice) {
+			regression.addData(referencePrice(i++), price);
+		}
+		double m = regression.getSlope();
+		double c = regression.getIntercept();
+		final double DECAY = 0.99;
+		for(int q=0; q<House.Config.N_QUALITY; ++q) {
+			averageSalePrice[q] = DECAY*averageSalePrice[q] + (1.0-DECAY)*(m*referencePrice(q) + c);
+		}
+		
+	}
+
 	
 	public double daysOnMarket[] = new double[House.Config.N_QUALITY];
 	public double expectedGrossYield[] = new double[House.Config.N_QUALITY];

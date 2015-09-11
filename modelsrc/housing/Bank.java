@@ -19,9 +19,10 @@ public class Bank implements Serializable {
 	public double INITIAL_BASE_RATE = 0.005; // Bank base-rate (0.5%)
 	public double MAX_OO_LTV = 0.9;		// maximum LTV bank will give to owner-occupier when not regulated	
 	public double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
-	public double MAX_OO_LTI = 5.0;		// maximum LTI bank will give to owner-occupier when not regulated
-	public double INTEREST_MARGIN = 3.0; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
-	public double CREDIT_SUPPLY_TARGET = 400;//490.0; // target supply of credit per household per month
+	public double MAX_OO_LTI = 6.0;		// maximum LTI bank will give to owner-occupier when not regulated
+//	public double INTEREST_MARGIN = 0.03; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
+	public double BTL_STRESSED_INTEREST = 0.05; // Interest rate stress for BTL when calculating ICR
+	public double CREDIT_SUPPLY_TARGET = 380;//490.0; // target supply of credit per household per month
 	
 	/********************************
 	 * Constructor. This just sets up a few
@@ -120,6 +121,7 @@ public class Bank implements Serializable {
 		}
 	}
 
+	/*
 	public double stressedMonthlyPaymentFactor(boolean isHome) {
 		if(isHome) {
 			return(k); // Fixed rate for OO
@@ -127,7 +129,7 @@ public class Bank implements Serializable {
 			return((getMortgageInterestRate()+INTEREST_MARGIN)/12.0); // interest only
 		}
 	}
-
+*/
 	/*****************************
 	 * Use this to arrange a Mortgage and get a MortgageApproval object.
 	 * 
@@ -136,14 +138,14 @@ public class Bank implements Serializable {
 	 * @param isHome true if 'h' plans to live in the house.
 	 * @return The MortgageApproval object, or NULL if the mortgage is declined
 	 ****************************/
-	public MortgageAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+	public MortgageAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome, House house) {
 		MortgageAgreement approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
 		if(approval == null) return(null);
 		// --- if all's well, go ahead and arrange mortgage
 		supplyVal += approval.principal;
 		if(approval.principal > 0.0) {
 			mortgages.add(approval);
-			Model.collectors.creditSupply.recordLoan(h, approval);
+			Model.collectors.creditSupply.recordLoan(h, approval, house);
 			++nLoans;
 			if(isHome) {
 				if(approval.principal/h.annualEmploymentIncome() > Model.centralBank.loanToIncomeRegulation(h.isFirstTimeBuyer())) {
@@ -175,7 +177,7 @@ public class Bank implements Serializable {
 	public MortgageAgreement requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
 		MortgageAgreement approval = new MortgageAgreement(h, !isHome);
 		double r = getMortgageInterestRate()/12.0; // monthly interest rate
-		double lti_principal, affordable_principal;
+		double lti_principal, affordable_principal, icr_principal;
 		double liquidWealth = h.bankBalance;
 		
 		if(isHome == true) liquidWealth += h.getHomeEquity();		
@@ -185,12 +187,17 @@ public class Bank implements Serializable {
 
 		if(isHome) {
 			// --- affordability constraint TODO: affordability for BtL
-			affordable_principal = Math.max(0.0,0.5*h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
+			affordable_principal = Math.max(0.0,0.5*h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 			approval.principal = Math.min(approval.principal, affordable_principal);
 
 			// --- lti constraint
 			lti_principal = h.annualEmploymentIncome() * loanToIncome(h.isFirstTimeBuyer());
 			approval.principal = Math.min(approval.principal, lti_principal);
+		} else {
+			// --- BtL ICR constraint
+			icr_principal = Model.rentalMarket.averageSoldGrossYield*housePrice/(interestCoverageRatio()*getBtLStressedMortgageInterestRate());
+			approval.principal = Math.min(approval.principal, icr_principal);
+	//		System.out.println(icr_principal/housePrice);
 		}
 		
 		approval.downPayment = housePrice - approval.principal;
@@ -232,6 +239,7 @@ public class Bank implements Serializable {
 		double max;
 		double pdi_max; // disposable income constraint
 		double lti_max; // loan to income constraint
+		double icr_max; // interest rate coverage
 		double liquidWealth = h.bankBalance;
 
 		if(isHome == true) {
@@ -242,10 +250,16 @@ public class Bank implements Serializable {
 
 		if(isHome) { // no LTI for BtL investors
 //			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer())/loanToValue(h.isFirstTimeBuyer(),isHome);
-			pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/stressedMonthlyPaymentFactor(isHome);
+			pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 			max = Math.min(max, pdi_max);
 			lti_max = h.annualEmploymentIncome()* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
 			max = Math.min(max, lti_max);
+		} else {
+			icr_max = Model.rentalMarket.averageSoldGrossYield/(interestCoverageRatio()*getBtLStressedMortgageInterestRate());
+			if(icr_max < 1.0) {
+				icr_max = liquidWealth/(1.0 - icr_max);
+				max = Math.min(max,  icr_max);
+			}
 		}
 		
 		max = Math.floor(max*100.0)/100.0; // round down to nearest penny
@@ -283,6 +297,10 @@ public class Bank implements Serializable {
 	
 	public double interestCoverageRatio() {
 		return(Model.centralBank.interestCoverageRatioRegulation());
+	}
+	
+	public double getBtLStressedMortgageInterestRate() {
+		return(BTL_STRESSED_INTEREST);
 	}
 	
 	public HashSet<MortgageAgreement>		mortgages;	// all unpaid mortgage contracts supplied by the bank

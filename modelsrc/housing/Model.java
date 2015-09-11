@@ -2,6 +2,7 @@ package housing;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -32,7 +33,7 @@ public class Model extends SimState implements Steppable {
 		recorder = new Recorder();
 		rand = new MersenneTwister(seed);
 
-		mCentralBank = new CentralBank();
+		centralBank = new CentralBank();
 		mBank = new Bank();
 		mConstruction = new Construction();
 		mHouseholds = new ArrayList<Household>(Demographics.TARGET_POPULATION*2);
@@ -52,7 +53,7 @@ public class Model extends SimState implements Steppable {
 	}
 	
 	protected void setupStatics() {
-		centralBank = mCentralBank;
+//		centralBank = mCentralBank;
 		bank = mBank;
 		construction = mConstruction;
 		households = mHouseholds;
@@ -71,6 +72,10 @@ public class Model extends SimState implements Steppable {
 		households.clear();
 		collectors.init();
 		t = 0;
+		if(monteCarloCheckpoint != "") {
+			File f = new File(monteCarloCheckpoint);
+			readFromCheckpoint(f);
+		}
 	}
 
 	/**
@@ -82,6 +87,10 @@ public class Model extends SimState implements Steppable {
         scheduleRepeat = schedule.scheduleRepeating(this);
 
 		try {
+			if(monteCarloCheckpoint != "") {
+				File f = new File(monteCarloCheckpoint);
+				readFromCheckpoint(f);
+			}
 			recorder.start();
 		} catch (FileNotFoundException | UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -108,10 +117,12 @@ public class Model extends SimState implements Steppable {
 				simulationStateNow.kill();
 				return;
 			}
+			recorder.endOfSim();
 			init();
 		}
 		modelStep();
 		if(recordCoreIndicators) recorder.step();
+//		if(this.getTime() % 1200) this.writeToCheckpoint("file");
 		collectors.step();
 	}
 
@@ -148,7 +159,7 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
-	public static int N_STEPS = 12000; // timesteps
+	public static int N_STEPS = 12*10000; // timesteps
 	public static int N_SIMS = 1; // number of simulations to run (monte-carlo) 
 
 
@@ -157,7 +168,7 @@ public class Model extends SimState implements Steppable {
 	// non-statics for serialization
 	public ArrayList<Household>    	mHouseholds;
 	public Bank						mBank;
-	public CentralBank				mCentralBank;
+//	public CentralBank				mCentralBank;
 	public Construction				mConstruction;
 	public HouseSaleMarket			mHousingMarket;
 	public HouseRentalMarket		mRentalMarket;
@@ -232,12 +243,33 @@ public class Model extends SimState implements Steppable {
 	}
 	public String nameN_SIMS() {return("Number of monte-carlo runs");}
 
+	String monteCarloCheckpoint = "";
+	
+	
+	public String getMonteCarloCheckpoint() {
+		return monteCarloCheckpoint;
+	}
+
+	public void setMonteCarloCheckpoint(String monteCarloCheckpoint) {
+		this.monteCarloCheckpoint = monteCarloCheckpoint;
+	}
+
 	public boolean isRecordCoreIndicators() {
 		return recordCoreIndicators;
 	}
 
 	public void setRecordCoreIndicators(boolean recordCoreIndicators) {
 		this.recordCoreIndicators = recordCoreIndicators;
+		if(recordCoreIndicators) {
+			try {
+				recorder.start();
+			} catch (FileNotFoundException | UnsupportedEncodingException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		} else {
+			recorder.finish();
+		}
 	}
 	public String nameRecordCoreIndicators() {return("Record core indicators");}
 

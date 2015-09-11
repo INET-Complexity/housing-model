@@ -11,12 +11,14 @@ public class CentralBank implements Serializable {
 		ownerOccupierLTVLimit= 0.9;
 		buyToLetLTVLimit = 0.8;
 		
-		firstTimeBuyerLTILimit = 5.0;
-		ownerOccupierLTILimit = 5.0;
+		firstTimeBuyerLTILimit = 6.0;
+		ownerOccupierLTILimit = 6.0;
 //		buyToLetLTILimit = 1000.0; // unregulated
 
 		proportionOverLTILimit= 0.15;
-		proportionOverLTVLimit= 0.0;		
+		proportionOverLTVLimit= 0.0;
+		
+		interestCoverRatioLimit = 1.25;
 	}
 	
 	
@@ -50,7 +52,7 @@ public class CentralBank implements Serializable {
 	}
 	
 	public double interestCoverageRatioRegulation() {
-		return(1.25);
+		return(interestCoverRatioLimit);
 	}
 
 	public double ownerOccupierLTILimit;	// LTI upper limit for owner-occupiers
@@ -61,4 +63,5 @@ public class CentralBank implements Serializable {
 	public double firstTimeBuyerLTVLimit;	// LTV upper limit for first-time buyers
 	public double proportionOverLTILimit;	// proportion of mortgages that are allowed to be above the respective LTI limit
 	public double proportionOverLTVLimit;	// proportion of mortgages that are allowed to be above the respective LTV limit
+	public double interestCoverRatioLimit;
 }

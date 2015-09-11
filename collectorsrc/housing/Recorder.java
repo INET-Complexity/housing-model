@@ -27,10 +27,13 @@ public class Recorder {
         rentalYield = new PrintWriter("coreIndicator-rentalYield.csv", "UTF-8");
         housePriceGrowth = new PrintWriter("coreIndicator-housePriceGrowth.csv", "UTF-8");
         interestRateSpread = new PrintWriter("coreIndicator-interestRateSpread.csv", "UTF-8");
+        newSim = true;
 	}
 
 	public void step() {
-		if(Model.getTime() > 1) {
+		if(newSim) {
+			newSim = false;
+		} else {
 			ooLTI.print(", ");
 			btlLTV.print(", ");
 			creditGrowth.print(", ");
@@ -45,21 +48,6 @@ public class Recorder {
 			rentalYield.print(", ");
 			housePriceGrowth.print(", ");			
 			interestRateSpread.print(", ");			
-		} else if(Model.root.nSimulation > 0) {
-			ooLTI.println("");
-			btlLTV.println("");
-			creditGrowth.println("");
-			debtToIncome.println("");
-			ooDebtToIncome.println("");
-			mortgageApprovals.println("");
-			housingTransactions.println("");
-			advancesToFTBs.println("");
-			advancesToBTL.println("");
-			advancesToHomeMovers.println("");
-			priceToIncome.println("");
-			rentalYield.println("");
-			housePriceGrowth.println("");
-			interestRateSpread.println("");
 		}
         ooLTI.print(Model.collectors.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
     	btlLTV.print(Model.collectors.coreIndicators.getBuyToLetLTVMean());
@@ -105,6 +93,24 @@ public class Recorder {
     	interestRateSpread.close();
 	}
 		
+	public void endOfSim() {
+		ooLTI.println("");
+		btlLTV.println("");
+		creditGrowth.println("");
+		debtToIncome.println("");
+		ooDebtToIncome.println("");
+		mortgageApprovals.println("");
+		housingTransactions.println("");
+		advancesToFTBs.println("");
+		advancesToBTL.println("");
+		advancesToHomeMovers.println("");
+		priceToIncome.println("");
+		rentalYield.println("");
+		housePriceGrowth.println("");
+		interestRateSpread.println("");
+		newSim = true;
+	}
+	
 	PrintWriter ooLTI;
 	PrintWriter btlLTV;
 	PrintWriter creditGrowth;
@@ -119,4 +125,5 @@ public class Recorder {
 	PrintWriter	rentalYield;
 	PrintWriter	housePriceGrowth;
 	PrintWriter	interestRateSpread;
+	public boolean newSim = true;
 }

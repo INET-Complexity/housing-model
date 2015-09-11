@@ -49,7 +49,7 @@ public class CreditSupply extends CollectorBase {
 	 * @param h
 	 * @param approval
 	 */
-	public void recordLoan(Household h, MortgageAgreement approval) {
+	public void recordLoan(Household h, MortgageAgreement approval, House house) {
 		double housePrice;
 		if(DIAGNOSTICS_ACTIVE) {
 			housePrice = approval.principal + approval.downPayment;
@@ -57,6 +57,9 @@ public class CreditSupply extends CollectorBase {
 			if(approval.principal > 1.0) {
 				if(approval.isBuyToLet) {
 					btl_ltv.addValue(100.0*approval.principal/housePrice);
+//					double icr = Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
+					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
+					btl_icr.addValue(icr);
 				} else {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);
 					oo_lti.addValue(approval.principal/h.annualEmploymentIncome());
@@ -92,7 +95,8 @@ public class CreditSupply extends CollectorBase {
     public double [] getOOLTIDistribution() {return(oo_lti.getValues());}
     public double [] getBTLLTVDistribution() {return(btl_ltv.getValues());}
     public double [] getDownpaymentDistribution() {return(downpayments.getValues());}
-    
+    public double [] getBTLICRDistribution() {return(btl_icr.getValues());}
+       
     public boolean getSaveLTIDistribution() { return(false);}
     public void setSaveLTIDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
         PrintWriter ooLTI = new PrintWriter("ooLTIVals.csv", "UTF-8");
@@ -136,6 +140,7 @@ public class CreditSupply extends CollectorBase {
 	public DescriptiveStatistics oo_lti;
 	public DescriptiveStatistics oo_ltv;
 	public DescriptiveStatistics btl_ltv;
+	public DescriptiveStatistics btl_icr;
 	public DescriptiveStatistics downpayments;
 //	public double [][] approved_mortgages = new double [2][ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
 //	public int approved_mortgages_index;
