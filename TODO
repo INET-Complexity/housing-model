@@ -1,5 +1,4 @@
 TODO:
-- BtL portfolio size
-- OO buy/rent decision
-- replace desired price with desired quality
-- test downpayment decision against data
+- spinup for transient population (slowly change birth/death rate?)
+- data assimilation
+- add utility

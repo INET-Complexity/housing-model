@@ -14,6 +14,7 @@ import org.apache.commons.math3.distribution.GeometricDistribution;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import utilities.PriorityQueue2D;
 
@@ -266,6 +267,11 @@ public abstract class HousingMarket implements Serializable {
 		// --- update sales statistics		
 		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.getTime() - sale.tInitialListing);
 		averageSalePrice[sale.getQuality()] = Config.G*averageSalePrice[sale.getQuality()] + (1.0-Config.G)*sale.getPrice();
+		
+		housePriceRegression.addData(referencePrice(sale.getQuality()), sale.getPrice());
+		aveSoldRefPrice += referencePrice(sale.getQuality());
+		aveSoldPrice += sale.getPrice();
+		
 		if(averageSalePrice[sale.getQuality()] < 0.0) {
 			System.out.println("Average sale price "+sale.getQuality()+" is "+averageSalePrice[sale.getQuality()]);
 		}
@@ -325,13 +331,31 @@ public abstract class HousingMarket implements Serializable {
 	protected void recordMarketStats() {
 		// --- House Price Index stuff
 		// ---------------------------
-//		HPIAppreciation = Config.F*HPIAppreciation - (1.0-Config.F)*housePriceIndex;
+		
+		// ###### TODO: TEST!!!
+		// --- calculate from avergeSalePrice from housePriceRegression
+		if(housePriceRegression.getN() > 4) {
+//			housePriceRegression.regress();
+//			double m = housePriceRegression.getSlope();
+//			double c = housePriceRegression.getIntercept();
+			double m = aveSoldPrice/aveSoldRefPrice;
+			double c = 0.0;
+			aveSoldPrice = 0.0;
+			aveSoldRefPrice = 0.0;
+			final double DECAY = 0.25;
+			for(int q=0; q<House.Config.N_QUALITY; ++q) {
+				averageSalePrice[q] = DECAY*averageSalePrice[q] + (1.0-DECAY)*(m*referencePrice(q) + c);
+			}
+		}
+		housePriceRegression.clear();
+		
+		// --- calculate from averageSalePrice array
 		housePriceIndex = 0.0;
 		for(Double price : averageSalePrice) {
 			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
 		}
 		housePriceIndex /= House.Config.N_QUALITY*data.HouseSaleMarket.HPI_REFERENCE;
-//		HPIAppreciation += (1.0-Config.F)*housePriceIndex;
+		
 		HPIRecord.addValue(housePriceIndex);
 	}
 
@@ -348,6 +372,9 @@ public abstract class HousingMarket implements Serializable {
 //	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	
 	// ---- statistics
+	SimpleRegression housePriceRegression = new SimpleRegression(); // linear regression of (transaction price,reference price)
+	public double aveSoldRefPrice = 0.0;
+	public double aveSoldPrice = 0.0;
 	public double averageDaysOnMarket;
 	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
 	public DescriptiveStatistics HPIRecord;

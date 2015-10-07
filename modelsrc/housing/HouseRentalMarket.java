@@ -88,7 +88,8 @@ public class HouseRentalMarket extends HousingMarket {
 	protected void recordMarketStats() {
 		super.recordMarketStats();
 		recalculateExpectedGrossYield();
-	
+
+		/**
 		SimpleRegression regression = new SimpleRegression();
 		int i = 0;
 		for(Double price : averageSalePrice) {
@@ -100,7 +101,7 @@ public class HouseRentalMarket extends HousingMarket {
 		for(int q=0; q<House.Config.N_QUALITY; ++q) {
 			averageSalePrice[q] = DECAY*averageSalePrice[q] + (1.0-DECAY)*(m*referencePrice(q) + c);
 		}
-		
+		**/
 	}
 
 	
