@@ -86,16 +86,11 @@ public class Model extends SimState implements Steppable {
 		super.start();
         scheduleRepeat = schedule.scheduleRepeating(this);
 
-		try {
-			if(monteCarloCheckpoint != "") {
-				File f = new File(monteCarloCheckpoint);
-				readFromCheckpoint(f);
-			}
-			recorder.start();
-		} catch (FileNotFoundException | UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        if(monteCarloCheckpoint != "") {
+        	File f = new File(monteCarloCheckpoint);
+        	readFromCheckpoint(f);
+        }
+			// recorder.start();
 	}
 	
 	public void stop() {
@@ -146,6 +141,7 @@ public class Model extends SimState implements Steppable {
 	 */
 	public void finish() {
 		super.finish();
+		if(recordCoreIndicators) recorder.finish();
 	}
 	
 	/*** @return simulated time in months */
@@ -261,6 +257,11 @@ public class Model extends SimState implements Steppable {
 	public void setRecordCoreIndicators(boolean recordCoreIndicators) {
 		this.recordCoreIndicators = recordCoreIndicators;
 		if(recordCoreIndicators) {
+			collectors.coreIndicators.setActive(true);
+			collectors.creditSupply.setActive(true);
+			collectors.householdStats.setActive(true);
+			collectors.housingMarketStats.setActive(true);
+			collectors.rentalMarketStats.setActive(true);
 			try {
 				recorder.start();
 			} catch (FileNotFoundException | UnsupportedEncodingException e) {
@@ -271,7 +272,7 @@ public class Model extends SimState implements Steppable {
 			recorder.finish();
 		}
 	}
-	public String nameRecordCoreIndicators() {return("Record core indicators");}
+	public String nameRecordCoreIndicators() {return("Record output");}
 
 
 
