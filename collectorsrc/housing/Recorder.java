@@ -40,8 +40,8 @@ public class Recorder {
 				outfile = new PrintWriter("output-"+simID+".csv", "UTF-8");
 		    	outfile.println(
 		    			"Model time, NRegisteredMortgages, nBtL, nEmpty, nHomeless, nHouseholds, nRenting, AverageBidPrice, "+
-		    			"AverageDaysOnMarket, AverageOfferPrice, BTLSalesProportion, FTBSalesProportion, HPA, HPI, nBuyers"+
-		    			"nSellers, nSales, nNewBuild, Rental AverageBidPrice, Rental AverageDaysOnMarket, Rental AverageOfferPrice, Rental HPA, Rental HPI"+
+		    			"AverageDaysOnMarket, AverageOfferPrice, BTLSalesProportion, FTBSalesProportion, HPA, HPI, nBuyers, "+
+		    			"nSellers, nSales, nNewBuild, Rental AverageBidPrice, Rental AverageDaysOnMarket, Rental AverageOfferPrice, Rental HPA, Rental HPI, "+
 		    			"Rental nBuyers, Rental nSellers, Rental nSales");
 		        paramfile = new PrintWriter("parameters-"+simID+".csv", "UTF-8");
 		        paramfile.println("BtL P_INVESTOR, CentralBank ICR Limit");

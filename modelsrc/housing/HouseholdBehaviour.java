@@ -14,8 +14,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 	public double HPA_EXPECTATION_WEIGHT = 1.0; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer: less than 1)
 	public double INTENSITY_OF_CHOICE = 10.0;
-	public double P_BTL_CAP_ONLY = 0.0; // proportion of BtL investors who care only about capital gains
-	public double P_BTL_RENT_ONLY = 0.0; // proportion of BtL investors who care only about rental yield
+	public double FUNDAMENTALIST_CAP_GAIN_COEFF = 0.5; 	// weight that fundamentalists put on cap gain
+	public double TREND_CAP_GAIN_COEFF = 0.9;			// weight that trend-followers put on cap gain
+	public double P_FUNDAMENTALIST = 0.5; 				// probability that BTL investor is a fundamentalist (otherwise is a trend-follower)
 	
 	protected MersenneTwisterFast 	rand = Model.rand;
 	public boolean					BTLInvestor;
@@ -30,10 +31,10 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 			if( incomePercentile > 0.5 && rand.nextDouble() < data.Households.P_INVESTOR) {
 				BTLInvestor = true;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
 				double type = Model.rand.nextDouble();
-				if(type < P_BTL_CAP_ONLY) {
-					BtLCapGainCoeff = 1.0;
-				} else if(type < P_BTL_CAP_ONLY + P_BTL_RENT_ONLY) {
-					BtLCapGainCoeff = 0.0;
+				if(type < P_FUNDAMENTALIST) {
+					BtLCapGainCoeff = FUNDAMENTALIST_CAP_GAIN_COEFF;
+				} else {
+					BtLCapGainCoeff = TREND_CAP_GAIN_COEFF;
 				}
 			} else {
 				BTLInvestor = false;
