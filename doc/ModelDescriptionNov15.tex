@@ -1,0 +1,315 @@
+
+\documentclass{article}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newenvironment{proof}[1][Proof]{\noindent\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+\begin{document}
+
+\title{Housing ABM, November 2015}
+\maketitle
+
+
+\section{Model description}
+
+The model consists of a construction sector that builds houses that are
+bought and sold by households on a housing market. Households take out
+mortgages from a bank, which is regulated by a central bank. Owner-occupiers
+can also choose to buy and sell properties as buy-to-let investments. These
+are offered on a rental market and rented out by households that decide to
+rent rather than buy. Households that cannot afford to rent or buy are put
+into social housing.
+
+Houses have no intrinsic properties other than a single `quality', which
+acts as a proxy for size, location, condition etc. The model is
+time-stepping with a step of one month.
+
+\subsection{Household lifecycle}
+
+Households enter the model, age, and exit the model. Each household has an
+age, which is identified by the age of the `household reference person'
+(HRP) (a concept that exists in many household surveys).
+
+Households are formed when children leave home and couples separate. The
+birth rate of households is calibrated using the English Housing Survey
+(EHS). Respondents to the EHS are asked about their previous tenure so newly
+formed households can be identified. This gives a birth rate and an age
+distribution for new households. Households enter the model with an
+endowment of income and wealth but no existing housing - they enter either
+the buying or rental market immediately.
+
+New households are assigned an income from the distribution of incomes for
+households of that age.
+
+Once a household has been assigned an income, they remain in that percentile
+of the income distribution for the rest of their `life'. This gives their
+income a life-cycle trajectory, but abstracts away from income shocks,
+unemployment, etc. Incomes have a lower bound at the level of income support
+for a married couple (currently \pounds 5,900). The income distribution of
+households by age of HRP are calibrated according to LCFS 2012.
+
+New households are endowed with some savings. This is calibrated based on
+their income; households with larger income have larger savings, and the
+overall distribution of savings fits data from the Wealth and Asset survey.
+Trajectory of the household's savings is endogenous from this point - they
+choose how much to save/spend in each period and that determines their
+saving balance in the next period.
+
+A percentage (4\%, based on data) of owner-occupiers are chosen to be
+buy-to-let investors. Buy-to-let (BTL) investors are determined in the
+following way. If a household's income percentile is less than 50\%, it has
+a 0\% chance of inheriting a BTL 'gene', otherwise it has an 8\% chance of
+inheriting the BTL gene (giving an overall population of 4\% BTL investors,
+calibrated against number of rental properties (ONS) and distribution of
+number of rental properties per investor (ARLA)).
+
+Household dissolution (`death') occurs on death of
+the last remaining household member, this is calibrated against the mortality rates of
+females.
+
+On exit, all of a household's financial and housing wealth is given to
+another, randomly chosen, household which is still in the model.
+
+\subsection{Simulation initialisation}
+
+The model starts  with no households. Initialisation can proceed in one of two modes. In the first, the model starts at time [-80 years] with no households and the birth rates are calculated so that at time zero the age distribution corresponds with the age distribution of households in LCFS 2012. In the second (the current default), birth and death rates are held constant so that population hits the equilibrium distribution after around 100 years of spinup.
+
+\subsection{Households}
+
+In each period, each household receives its gross employment income and any
+income from rental properties. Income tax is paid according to national tax
+rates to leave disposable income ($Inc$). On housing costs, outright owners
+have no housing costs. Mortgage holders make a mortgage payment under the
+assumption of a 25 year repayment mortgage (changes in interest rates do not affect
+existing owners) ($C_{h}$). Renters pay their rent (same as last period
+unless just moved) ($C_{r}$).
+
+The remainder of income is saved so that each household's bank balance ($B$)
+changes as per:
+
+\bigskip 
+\begin{equation}
+B(t)=B(t-1)+(Inc-C_{r}-C_{h}-E)
+\end{equation}
+
+\bigskip
+
+If a household sells a property then B = B + (Sale price - outstanding
+mortgage). If a household buys a property then B = B - downpayment.
+
+Households consume according to
+
+\begin{equation}
+E=\alpha \max \left( b-e^{4.07\log (i)-33.1+\varepsilon },0\right)
+\end{equation}
+
+\bigskip
+
+where $b$ is the household's liquid wealth and $i$ is gross annual income.
+
+This equation is calibrated from data on household financial wealth from the
+Wealth and Assets survey, under the assumption that the more income a
+household has, the more wealthy it is.
+
+\bigskip
+
+\subsection{Household decision making}
+
+\subsubsection{Buying houses}
+
+If a household decides to buy a house, it will bid an amount given by
+\[
+ \frac{\sigma i e^{N(0,\epsilon)}}{1.0 - AP}
+\]
+where $i$ is income, $P$ is expected house price appreciation, $N()$ is Gaussian noise, $\sigma$, $A$ and $\epsilon$ are parameters.
+
+\subsection{Downpayment}
+On buying a house, if the household has liquid wealth of 1.25 times the price of the house, they will pay outright. If they are property investors they will choose from a Gaussian distribution, calibrated against data. Otherwise they will choose the $i^{th}$ percentile from a log normal distribution (parameters depending on whether they are FTB or OO), where $i$ is their income percentile.
+
+\subsubsection{Selling houses}
+
+For home owners, the probability that they will sell is a linear function of the number of houses currently on the market and the mortgage interest rate.
+
+Houses are offered on the market at a price, $q,$ given by
+
+\begin{equation}
+\ln q=0.095+\ln (\bar{p})-D\ln \left( \frac{\bar{d}+1}{\left\langle
+d\right\rangle +1}\right) +\varepsilon
+\end{equation}
+
+\bigskip
+
+where $\bar{p}$ is the average sold-price of houses of this quality, $\bar{d}
+$ is the average days on the market for all house qualities, $\left\langle
+d\right\rangle $ is the prior expectation of the number of days on the
+market, $D$ is a tunable parameter (currently set to 0), and $\varepsilon
+=N(0,0.01^{2})$.
+
+If a house remains on the market from the previous time-step, with a 6\%
+probability its price is reduced by an amount drawn from a Gaussian
+distribution with mean around -1.6\% and SD 0.6\%. This is calibrated
+against data on house price reductions from Zoopla. If the price drops below the amount needed to pay the mortgage on the house, it is withdrawn from the
+market.
+
+\subsubsection{Renting}
+
+A household will enter the rental market if it has sold its home and was not
+successful in buying another home. A current renter will re-enter the rental
+market when a rental contract ends and they decide not to buy a house.
+
+The probability of deciding to rent/buy is given by a logistic curve, based on the cost of renting against the cost of a mortgage payment and expected capital appreciation of the house.
+
+If a household decides to rent, they will bid 0.3 times their income for rent.
+
+\subsubsection{Buy-to-let rental offers}
+A household that owns a buy-to-let house will put it on the rental market
+whenever a rental contract ends, or when a new buy-to-let house is bought
+that doesn't already have a tenant. The length of a rental agreement is
+chosen randomly from 12 to 24 months with uniform probability. This is based
+on figures from ARLA.
+
+The rent BTL investors charge is given by:
+
+\begin{equation}
+r=e^{C+log(\bar{p})-D\ast log((d+1.0)/31.0)+E\ast N(0,1)}
+\end{equation}
+
+\bigskip
+
+where $C=0.01$, $D=0.02$, $E=0.05$. $N(0,1)$ is a Gaussian noise term with
+average 0 and variance 1. $\bar{p}$ is the average mark-to-market rental
+price for house of this quality.
+
+If a house on the rental market does not get filled, the price is multiplied by 0.95 each month.
+
+\subsubsection{Buy-to-let portfolio sales}
+
+Buy-to-let investors decide to sell houses in their current portfolio based
+on the realised interest coverage ratio of that house and the expected
+capital gains on the house. BtL investors differ in the weightings they
+assign to these two streams of income. The weighted sum of these streams is
+then passed through a logistic function to give a probability for deciding
+to sell the house.
+
+
+\subsubsection{Buy-to-let purchases}
+
+BtL investors decide to buy houses based on the expected yield and expected
+capital gain of the best performing house quality on the market. Different
+investors put different weightings on these two income streams. The sum of
+the weighted streams is passed through a logistic function to get a
+probability of bidding on the house-sale market.
+
+The maximum amount they can invest is determined by the LTV, ICR and
+affordability constraints that the bank imposes as defined below.
+
+\subsection{Bank decision making}
+
+There is a single bank in the model which represents the mortgage lending
+sector in the aggregate. The bank will approve a home mortgage as long as it
+conforms to LTV, LTI and affordability constraints. The affordability
+constraint ensures that a household has enough total income to pay all its
+mortgages. Subject to meeting those criteria, all demand is met in any
+period. The maximum mortgage amount, then, is calculated as
+
+\bigskip 
+\begin{equation}
+q=\min \left( \frac{b(1-\theta )}{\theta },i\ast \psi ,\phi \ast pdi\frac{%
+1-(1+r_{stress})^{-N}}{r_{stress}}\right)
+\end{equation}
+
+\bigskip
+
+In the case of buy to let investors, a central-bank imposed Interest Coverage Ratio is imposed in place of the income to value ratio.
+
+\bigskip The constraints are described in the following table.
+
+\bigskip
+
+\noindent \bigskip 
+\begin{tabular}{p{1.5in}|p{4in}}
+Term / constraint & Description \\ \hline\hline
+$\frac{b(1-\theta )}{\theta }$ & LTV constraint. $b$ is the household's bank
+balance, $\theta $ is the minimum loan to value haircut (i.e. 1 minus the
+loan to value ratio). $\theta $ is 0.1 for first-time buyers, 0.2 for
+homeowners moving home and 0.4 for buy-to-let investors. \\ 
+$i\ast \psi $ & LTI constraint. $i$ is household gross income and $\psi $ is
+the maximum loan to income ratio \\ 
+$\phi \ast pdi\frac{1-(1+r_{stress})^{-N}}{r_{stress}}$ & Affordability test
+given a down-payment of all cash in the bank and a monthly payment equal to
+the share $\phi $ of the household's disposable income available for
+mortgage payments. $pdi$ is a household's disposable income (including
+income from rent), $r_{stress}$ is the fixed monthly interest rate based on
+a stress scenario and $N$ is the number of monthly payments to pay off the
+mortgage. $\phi $ is 0.25.%
+\end{tabular}
+
+\bigskip \bigskip
+
+In order to calibrate the mortgage interest rate $r$, we develop a simple
+credit supply model to simulate the fact that an increase in credit
+provision will tend to push up mortgages rates. In our model, the spread of
+the variable mortgage interest rate over Bank rate depends on new mortgage
+flows over the last 3 months, house price appreciation and an interaction
+term between the two.
+
+The model has been estimated using aggregate monthly data from 1997 to 2014.
+The coefficient of the interaction term implies that if house price growth
+increases by 1 percentage point, then the effect of mortgage flows on
+mortgage spreads increases by 2.33 basis points. In other words, banks
+increase the mortgage spread only in times of high lending and house price
+growth.
+
+The baseline interest rate is set at 3\% and the monthly payments are fixed
+amounts calculated to pay off the mortgage in 25 years.
+
+\subsection{Housing market clearing}
+
+\subsubsection{House sales clearing}
+
+Clearing proceeds as follows: Home-buyers are matched to the best quality
+house they can afford and BtL investors are matched to the best yield house
+they can afford. Where a given offered house is matched with more than one
+bidder, the price is `bid-up' and offered at random to one of the bids that
+can still afford to buy. The failed bids then get to bid again.
+
+\subsubsection{Rental clearing}
+
+Rental clearing proceeds in the same way as house-sales-clearing, but
+without yield-driven BtL bidders.\bigskip
+
+\subsection{Central bank}
+
+The central bank sets LTV, LTI, interest cover ratio (ICR) and affordability
+policies. Policies can be of three different types:
+
+1. Strict limits, e.g. a hard LTV limit of 90\% for all households (though
+the limit may differ between types of agents, such as first-time buyers or
+owner-occupiers);
+
+2. 'Soft' limits, e.g. an LTI cap of 3.5 on new mortgage lending, but
+allowing for 15\% of new mortgages above this limit;
+
+3. State-contingent policies, e.g. an LTV limit of 85\% if credit growth
+over a certain time is above a certain threshold; otherwise no limit.
+
+\end{document}
