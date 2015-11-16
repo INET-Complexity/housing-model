@@ -1,4 +1,19 @@
 TODO:
+- split HPI into behavioural and reporting and check period should be 27 quarters (half period)
+- record parameters and box to record everything with timestamp in one file
+
 - spinup for transient population (slowly change birth/death rate?)
+  change to death rate modulation during spinup rather than birth rate modulation
 - data assimilation
 - add utility
+- send list of observables needed for time-series calibration
+	+ Base rate
+	+ Spread
+	+ Core indicators?
+	+ Total income
+	+ no. of households
+	+ stock of houses
+	+ house price index/distribution
+	+ no of first time buyers
+	+ 
+(interest rate, gdp measure, market)

@@ -53,6 +53,8 @@ public abstract class HousingMarket implements Serializable {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
 		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
 		HPIRecord = new DescriptiveStatistics(Config.HPI_LENGTH);
+		quarterlyHPI.addValue(1.0);
+		quarterlyHPI.addValue(1.0);		
 		init();
 	}
 	
@@ -268,9 +270,10 @@ public abstract class HousingMarket implements Serializable {
 		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.getTime() - sale.tInitialListing);
 		averageSalePrice[sale.getQuality()] = Config.G*averageSalePrice[sale.getQuality()] + (1.0-Config.G)*sale.getPrice();
 		
-		housePriceRegression.addData(referencePrice(sale.getQuality()), sale.getPrice());
+//		housePriceRegression.addData(referencePrice(sale.getQuality()), sale.getPrice());
 		aveSoldRefPrice += referencePrice(sale.getQuality());
 		aveSoldPrice += sale.getPrice();
+		nSold += 1;
 		
 		if(averageSalePrice[sale.getQuality()] < 0.0) {
 			System.out.println("Average sale price "+sale.getQuality()+" is "+averageSalePrice[sale.getQuality()]);
@@ -284,12 +287,12 @@ public abstract class HousingMarket implements Serializable {
 	 * @return Annualised appreciation
 	 ***************************************************/
 	public double housePriceAppreciation() {
-//		return((HPIRecord.getElement(Config.HPI_LENGTH-1)+HPIRecord.getElement(Config.HPI_LENGTH-2)+HPIRecord.getElement(Config.HPI_LENGTH-3))/
-//				(HPIRecord.getElement(Config.HPI_LENGTH-13)+HPIRecord.getElement(Config.HPI_LENGTH-14)+HPIRecord.getElement(Config.HPI_LENGTH-15))
-//				-1.0);
-		return(HPIRecord.getElement(Config.HPI_LENGTH-1)/
-				HPIRecord.getElement(Config.HPI_LENGTH-13)
+		return((HPIRecord.getElement(Config.HPI_LENGTH-1)+HPIRecord.getElement(Config.HPI_LENGTH-2)+HPIRecord.getElement(Config.HPI_LENGTH-3))/
+				(HPIRecord.getElement(Config.HPI_LENGTH-13)+HPIRecord.getElement(Config.HPI_LENGTH-14)+HPIRecord.getElement(Config.HPI_LENGTH-15))
 				-1.0);
+//		return(HPIRecord.getElement(Config.HPI_LENGTH-1)/
+//				HPIRecord.getElement(Config.HPI_LENGTH-13)
+//				-1.0);
 	}
 	
 	/***********************************************
@@ -334,27 +337,32 @@ public abstract class HousingMarket implements Serializable {
 		
 		// ###### TODO: TEST!!!
 		// --- calculate from avergeSalePrice from housePriceRegression
-		if(housePriceRegression.getN() > 4) {
+//		if(housePriceRegression.getN() > 4) {
+		if(nSold > 4) {
+			final double DECAY = 0.25;
 //			housePriceRegression.regress();
 //			double m = housePriceRegression.getSlope();
-//			double c = housePriceRegression.getIntercept();
+			double c = 0.0;//housePriceRegression.getIntercept();
 			double m = aveSoldPrice/aveSoldRefPrice;
-			double c = 0.0;
 			aveSoldPrice = 0.0;
 			aveSoldRefPrice = 0.0;
-			final double DECAY = 0.25;
+			nSold = 0;
+
+			housePriceIndex = m;
+//			quarterlyHPI.addValue(m);
 			for(int q=0; q<House.Config.N_QUALITY; ++q) {
 				averageSalePrice[q] = DECAY*averageSalePrice[q] + (1.0-DECAY)*(m*referencePrice(q) + c);
+//				averageSalePrice[q] = referencePrice(q)*quarterlyHPI.getMean();
 			}
 		}
-		housePriceRegression.clear();
+//		housePriceRegression.clear();
 		
 		// --- calculate from averageSalePrice array
-		housePriceIndex = 0.0;
-		for(Double price : averageSalePrice) {
-			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
-		}
-		housePriceIndex /= House.Config.N_QUALITY*data.HouseSaleMarket.HPI_REFERENCE;
+//		housePriceIndex = 0.0;
+//		for(Double price : averageSalePrice) {
+//			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
+//		}
+//		housePriceIndex /= House.Config.N_QUALITY*data.HouseSaleMarket.HPI_REFERENCE;
 		
 		HPIRecord.addValue(housePriceIndex);
 	}
@@ -372,12 +380,14 @@ public abstract class HousingMarket implements Serializable {
 //	protected PriorityQueue<HouseBuyerRecord> buyers = new PriorityQueue<HouseBuyerRecord>();
 	
 	// ---- statistics
-	SimpleRegression housePriceRegression = new SimpleRegression(); // linear regression of (transaction price,reference price)
+//	SimpleRegression housePriceRegression = new SimpleRegression(); // linear regression of (transaction price,reference price)
 	public double aveSoldRefPrice = 0.0;
 	public double aveSoldPrice = 0.0;
+	public int nSold = 0;
 	public double averageDaysOnMarket;
 	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
 	public DescriptiveStatistics HPIRecord;
+	public DescriptiveStatistics quarterlyHPI = new DescriptiveStatistics(3);
 	public double housePriceIndex;
 	public double dLogPriceMean;
 	public double dLogPriceSD;
