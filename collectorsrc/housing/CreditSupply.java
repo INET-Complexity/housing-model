@@ -18,7 +18,7 @@ public class CreditSupply extends CollectorBase {
 		mortgageCounter = 0;
 		ftbCounter = 0;
 		btlCounter = 0;
-		setArchiveLength(1000);
+		setArchiveLength(10000);
 	}
 
 	/***
@@ -97,17 +97,21 @@ public class CreditSupply extends CollectorBase {
     public double [] getDownpaymentDistribution() {return(downpayments.getValues());}
     public double [] getBTLICRDistribution() {return(btl_icr.getValues());}
        
-    public boolean getSaveLTIDistribution() { return(false);}
-    public void setSaveLTIDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
-        PrintWriter ooLTI = new PrintWriter("ooLTIVals.csv", "UTF-8");
-        double [] ltiVals = getOOLTIDistribution();
-        if(ltiVals.length > 0) {
-        	ooLTI.print(ltiVals[0]);
-        	for(int i=1; i<ltiVals.length; ++i) {
-        		ooLTI.print(", "+ltiVals[i]);
-        	}
-        }
-        ooLTI.close();
+    public boolean getSaveOOLTVDistribution() { return(false);}
+    public void setSaveOOLTVDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
+        writeDistributionToFile(getOOLTVDistribution(),"ooLTVVals.csv");
+    }
+    public boolean getSaveBTLLTVDistribution() { return(false);}
+    public void setSaveBTLLTVDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
+        writeDistributionToFile(getBTLLTVDistribution(),"btlLTVVals.csv");
+    }
+    public boolean getSaveOOLTIDistribution() { return(false);}
+    public void setSaveOOLTIDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
+        writeDistributionToFile(getOOLTIDistribution(),"ooLTIVals.csv");
+    }
+    public boolean getSaveBTLICRDistribution() { return(false);}
+    public void setSaveBTLICRDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
+        writeDistributionToFile(getBTLICRDistribution(),"btlICRVals.csv");
     }
     
 
@@ -117,6 +121,17 @@ public class CreditSupply extends CollectorBase {
 
 	public int getArchiveLength() {
 		return archiveLength;
+	}
+	
+	public void writeDistributionToFile(double [] vals, String filename) throws FileNotFoundException, UnsupportedEncodingException {
+        PrintWriter dist = new PrintWriter(filename, "UTF-8");
+        if(vals.length > 0) {
+        	dist.print(vals[0]);
+        	for(int i=1; i<vals.length; ++i) {
+        		dist.print(", "+vals[i]);
+        	}
+        }
+        dist.close();
 	}
 
 	public void setArchiveLength(int archiveLength) {
