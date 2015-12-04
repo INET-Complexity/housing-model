@@ -23,86 +23,29 @@
 \newtheorem{solution}[theorem]{Solution}
 \newtheorem{summary}[theorem]{Summary}
 \newenvironment{proof}[1][Proof]{\noindent\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+\setlength{\parskip}{1.8mm}
+\setlength{\parindent}{0mm}
 \begin{document}
 
-\title{Housing ABM, November 2015}
+\title{Housing ABM, December 2015}
 \maketitle
 
 \section{Introduction}
+The model consists of a construction sector that builds houses that are bought and sold by households on a housing market. Households take out mortgages from a bank, which is regulated by a central bank. Owner-occupiers can also choose to buy and sell properties as buy-to-let investments. These are offered on a rental market and rented out by households that decide to rent rather than buy. Households that cannot afford to rent or buy are put into social housing.
 
-The model consists of a construction sector that builds houses that are
-bought and sold by households on a housing market. Households take out
-mortgages from a bank, which is regulated by a central bank. Owner-occupiers
-can also choose to buy and sell properties as buy-to-let investments. These
-are offered on a rental market and rented out by households that decide to
-rent rather than buy. Households that cannot afford to rent or buy are put
-into social housing.
-
-Houses have no intrinsic properties other than a single `quality', which
-acts as a proxy for size, location, condition etc. The model is
-time-stepping with a step of one month.
+Houses have no intrinsic properties other than a single `quality', which acts as a proxy for size, location, condition etc. The model is time-stepping with a step of one month.
 
 \section{Household lifecycle}
 
-Households enter the model, age, and exit the model. Each household has an
-age, which represents the age of the `household reference person'
-(HRP) (a concept that exists in many household surveys).
+Households enter the model, age, and exit. Upon entry, households are assigned an income percentile, which they will retain for the rest of their lives. They are endowed with wealth, based on average wealth for their income, but no existing housing. 8\% of households that are above the 50th percentile of income are given a buy-to-let `gene' which gives them the desire to enter the buy-to-let market.
 
-Households are formed when children leave home and couples separate, separation is currently not modelled. The
-birth rate of households is calibrated using the English Housing Survey
-(EHS). Respondents to the EHS are asked about their previous tenure so newly
-formed households can be identified. This gives a birth rate and an age
-distribution for new households. Households enter the model with an
-endowment of income and wealth but no existing housing - they enter either
-the buying or rental market immediately.
-
-New households are assigned an income from the distribution of incomes for
-households of that age.
-
-Once a household has been assigned an income, they remain in that percentile
-of the income distribution for the rest of their `life'. This gives their
-income a life-cycle trajectory, but abstracts away from income shocks,
-unemployment, etc. Incomes have a lower bound at the level of income support
-for a married couple (currently \pounds 5,900). The income distribution of
-households by age of HRP are calibrated according to LCFS 2012.
-
-New households are endowed with some savings. This is calibrated based on
-their income; households with larger income have larger savings, and the
-overall distribution of savings fits data from the Wealth and Asset survey.
-Trajectory of the household's savings is endogenous from this point - they
-choose how much to save/spend in each period and that determines their
-saving balance in the next period.
-
-A percentage (4\%, based on data) of households are chosen to be
-buy-to-let investors. Buy-to-let (BTL) investors are determined in the
-following way. If a household's income percentile is less than 50\%, it has
-a 0\% chance of inheriting a BTL 'gene', otherwise it has an 8\% chance of
-inheriting the BTL gene (giving an overall population of 4\% BTL investors,
-calibrated against number of rental properties (ONS) and distribution of
-number of rental properties per investor (ARLA)).
-
-Household dissolution (`death') occurs on death of
-the last remaining household member, this is calibrated against the mortality rates of
-females.
-
-On exit, all of a household's financial and housing wealth is given to
-another, randomly chosen, household which is still in the model.
-
+The age of a household represents the age of the `household reference person' (HRP) (a concept that exists in many household surveys). As a household ages, its income changes based on its income percentile and the aggregate income distribution for that age. Income has a lower bound of \pounds 5,900 (the current level of income support for a married couple).On exit, all of a household's financial and housing wealth is given to another, randomly chosen, household. 
 \section{Simulation initialisation}
-
-The model starts  with no households. Initialisation can proceed in one of two modes. In the first, the model starts at time [-80 years] with no households and the birth rates are calculated so that at time zero the age distribution corresponds with the age distribution of households in LCFS 2012. In the second (the current default), birth and death rates are held constant so that population hits the equilibrium distribution after around 100 years of spinup.
+The model goes through a `spinup' peroid before any simulation. The spinup peroid begins with no households and ends with 10,000 households. Spinup can proceed in one of two modes. If the simulation requires a non-equilibrium population, the birth rates during spinup are calculated so that at the end of the spinup, the households have the desired age distribution. If we want to simulate an equilibrium age distribution for a given birth and deeath rate (the current default), birth and death rates are held constant during spinup so that population hits the equilibrium distribution after around 100 years.
 
 \section{Households}
 
-In each period, each household receives its gross employment income and any
-income from rental properties. Income tax is paid according to national tax
-rates to leave disposable income ($Inc$). On housing costs, outright owners
-have no housing costs. Mortgage holders make a mortgage payment under the
-assumption of a 25 year repayment mortgage (changes in interest rates do not affect
-existing owners) ($C_{h}$). Renters pay their rent (same as last period
-unless just moved) ($C_{r}$). The remainder of income is saved.
-
-
+In each period, each household receives its gross employment income and any income from rental properties. Income tax is paid according to national tax rates to leave disposable income. Mortgage holders make mortgage payments under the assumption of a 25 year repayment mortgage (changes in interest rates do not affect existing owners). Renters pay their rent (same as last period unless just moved).
 
 \subsection{Household consumption}
 
@@ -112,26 +55,26 @@ Households consume according to
 E=\alpha \max \left( b-e^{4.07\log (i)-33.1+\varepsilon },0\right)
 \end{equation}
 
-\bigskip
-
 where $b$ is the household's liquid wealth and $i$ is gross annual income.
 
-This equation is calibrated from data on household financial wealth from the
-Wealth and Assets survey, under the assumption that the more income a
-household has, the more wealthy it is.
+\subsection{Decisions while in ``social housing''}
+All agents are born into ``social housing''. Although we refer to this as social housing, this also represents homelessness, living with parents while looking for a house or living in temporary accommodation (e.g.hotel, staying with friends) while between houses.
 
-\bigskip
+Agents never choose to be in ``social housing'', but are put there if they fail to secure any other form of housing at a given time. If they find themselves in social housing they will always consider renting or buying and will bid on the appropriate market.
 
-\subsection{Social housing}
-All agents are born into ``social housing''. Although we refer to this as in social housing, this also represents homelessness, living with parents while looking for a house or living in temporary accommodation (e.g.hotel, staying with friends) while between houses.
-
-Agents never choose to be in ``social housing'', but are put there if they fail to secure any other form of housing at a given time. If they find themselves in social housing they will always consider renting or buying and will bid appropriately.
-
-\subsection{Decisions about one's home}
 \subsubsection{Decision to rent or buy a home}
-If an agent is in need of a new home (if in social housing, at the end of a rental contract or directly after the sale of a house), they need to decide between renting and buying. The probability of deciding to rent/buy is given by a logistic curve, based on the cost of renting against the cost of a mortgage payment and expected capital appreciation of the house.
+If an agent is in need of a new home (if in social housing, at the end of a rental contract or directly after the sale of a house), they need to decide between renting and buying. The probability of deciding to buy is given by
+\[
+P_{buy} = \frac{1}{1 + e^{K_{rb}(C_{r}(1+C_R) - C_{b})}}
+\]
+where $K_{rb}$ is a constant, $C_{r}$ is the average annual rent on a house of the buyer's desired quality, $C_R$ is a constant, representing the intrinsic cost of renting rather than owning, and $C_{b}$ is the expected annual mortgage payment minus the expected annual capital appreciation of a house of the buyer's desired quality.
+
+Desired quality is the maximum quality house that, at current market prices, the household would expect to get if they entered the house sale market (see section \ref{buyahome}).
+
+\subsection{Decisions as a Homeowner}
 
 \subsubsection{Buying a home}
+\label{buyahome}
 If a household decides to buy a home, it will bid on the house sale market. The desired amount of the bid is given by
 \[
  \frac{\sigma i e^{N(0,\epsilon)}}{1.0 - AP}
@@ -141,7 +84,7 @@ where $i$ is income, $P$ is expected house price appreciation, $N()$ is Gaussian
 The actual amount bid is the closest amount possible to the desired bid, after accounting for any bank-decided constraints on mortgages available to the agent.
 
 \subsubsection{Downpayment on a new home}
-On buying a home, if the household has liquid wealth of 1.25 times the price of the house, they will pay outright. Otherwise they will choose the $i^{th}$ percentile from a log normal distribution (parameters depending on whether they are FTB or OO), where $i$ is their income percentile (calibrated against emprical LTV distributions).
+On buying a home, if the household has liquid wealth of 1.25 times the price of the house, they will pay outright. Otherwise they will choose the $i^{th}$ percentile from a log-normal distribution (parameters depending on whether they are FTB or OO), where $i$ is their income percentile (calibrated against emprical LTV distributions).
 
 \subsubsection{Decision to sell a home}
 The probability that an agent will sell their home is a linear function of the number of houses currently on the market and the mortgage interest rate.
@@ -223,10 +166,13 @@ A BTL investor will be willing to invest up to the amount of the maximum mortgag
 \subsubsection{Downpayment}
 On buying a house, if the household has liquid wealth of 1.25 times the price of the house, they will pay outright. BTL investors will choose downpayment from a Gaussian distribution, calibrated against data.
 
-\subsection{Bank decision making}
+\section{Banks}
 
 There is a single bank in the model which represents the mortgage lending
-sector in the aggregate. The bank will approve a home mortgage as long as it
+sector in the aggregate.
+
+\subsection{Mortgage approval}
+The bank will approve a home mortgage as long as it
 conforms to LTV, LTI and affordability constraints. The affordability
 constraint ensures that a household has enough total income to pay all its
 mortgages. Subject to meeting those criteria, all demand is met in any
@@ -264,24 +210,12 @@ a stress scenario and $N$ is the number of monthly payments to pay off the
 mortgage. $\phi $ is 0.25.%
 \end{tabular}
 
-\bigskip \bigskip
-
-In order to calibrate the mortgage interest rate $r$, we develop a simple
-credit supply model to simulate the fact that an increase in credit
-provision will tend to push up mortgages rates. In our model, the spread of
-the variable mortgage interest rate over Bank rate depends on new mortgage
-flows over the last 3 months, house price appreciation and an interaction
-term between the two.
-
-The model has been estimated using aggregate monthly data from 1997 to 2014.
-The coefficient of the interaction term implies that if house price growth
-increases by 1 percentage point, then the effect of mortgage flows on
-mortgage spreads increases by 2.33 basis points. In other words, banks
-increase the mortgage spread only in times of high lending and house price
-growth.
-
-The baseline interest rate is set at 3\% and the monthly payments are fixed
-amounts calculated to pay off the mortgage in 25 years.
+\subsection{Interest rates}
+Mortgage interest rate spread, $r$, is calculated according to
+\[
+r_{t+1} = r_{t} + k(S-T)
+\]
+where $k$ is a constant, $S$ is the aggregate rate of supply of credit and $T$ is a constant target rate of supply.
 
 \section{Housing market clearing}
 
@@ -291,7 +225,13 @@ Clearing proceeds as follows: Home-buyers are matched to the best quality
 house they can afford and BtL investors are matched to the best yield house
 they can afford. Where a given offered house is matched with more than one
 bidder, the price is `bid-up' and offered at random to one of the bids that
-can still afford to buy. The failed bids then get to bid again.
+can still afford to buy. For a total number, $b$, of bids received in the timestep, the number of bid-ups, $k$, is drawn from a geometric distribution such that:
+\[
+p(k) = (1-e^{-7b/30})^{k-1}e^{-7b/30}
+\]
+Each bid-up increases the price of the house by $0.75\%$.
+
+Failed bids then get to bid again. This re-bidding carries on up to the smaller of $N/1000$ and $1+n/5000000$ times, where $N$ is the population and $n$ is the total number of orders on the market.
 
 \subsection{Rental clearing}
 
@@ -312,5 +252,8 @@ allowing for 15\% of new mortgages above this limit;
 
 3. State-contingent policies, e.g. an LTV limit of 85\% if credit growth
 over a certain time is above a certain threshold; otherwise no limit.
+
+\section{Construction sector}
+The construction sector builds houses during the spinup period so as to keep the household to house ratio constant. New houses will be put onto the house sale market at the current market price and will drop the price at a rate of $5\%$ per month if unsold.
 
 \end{document}
