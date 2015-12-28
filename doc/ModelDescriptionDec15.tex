@@ -31,36 +31,49 @@
 \maketitle
 
 \section{Introduction}
-The model consists of a construction sector that builds houses that are bought and sold by households on a housing market. Households take out mortgages from a bank, which is regulated by a central bank. Owner-occupiers can also choose to buy and sell properties as buy-to-let investments. These are offered on a rental market and rented out by households that decide to rent rather than buy. Households that cannot afford to rent or buy are put into social housing.
+The model consists of houses that are bought and sold by households on a housing market; households take out mortgages from a bank, which is regulated by a central bank. Owner-occupiers can also choose to buy and sell properties as buy-to-let investments. These are offered on a rental market and rented out by households that decide to rent rather than buy. Households that cannot afford to rent or buy are put into social housing.
 
 Houses have no intrinsic properties other than a single `quality', which acts as a proxy for size, location, condition etc. The model is time-stepping with a step of one month.
 
 \section{Household lifecycle}
 
-Households enter the model, age, and exit. Upon entry, households are assigned an income percentile, which they will retain for the rest of their lives. They are endowed with wealth, based on average wealth for their income, but no existing housing. 8\% of households that are above the 50th percentile of income are given a buy-to-let `gene' which gives them the desire to enter the buy-to-let market.
+Households enter the model, age, and exit. Upon entry, households are endowed with an age (taken from an empirical distributions), a value representing their income percentile (chosen with uniform probability) and wealth (based on average wealth for their income) but no existing housing. 8\% of households that are above the 50th percentile of income are given a buy-to-let `gene' which gives them the desire to enter the buy-to-let market.
 
-The age of a household represents the age of the `household reference person' (HRP) (a concept that exists in many household surveys). As a household ages, its income changes based on its income percentile and the aggregate income distribution for that age. Income has a lower bound of \pounds 5,900 (the current level of income support for a married couple).On exit, all of a household's financial and housing wealth is given to another, randomly chosen, household. 
+The age of a household represents the age of the `household reference person' (HRP) (a concept that exists in many household surveys). As a household ages, its income percentile remains fixed and its income changes based on the empirical distribution of income by age in the UK. Income is bounded by a lower limit of \pounds 5,900 (the current level of income support for a married couple).
+Each month, each household has a certain probability of `death' based on its age, taken from empirical rates for the UK. On exit, all of a household's financial and housing wealth is given to another, randomly chosen, household. 
 \section{Simulation initialisation}
-The model goes through a `spinup' peroid before any simulation. The spinup peroid begins with no households and ends with 10,000 households. Spinup can proceed in one of two modes. If the simulation requires a non-equilibrium population, the birth rates during spinup are calculated so that at the end of the spinup, the households have the desired age distribution. If we want to simulate an equilibrium age distribution for a given birth and deeath rate (the current default), birth and death rates are held constant during spinup so that population hits the equilibrium distribution after around 100 years.
+In order to initialise a simulation with a realistic assignment of houses and mortgages to households, the model goes through a `spinup' period before any simulation. For a given target population, the necessary total birth rate is calculated and the population is allowed to grow to its equilibrium distribution while holding the total birth rate fixed.
+
+During this period, houses are put on the sale market by a `construction sector' when the household to house ratio falls below a fixed value. New houses will be put onto the house sale market at the current market price and will drop the price at a rate of $5\%$ per month if unsold.
 
 \section{Households}
 
-In each period, each household receives its gross employment income and any income from rental properties. Income tax is paid according to national tax rates to leave disposable income. Mortgage holders make mortgage payments under the assumption of a 25 year repayment mortgage (changes in interest rates do not affect existing owners). Renters pay their rent (same as last period unless just moved).
+\subsection{A month in the life...}
+In each one-month time-step, each household:
+\begin{enumerate}
+\item ages by 1 month and possibly dies
+\item receives its gross employment income and pays income tax and national insurance according to UK tax law for a single person in the 2014/15 tax year (this needs changing to account for probability of household status given income and age).
+\item makes mortgage and/or rental payments and collects any rent due
+\item consumes
+\item decides whether to try to rent/buy a new house
+\item decides whether to sell any owned houses
+\item rethinks the price of any house on the rental/sale market or removes from the market.
+\end{enumerate}
 
 \subsection{Household consumption}
 
-Households consume according to
+Households have a fixed, subsistence-consumption set at the married couple's monthly lower earnings limit for UK income support. After this is subtracted from disposable income, the household's discretionary consumption is calculated as
 
 \begin{equation}
 E=\alpha \max \left( b-e^{4.07\log (i)-33.1+\varepsilon },0\right)
 \end{equation}
 
-where $b$ is the household's liquid wealth and $i$ is gross annual income.
+where $b$ is the household's liquid wealth and $i$ is gross annual income. This formula ensures that the aggregate wealth distribution fits the empirical distribution of wealth given income for the UK, while ensuring that households with higher income consume more.
 
 \subsection{Decisions while in ``social housing''}
 All agents are born into ``social housing''. Although we refer to this as social housing, this also represents homelessness, living with parents while looking for a house or living in temporary accommodation (e.g.hotel, staying with friends) while between houses.
 
-Agents never choose to be in ``social housing'', but are put there if they fail to secure any other form of housing at a given time. If they find themselves in social housing they will always consider renting or buying and will bid on the appropriate market.
+Agents never choose to be in ``social housing'', but are put there if they fail to secure any other form of housing at a given time. If they find themselves in social housing they will always consider renting or buying and will bid on the appropriate market. When in social housing, no rental payments are deducted from income.
 
 \subsubsection{Decision to rent or buy a home}
 If an agent is in need of a new home (if in social housing, at the end of a rental contract or directly after the sale of a house), they need to decide between renting and buying. The probability of deciding to buy is given by
@@ -253,7 +266,5 @@ allowing for 15\% of new mortgages above this limit;
 3. State-contingent policies, e.g. an LTV limit of 85\% if credit growth
 over a certain time is above a certain threshold; otherwise no limit.
 
-\section{Construction sector}
-The construction sector builds houses during the spinup period so as to keep the household to house ratio constant. New houses will be put onto the house sale market at the current market price and will drop the price at a rate of $5\%$ per month if unsold.
 
 \end{document}
