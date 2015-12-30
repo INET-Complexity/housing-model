@@ -57,7 +57,7 @@ In each one-month time-step, each household:
 \item consumes
 \item decides whether to try to rent/buy a new house
 \item decides whether to sell any owned houses
-\item rethinks the price of any house on the rental/sale market or removes from the market.
+\item rethinks the price of any house on the rental/sale market or takes the house off the market.
 \end{enumerate}
 
 \subsection{Household consumption}
@@ -68,7 +68,7 @@ Households have a fixed, subsistence-consumption set at the married couple's mon
 E=\alpha \max \left( b-e^{4.07\log (i)-33.1+\varepsilon },0\right)
 \end{equation}
 
-where $b$ is the household's liquid wealth and $i$ is gross annual income. This formula ensures that the aggregate wealth distribution fits the empirical distribution of wealth given income for the UK, while ensuring that households with higher income consume more.
+where $b$ is the household's liquid wealth, $i$ is gross annual income, $\alpha$ is a constant and $\varepsilon$ is a noise term. This formula ensures that the aggregate wealth distribution fits the empirical distribution of wealth given income for the UK, while ensuring that households with higher income consume more. The rule imposes the distribution quite agressively, effectively making liquid wealth roughly a function of income. This needs to be improved.
 
 \subsection{Decisions while in ``social housing''}
 All agents are born into ``social housing''. Although we refer to this as social housing, this also represents homelessness, living with parents while looking for a house or living in temporary accommodation (e.g.hotel, staying with friends) while between houses.
@@ -76,13 +76,17 @@ All agents are born into ``social housing''. Although we refer to this as social
 Agents never choose to be in ``social housing'', but are put there if they fail to secure any other form of housing at a given time. If they find themselves in social housing they will always consider renting or buying and will bid on the appropriate market. When in social housing, no rental payments are deducted from income.
 
 \subsubsection{Decision to rent or buy a home}
+\label{rentorbuy}
 If an agent is in need of a new home (if in social housing, at the end of a rental contract or directly after the sale of a house), they need to decide between renting and buying. The probability of deciding to buy is given by
 \[
 P_{buy} = \frac{1}{1 + e^{K_{rb}(C_{r}(1+C_R) - C_{b})}}
 \]
-where $K_{rb}$ is a constant, $C_{r}$ is the average annual rent on a house of the buyer's desired quality, $C_R$ is a constant, representing the intrinsic cost of renting rather than owning, and $C_{b}$ is the expected annual mortgage payment minus the expected annual capital appreciation of a house of the buyer's desired quality.
+where $K_{rb}$ is a constant giving sinsitivity to cost, $C_{r}$ is the average annual rent on a house of the buyer's desired quality, $C_R$ is a constant, representing the intrinsic desire to own rather than rent (i.e. the psychological cost of renting), and $C_{b}$ is the expected annual mortgage payment minus the expected annual capital appreciation of a house of the buyer's desired quality.
 
 Desired quality is the maximum quality house that, at current market prices, the household would expect to get if they entered the house sale market (see section \ref{buyahome}).
+
+\subsection{Decisions as a renter}
+If a household decides to rent, they will bid 0.3 times their income for rent. Upon entering a rental contract, they will live in the rented house and pay rent until the end of the contract. At the end of the contract, they will reconsider whether to rent or buy as described in section \ref{rentorbuy}.
 
 \subsection{Decisions as a Homeowner}
 
@@ -92,17 +96,19 @@ If a household decides to buy a home, it will bid on the house sale market. The 
 \[
  \frac{\sigma i e^{N(0,\epsilon)}}{1.0 - AP}
 \]
-where $i$ is income, $P$ is expected house price appreciation, $N()$ is Gaussian noise, $\sigma$, $A$ and $\epsilon$ are parameters.
+where $i$ is income, $P$ is expected house price appreciation, $N()$ is Gaussian noise, $\sigma$, $A$ and $\epsilon$ are parameters. This formula is exactly equivalent to the one used in the Washington model, although the parameter values used are different.
 
 The actual amount bid is the closest amount possible to the desired bid, after accounting for any bank-decided constraints on mortgages available to the agent.
 
 \subsubsection{Downpayment on a new home}
-On buying a home, if the household has liquid wealth of 1.25 times the price of the house, they will pay outright. Otherwise they will choose the $i^{th}$ percentile from a log-normal distribution (parameters depending on whether they are FTB or OO), where $i$ is their income percentile (calibrated against emprical LTV distributions).
+\label{downpayment}
+On buying a house, the minimum downpayment on the house is imposed by the mortgage lender during the mortgage pre-approval process (where applicable) but the household may choose to make a larger downpayment. If the household has liquid wealth of 1.25 times the price of the house, they will pay outright (this ensures there are roughly the right number of cash buyers). Otherwise they will choose the $i^{th}$ percentile from a log-normal distribution calibrated against emprical LTV distributions, where $i$ is their income percentile. The parameters of the log-normal distributions are different for first time buyers (FTB) and owner-occupiers (OO).
 
 \subsubsection{Decision to sell a home}
-The probability that an agent will sell their home is a linear function of the number of houses currently on the market and the mortgage interest rate.
+The probability that an agent will sell their home is a linear function of the number of houses currently on the market and the mortgage interest rate. This is a fudge to prevent unrealistic build up of housing stock on the market and unrealistic fluctuations in interest rates.
 
 \subsubsection{Sale price decision}
+\label{saleprice}
 Houses are offered on the market at a price, $q,$ given by
 
 \begin{equation}
@@ -116,18 +122,18 @@ where $\bar{p}$ is the average sold-price of houses of this quality, $\bar{d}
 $ is the average days on the market for all house qualities, $\left\langle
 d\right\rangle $ is the prior expectation of the number of days on the
 market, $D$ is a tunable parameter (currently set to 0), and $\varepsilon
-=N(0,0.01^{2})$.
+=N(0,0.01^{2})$. Please see Washington model documentation for motivation for this equation.
 
 If a house remains on the market from the previous time-step, with a 6\%
 probability its price is reduced by an amount drawn from a Gaussian
 distribution with mean around -1.6\% and SD 0.6\%. This is calibrated
-against data on house price reductions from Zoopla. If the price drops below the amount needed to pay the mortgage on the house, it is withdrawn from the
-market.
+against data on house price reductions from Zoopla. If the price drops below the amount needed to pay the mortgage on the house, it is withdrawn from the market.
 
-\subsubsection{Decision on how much to spend on rent}
-If a household decides to rent, they will bid 0.3 times their income for rent.
 
 \subsection{Buy-To-Let Investor's decisions}
+\subsubsection{BtL heterogeneity}
+BtL investors are, with a tunable probability, randomly assigned to be either `fundamentalist' or `trend follower'. The only difference between the two is the value of the `capital gain coefficient' $c_{g}$, which is used in some of the decision processes below.
+
 \subsubsection{Buy-to-let rental offers}
 A BTL investor will put a house on the rental market
 whenever a rental contract ends, or when a new buy-to-let house is bought
@@ -136,48 +142,51 @@ that doesn't already have a tenant.
 The rent BTL investors charge is given by:
 
 \begin{equation}
-r=e^{C+log(\bar{p})-D\ast log((d+1.0)/31.0)+E\ast N(0,1)}
+\ln(r)=C+\ln (\bar{p})-D\ast \ln((d+1.0)/31.0)+E\ast N(0,1)
 \end{equation}
 
 \bigskip
 
 where $C=0.01$, $D=0.02$, $E=0.05$. $N(0,1)$ is a Gaussian noise term with
 average 0 and variance 1. $\bar{p}$ is the average mark-to-market rental
-price for house of this quality.
+price for house of this quality. This is of the same form as used for sale price in the Washington model.
 
 If a house on the rental market does not get filled, the price is multiplied by 0.95 each month.
 
 The length of a rental agreement is
-chosen randomly from 12 to 24 months with uniform probability. This is based
-on figures from ARLA.
+chosen randomly from 12 to 24 months with uniform probability. This is based on figures from ARLA.
 
 \subsubsection{Decision to sell BTL property}
 
-Buy-to-let investors decide to sell houses in their current portfolio based
-on the realised interest coverage ratio of that house and the expected
-capital gains on the house. BtL investors differ in the weightings they
-assign to these two streams of income. The weighted sum of these streams is
-then passed through a logistic function to give a probability for deciding
-to sell the house.
+Buy-to-let investors decide to sell houses in their current portfolio based on the `effective yield' on the house, which is defined as
+\[
+y_e = \frac{2(c_g \bar{g}p + (1-c_g)r) - m}{e} 
+\]
+where $c_g$ is the investor's capital gain coefficient $\bar{g}$ is expected annual house price appreciation, $r$ is current annual rental income from the house, $m$ is the current annual mortgage payment and $e$ is the maximum of the current equity in the house and 1 pence.
 
-The price at which the property is offered is decided in the same way as with homes.
+The probability of deciding to keep the house is then given by
+\[
+P(keep) = \frac{1}{(1 + e^{ky_e+c})^\gamma}
+\]
+where $k$ is a scaling constant, $c$ represents transaction costs and stickiness, and $\gamma$ deals with the fact that the decision to keep or sell is made every month in the model, whereas in reality this decision may be made less frequently.
 
+If an investor decides to sell, the price at which the property is offered is decided in the same way as with homes (see section \ref{saleprice}).
 
 \subsubsection{Decision to buy BTL property}
+Buy-to-let investors decide to add houses to their current portfolio based on the `expected yield' on one or more houses bought with the maximum mortgage available to the investor, which is defined as
+\[
+\bar{y} = 2l(c_g \bar{g} + (1-c_g)\bar{r}) - \frac{m}{d} 
+\]
+where $c_g$ is the investor's capital gain coefficient, $\bar{g}$ is expected annual house price appreciation, $\bar{r}$ is an exponential average of the gross rental yield on new rental contracts, $l$ is the leverage (house price over downpayment) of the largest mortgage available to the investor, $m$ is the associated annual mortgage payment and $d$ is the minimum downpayment.
 
-BtL investors decide to buy houses based on the expected yield and expected
-capital gain of the best performing house quality on the market. Different
-investors put different weightings on these two income streams. The sum of
-the weighted streams is passed through a logistic function to get a
-probability of bidding on the house-sale market.
-
-The maximum amount they can invest is determined by the LTV, ICR and
-affordability constraints that the bank imposes as defined below.
-
-A BTL investor will be willing to invest up to the amount of the maximum mortgage the bank is willing to approve.
+The probability of deciding not to buy any house is then given by
+\[
+P(\overline{buy}) = \frac{1}{(1 + e^{ky_e+c})^\gamma}
+\]
+where $k$ is a scaling constant, $c$ represents transaction costs and stickiness, and $\gamma$ deals with the fact that the decision to buy or not is made every month in the model, whereas in reality this decision may be made less frequently.
 
 \subsubsection{Downpayment}
-On buying a house, if the household has liquid wealth of 1.25 times the price of the house, they will pay outright. BTL investors will choose downpayment from a Gaussian distribution, calibrated against data.
+The decision on how much downpayment to make on a newly purchased house is made in the same way as described in section \ref{downpayment} except that BTL investors will choose downpayment from a Gaussian distribution (bounded at the lower end by zero) rather than a log-normal, this is calibrated against confidential BoE data.
 
 \section{Banks}
 
@@ -235,14 +244,11 @@ where $k$ is a constant, $S$ is the aggregate rate of supply of credit and $T$ i
 \subsection{House sales clearing}
 
 Clearing proceeds as follows: Home-buyers are matched to the best quality
-house they can afford and BtL investors are matched to the best yield house
-they can afford. Where a given offered house is matched with more than one
-bidder, the price is `bid-up' and offered at random to one of the bids that
-can still afford to buy. For a total number, $b$, of bids received in the timestep, the number of bid-ups, $k$, is drawn from a geometric distribution such that:
+house they can afford and BtL investors are matched to the best gross yield house they can afford. Where a given offered house is matched with more than one bidder, the price is `bid up' by multiplying by $1.0075^k$ where $k$ is chosen at random from a geometric distribution such that
 \[
 p(k) = (1-e^{-7b/30})^{k-1}e^{-7b/30}
 \]
-Each bid-up increases the price of the house by $0.75\%$.
+where $b$ is the number of bids received in the timestep. The house is then offered to a randomly chosen bid that can still afford to buy. This approximates the outcome that would be achieved if the bids came in on random days in the simulated month; if a bid is followed by another bid within 7 days, the new bid `bids up' the price by $0.75\%$, the first bid that is not bid up within 7 days gets the house.
 
 Failed bids then get to bid again. This re-bidding carries on up to the smaller of $N/1000$ and $1+n/5000000$ times, where $N$ is the population and $n$ is the total number of orders on the market.
 
