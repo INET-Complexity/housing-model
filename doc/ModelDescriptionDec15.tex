@@ -36,39 +36,65 @@ The model consists of houses that are bought and sold by households on a housing
 Houses have no intrinsic properties other than a single `quality', which acts as a proxy for size, location, condition etc. The model is time-stepping with a step of one month.
 
 \section{Household lifecycle}
-
-Households enter the model, age, and exit. Upon entry, households are endowed with an age (taken from an empirical distributions), a value representing their income percentile (chosen with uniform probability) and wealth (based on average wealth for their income) but no existing housing. 8\% of households that are above the 50th percentile of income are given a buy-to-let `gene' which gives them the desire to enter the buy-to-let market.
+\label{lifecycle}
+Households enter the model, age, and exit. The total `birth' rate of households is held constant. Upon birth, households are endowed with an age (taken from an empirical distributions), a value representing their income percentile (chosen with uniform probability) and wealth (based on average wealth for their income) but no existing housing. 8\% of households that are above the 50th percentile of income are given a buy-to-let `gene' which gives them the desire to enter the buy-to-let market.
 
 The age of a household represents the age of the `household reference person' (HRP) (a concept that exists in many household surveys). As a household ages, its income percentile remains fixed and its income changes based on the empirical distribution of income by age in the UK. Income is bounded by a lower limit of \pounds 5,900 (the current level of income support for a married couple).
-Each month, each household has a certain probability of `death' based on its age, taken from empirical rates for the UK. On exit, all of a household's financial and housing wealth is given to another, randomly chosen, household. 
-\section{Simulation initialisation}
-In order to initialise a simulation with a realistic assignment of houses and mortgages to households, the model goes through a `spinup' period before any simulation. For a given target population, the necessary total birth rate is calculated and the population is allowed to grow to its equilibrium distribution while holding the total birth rate fixed.
 
-During this period, houses are put on the sale market by a `construction sector' when the household to house ratio falls below a fixed value. New houses will be put onto the house sale market at the current market price and will drop the price at a rate of $5\%$ per month if unsold.
+\subsection{Death and Inheritance}
+Each month, each household has a probability of `death' given by
+\begin{equation}
+P_{die} = Ae^{ka}
+\label{mortality}
+\end{equation}
+where $a$ is age and $k$ and $A$ are constants. This exponential mortality rate is seen in data for individuals. In the case of households marriage is also a cause of death; this is not accounted for in the model.
+
+On exit, all of a household's financial and housing wealth is given to another, randomly chosen, household. If the deceased household had any houses on any market, they are taken off the market. Any tenants living in the houses are evicted. If the household was renting, the rental contract is terminated (this isn't realistic). Outstanding mortgages are written off (this isn't realistic).
+
+Upon inheriting a house, a renter will immediately move into it, an owner-occupier will immediately sell it and a buy-to-let investor will decide whether to sell it or add it to their portfolio according to the decision rule in section \ref{sellbtl}. 
+\section{Simulation initialisation}
+In order to initialise a simulation with a realistic assignment of houses and mortgages to households, the model goes through a `spin-up' period before any simulation. The spin-up period begins with no households and no houses. Households are born, age and die as described in section \ref{lifecycle}. The population will naturally grow until the total death rate (given by the integral over age of mortality rate times population) equals the total birth rate (which is held constant).
+
+During spin-up, houses are put on the sale market by a `construction sector' whenever the household to house ratio falls below a fixed value. New houses will be put onto the house sale market at a price based on the ONS house price index data tables for 2013. If unsold, the price will be reduced at a rate of $5\%$ per month.
+
+We typically allow the model to spin-up for 1000 years.
 
 \section{Households}
 
 \subsection{A month in the life...}
 In each one-month time-step, each household:
 \begin{enumerate}
-\item ages by 1 month and possibly dies
-\item receives its gross employment income and pays income tax and national insurance according to UK tax law for a single person in the 2014/15 tax year (this needs changing to account for probability of household status given income and age).
+\item ages by 1 month and possibly dies, leaving an inheritance
+\item receives its gross employment income and pays income tax and national insurance according to UK tax law for a single person in the 2014/15 tax year (this needs changing to account for probability of household status given income and age, to account for married couples and multiple adult occupancy).
 \item makes mortgage and/or rental payments and collects any rent due
 \item consumes
-\item decides whether to try to rent/buy a new house
+\item if in social housing or at end of tenancy decides whether to try to rent/buy a new house
+\item if a buy-to-let investor decides whether to buy more investment properties
 \item decides whether to sell any owned houses
-\item rethinks the price of any house on the rental/sale market or takes the house off the market.
+\item rethinks the offer price of any house currently on the rental/sale market or takes the house off the market.
 \end{enumerate}
+
+
+\subsection{Expected House-price growth}
+A household's expectation for annual house price growth, $\bar{g}$, is equal to the last year's growth in the quarterly HPI. So
+\[
+\bar{g} = \frac{h_0 + h_{1} + h_{2}}{h_{12} + h_{13} + h_{14}} - 1
+\]
+where $h_t$ is the monthly house price index $t$ months ago.
 
 \subsection{Household consumption}
 
 Households have a fixed, subsistence-consumption set at the married couple's monthly lower earnings limit for UK income support. After this is subtracted from disposable income, the household's discretionary consumption is calculated as
 
 \begin{equation}
-E=\alpha \max \left( b-e^{4.07\log (i)-33.1+\varepsilon },0\right)
+E=\alpha \max \left( b-e^{4.07\ln (i)-33.1+\varepsilon },0\right)
 \end{equation}
 
-where $b$ is the household's liquid wealth, $i$ is gross annual income, $\alpha$ is a constant and $\varepsilon$ is a noise term. This formula ensures that the aggregate wealth distribution fits the empirical distribution of wealth given income for the UK, while ensuring that households with higher income consume more. The rule imposes the distribution quite agressively, effectively making liquid wealth roughly a function of income. This needs to be improved.
+where $b$ is the household's liquid wealth (after receiving this month's employment and rental income, paying tax, rent, mortgage and subsistence-consumption), $i$ is gross annual income, $\alpha$ is a constant and $\varepsilon$ is a noise term.
+
+This formula ensures that the aggregate (liquid) wealth distribution fits the empirical distribution of wealth for the UK, while ensuring that households with higher income consume more. The exponential term can be thought of as a `desired liquid wealth', and can be understood as a transformation from a log-normal income distribution to a log-normal desired wealth distribution.
+
+This consumption equation has the effect of making the actual wealth of a household relax towards its desired wealth with an exponential decay-rate given by $\alpha$. The rate of this relaxation is quite aggressive, effectively making actual wealth a noisy function of income. This needs to be improved.
 
 \subsection{Decisions while in ``social housing''}
 All agents are born into ``social housing''. Although we refer to this as social housing, this also represents homelessness, living with parents while looking for a house or living in temporary accommodation (e.g.hotel, staying with friends) while between houses.
@@ -79,11 +105,9 @@ Agents never choose to be in ``social housing'', but are put there if they fail 
 \label{rentorbuy}
 If an agent is in need of a new home (if in social housing, at the end of a rental contract or directly after the sale of a house), they need to decide between renting and buying. The probability of deciding to buy is given by
 \[
-P_{buy} = \frac{1}{1 + e^{K_{rb}(C_{r}(1+C_R) - C_{b})}}
+P_{buy} = \frac{1}{1 + e^{-K_{rb}(C_{r}(1+C_R) - (m - \bar{g}p))}}
 \]
-where $K_{rb}$ is a constant giving sinsitivity to cost, $C_{r}$ is the average annual rent on a house of the buyer's desired quality, $C_R$ is a constant, representing the intrinsic desire to own rather than rent (i.e. the psychological cost of renting), and $C_{b}$ is the expected annual mortgage payment minus the expected annual capital appreciation of a house of the buyer's desired quality.
-
-Desired quality is the maximum quality house that, at current market prices, the household would expect to get if they entered the house sale market (see section \ref{buyahome}).
+where $K_{rb}$ is a constant giving sensitivity to cost, $C_{r}$ is the average annual rent on a house of the buyer's desired quality, $C_R$ is a constant, representing the intrinsic desire to own rather than rent (i.e. the psychological cost of renting), and $m$ is the expected annual mortgage payment, $\bar{g}$ is the expected annual house price growth and $p$ is the expected house price, calculated as the minimum of the desired house price according to section \ref{buyahome} and the maximum mortgage the bank is willing to finance.
 
 \subsection{Decisions as a renter}
 If a household decides to rent, they will bid 0.3 times their income for rent. Upon entering a rental contract, they will live in the rented house and pay rent until the end of the contract. At the end of the contract, they will reconsider whether to rent or buy as described in section \ref{rentorbuy}.
@@ -94,9 +118,9 @@ If a household decides to rent, they will bid 0.3 times their income for rent. U
 \label{buyahome}
 If a household decides to buy a home, it will bid on the house sale market. The desired amount of the bid is given by
 \[
- \frac{\sigma i e^{N(0,\epsilon)}}{1.0 - AP}
+ \frac{\sigma i e^{N(0,\epsilon)}}{1.0 - A\bar{g}}
 \]
-where $i$ is income, $P$ is expected house price appreciation, $N()$ is Gaussian noise, $\sigma$, $A$ and $\epsilon$ are parameters. This formula is exactly equivalent to the one used in the Washington model, although the parameter values used are different.
+where $i$ is income, $\bar{g}$ is expected house price growth, $N()$ is Gaussian noise, $\sigma$, $A$ and $\epsilon$ are parameters. This formula is exactly equivalent to the one used in the Washington model, although the parameter values used are different.
 
 The actual amount bid is the closest amount possible to the desired bid, after accounting for any bank-decided constraints on mortgages available to the agent.
 
@@ -105,7 +129,14 @@ The actual amount bid is the closest amount possible to the desired bid, after a
 On buying a house, the minimum downpayment on the house is imposed by the mortgage lender during the mortgage pre-approval process (where applicable) but the household may choose to make a larger downpayment. If the household has liquid wealth of 1.25 times the price of the house, they will pay outright (this ensures there are roughly the right number of cash buyers). Otherwise they will choose the $i^{th}$ percentile from a log-normal distribution calibrated against emprical LTV distributions, where $i$ is their income percentile. The parameters of the log-normal distributions are different for first time buyers (FTB) and owner-occupiers (OO).
 
 \subsubsection{Decision to sell a home}
-The probability that an agent will sell their home is a linear function of the number of houses currently on the market and the mortgage interest rate. This is a fudge to prevent unrealistic build up of housing stock on the market and unrealistic fluctuations in interest rates.
+The probability that an agent will sell their home is given by
+\begin{equation}
+p = an_h + bi + c
+\label{sellhome}
+\end{equation}
+where $a$, $b$ and $c$ are constants, $n_h$ is the number of houses currently on the market and $i$ is the mortgage interest rate. This is a fudge to prevent unrealistic build up of housing stock on the market and unrealistic fluctuations in interest rates.
+
+While a household's house is for-sale, they will only attempt to look for another home once their house is sold. During this time they will be made temporarily homeless.
 
 \subsubsection{Sale price decision}
 \label{saleprice}
@@ -157,8 +188,8 @@ The length of a rental agreement is
 chosen randomly from 12 to 24 months with uniform probability. This is based on figures from ARLA.
 
 \subsubsection{Decision to sell BTL property}
-
-Buy-to-let investors decide to sell houses in their current portfolio based on the `effective yield' on the house, which is defined as
+\label{sellbtl}
+Buy-to-let investors will consider selling their investment properties at the end of each tenancy agreement, and each month until another tenant moves in. The decision to sell is based on the `effective yield' on the house, which is defined as
 \[
 y_e = \frac{2(c_g \bar{g}p + (1-c_g)r) - m}{e} 
 \]
@@ -170,7 +201,7 @@ P(keep) = \frac{1}{(1 + e^{ky_e+c})^\gamma}
 \]
 where $k$ is a scaling constant, $c$ represents transaction costs and stickiness, and $\gamma$ deals with the fact that the decision to keep or sell is made every month in the model, whereas in reality this decision may be made less frequently.
 
-If an investor decides to sell, the price at which the property is offered is decided in the same way as with homes (see section \ref{saleprice}).
+If an investor decides to sell, the house will be taken off the rental market and put on the sale market at the price given in section \ref{saleprice}.
 
 \subsubsection{Decision to buy BTL property}
 Buy-to-let investors decide to add houses to their current portfolio based on the `expected yield' on one or more houses bought with the maximum mortgage available to the investor, which is defined as
@@ -185,8 +216,13 @@ P(\overline{buy}) = \frac{1}{(1 + e^{ky_e+c})^\gamma}
 \]
 where $k$ is a scaling constant, $c$ represents transaction costs and stickiness, and $\gamma$ deals with the fact that the decision to buy or not is made every month in the model, whereas in reality this decision may be made less frequently.
 
+Upon buying an investment property, the property is immediately put onto the rental market.
+
 \subsubsection{Downpayment}
 The decision on how much downpayment to make on a newly purchased house is made in the same way as described in section \ref{downpayment} except that BTL investors will choose downpayment from a Gaussian distribution (bounded at the lower end by zero) rather than a log-normal, this is calibrated against confidential BoE data.
+
+\subsection{Bankruptcy}
+If a household's liquid wealth goes negative, they are given a cash injection to raise their liquid wealth to 1 pound. Households make no directed attempt to avoid bankruptcy and will not decide to sell housing wealth in response to dwindling liquid wealth.
 
 \section{Banks}
 
@@ -239,7 +275,21 @@ r_{t+1} = r_{t} + k(S-T)
 \]
 where $k$ is a constant, $S$ is the aggregate rate of supply of credit and $T$ is a constant target rate of supply.
 
-\section{Housing market clearing}
+\section{Housing markets}
+
+\subsection{Market price information}
+
+Households make use of market price information when making their decisions. For both the rental and sale markets, two types of information are available: the house price index and the market price of a house of a given quality.
+
+The house price index for a given month is calculated from the set of all completed transactions for that month. The index is defined as the average transaction price divided by the average reference price. The reference price of a house is the price of a house of that quality according to the ONS house price data tables 2013. (Better to do the division per transaction then average?)
+
+The market price given quality is calculated as a moving exponential average of completed transactions on the market. Because the number of transactions per month may be quite small in the simulation (due to scaling down of the population) some quality bands may have very few transactions which leads to unrealistic distributions of price with quality. Analysis of house price distribution data over time shows that the shape of the distribution stays the same (almost log-normal). When the simulated population is large the model naturally reproduces this.
+
+To deal with scaled-down populations, however, at the end of every month the market price is transformed according to
+\[
+p_q' = Dp_q + (1-D)hp_r(q)
+\]
+where $p_q$ is the market price of quality $q$, $h$ is the house price index for this month and $p_r(q)$ is the reference price of houses of that quality. This effectively relaxes the distribution of house prices to the shape of that in the 2013 data tables. This is a quick and dirty fix since initial experiments with a proper regression led to unrealistically unstable prices.
 
 \subsection{House sales clearing}
 
@@ -271,6 +321,25 @@ allowing for 15\% of new mortgages above this limit;
 
 3. State-contingent policies, e.g. an LTV limit of 85\% if credit growth
 over a certain time is above a certain threshold; otherwise no limit.
+
+\section{Calibration}
+
+\begin{tabular}{|l|l|p{75mm}|}
+\hline
+Equation & Symbol & Calibration \\ \hline
+\ref{mortality} & A,k & Calibrated to ensure that the oldest households are around 100 years old and the population is correct given the birth rate.\\ \hline
+
+\end{tabular}
+
+\subsection{Lifecycle}
+The age of a household at birth is distributed as a beta distribution, calibrated against "The changing living arrangements of young adults in the UK" ONS Population Trends winter 2009.
+
+The total birth rate is calculated against the flux of first time buyers according to the Council of Mortgage Lenders Regulated Mortgage Survey (2015) and a simulated population of 10000 households.
+
+
+\subsection{Decisions as a homeowner}
+\subsubsection{Decision to sell a home}
+
 
 
 \end{document}

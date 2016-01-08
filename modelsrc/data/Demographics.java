@@ -8,6 +8,7 @@ import utilities.Pdf;
 public class Demographics {
 	//public static final int SPINUP_YEARS = 80;			// number of years to spinup
 	public static final BetaDistribution betaDist = new BetaDistribution(null,2,2);
+	
 	/**
 	 * Target probability density of age of representative householder
 	 * at time t=0
@@ -64,7 +65,7 @@ public class Demographics {
 	 */
 	public static double probDeathGivenAge(double ageInYears) {
 		double PdeathOfFemale2012 = 3.788e-5*Math.exp(8.642e-2*ageInYears);
-		double tempFudgeFactor = 0.0002*Math.exp(6.2e-2*ageInYears); // to ensure population doesn't decrease after spinup
+		double tempFudgeFactor = 0.0002*Math.exp(6.2e-2*ageInYears); // to ensure population doesn't decrease after spinup (i.e. to allow correct birth rate)
 		// ONS Statistical Bulletin: Historic and Projected Mortality. Data from the Period and Cohort
 		// Life Tables, 2012-based, UK, 1981-2062
 		return(tempFudgeFactor*PdeathOfFemale2012);

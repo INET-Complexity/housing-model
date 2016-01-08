@@ -258,7 +258,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		final double INTENSITY = 50.0; // intensity of choice on effective yield
 		final double AGGREGATE_RATE = 1.0/12.0; // controls the average rate of sales
 		// sell if not selling on rental market at interest coverage ratio of 1.0
-		if(!h.isOnRentalMarket()) return(false);
+		if(!h.isOnRentalMarket()) return(false); // don't sell while occupied by tenant
 		MortgageAgreement mortgage = me.mortgageFor(h);
 		if(mortgage == null) {
 			System.out.println("Strange: deciding to sell investment property that I don't own");
