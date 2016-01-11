@@ -87,7 +87,8 @@ where $h_t$ is the monthly house price index $t$ months ago.
 Households have a fixed, subsistence-consumption set at the married couple's monthly lower earnings limit for UK income support. After this is subtracted from disposable income, the household's discretionary consumption is calculated as
 
 \begin{equation}
-E=\alpha \max \left( b-e^{4.07\ln (i)-33.1+\varepsilon },0\right)
+E=0.5 \max \left( b-e^{4.07\ln (i)-33.1+\varepsilon },0\right)
+\label{consumption}
 \end{equation}
 
 where $b$ is the household's liquid wealth (after receiving this month's employment and rental income, paying tax, rent, mortgage and subsistence-consumption), $i$ is gross annual income, $\alpha$ is a constant and $\varepsilon$ is a noise term.
@@ -131,10 +132,10 @@ On buying a house, the minimum downpayment on the house is imposed by the mortga
 \subsubsection{Decision to sell a home}
 The probability that an agent will sell their home is given by
 \begin{equation}
-p = an_h + bi + c
+p = c(1 + a(0.05-n_h) + b(0.03-i))
 \label{sellhome}
 \end{equation}
-where $a$, $b$ and $c$ are constants, $n_h$ is the number of houses currently on the market and $i$ is the mortgage interest rate. This is a fudge to prevent unrealistic build up of housing stock on the market and unrealistic fluctuations in interest rates.
+where $a$, $b$ and $c$ are constants, $n_h$ is the number of houses per capita currently on the market and $i$ is the mortgage interest rate (expressed as percent/100). This is a fudge to prevent unrealistic build up of housing stock on the market and unrealistic fluctuations in interest rates.
 
 While a household's house is for-sale, they will only attempt to look for another home once their house is sold. During this time they will be made temporarily homeless.
 
@@ -157,8 +158,7 @@ market, $D$ is a tunable parameter (currently set to 0), and $\varepsilon
 
 If a house remains on the market from the previous time-step, with a 6\%
 probability its price is reduced by an amount drawn from a Gaussian
-distribution with mean around -1.6\% and SD 0.6\%. This is calibrated
-against data on house price reductions from Zoopla. If the price drops below the amount needed to pay the mortgage on the house, it is withdrawn from the market.
+distribution with mean around -1.6\% and SD 0.6\%.  If the price drops below the amount needed to pay the mortgage on the house, it is withdrawn from the market.
 
 
 \subsection{Buy-To-Let Investor's decisions}
@@ -324,22 +324,25 @@ over a certain time is above a certain threshold; otherwise no limit.
 
 \section{Calibration}
 
-\begin{tabular}{|l|l|p{75mm}|}
+
+\begin{tabular}{|l|p{30mm}|p{75mm}|}
 \hline
 Equation & Symbol & Calibration \\ \hline
-\ref{mortality} & A,k & Calibrated to ensure that the oldest households are around 100 years old and the population is correct given the birth rate.\\ \hline
-
+\ref{mortality} & A=7.576e-9, k=0.148 & Calibrated to ensure that the oldest households are around 100 years old and the population is 10000 for the given the total birth rate.\\ \hline
+\ref{consumption} & & Calibrated against ONS Wealth in Great Britain, wave 3 \\ \hline
+\ref{sellhome} & c=0.007575, a=4, b=5 & a and b are fudge factors. c is calibrated against average house sales, British housing survey 2008 \\ \hline
 \end{tabular}
 
 \subsection{Lifecycle}
-The age of a household at birth is distributed as a beta distribution, calibrated against "The changing living arrangements of young adults in the UK" ONS Population Trends winter 2009.
+The age of a household at birth is distributed as a beta distribution with $\alpha$ and $\beta$ equal to 2, shifted and scaled to have a support from 14.5 to 44.5 years. Calibrated against "The changing living arrangements of young adults in the UK" ONS Population Trends winter 2009. This does not account for new households created by divorce/separation.
 
-The total birth rate is calculated against the flux of first time buyers according to the Council of Mortgage Lenders Regulated Mortgage Survey (2015) and a simulated population of 10000 households.
+The per capita birth rate is 0.0102 per year, calculated against the flux of first time buyers according to the Council of Mortgage Lenders Regulated Mortgage Survey (2015). Target population is 10000 households.
 
+Household income given age is taken from ONS wealth and assets survey. 
 
 \subsection{Decisions as a homeowner}
-\subsubsection{Decision to sell a home}
-
+\subsubsection{House price reductions}
+The house price reduction behaviour is calibrated against data on house price reductions in the Zoopla dataset.
 
 
 \end{document}
