@@ -1,0 +1,390 @@
+
+\documentclass{report}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newtheorem{theorem}{Theorem}
+\newtheorem{acknowledgement}[theorem]{Acknowledgement}
+\newtheorem{algorithm}[theorem]{Algorithm}
+\newtheorem{axiom}[theorem]{Axiom}
+\newtheorem{case}[theorem]{Case}
+\newtheorem{claim}[theorem]{Claim}
+\newtheorem{conclusion}[theorem]{Conclusion}
+\newtheorem{condition}[theorem]{Condition}
+\newtheorem{conjecture}[theorem]{Conjecture}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{criterion}[theorem]{Criterion}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{exercise}[theorem]{Exercise}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{notation}[theorem]{Notation}
+\newtheorem{problem}[theorem]{Problem}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{remark}[theorem]{Remark}
+\newtheorem{solution}[theorem]{Solution}
+\newtheorem{summary}[theorem]{Summary}
+\newenvironment{proof}[1][Proof]{\noindent\textbf{#1.} }{\ \rule{0.5em}{0.5em}}
+\setlength{\parskip}{1.8mm}
+\setlength{\parindent}{0mm}
+\begin{document}
+
+\title{Housing ABM, December 2015}
+\maketitle
+\tableofcontents
+\chapter{Model Description}
+
+\section{Introduction}
+The model consists of houses that are bought and sold by households on a housing market; households take out mortgages from a bank, which is regulated by a central bank. Owner-occupiers can also choose to buy and sell properties as buy-to-let investments. These are offered on a rental market and rented by households that decide to rent rather than buy. Households that cannot afford to rent or buy are put into social housing.
+
+Houses have no intrinsic properties other than a single `quality', which acts as a proxy for size, location, condition etc. Quality bands are assigned so that there are roughly the same number of houses in each band; at present there are 48 bands. The model is time-stepping with a step of one month.
+
+\section{Household lifecycle}
+\label{lifecycle}
+Households enter the model, age, and exit. The total `birth' rate of households is held constant. Upon birth, households are endowed with an age (drawn from a beta distribution), a value representing their income percentile (drawn from a uniform probability) and wealth (based on average wealth for their income) but no existing housing. 8\% of households that are above the 50th percentile of income are given a buy-to-let `gene' which gives them the desire to enter the buy-to-let market.
+
+The age of a household represents the age of the `household reference person' (HRP) (a concept that exists in many household surveys). As a household ages, its income percentile remains fixed and its income changes based on the empirical distribution of income by age in the UK. Income is bounded by a lower limit of \pounds 5,900 (the current level of income support for a married couple).
+
+\subsection{Death and Inheritance}
+Each month, each household has a probability of `death' given by
+\begin{equation}
+P_{die} = Ae^{ka}
+\label{mortality}
+\end{equation}
+where $a$ is age and $k$ and $A$ are constants. This exponential mortality rate is seen in data for individuals. In the case of households marriage is also a cause of death; this is not accounted for in the model.
+
+On exit, all of a household's financial and housing wealth is given to another, randomly chosen, household. If the deceased household had any houses on any market, they are taken off the market. Any tenants living in the houses are evicted. If the household was renting, the rental contract is terminated (this isn't realistic). Outstanding mortgages are written off (this isn't realistic).
+
+Upon inheriting a house, a renter will immediately move into it, an owner-occupier will immediately sell it and a buy-to-let investor will decide whether to sell it or add it to their portfolio according to the decision rule in section \ref{sellbtl}. 
+\section{Simulation initialisation}
+In order to initialise a simulation with a realistic assignment of houses and mortgages to households, the model goes through a `spin-up' period before any simulation. The spin-up period begins with no households and no houses. Households are born, age and die as described in section \ref{lifecycle}. The population will naturally grow until the total death rate (given by the integral over age of mortality rate times population) equals the total birth rate (which is held constant).
+
+During spin-up, houses are put on the sale market by a `construction sector' whenever the household to house ratio falls below a fixed value. New houses will be put onto the house sale market at a price based on the ONS house price index data tables for 2013. If unsold, the price will be reduced at a rate of $5\%$ per month.
+
+We typically allow the model to spin-up for around 200 years.
+
+\section{Households}
+
+\subsection{A month in the life...}
+In each one-month time-step, each household:
+\begin{enumerate}
+\item ages by 1 month and possibly dies, leaving an inheritance
+\item receives its gross employment income and pays income tax and national insurance according to UK tax law for a single person in the 2014/15 tax year (this needs changing to account for probability of household status given income and age, to account for married couples and multiple adult occupancy).
+\item makes mortgage and/or rental payments and collects any rent due
+\item consumes
+\item if in social housing or at end of tenancy decides whether to try to rent/buy a new house
+\item if a buy-to-let investor decides whether to buy more investment properties
+\item decides whether to sell any owned houses
+\item rethinks the offer price of any house currently on the rental/sale market or takes the house off the market.
+\end{enumerate}
+
+
+\subsection{Expected House-price growth}
+A household's expectation for annual house price growth, $\bar{g}$, is equal to the last year's growth in the quarterly HPI. So
+\begin{equation}
+\bar{g} = \frac{h_0 + h_{1} + h_{2}}{h_{12} + h_{13} + h_{14}} - 1
+\end{equation}
+where $h_t$ is the monthly house price index $t$ months ago.
+
+\subsection{Household consumption}
+
+Households have a fixed, subsistence-consumption set at the married couple's monthly lower earnings limit for UK income support. After this is subtracted from disposable income, the household's discretionary consumption is calculated as
+
+\begin{equation}
+E=0.5 \max \left( b-e^{4.07\ln (i)-33.1+\varepsilon },0\right)
+\label{consumption}
+\end{equation}
+
+where $b$ is the household's liquid wealth (after receiving this month's employment and rental income, paying tax, rent, mortgage and subsistence-consumption), $i$ is gross annual income and $\varepsilon$ is a noise term.
+
+This formula ensures that the aggregate (liquid) wealth distribution fits the empirical distribution of wealth for the UK, while ensuring that households with higher income consume more. The exponential term can be thought of as a `desired liquid wealth', and can be understood as a transformation from a log-normal income distribution to a log-normal desired wealth distribution.
+
+This consumption equation has the effect of making the actual wealth of a household relax towards its desired wealth with an exponential decay-rate given by $\alpha$. The rate of this relaxation is quite aggressive, effectively making actual wealth a noisy function of income. This needs to be improved.
+
+\subsection{Decisions while in ``social housing''}
+All agents are born into ``social housing''. Although we refer to this as social housing, this also represents homelessness, living with parents while looking for a house or living in temporary accommodation (e.g.hotel, staying with friends) while between houses.
+
+Agents never choose to be in ``social housing'', but are put there if they fail to secure any other form of housing at a given time. If they find themselves in social housing they will always consider renting or buying and will bid on the appropriate market. When in social housing, no rental payments are deducted from income.
+
+\subsubsection{Decision to rent or buy a home}
+\label{rentorbuy}
+If an agent is in need of a new home (if in social housing, at the end of a rental contract or directly after the sale of a house), they need to decide between renting and buying. To do this they first decide on a price they would pay to buy a house, $p$, calculated as the minimum of the desired house price according to section \ref{buyahome} and the maximum mortgage the bank is willing to finance. They then check the current market prices to see what quality of house they can expect to get for this price. The probability of deciding to buy is then  given by
+\begin{equation}
+P_{buy} = \frac{1}{1 + e^{-K_{rb}(C_{r}(1+C_R) - (m - \bar{g}p))}}
+\end{equation}
+where $K_{rb}$ is a constant giving sensitivity to cost, $C_{r}$ is the average annual rent on a house of the same quality they would expect to buy, $C_R$ is a constant, representing the intrinsic desire to own rather than rent (i.e. the psychological cost of renting), $m$ is the expected annual mortgage payment and $\bar{g}$ is the expected annual house price growth.
+
+\subsection{Decisions as a renter}
+If a household decides to rent, they will bid 0.3 times their income for rent. Upon entering a rental contract, they will live in the rented house and pay rent until the end of the contract. At the end of the contract, they will reconsider whether to rent or buy as described in section \ref{rentorbuy}.
+
+\subsection{Decisions as a Homeowner}
+
+\subsubsection{Bidding for a home}
+\label{buyahome}
+If a household decides to buy a home, it will bid on the house sale market. The desired amount of the bid is given by
+\begin{equation}
+ \frac{\sigma i e^{N(0,\epsilon)}}{1.0 - A\bar{g}}
+\end{equation}
+where $i$ is income, $\bar{g}$ is expected house price growth, $N()$ is Gaussian noise, $\sigma$, $A$ and $\epsilon$ are parameters. This formula is exactly equivalent to the one used in the Washington model, although the parameter values used are different.
+
+The actual amount bid is the closest amount possible to the desired bid, after accounting for any bank-decided constraints on mortgages available to the agent.
+
+\subsubsection{Downpayment on a new home}
+\label{downpayment}
+On buying a house, the minimum downpayment on the house is imposed by the mortgage lender during the mortgage pre-approval process (where applicable) but the household may choose to make a larger downpayment. If the household has liquid wealth of 1.25 times the price of the house, they will pay outright (this ensures there are roughly the right number of cash buyers). Otherwise they will choose the $i^{th}$ percentile from a log-normal distribution calibrated against emprical LTV distributions, where $i$ is their income percentile. The parameters of the log-normal distributions are different for first time buyers (FTB) and owner-occupiers (OO).
+
+\subsubsection{Decision to sell a home}
+The probability that an agent will sell their home is given by
+\begin{equation}
+p = c(1 + a(0.05-n_h) + b(0.03-i))
+\label{sellhome}
+\end{equation}
+where $a$, $b$ and $c$ are constants, $n_h$ is the number of houses per capita currently on the market and $i$ is the mortgage interest rate (expressed as percent/100). This is a fudge to prevent unrealistic build up of housing stock on the market and unrealistic fluctuations in interest rates.
+
+While a household's house is for-sale, they will only attempt to look for another home once their house is sold. During this time they will be made temporarily homeless.
+
+\subsubsection{Sale price decision}
+\label{saleprice}
+Houses are offered on the market at a price, $q,$ given by
+
+\begin{equation}
+\ln q=0.095+\ln (\bar{p})-D\ln \left( \frac{\bar{d}+1}{\left\langle
+d\right\rangle +1}\right) +\varepsilon
+\end{equation}
+
+\bigskip
+
+where $\bar{p}$ is the average sold-price of houses of this quality, $\bar{d}
+$ is the average days on the market for all house qualities, $\left\langle
+d\right\rangle $ is the prior expectation of the number of days on the
+market, $D$ is a tunable parameter (currently set to 0), and $\varepsilon
+=N(0,0.01^{2})$. Please see Washington model documentation for motivation for this equation.
+
+If a house remains on the market from the previous time-step, with a 6\%
+probability its price is reduced according to
+\begin{equation}
+p' = p\left(1-e^{N(\mu,\sigma)}\right)
+\label{reprice}
+\end{equation}
+where $N(\mu,\sigma)$ is a draw from a Gaussian distribution.
+ If the price drops below the amount needed to pay the mortgage on the house, it is withdrawn from the market.
+
+\subsection{Buy-To-Let Investor's decisions}
+\subsubsection{BtL heterogeneity}
+BtL investors are, with a tunable probability, randomly assigned to be either `fundamentalist' or `trend follower'. The only difference between the two is the value of the `capital gain coefficient' $c_{g}$, which is used in some of the decision processes below.
+
+\subsubsection{Buy-to-let rental offers}
+A BTL investor will put a house on the rental market
+whenever a rental contract ends, or when a new buy-to-let house is bought
+that doesn't already have a tenant. 
+
+The rent BTL investors charge is given by:
+
+\begin{equation}
+\ln(r)=C+\ln (\bar{p})-D\ast \ln((d+1.0)/31.0)+E\ast N(0,1)
+\end{equation}
+
+\bigskip
+
+where $C=0.01$, $D=0.02$, $E=0.05$. $N(0,1)$ is a Gaussian noise term with
+average 0 and variance 1. $\bar{p}$ is the average mark-to-market rental
+price for house of this quality and $d$ is the average number of days that houses spend on the rental market. This is of the same form as used for sale price in the Washington model.
+
+If a house on the rental market does not get filled, the price is multiplied by 0.95 each month.
+
+The length of a rental agreement is
+chosen randomly from 12 to 24 months with uniform probability. This is based on figures from ARLA.
+
+\subsubsection{Decision to sell BTL property}
+\label{sellbtl}
+Buy-to-let investors will consider selling their investment properties at the end of each tenancy agreement, and each month until another tenant moves in. The decision to sell is based on the `effective yield' on the house, which is defined as
+\begin{equation}
+y_e = \frac{2(c_g \bar{g}p + (1-c_g)r) - m}{e} 
+\end{equation}
+where $c_g$ is the investor's capital gain coefficient $\bar{g}$ is expected annual house price appreciation, $r$ is current annual rental income from the house, $m$ is the current annual mortgage payment and $e$ is the maximum of the current equity in the house and 1 pence.
+
+The probability of deciding to keep the house is then given by
+\begin{equation}
+P(keep) = \frac{1}{(1 + e^{ky_e+c})^\gamma}
+\end{equation}
+where $k$ is a scaling constant, $c$ represents transaction costs and stickiness, and $\gamma$ deals with the fact that the decision to keep or sell is made every month in the model, whereas in reality this decision may be made less frequently.
+
+If an investor decides to sell, the house will be taken off the rental market and put on the sale market at the price given in section \ref{saleprice}.
+
+\subsubsection{Decision to buy BTL property}
+Buy-to-let investors decide to add houses to their current portfolio based on the `expected yield' on one or more houses bought with the maximum mortgage available to the investor, which is defined as
+\begin{equation}
+\bar{y} = 2l(c_g \bar{g} + (1-c_g)\bar{r}) - \frac{m}{d} 
+\end{equation}
+where $c_g$ is the investor's capital gain coefficient, $\bar{g}$ is expected annual house price appreciation, $\bar{r}$ is an exponential average of the gross rental yield on new rental contracts, $l$ is the leverage (house price over downpayment) of the largest mortgage available to the investor, $m$ is the associated annual mortgage payment and $d$ is the minimum downpayment.
+
+The probability of deciding not to buy any house is then given by
+\begin{equation}
+P(\overline{buy}) = \frac{1}{(1 + e^{k\bar{y}+c})^\gamma}
+\end{equation}
+where $k$ is a scaling constant, $c$ represents transaction costs and stickiness, and $\gamma$ deals with the fact that the decision to buy or not is made every month in the model, whereas in reality this decision may be made less frequently.
+
+Upon buying an investment property, the property is immediately put onto the rental market.
+
+\subsubsection{Downpayment}
+The decision on how much downpayment to make on a newly purchased house is made in the same way as described in section \ref{downpayment} except that BTL investors will choose downpayment from a Gaussian distribution (bounded at the lower end by zero) rather than a log-normal, this is calibrated against confidential BoE data.
+
+\subsection{Bankruptcy}
+If a household's liquid wealth goes negative, they are given a cash injection to raise their liquid wealth to 1 pound. Households make no directed attempt to avoid bankruptcy and will not decide to sell housing wealth in response to dwindling liquid wealth.
+
+\section{Banks}
+
+There is a single bank in the model which represents the mortgage lending
+sector in the aggregate.
+
+\subsection{Mortgage approval}
+The bank will approve a home mortgage as long as it
+conforms to LTV, LTI and affordability constraints. The affordability
+constraint ensures that a household has enough total income to pay all its
+mortgages. Subject to meeting those criteria, all demand is met in any
+period. The maximum mortgage amount, then, is calculated as
+
+\bigskip 
+\begin{equation}
+q=\min \left( \frac{b(1-\theta )}{\theta },i\ast \psi ,\phi \ast pdi\frac{%
+1-(1+r_{stress})^{-N}}{r_{stress}}\right)
+\end{equation}
+
+In the case of buy to let investors, a central-bank imposed Interest Coverage Ratio is imposed in place of the income to value ratio. The ICR imposes the constraint that
+\begin{equation}
+q < \frac{b}{1 - \frac{\bar{y}}{\xi I}}
+\end{equation}
+where $\bar{y}$ is the exponential average gross yield on new tenancy agreements, $\xi$ is the ICR and $I$ is a stressed mortgage interest rate of 5\%.
+
+The other constraints are described in the following table.
+
+
+\noindent \bigskip 
+\begin{tabular}{p{1.5in}|p{4in}}
+Term / constraint & Description \\ \hline\hline
+$\frac{b(1-\theta )}{\theta }$ & LTV constraint. $b$ is the household's bank
+balance, $\theta $ is the minimum loan to value haircut (i.e. 1 minus the
+loan to value ratio). \\ 
+$i\ast \psi $ & LTI constraint. $i$ is household gross income and $\psi $ is
+the maximum loan to income ratio \\ 
+$\phi \ast pdi\frac{1-(1+r_{stress})^{-N}}{r_{stress}}$ & Affordability test
+given a down-payment of all cash in the bank and a monthly payment equal to
+the share $\phi $ of the household's disposable income available for
+mortgage payments. $pdi$ is a household's disposable income (including
+income from rent), $r_{stress}$ is the fixed monthly interest rate based on
+a stress scenario and $N$ is the number of monthly payments to pay off the
+mortgage. $\phi $ is 0.25.%
+\end{tabular}
+
+In the case of LTI and LTV constraints, the central bank allows a certain proportion of loans to be unregulated. The bank has a set of higher LTI and LTV ratio limits which it applies to unregulated loans, and it will apply these limits to a loan whenever the extension of the loan would not cause the bank to exceed the maximum proportion set by the central bank.
+
+\subsection{Interest rates}
+Mortgage interest rate spread, $r$, is calculated according to
+\begin{equation}
+r_{t+1} = r_{t} + k(S-T)
+\label{spread}
+\end{equation}
+where $k$ is a constant, $S$ is the total supply of credit in the current month and $T$ is an exogenous constant target monthly supply.
+
+\section{Housing markets}
+
+\subsection{Market price information}
+
+Households make use of market price information when making their decisions. For both the rental and sale markets, two types of information are available: the house price index and the market price of a house of a given quality.
+
+The house price index for a given month is calculated from the set of all completed transactions for that month. The index is defined as the average transaction price divided by the average reference price. The reference price of a house is the price of a house of that quality according to the ONS house price data tables 2013. (Better to do the division per transaction then average?)
+
+The market price given quality is calculated as a moving exponential average of completed transactions on the market. Because the number of transactions per month may be quite small in the simulation (due to scaling down of the population) some quality bands may have very few transactions which leads to unrealistic distributions of price with quality. Analysis of house price distribution data over time shows that the shape of the distribution stays the same (almost log-normal). When the simulated population is large the model naturally reproduces this.
+
+To deal with scaled-down populations, however, at the end of every month the market price is transformed according to
+\[
+p_q' = Dp_q + (1-D)hp_r(q)
+\]
+where $D$ is a constant, $p_q$ is the market price of quality $q$, $h$ is the house price index for this month and $p_r(q)$ is the reference price of houses of that quality. This effectively relaxes the distribution of house prices to the shape of that in the 2013 data tables. This is a quick and dirty fix since initial experiments with a proper regression led to unrealistically unstable prices.
+
+\subsection{House sales clearing}
+
+Clearing proceeds as follows: Home-buyers are matched to the best quality
+house they can afford and BtL investors are matched to the best gross yield house they can afford. Where a given offered house is matched with more than one bidder, the price is `bid up' by multiplying by $1.0075^k$ where $k$ is chosen at random from a geometric distribution such that
+\[
+p(k) = (1-e^{-7b/30})^{k-1}e^{-7b/30}
+\]
+where $b$ is the number of bids received in the timestep. The house is then offered to a randomly chosen bid that can still afford to buy. This approximates the outcome that would be achieved if the bids came in on random days in the simulated month; if a bid is followed by another bid within 7 days, the new bid `bids up' the price by $0.75\%$, the first bid that is not bid up within 7 days gets the house.
+
+Failed bids then get to bid again. This re-bidding carries on up to the smaller of $N/1000$ and $1+n/5000000$ times, where $N$ is the population and $n$ is the total number of orders on the market.
+
+\subsection{Rental clearing}
+
+Rental clearing proceeds in the same way as house-sales-clearing, but
+without yield-driven BtL bidders.\bigskip
+
+\section{Central bank}
+
+The central bank sets LTV, LTI, interest cover ratio (ICR) and affordability
+policies. Policies can be of three different types:
+
+1. Strict limits, e.g. a hard LTV limit of 90\% for all households (though
+the limit may differ between types of agents, such as first-time buyers or
+owner-occupiers);
+
+2. 'Soft' limits, e.g. an LTI cap of 3.5 on new mortgage lending, but
+allowing for 15\% of new mortgages above this limit;
+
+3. State-contingent policies, e.g. an LTV limit of 85\% if credit growth
+over a certain time is above a certain threshold; otherwise no limit.
+
+\chapter{Context}
+
+The previous chapter describes a snapshot of a model in flux, a work in progress. The snapshot presented is of the model as used for the Bank of England policy experiments. Almost all of it is already outdated, but it's the only one that has been calibrated against BoE core indicators.
+
+Explaining the reasoning behind a model in flux is much more difficult than explaining a finished model as we need to distinguish between features that are intended to be temporary and those that are intended to be permanent. To do this we need to place the model within its historical context and it's intended future trajectory. This chapter supplies that context.
+
+\section{Youthful writings: Before the Bank of England}
+Very early on in the development of the model some of the model parameters were very roughly micro-calibrated with an aim to getting plausible qualitative behaviour. Some of those calibrations remain in the model.
+
+The consumption equation was calibrated against the ONS Wealth in great britain wave 3. The proportion of houses to households was calibrated against English housing survey. The proportion of BTL investors was calibrated against ARLA figures and British housing survey. The average duration of tenancy was calibrated against ARLA figures.
+
+\section{The Plague: A journey into the bowels of the BoE}
+
+\subsection{The Outsider: Microcalibration begins}
+The first month at the BoE was spent improving the model in response to conversations with BoE staff and calibrating against data available at the BoE.
+
+A lifecycle was added in order to provide a flux of first time buyers, interest rates were endogenised, base rate and spread was distinguished, core indicators were calculated and added to diagnostics, a central bank was added and allowed to constrain LTV and LTI for a given proportion of mortgages.
+
+The age of a household at birth is distributed as a beta distribution with $\alpha$ and $\beta$ equal to 2, shifted and scaled to have a support from 14.5 to 44.5 years. Calibrated against "The changing living arrangements of young adults in the UK" ONS Population Trends winter 2009. This does not account for new households created by divorce/separation.
+
+The per capita birth rate is 0.0102 per year, calculated against the flux of first time buyers according to the Council of Mortgage Lenders Regulated Mortgage Survey (2015). Target population is 10000 households.
+
+The re-price decision, Equation \ref{reprice}, was calibrated against Zoopla data. Records of price reductions showed a very good fit to a Gaussian in the log domain. The Python code used to extract the Gaussian fit can be found in the repo under \texttt{calibration/code/SaleReprice.py}, and the output of the script is at \texttt{calibration/HouseRepriceAnalysis.html}.
+
+Income distribution given age was calibrated against ONS living costs and food survey 2012, the STATA script to extract the distribution and the resulting analysis can be found in the repo at \texttt{calibration/IncomeDistribution.xlsx}. Equation \ref{spread} was calibrated against BoE historic data on credit supply and interest rate spread.
+
+We also got data about initial offer prices as a function of final sale price from Zoopla, the code for this is at \texttt{calibration/code/InitialSalePrice.py} and the output is at \texttt{calibration/InitialSalePriceMarkup<DATE>.html}. However, we never got round to using this in the model.
+
+When these new micro-calibrations were put into the model as is, they broke the model. Unfortunately we had to present the model at BoE before I left and there wasn't time to calibrate the rest of the model around these new micro-calibrations, so we had to revert to the old calibrations and tweak the model to roughly match some of the core indicators.
+
+\subsection{The Fall: First policy expt}
+
+After the first BoE presentation, there seemed to be no time pressure and no definite direction from BoE so, in order to better align the model to our own research interests, I re-wrote the whole model from scratch so that it had a class-hierarchy of contracts and was fully asynchronous. The asynchronous nature allowed me to completely re-design the way the markets worked so that they were much more realistic. One important improvement was that there could now be competition between BTL and OO on the house sale market. This model is now on the BankOfEngland branch of the github repo.
+
+At this point BoE announced that they wanted to use the model for a policy experiment for the FPC. The asynchronous model was running too slowly to be used for experiments and there was no time to investigate why, so I had to revert to the old, synchronous model (as described here), updating the market clearing mechanism to roughly approximate the behaviour of the asynchronous market. To perform the experiment, we also added an ICR constraint policy to the central bank, interest only mortgages for BTL investors, no LTI constraints for BTL investors and improved diagnostics, recording and general usability.
+
+In response to comments at BoE about there being too many parameters, I re-designed the decision rules to appeal to an internal utility function, effectively allowing the comparison of housing situation to that of having liquid wealth. Unfortunately, despite my protestations, the BoE insisted on the model matching a time-series of house price index which meant that there was no time to calibrate the utility function to the data, so I had to revert to the old decision rules. The utility-function code remains in the github repo history and in some of the commented out sections of the current code.
+
+Much time was spent macro-calibrating to fit the model to the core indicators, and to find an internal state that reproduced the HPI time-series in order to do the policy experiments. In the absence of time to build optimising software to macro-calibrate, this was done manually by tweaking the parameters, then running the model for many years until the HPI happened to hit the right time-series.
+
+In order to match the time-series in this way, I also had to replace the lifecycle, which had a non-static household age distribution (calibrated to today's age distribution), with a lifecycle with a static age distribution. I chose to hold the birth and death rates at their calibrated values and allow the population to reach its static distribution. In equation \ref{mortality}, $A=7.576e-9$ and $k=0.148$ to ensure that the oldest households are around 100 years old and the population is 10000 for the given the total birth rate.
+
+In equation \ref{sellhome}, $c=0.007575$, $a=4$ and $b=5$. a and b are fudge factors. c is calibrated against average house sales, British housing survey 2008.
+
+For future experiments, if we need a static population density, it would be better to have an unrealistic death rate and a calibrated age distribution.
+
+All this was done in preparation for the proposed policy experiment. Apparently due to confidentiality issues, we were not told what the policy experiment would be until only a few hours before the results were required. As it turned out, the proposed policy was something that could be shown analytically to be ineffectual. The model, unsurprisingly, showed that the policy had no effect.
+
+\subsection{The Myth of Sisyphus: Second policy expt}
+
+After the dust had settled from the first policy experiment, I reflected on everything and decided that in order to be accepted as a policy tool, the model had to be calibrated and validated against time series data, and needs to be able to produce time series projections over around a 6 month time scale.
+
+To this end I started work on adapting data assimilation techniques for use with ABM, with a view to incorporating the utility-based behaviour into the asynchronous model and properly calibrating it against all the datasets that we have used.
+
+At this point BoE announced their February deadline. One must imagine Sisyphus happy.
+
+\end{document}
