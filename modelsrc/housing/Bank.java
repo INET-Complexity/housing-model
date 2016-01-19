@@ -18,8 +18,9 @@ public class Bank implements Serializable {
 	public int    N_PAYMENTS = 12*25; // number of monthly repayments
 	public double INITIAL_BASE_RATE = 0.005; // Bank base-rate (0.5%)
 	public double MAX_OO_LTV = 0.9;		// maximum LTV bank will give to owner-occupier when not regulated	
-	public double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
+	public static double MAX_BTL_LTV = 0.8;	// maximum LTV bank will give to BTL when not regulated
 	public double MAX_OO_LTI = 6.0;		// maximum LTI bank will give to owner-occupier when not regulated
+	public double AFFORDABILITY_COEFF = 0.5; // maximum proportion of income to be spent on mortgage under stressed conditions
 //	public double INTEREST_MARGIN = 0.03; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
 	public double BTL_STRESSED_INTEREST = 0.05; // Interest rate stress for BTL when calculating ICR
 	public double CREDIT_SUPPLY_TARGET = 380;//490.0; // target supply of credit per household per month
@@ -186,8 +187,8 @@ public class Bank implements Serializable {
 		approval.principal = housePrice*loanToValue(h.isFirstTimeBuyer(), isHome);
 
 		if(isHome) {
-			// --- affordability constraint TODO: affordability for BtL
-			affordable_principal = Math.max(0.0,0.5*h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
+			// --- affordability constraint TODO: affordability for BtL?
+			affordable_principal = Math.max(0.0,AFFORDABILITY_COEFF*h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 			approval.principal = Math.min(approval.principal, affordable_principal);
 
 			// --- lti constraint
@@ -250,7 +251,7 @@ public class Bank implements Serializable {
 
 		if(isHome) { // no LTI for BtL investors
 //			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer())/loanToValue(h.isFirstTimeBuyer(),isHome);
-			pdi_max = liquidWealth + Math.max(0.0,h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
+			pdi_max = liquidWealth + Math.max(0.0,AFFORDABILITY_COEFF*h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 			max = Math.min(max, pdi_max);
 			lti_max = h.annualEmploymentIncome()* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
 			max = Math.min(max, lti_max);

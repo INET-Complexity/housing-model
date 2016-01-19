@@ -9,7 +9,7 @@ public class CentralBank implements Serializable {
 		// Setup initial values
 		firstTimeBuyerLTVLimit = 0.95;
 		ownerOccupierLTVLimit= 0.9;
-		buyToLetLTVLimit = 0.8;
+		buyToLetLTVLimit = Bank.MAX_BTL_LTV;
 		
 		firstTimeBuyerLTILimit = 6.0;
 		ownerOccupierLTILimit = 6.0;
