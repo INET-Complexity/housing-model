@@ -75,9 +75,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * value of house price appreciation.
 	 ****************************/
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
-		final double A = 0.4;//0.48;			// sensitivity to house price appreciation
-		final double EPSILON = 0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
-		final double SIGMA = 5.6*12.0;//4.2	// scale
+		final double A = 0.08;//0.48;			// sensitivity to house price appreciation
+		final double EPSILON = 0.17;//0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
+		final double SIGMA = 4.2*12.0;//4.2	// scale
 		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*HPAExpectation()));
 		
 //		PurchasePlan plan = findBestPurchase(me);
@@ -92,10 +92,10 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @return initial sale price of a house 
 	 ********************************/
 	public double initialSalePrice(double pbar, double d, double principal) {
-		final double C = 0.02;//0.095;	// initial markup from average price (more like 0.2 from BoE calibration)
-		final double M = 6.0; // equilibrium months on market 
+		final double C = 0.05;//0.02;	// initial markup from average price (more like 0.2 from BoE calibration)
+		final double M = 18.0; // equilibrium months on market 
 		final double D = C/Math.log(M);//0.024;//0.01;//0.001;		// Size of Days-on-market effect
-		final double E = 0.05; //0.05;	// SD of noise
+		final double E = 0.05;//0.05; //0.05;	// SD of noise
 		double exponent = C + Math.log(pbar) - D*Math.log((d + 1.0)/31.0) + E*Model.rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
 	}
@@ -165,8 +165,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 
 		if(rand.nextDouble() < data.Households.P_SALEPRICEREDUCE) {
 			double logReduction = data.Households.REDUCTION_MU+(rand.nextGaussian()*data.Households.REDUCTION_SIGMA);
+//			System.out.println(1.0-Math.exp(logReduction)/100.0);
 			return(sale.getPrice() * (1.0-Math.exp(logReduction)/100.0));
-//			return(sale.getPrice() * (1.0-data.Households.REDUCTION_MU/100.0 + rand.nextGaussian()*data.Households.REDUCTION_SIGMA/100.0);
+//			return(sale.getPrice() * (1.0-data.Households.REDUCTION_MU/100.0) + rand.nextGaussian()*data.Households.REDUCTION_SIGMA/100.0);
 		}
 		return(sale.getPrice());
 	}
