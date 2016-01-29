@@ -184,6 +184,7 @@ public class Model extends SimState implements Steppable {
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
 	public boolean recordCoreIndicators = false;
+	public boolean recordMicroData = false;
 	
 	public int	nSimulation; // number of simulations run
 	public int	t; // time (months)
@@ -272,8 +273,21 @@ public class Model extends SimState implements Steppable {
 			recorder.finish();
 		}
 	}
-	public String nameRecordCoreIndicators() {return("Record output");}
+	public String nameRecordCoreIndicators() {return("Record core indicators");}
 
+	public boolean isRecordMicroData() {
+		return recordMicroData;
+	}
+
+	public void setRecordMicroData(boolean record) {
+		this.recordMicroData = record;
+		if(recordMicroData) {
+//			recorder.start();
+		} else {
+//			recorder.finish();
+		}
+	}
+	public String nameRecordMicroData() {return("Record micro data");}
 
 
 }
