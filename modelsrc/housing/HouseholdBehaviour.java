@@ -77,7 +77,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
 		final double A = 0.4;//0.48;			// sensitivity to house price appreciation
 		final double EPSILON = 0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
-		final double SIGMA = 4.2*12.0;//5.6;	// scale
+		final double SIGMA = 5.6*12.0;//4.2	// scale
 		return(SIGMA*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - A*HPAExpectation()));
 		
 //		PurchasePlan plan = findBestPurchase(me);
@@ -164,9 +164,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //		return(sale.getPrice() *0.95);
 
 		if(rand.nextDouble() < data.Households.P_SALEPRICEREDUCE) {
-//			double logReduction = Math.min(-5.1e-3, data.Households.REDUCTION_MU+(rand.nextGaussian()*data.Households.REDUCTION_SIGMA));
-//			return(sale.getPrice() * (1.0-Math.exp(logReduction)));
-			return(sale.getPrice() * data.Households.REDUCTION_MU + rand.nextGaussian()*data.Households.REDUCTION_SIGMA);
+			double logReduction = data.Households.REDUCTION_MU+(rand.nextGaussian()*data.Households.REDUCTION_SIGMA);
+			return(sale.getPrice() * (1.0-Math.exp(logReduction)/100.0));
+//			return(sale.getPrice() * (1.0-data.Households.REDUCTION_MU/100.0 + rand.nextGaussian()*data.Households.REDUCTION_SIGMA/100.0);
 		}
 		return(sale.getPrice());
 	}
