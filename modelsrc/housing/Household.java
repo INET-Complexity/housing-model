@@ -61,17 +61,9 @@ public class Household implements IHouseOwner, Serializable {
 		lifecycle.step();
 		monthlyEmploymentIncome = lifecycle.annualIncome()/12.0;
 		disposableIncome = getMonthlyPostTaxIncome() - 0.8 * Government.Config.INCOME_SUPPORT; // necessary consumption
-		for(Entry<House,PaymentAgreement> payment : housePayments.entrySet()) {
-			disposableIncome -= payment.getValue().makeMonthlyPayment();
-			house = payment.getKey();
-			if(house.resident != this && house.resident != null) {
-				// collect rent
-				disposableIncome += house.resident.monthlyPaymentOn(house);
-			}
+		for(PaymentAgreement payment : housePayments.values()) {
+			disposableIncome -= payment.makeMonthlyPayment();
 		}
-//		for(PaymentAgreement payment : housePayments.values()) {
-//			disposableIncome -= payment.makeMonthlyPayment();
-//		}
 		
 		// --- consume based on disposable income after house payments
 		bankBalance += disposableIncome;
