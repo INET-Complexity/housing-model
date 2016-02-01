@@ -14,9 +14,9 @@ public class MicroDataRecorder {
 	}
 
 	public void openNewFile() {
-		String simID = Integer.toHexString(UUID.randomUUID().hashCode());
+//		String simID = Integer.toHexString(UUID.randomUUID().hashCode());
 		try {
-			outfile = new PrintWriter("transactions-"+simID+".csv", "UTF-8");
+			outfile = new PrintWriter("transactions-"+Model.nSimulation+".csv", "UTF-8");
 			outfile.println(
 					"Timestamp, transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, "+
 					"buyerId, buyerHasBTLGene, buyerMonthlyPreTaxIncome, buyerMonthlyEmploymentIncome, buyerBankBalance, "+

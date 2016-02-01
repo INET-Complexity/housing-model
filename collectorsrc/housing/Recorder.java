@@ -35,15 +35,15 @@ public class Recorder {
 
 	public void step() {
 		if(newSim) {
-			String simID = Integer.toHexString(UUID.randomUUID().hashCode());
+//			String simID = Integer.toHexString(UUID.randomUUID().hashCode());
 	        try {
-				outfile = new PrintWriter("output-"+simID+".csv", "UTF-8");
+				outfile = new PrintWriter("output-"+Model.nSimulation+".csv", "UTF-8");
 		    	outfile.println(
 		    			"Model time, NRegisteredMortgages, nBtL, nEmpty, nHomeless, nHouseholds, nRenting, AverageBidPrice, "+
 		    			"AverageDaysOnMarket, AverageOfferPrice, BTLSalesProportion, FTBSalesProportion, HPA, HPI, nBuyers, "+
 		    			"nSellers, nSales, nNewBuild, Rental AverageBidPrice, Rental AverageDaysOnMarket, Rental AverageOfferPrice, Rental HPA, Rental HPI, "+
 		    			"Rental nBuyers, Rental nSellers, Rental nSales");
-		        paramfile = new PrintWriter("parameters-"+simID+".csv", "UTF-8");
+		        paramfile = new PrintWriter("parameters-"+Model.nSimulation+".csv", "UTF-8");
 		        paramfile.println("BtL P_INVESTOR, CentralBank ICR Limit");
 		        paramfile.println(
 		        		data.Households.P_INVESTOR+", "+

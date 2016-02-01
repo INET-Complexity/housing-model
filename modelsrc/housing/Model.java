@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -191,7 +192,7 @@ public class Model extends SimState implements Steppable {
 	public boolean recordCoreIndicators = false;
 	public boolean recordMicroData = false;
 	
-	public int	nSimulation; // number of simulations run
+	public static int	nSimulation; // number of simulations run
 	public int	t; // time (months)
 //	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
 
