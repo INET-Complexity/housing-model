@@ -56,7 +56,7 @@ public class Household implements IHouseOwner, Serializable {
 	 ********************************************************/
 	public void step() {
 		double disposableIncome;
-		House  house;
+//		House  house;
 		
 		lifecycle.step();
 		monthlyEmploymentIncome = lifecycle.annualIncome()/12.0;

@@ -27,6 +27,7 @@ public class HousingMarketStats extends CollectorBase {
 
 	public void init(HousingMarket m) {
 		market = m;
+		recorder = Model.transactionRecorder;
         int i;
         if(market != null) {
         	for(i=0; i<House.Config.N_QUALITY; ++i) {
@@ -89,6 +90,7 @@ public class HousingMarketStats extends CollectorBase {
 				btlSaleCount += 1;
 			}
 		}
+		recorder.recordSale(purchase, sale, mortgage, market);
 	}
 		
 	protected void recordOfferPrices() {
@@ -124,7 +126,8 @@ public class HousingMarketStats extends CollectorBase {
 	double [] offerPrices;
 	double [] bidPrices;
 	HousingMarket market;
-
+	MicroDataRecorder recorder;
+	
 	public int 	nEmpty;
 
 	///////////////////////////////////////////////////////////////////////////////////////

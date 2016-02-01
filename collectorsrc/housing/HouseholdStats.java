@@ -10,11 +10,13 @@ public class HouseholdStats extends CollectorBase {
 		nRenting = 0;
     	nHomeless = 0;
     	nBtL = 0;
+    	nActiveBtL = 0;
     	nHouseholds = Model.households.size();
     	rentalYield = 0.0;
     	for(Household h : Model.households) {
     		if(h.behaviour.isPropertyInvestor()) {
     			++nBtL;
+    			if(h.nInvestmentProperties() > 0) ++nActiveBtL;
     			BtLTotalAnnualIncome += h.getMonthlyPreTaxIncome();
     		} else if(h.isInSocialHousing()) {
     			++nHomeless;
@@ -183,10 +185,20 @@ public class HouseholdStats extends CollectorBase {
 		return nBtL;
 	}
 	public String desnBtL() {
-		return("Number of BtL investors");
+		return("Number of investors with BtL gene");
 	}
 	public String namenBtL() {
-		return("Number of BtL investors");
+		return("Number of BtL investors (gene)");
+	}
+
+	public int getnActiveBtL() {
+		return nActiveBtL;
+	}
+	public String desnActiveBtL() {
+		return("Number of BtL investors with one or more investment properties");
+	}
+	public String namenActiveBtL() {
+		return("Number of BtL investors (active)");
 	}
 
     public int 		  nRenting;
@@ -194,6 +206,7 @@ public class HouseholdStats extends CollectorBase {
     public int 		  nNonOwner;
     public int		  nHouseholds;
     public int 		  nBtL;
+    public int 		  nActiveBtL;
     public int		  nEmpty;
     public double []  BtlNProperties; // number of properties owned by buy-to-let investors
 	public double	  BtLTotalAnnualIncome;

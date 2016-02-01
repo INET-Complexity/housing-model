@@ -31,6 +31,7 @@ public class Model extends SimState implements Steppable {
 		government = new Government();
 		demographics = new Demographics();
 		recorder = new Recorder();
+		transactionRecorder = new MicroDataRecorder();
 		rand = new MersenneTwister(seed);
 
 		centralBank = new CentralBank();
@@ -109,10 +110,12 @@ public class Model extends SimState implements Steppable {
 			if (nSimulation >= N_SIMS) {
 				// this was the last simulation
 				recorder.finish();
+				transactionRecorder.finish();
 				simulationStateNow.kill();
 				return;
 			}
 			recorder.endOfSim();
+			transactionRecorder.endOfSim();
 			init();
 		}
 		modelStep();
@@ -142,6 +145,7 @@ public class Model extends SimState implements Steppable {
 	public void finish() {
 		super.finish();
 		if(recordCoreIndicators) recorder.finish();
+		if(recordMicroData) transactionRecorder.finish();
 	}
 	
 	/*** @return simulated time in months */
@@ -183,6 +187,7 @@ public class Model extends SimState implements Steppable {
 	
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
+	public static MicroDataRecorder transactionRecorder;
 	public boolean recordCoreIndicators = false;
 	public boolean recordMicroData = false;
 	
@@ -276,16 +281,11 @@ public class Model extends SimState implements Steppable {
 	public String nameRecordCoreIndicators() {return("Record core indicators");}
 
 	public boolean isRecordMicroData() {
-		return recordMicroData;
+		return transactionRecorder.isActive();
 	}
 
 	public void setRecordMicroData(boolean record) {
-		this.recordMicroData = record;
-		if(recordMicroData) {
-//			recorder.start();
-		} else {
-//			recorder.finish();
-		}
+		transactionRecorder.setActive(record);
 	}
 	public String nameRecordMicroData() {return("Record micro data");}
 
