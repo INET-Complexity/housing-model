@@ -107,8 +107,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean decideToSellHome(Household me) {
 		// TODO: need to add expenditure
 		if(isPropertyInvestor()) return(false);
-//		return(rand.nextDouble() < data.Households.P_SELL *(1.0 + 4.0*(0.05 - Model.housingMarket.offersPQ.size()*1.0/Model.households.size())) + 5.0*(0.03-Model.bank.getMortgageInterestRate()));
-		return(rand.nextDouble() < data.Households.P_SELL);
+		return(rand.nextDouble() < data.Households.P_SELL *(1.0 + 4.0*(0.05 - Model.housingMarket.offersPQ.size()*1.0/Model.households.size())) + 5.0*(0.03-Model.bank.getMortgageInterestRate()));
+//		return(rand.nextDouble() < data.Households.P_SELL);
 		
 		// reference 
 		//int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
