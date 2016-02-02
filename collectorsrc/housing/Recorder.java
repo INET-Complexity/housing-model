@@ -42,7 +42,7 @@ public class Recorder {
 		    			"Model time, NRegisteredMortgages, nBtL(gene), nEmpty, nHomeless, nHouseholds, nRenting, AverageBidPrice, "+
 		    			"AverageDaysOnMarket, AverageOfferPrice, BTLSalesProportion, FTBSalesProportion, HPA, HPI, nBuyers, "+
 		    			"nSellers, nSales, nNewBuild, Rental AverageBidPrice, Rental AverageDaysOnMarket, Rental AverageOfferPrice, Rental HPA, Rental HPI, "+
-		    			"Rental nBuyers, Rental nSellers, Rental nSales, nBtL(active), ProportionOfHousingStockBtL");
+		    			"Rental nBuyers, Rental nSellers, Rental nSales, averageNewRentalGrossYield, nBtL(active), ProportionOfHousingStockBtL");
 		        paramfile = new PrintWriter("parameters-"+Model.nSimulation+".csv", "UTF-8");
 		        paramfile.println("BtL P_INVESTOR, CentralBank ICR Limit");
 		        paramfile.println(
@@ -115,6 +115,7 @@ public class Recorder {
     			Model.collectors.rentalMarketStats.getnBuyers()+", "+
     			Model.collectors.rentalMarketStats.getnSellers()+", "+
     			Model.collectors.rentalMarketStats.getnSales()+", "+
+    			Model.rentalMarket.averageSoldGrossYield+", "+
     			Model.collectors.householdStats.getnActiveBtL()+", "+
     			Model.collectors.householdStats.getBTLProportion());
 	}
