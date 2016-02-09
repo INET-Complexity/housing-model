@@ -153,7 +153,7 @@ public abstract class HousingMarket implements Serializable {
 			if(nBids > 0) {
 				// bid up the price
 				if(Config.BIDUP != 1.0) {
-					enoughBids = Math.min(4, nBids);
+					enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/Demographics.TARGET_POPULATION));
 					pSuccessfulBid = Math.exp(-enoughBids*Config.UNDEROFFER);
 					geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
 					salePrice = offer.getPrice() * Math.pow(Config.BIDUP, geomDist.sample());
@@ -193,7 +193,7 @@ public abstract class HousingMarket implements Serializable {
 		// bids contains bids (HouseBuyerRecords) in an array
 		
 		recordMarketStats();
-		int rounds = Math.min(Demographics.TARGET_POPULATION/1000,1 + (offersPQ.size()+bids.size())*Demographics.TARGET_POPULATION/5000000);
+		int rounds = Math.min(Demographics.TARGET_POPULATION/1000,1 + (offersPQ.size()+bids.size())/500);
 		for(int i=0; i<rounds; ++i) {
 			matchBidsWithOffers();
 			clearMatches();

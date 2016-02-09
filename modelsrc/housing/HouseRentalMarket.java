@@ -10,11 +10,12 @@ import org.apache.commons.math3.stat.regression.SimpleRegression;
  **********************************************/
 public class HouseRentalMarket extends HousingMarket {
 	private static final long serialVersionUID = -3039057421808432696L;
-	static final double K = Math.exp(-1.0/50.0); // decay rate for averageGrossYield
+	static final double S = 10000.0/Demographics.TARGET_POPULATION; // Decay scaling factor
+	static final double K = Math.exp(-S/50.0); // decay rate for averageSoldGrossYield
 
 	public HouseRentalMarket() {
 		for(int i=0; i< House.Config.N_QUALITY; ++i) {
-			daysOnMarket[i] = 0.0;			
+			monthsOnMarket[i] = 1.0;			
 		}
 		recalculateExpectedGrossYield();
 		averageSoldGrossYield = data.HouseRentalMarket.RENT_GROSS_YIELD;
@@ -23,7 +24,7 @@ public class HouseRentalMarket extends HousingMarket {
 	@Override
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		super.completeTransaction(purchase, sale);
-		daysOnMarket[sale.house.getQuality()] = Config.E*daysOnMarket[sale.house.getQuality()] + (1.0-Config.E)*(Model.getTime() - sale.tInitialListing);
+		monthsOnMarket[sale.house.getQuality()] = Config.E*monthsOnMarket[sale.house.getQuality()] + (1.0-Config.E)*(Model.getTime() - sale.tInitialListing);
 		sale.house.rentalRecord = null;
 		purchase.buyer.completeHouseRental(sale);
 		sale.house.owner.completeHouseLet(sale);
@@ -62,7 +63,7 @@ public class HouseRentalMarket extends HousingMarket {
 	 *         TODO: Take the 18 out as data
 	 */
 	public double expectedOccupancy(int quality) {
-		return(18.0*30.0/(18.0*30.0 + daysOnMarket[quality]));
+		return(18.0/(18.0 + monthsOnMarket[quality]));
 	}
 
 	public double getExpectedGrossYield(int quality) {
@@ -105,7 +106,7 @@ public class HouseRentalMarket extends HousingMarket {
 	}
 
 	
-	public double daysOnMarket[] = new double[House.Config.N_QUALITY];
+	public double monthsOnMarket[] = new double[House.Config.N_QUALITY];
 	public double expectedGrossYield[] = new double[House.Config.N_QUALITY];
 	public double averageSoldGrossYield;
 //	public double bestGrossYield;

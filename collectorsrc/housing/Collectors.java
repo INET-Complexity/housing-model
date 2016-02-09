@@ -21,7 +21,7 @@ public class Collectors implements Serializable {
 	public CoreIndicators	coreIndicators 	= new CoreIndicators();
 	public HouseholdStats	householdStats	= new HouseholdStats();
 	public HousingMarketStats housingMarketStats = new HousingMarketStats();
-	public HousingMarketStats rentalMarketStats = new HousingMarketStats();
+	public RentalMarketStats rentalMarketStats = new RentalMarketStats();
 	
 	/////////////////////////////////////////////////////////////////////
 	// Getters for MASON...yawn.
