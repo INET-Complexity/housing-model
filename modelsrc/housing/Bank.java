@@ -221,7 +221,7 @@ public class Bank implements Serializable {
 		approval.monthlyPayment = approval.principal*monthlyPaymentFactor(isHome);		
 		approval.nPayments = N_PAYMENTS;
 		approval.monthlyInterestRate = r;
-		approval.isFirstTimeBuyer = h.isFirstTimeBuyer();
+//		approval.isFirstTimeBuyer = h.isFirstTimeBuyer();
 		approval.purchasePrice = approval.principal + approval.downPayment;
 		return(approval);
 	}

@@ -71,6 +71,10 @@ public class Household implements IHouseOwner, Serializable {
 		if(bankBalance < 0.0) { // bankrupt behaviour				
 			bankBalance = 1.0;	// TODO: cash injection for now...
 		}
+
+		for(House h : housePayments.keySet()) {
+			if(h.owner == this) manageHouse(h);
+		}
 		
 		if(isInSocialHousing()) {
 			bidForAHome();
@@ -80,16 +84,16 @@ public class Household implements IHouseOwner, Serializable {
 				bidForAHome();
 			}			
 		} else if(behaviour.isPropertyInvestor()) {
-			for(House h : housePayments.keySet()) {
-				manageHouse(h);
-			}
+//			for(House h : housePayments.keySet()) {
+//				manageHouse(h);
+//			}
 			if(BTL_ENABLED) {
 				if(behaviour.decideToBuyBuyToLet(this)) {
 					Model.housingMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
 				}
 			}		
 		} else if(isHomeowner()) {
-			manageHouse(home);
+//			manageHouse(home);
 		} else {
 			System.out.println("Strange: this household is not a type I recognize");
 		}

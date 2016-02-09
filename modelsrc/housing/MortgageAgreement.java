@@ -7,7 +7,7 @@ public class MortgageAgreement extends PaymentAgreement {
 	public double	downPayment;
 	public double	purchasePrice;
 	public final boolean	isBuyToLet;
-	public boolean	isFirstTimeBuyer;
+	public final boolean	isFirstTimeBuyer;
 	public double	principal;			// remaining principal to be paid off
 	public double 	monthlyInterestRate;
 
