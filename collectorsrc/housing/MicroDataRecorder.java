@@ -19,9 +19,9 @@ public class MicroDataRecorder {
 			outfile = new PrintWriter("transactions-"+Model.nSimulation+".csv", "UTF-8");
 			outfile.println(
 					"Timestamp, transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, "+
-					"buyerId, buyerHasBTLGene, buyerMonthlyPreTaxIncome, buyerMonthlyEmploymentIncome, buyerBankBalance, "+
+					"buyerId, buyerAge(years), buyerHasBTLGene, buyerMonthlyPreTaxIncome, buyerMonthlyEmploymentIncome, buyerBankBalance, buyerCapGainCoeff, "+
 					"mortgageDownpayment, firstTimeBuyerMortgage, buyToLetMortgage, "+
-					"sellerId, sellerHasBTLGene, sellerMonthlyPreTaxIncome, sellerMonthlyEmploymentIncome, sellerBankBalance");
+					"sellerId, sellerAge(years), sellerHasBTLGene, sellerMonthlyPreTaxIncome, sellerMonthlyEmploymentIncome, sellerBankBalance, sellerCapGainCoeff");
 		} catch (FileNotFoundException | UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -45,10 +45,12 @@ public class MicroDataRecorder {
     			sale.tInitialListing+", "+
     			sale.getPrice()+", "+
     			purchase.buyer.id+", "+
+    			purchase.buyer.lifecycle.age+", "+
     			purchase.buyer.behaviour.isPropertyInvestor()+", "+
     			purchase.buyer.getMonthlyPreTaxIncome()+", "+
     			purchase.buyer.monthlyEmploymentIncome+", "+
-    			purchase.buyer.bankBalance+", "
+    			purchase.buyer.bankBalance+", "+
+    			purchase.buyer.behaviour.BtLCapGainCoeff+", "
 				);
 		if(mortgage != null) {
 			outfile.print(
@@ -63,14 +65,16 @@ public class MicroDataRecorder {
 			Household seller = (Household)sale.house.owner;
 			outfile.println(
 					seller.id+", "+
+					seller.lifecycle.age+", "+
 					seller.behaviour.isPropertyInvestor()+", "+
 					seller.getMonthlyPreTaxIncome()+", "+
 					seller.monthlyEmploymentIncome+", "+
-					seller.bankBalance
+					seller.bankBalance+", "+
+					seller.behaviour.BtLCapGainCoeff
 					);			
 		} else {
 			// must be construction sector
-			outfile.println("-1, false, 0, 0, 0");
+			outfile.println("-1, 0, false, 0, 0, 0, 0");
 		}
 	}
 	

@@ -11,12 +11,13 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public static LogNormalDistribution FTB_DOWNPAYMENT = new LogNormalDistribution(null, 10.30, 0.9093);
 	public static LogNormalDistribution OO_DOWNPAYMENT = new LogNormalDistribution(null, 11.155, 0.7538);
 	
-	public double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
-	public double HPA_EXPECTATION_WEIGHT = 0.5; // expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer: less than 1)
-	public double INTENSITY_OF_CHOICE = 10.0;
-	public double FUNDAMENTALIST_CAP_GAIN_COEFF = 0.5; 	// weight that fundamentalists put on cap gain
-	public double TREND_CAP_GAIN_COEFF = 0.9;			// weight that trend-followers put on cap gain
-	public double P_FUNDAMENTALIST = 0.5; 				// probability that BTL investor is a fundamentalist (otherwise is a trend-follower)
+	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
+	public final double HPA_EXPECTATION_WEIGHT = 0.5; 		// expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer: less than 1)
+	public final double INTENSITY_OF_CHOICE = 10.0;
+	public final double FUNDAMENTALIST_CAP_GAIN_COEFF = 0.5;// weight that fundamentalists put on cap gain
+	public final double TREND_CAP_GAIN_COEFF = 0.9;			// weight that trend-followers put on cap gain
+	public final double P_FUNDAMENTALIST = 0.5; 			// probability that BTL investor is a fundamentalist (otherwise is a trend-follower)
+	public final boolean BTL_YIELD_SCALING = false;			// which equation to use when making BTL buy/sell decisions
 	
 	protected MersenneTwisterFast 	rand = Model.rand;
 	public boolean					BTLInvestor;
@@ -26,7 +27,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	
 	public HouseholdBehaviour(double incomePercentile) {
 		propensityToSave = 0.1*Model.rand.nextGaussian();
-		BtLCapGainCoeff = 0.5;
+		BtLCapGainCoeff = 0.0;
 		if(Household.BTL_ENABLED) {
 			if(incomePercentile > data.Households.MIN_INVESTOR_PERCENTILE && rand.nextDouble() < data.Households.P_INVESTOR/data.Households.MIN_INVESTOR_PERCENTILE) {
 				BTLInvestor = true;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
@@ -259,6 +260,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		if(me.nInvestmentProperties() < 2) return(false);
 		final double INTENSITY = 50.0; // intensity of choice on effective yield
 		final double AGGREGATE_RATE = 1.0/12.0; // controls the average rate of sales
+		double effectiveYield;
+		
 		// sell if not selling on rental market at interest coverage ratio of 1.0
 		if(!h.isOnRentalMarket()) return(false); // don't sell while occupied by tenant
 		MortgageAgreement mortgage = me.mortgageFor(h);
@@ -268,11 +271,16 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		}
 		// TODO: add transaction costs to expected capital gain
 //		double icr = (h.rentalRecord.getPrice()-mortgage.nextPayment())/h.rentalRecord.getPrice();
-		double equity = Math.max(0.01, Model.housingMarket.getAverageSalePrice(h.getQuality()) - mortgage.principal);
-		double capitalGainRate = HPAExpectation()*Model.housingMarket.getAverageSalePrice(h.getQuality())/equity;
-		double rentalYield = h.rentalRecord.getPrice()*12.0/equity;
+		double marketPrice = Model.housingMarket.getAverageSalePrice(h.getQuality());
+		double equity = Math.max(0.01, marketPrice - mortgage.principal);
+		double leverage = marketPrice/equity;
+		double rentalYield = h.rentalRecord.getPrice()*12.0/marketPrice;
 		double mortgageRate = mortgage.nextPayment()*12.0/equity;
-		double effectiveYield = 2.0*((1.0-BtLCapGainCoeff)*(rentalYield-0.04) + BtLCapGainCoeff*(capitalGainRate-0.04)) - mortgageRate;
+		if(BTL_YIELD_SCALING) {
+			effectiveYield = leverage*((1.0-BtLCapGainCoeff)*rentalYield + BtLCapGainCoeff*(Model.rentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
+		} else {
+			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
+		}
 		double pKeep = Math.pow(1.0/(1.0 + Math.exp(-INTENSITY*effectiveYield)),AGGREGATE_RATE);
 //		System.out.println("DontSell = "+(-INTENSITY*(effectiveYield-0.05))+" "+pKeep);
 		return(Model.rand.nextDouble() < (1.0-pKeep));
@@ -321,6 +329,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		}
 		final double INTENSITY = 50.0;
 		final double AGGREGATE_RATE = 1.0/12.0;
+		double effectiveYield;
 		
 		if(!isPropertyInvestor()) return false;
 		if(me.bankBalance < desiredBankBalance(me)*0.75) {
@@ -333,10 +342,13 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		MortgageAgreement m = Model.bank.requestApproval(me, maxPrice, 0.0, false); // maximise leverege with min downpayment
 		
 		double leverage = m.purchasePrice/m.downPayment;
-		double rentalYield = Model.rentalMarket.averageSoldGrossYield*leverage;
-		double capitalGainRate = HPAExpectation()*leverage;
+		double rentalYield = Model.rentalMarket.averageSoldGrossYield;
 		double mortgageRate = m.monthlyPayment*12.0/m.downPayment;
-		double effectiveYield = 2.0*((1.0-BtLCapGainCoeff)*(rentalYield-0.04) + BtLCapGainCoeff*(capitalGainRate - 0.04)) - mortgageRate;		
+		if(BTL_YIELD_SCALING) {
+			effectiveYield = leverage*((1.0-BtLCapGainCoeff)*rentalYield + BtLCapGainCoeff*(Model.rentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
+		} else {
+			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
+		}
 		double pDontBuy = Math.pow(1.0/(1.0 + Math.exp(INTENSITY*effectiveYield)),AGGREGATE_RATE);
 //		System.out.println("DontBuy = "+(INTENSITY*effectiveYield) + " " + pDontBuy);
 		return(Model.rand.nextDouble() < (1.0-pDontBuy));

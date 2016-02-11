@@ -12,6 +12,8 @@ public class HouseRentalMarket extends HousingMarket {
 	private static final long serialVersionUID = -3039057421808432696L;
 	static final double S = 10000.0/Demographics.TARGET_POPULATION; // Decay scaling factor
 	static final double K = Math.exp(-S/50.0); // decay rate for averageSoldGrossYield
+	static final double KL = Math.exp(-S/(50.0*200.0)); // decay rate for longTermAverageGrossYield
+	
 
 	public HouseRentalMarket() {
 		for(int i=0; i< House.Config.N_QUALITY; ++i) {
@@ -19,6 +21,7 @@ public class HouseRentalMarket extends HousingMarket {
 		}
 		recalculateExpectedGrossYield();
 		averageSoldGrossYield = data.HouseRentalMarket.RENT_GROSS_YIELD;
+		longTermAverageGrossYield = data.HouseRentalMarket.RENT_GROSS_YIELD;
 	}
 	
 	@Override
@@ -29,7 +32,9 @@ public class HouseRentalMarket extends HousingMarket {
 		purchase.buyer.completeHouseRental(sale);
 		sale.house.owner.completeHouseLet(sale);
 		Model.collectors.rentalMarketStats.recordSale(purchase, sale);
-		averageSoldGrossYield = averageSoldGrossYield*K + (1.0-K)*sale.getPrice()*12.0/Model.housingMarket.getAverageSalePrice(sale.house.getQuality());
+		double yield = sale.getPrice()*12.0/Model.housingMarket.getAverageSalePrice(sale.house.getQuality());
+		averageSoldGrossYield = averageSoldGrossYield*K + (1.0-K)*yield;
+		longTermAverageGrossYield = longTermAverageGrossYield*KL + (1.0-KL)*yield;
 	}
 	
 	public HouseSaleRecord offer(House house, double price) {
@@ -109,5 +114,6 @@ public class HouseRentalMarket extends HousingMarket {
 	public double monthsOnMarket[] = new double[House.Config.N_QUALITY];
 	public double expectedGrossYield[] = new double[House.Config.N_QUALITY];
 	public double averageSoldGrossYield;
+	public double longTermAverageGrossYield; // averaged over a long time
 //	public double bestGrossYield;
 }
