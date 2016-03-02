@@ -22,5 +22,9 @@ public class RentalMarketStats extends HousingMarketStats {
     	}
     	return data;
 	}
+    
+    public double getAverageSoldGrossYield() {
+    	return(Model.rentalMarket.averageSoldGrossYield);
+    }
 
 }
