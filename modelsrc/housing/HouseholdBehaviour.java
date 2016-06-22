@@ -6,6 +6,11 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
 
+/**
+ * This class implements the behavioural decisions made by households
+ *
+ * @author daniel
+ */
 public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
 	private static final long serialVersionUID = -7785886649432814279L;
 	public static LogNormalDistribution FTB_DOWNPAYMENT = new LogNormalDistribution(null, 10.30, 0.9093);
@@ -18,13 +23,25 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public final double TREND_CAP_GAIN_COEFF = 0.9;			// weight that trend-followers put on cap gain
 	public final double P_FUNDAMENTALIST = 0.5; 			// probability that BTL investor is a fundamentalist (otherwise is a trend-follower)
 	public final boolean BTL_YIELD_SCALING = false;			// which equation to use when making BTL buy/sell decisions
-	
+	public final double DESIRED_RENT_INCOME_FRACTION=0.33;	// proportion of income desired to be spent on rent
+
 	protected MersenneTwisterFast 	rand = Model.rand;
 	public boolean					BTLInvestor;
 	public double 					propensityToSave;
 	public double					desiredBalance;
 	public double 					BtLCapGainCoeff; // Sensitivity of BtL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
-	
+
+	public double sigma(double x) { // the Logistic function, sometimes called sigma function, 1/1+e^(-x)
+		return 1.0/(1.0+Math.exp(-1.0*x));
+	}
+	/***************************************
+	 * Constructor: initialise the behavioural variables for a new household: propensity to save, and
+	 * if the income percentile is above a minimum, decide whether to give the household
+	 * the BTL investor 'gene', and if so, decide whether they will be a fundamentalist or trend follower investor
+	 *
+	 * @param incomePercentile the fixed income percentile for the household (assumed constant over a lifetime),
+	 *                         used to determine whether the household can be a BTL investor
+     ***************************************************/
 	public HouseholdBehaviour(double incomePercentile) {
 		propensityToSave = 0.1*Model.rand.nextGaussian();
 		BtLCapGainCoeff = 0.0;
@@ -50,15 +67,21 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	///////////////////////////////////////////////////////////////////////////////////////////////
 
 	/********************************
-	 * How much a household consumes
+	 * How much a household consumes (optional, non-essential consumption)
 	 * Consumption rule made to fit ONS wealth in Great Britain data.
-	 * @author daniel
 	 *
+	 * @param me Household
+	 * @return Non-essential consumption for the month
 	 ********************************/
 	public double desiredConsumptionB(Household me) {//double monthlyIncome, double bankBalance) {
-		return(0.5*Math.max(me.bankBalance - desiredBankBalance(me),0.0));
+		return(data.Households.CONSUMPTION_FRACTION*Math.max(me.bankBalance - desiredBankBalance(me),0.0));
 	}
-	
+
+	/********************************
+	 * @param me Household
+	 * @return Minimum bank balance a household would like to have at the end of the month (like a minimum safety net).
+	 * Used to determine non-essential consumption.
+     *********************************/
 	public double desiredBankBalance(Household me) {
 		if(desiredBalance == -1.0) {
 //			desiredBalance = 1.1*OO_DOWNPAYMENT.inverseCumulativeProbability(me.lifecycle.incomePercentile);
@@ -71,9 +94,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	}
 
 	/***************************
-	 * After having decided to buy a house, 
-	 * decide on desired purchase price as a function of monthly income and current
-	 * value of house price appreciation.
+	 * @param me Household
+	 * @param monthlyIncome Mohthly income
+	 * @return desired purchase price after having decided to buy a house
 	 ****************************/
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
 		final double A = 0.08;//0.48;			// sensitivity to house price appreciation
@@ -136,6 +159,12 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		*/
 	}
 
+	/**TODO: WHAT IS THIS?
+	 *
+	 * @param me the household
+	 * @param housePrice the price of the house
+     * @return the downpayment
+     */
 	public double downPayment(Household me, double housePrice) {
 //		return(me.bankBalance - (1.0 - DOWNPAYMENT_FRACTION)*desiredBankBalance(me));
 		if(me.bankBalance > housePrice*2.0) { // calibrated against mortgage approval/housing transaction ratio, core indicators average 1987-2006
@@ -184,7 +213,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 *  is assumed to be the difference in rental price between the two qualities.
 	 *  @return true if we should buy a house, false if we should rent
 	 */
-	public boolean rentOrPurchaseDecision(Household me, double maxMortgage) {
+	public boolean rentOrPurchaseDecision(Household me) {
 		if(isPropertyInvestor()) return(true);
 //		final double SCALE = 1.0;//1.25
 		final double COST_OF_RENTING = 1.1/12.0; // annual psychological cost of renting
@@ -201,7 +230,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double costOfHouse = mortgageApproval.monthlyPayment*12 - purchasePrice*HPAExpectation();
 		double costOfRent = Model.rentalMarket.getAverageSalePrice(newHouseQuality)*12;
 //		System.out.println(FTB_K*(costOfRent + COST_OF_RENTING - costOfHouse));
-		return(rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent*(1.0+COST_OF_RENTING) - costOfHouse))));
+		//return(rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent*(1.0+COST_OF_RENTING) - costOfHouse))));
+		return(rand.nextDouble() < sigma(FTB_K*(costOfRent*(1.0+COST_OF_RENTING) - costOfHouse)));
 
 		/*
 		
@@ -227,7 +257,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
 	 ********************************************************/
 	public double desiredRent(Household me, double monthlyIncome) {
-		return(monthlyIncome * 0.33);
+		return(monthlyIncome * DESIRED_RENT_INCOME_FRACTION);
 
 //		int quality = findBestRentalQuality(me);
 //		return(1.01*Model.rentalMarket.getAverageSalePrice(quality)*Math.exp(0.1*Model.rand.nextGaussian()));
@@ -251,21 +281,24 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
+	 * Decide whether to sell an investment property.
 	 * 
 	 * @param h The house in question
 	 * @param me The investor
 	 * @return Does an investor decide to sell a buy-to-let property (per month)
 	 */
 	public boolean decideToSellInvestmentProperty(House h, Household me) {
-		if(me.nInvestmentProperties() < 2) return(false);
+		if(me.nInvestmentProperties() < 2) return(false); // Always keep at least one property
+
 		final double INTENSITY = 50.0; // intensity of choice on effective yield
 		final double AGGREGATE_RATE = 1.0/12.0; // controls the average rate of sales
 		double effectiveYield;
 		
-		// sell if not selling on rental market at interest coverage ratio of 1.0
+		// sell if not selling on rental market at interest coverage ratio of 1.0 (?)
 		if(!h.isOnRentalMarket()) return(false); // don't sell while occupied by tenant
 		MortgageAgreement mortgage = me.mortgageFor(h);
-		if(mortgage == null) {
+		//if(mortgage == null) {
+		if(h.owner!=me){
 			System.out.println("Strange: deciding to sell investment property that I don't own");
 			return(false);
 		}
@@ -281,8 +314,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		} else {
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
-		double pKeep = Math.pow(1.0/(1.0 + Math.exp(-INTENSITY*effectiveYield)),AGGREGATE_RATE);
-//		System.out.println("DontSell = "+(-INTENSITY*(effectiveYield-0.05))+" "+pKeep);
+		double pKeep = Math.pow(sigma(INTENSITY*effectiveYield),AGGREGATE_RATE);
 		return(Model.rand.nextDouble() < (1.0-pKeep));
 	}
 	
@@ -308,6 +340,12 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //		return(Model.housingMarket.getAverageSalePrice(h.getQuality())*0.051/12.0);
 	}
 
+	/**
+	 * Update the demanded rent for a property
+	 *
+	 * @param sale the HouseSaleRecord of the property for rent
+	 * @return the new rent
+     */
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
 		return(0.95*sale.getPrice());
 //		if(rand.nextDouble() > 0.944) {
@@ -318,13 +356,17 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	}
 
 	/***
-	 * Monthly opportunity of buying a new BTL property
-	 * @param me
+	 * Monthly opportunity of buying a new BTL property.
+	 *
+	 * Investor households with no investment properties always attempt to buy one. Households with at least
+	 * one investment property will calculate the expected yield of a new property based on two contributions:
+	 * capital gain and rental yield (with their corresponding weights which depend on the type of investor).
+	 *
+	 * @param me household
 	 * @return true if decision to buy
 	 */
 	public boolean decideToBuyBuyToLet(Household me) {
-		if(me.nInvestmentProperties() < 1) {
-//			System.out.println("Buying BtL house");
+		if(me.nInvestmentProperties() < 1) { // If I don't have any BTL properties, I always decide to buy one!!
 			return(true);
 		}
 		final double INTENSITY = 50.0;
@@ -339,7 +381,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double maxPrice = Model.bank.getMaxMortgage(me, false);
 		if(maxPrice < Model.housingMarket.getAverageSalePrice(0)) return false;
 		
-		MortgageAgreement m = Model.bank.requestApproval(me, maxPrice, 0.0, false); // maximise leverege with min downpayment
+		MortgageAgreement m = Model.bank.requestApproval(me, maxPrice, 0.0, false); // maximise leverage with min downpayment
 		
 		double leverage = m.purchasePrice/m.downPayment;
 		double rentalYield = Model.rentalMarket.averageSoldGrossYield;
@@ -349,9 +391,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		} else {
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
-		double pDontBuy = Math.pow(1.0/(1.0 + Math.exp(INTENSITY*effectiveYield)),AGGREGATE_RATE);
-//		System.out.println("DontBuy = "+(INTENSITY*effectiveYield) + " " + pDontBuy);
-		return(Model.rand.nextDouble() < (1.0-pDontBuy));
+		//double pDontBuy = Math.pow(1.0/(1.0 + Math.exp(INTENSITY*effectiveYield)),AGGREGATE_RATE);
+		//return(Model.rand.nextDouble() < (1.0-pDontBuy));
+	    return (Model.rand.nextDouble() < Math.pow(sigma(INTENSITY*effectiveYield),AGGREGATE_RATE));
 	}
 	
 	public double btlPurchaseBid(Household me) {

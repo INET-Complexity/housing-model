@@ -15,5 +15,5 @@ public class Households {
 	static public double P_SALEPRICEREDUCE = 1.0-0.945; 	// monthly probability of reducing the price of house on market
 	static public double REDUCTION_MU = 1.603; 	// mean of house price %age reductions for houses on the market. 
 	static public double REDUCTION_SIGMA = 0.617;		// SD of house price %age reductions for houses on the market
-	
+	static public double CONSUMPTION_FRACTION=0.5; // Fraction of the monthly budget for consumption (budget is bank balance - minimum desired bank balance)
 }

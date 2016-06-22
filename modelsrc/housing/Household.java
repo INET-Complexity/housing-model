@@ -26,6 +26,10 @@ public class Household implements IHouseOwner, Serializable {
 	
 	/********************************************************
 	 * Constructor.
+	 *
+	 * Initialises behaviour (determine whether the household
+	 * will be a BTL investor). Households start off in social
+	 * housing and with their 'desired bank balance' in the bank.
 	 ********************************************************/
 	public Household(double age) {
 //		bank = Model.bank;
@@ -50,9 +54,13 @@ public class Household implements IHouseOwner, Serializable {
 	/////////////////////////////////////////////////////////
 
 	/********************************************************
-	 * First step in a time-step:
+	 * Main simulation step for each household.
+	 *
 	 * Receive income, pay rent/mortgage, make consumption decision
-	 * and make decision to buy/sell house.
+	 * and make decision to:
+	 * - buy or rent if in social housing
+	 * - sell house if owner-occupier
+	 * - buy/sell/rent out properties if BTL investor
 	 ********************************************************/
 	public void step() {
 		double disposableIncome;
@@ -73,7 +81,8 @@ public class Household implements IHouseOwner, Serializable {
 		}
 
 		for(House h : housePayments.keySet()) {
-			if(h.owner == this) manageHouse(h);
+			if(h.owner == this) manageHouse(h); // Manage all owned properties
+
 		}
 		
 		if(isInSocialHousing()) {
@@ -102,6 +111,14 @@ public class Household implements IHouseOwner, Serializable {
 //		makeHousingDecision();
 	}
 
+	/******************************
+	 * Decide what to do with a house h owned by the household:
+	 *  - if the household lives in h, decide whether to sell it
+	 *  - if h is up for sale, rethink its offer price, and possibly put it up for rent instead (only BTL investors)
+	 *  - if h is up for rent, rethink the rent demanded
+	 *
+	 * @param h a house owned by the household
+     *****************************/
 	protected void manageHouse(House h) {
 		HouseSaleRecord forSale, forRent;
 		double newPrice;
@@ -123,12 +140,17 @@ public class Household implements IHouseOwner, Serializable {
 		}
 		
 		forRent = h.getRentalRecord();
-		if(forRent != null) {
+		if(forRent != null) { // reprice house for rent
 			newPrice = behaviour.rethinkBuyToLetRent(forRent);
 			Model.rentalMarket.updateOffer(forRent, newPrice);		
 		}		
 	}
 
+	/******************************************************
+	 * Having decided to sell house h, decide its initial sale price and put it up in the market.
+	 *
+	 * @param h the house being sold
+     ******************************************************/
 	protected void putHouseForSale(House h) {
 		double principal;
 		MortgageAgreement mortgage = mortgageFor(h);
@@ -301,7 +323,7 @@ public class Household implements IHouseOwner, Serializable {
 	 ********************************************************/
 	protected void bidForAHome() {
 		double maxMortgage = Model.bank.getMaxMortgage(this, true);
-		if(behaviour.rentOrPurchaseDecision(this, maxMortgage)) {
+		if(behaviour.rentOrPurchaseDecision(this)) {
 			double price = behaviour.desiredPurchasePrice(this, monthlyEmploymentIncome);
 			if(price > maxMortgage - 1.0) {
 				price = maxMortgage -1.0;
@@ -349,6 +371,13 @@ public class Household implements IHouseOwner, Serializable {
 	// Inheritance behaviour
 	/////////////////////////////////////////////////////////
 
+	/**
+	 * Implement inheritance: upon death, transfer all wealth to the previously selected household.
+	 *
+	 * Take all houses off the markets, evict any tenants, pay off mortgages, and give property and remaining
+	 * bank balance to the beneficiary.
+	 * @param beneficiary The household that will inherit the wealth
+     */
 	public void transferAllWealthTo(Household beneficiary) {
 		if(beneficiary == this) System.out.println("Strange: I'm transfering all my wealth to myself");
 		boolean isHome;
@@ -384,6 +413,9 @@ public class Household implements IHouseOwner, Serializable {
 	}
 	
 	/**
+	 * Inherit a house.
+	 *
+	 * Write off the mortgage for the house. Move into the house if renting or in social housing.
 	 * 
 	 * @param h House to inherit
 	 */

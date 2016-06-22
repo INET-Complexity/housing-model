@@ -17,7 +17,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	 * Construct a new record.
 	 * 
 	 * @param h The house that is for sale.
-	 * @param p The initial list price for the house.
+	 * @param price The initial list price for the house.
 	 ***********************************************/
 	public HouseSaleRecord(House h, double price) {
 		super(price);
@@ -26,16 +26,16 @@ public class HouseSaleRecord extends HousingMarketRecord {
 		initialListedPrice = price;
 //		quality = house.quality;
 		tInitialListing = Model.getTime();
-		matchedBids = new ArrayList<>(8);
+		matchedBids = new ArrayList<>(8); // Why 8 bids?
 		recalcYield();
 	}
 	
-	/***********************************************
-	 * Set the list price to a given value,
-	 * rounded to the nearest penny.
-	 * 
-	 * @param p The list-price.
-	 **********************************************/
+//	/***********************************************
+//	 * Set the list price to a given value,
+//	 * rounded to the nearest penny.
+//	 *
+//	 * @param p The list-price.
+//	 **********************************************/
 //	public void setPrice(double p) {
 //		price = Math.round(p*100.0)/100.0; // round to nearest penny
 //	}

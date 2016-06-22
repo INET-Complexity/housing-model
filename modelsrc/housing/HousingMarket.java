@@ -85,7 +85,7 @@ public abstract class HousingMarket implements Serializable {
 	 * Change the list-price on a house that is already on
 	 * the market.
 	 * 
-	 * @param h The house to change the price for.
+	 * @param hsr The HouseSaleRecord to change the price for.
 	 * @param newPrice The new price of the house.
 	 ******************************************/
 	public void updateOffer(HouseSaleRecord hsr, double newPrice) {
@@ -97,7 +97,7 @@ public abstract class HousingMarket implements Serializable {
 	/*******************************************
 	 * Take a house off the market.
 	 * 
-	 * @param house The house to take off the market.
+	 * @param hsr The HouseSaleRecord to take off the market.
 	 *******************************************/
 	public void removeOffer(HouseSaleRecord hsr) {
 		offersPQ.remove(hsr);
@@ -114,7 +114,10 @@ public abstract class HousingMarket implements Serializable {
 		bids.add(new HouseBuyerRecord(buyer, price));
 		// match bid with current offers
 	}
-	
+
+	/**
+	 * Iterate through all bids and, for each bid, try to find the best offer and match it
+	 */
 	protected void matchBidsWithOffers() {
 		HouseSaleRecord offer;
 		for(HouseBuyerRecord bid : bids) {
@@ -125,7 +128,8 @@ public abstract class HousingMarket implements Serializable {
 		}
 		bids.clear();		
 	}
-	
+
+
 	protected HouseSaleRecord getBestOffer(HouseBuyerRecord bid) {
 		return (HouseSaleRecord)offersPQ.peek(bid);
 	}
@@ -134,8 +138,9 @@ public abstract class HousingMarket implements Serializable {
 		return(offersPQ.iterator());
 	}
 
-	
-	@SuppressWarnings("unused")
+	/**
+	 * The main routine to clear the market.
+	 */
 	protected void clearMatches() {
 		// --- clear and resolve oversubscribed offers
 		// 
@@ -298,7 +303,7 @@ public abstract class HousingMarket implements Serializable {
 	/***********************************************
 	 * HPI reference price of a house for a given quality
 	 * 
-	 * @param q quality of the house
+	 * @param quality quality of the house
 	************************************************/
 	public abstract double referencePrice(int quality);
 

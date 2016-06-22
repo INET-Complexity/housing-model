@@ -231,7 +231,7 @@ public class Bank implements Serializable {
 	 * Find the maximum mortgage that this mortgage-lender will approve
 	 * to a household.
 	 * 
-	 * @param Household household who is applying for the mortgage
+	 * @param h household who is applying for the mortgage
 	 * @param isHome true if 'h' plans to live in the house
 	 * @return The maximum value of house that this mortgage-lender is willing
 	 * to approve a mortgage for.
@@ -243,7 +243,7 @@ public class Bank implements Serializable {
 		double icr_max; // interest rate coverage
 		double liquidWealth = h.bankBalance;
 
-		if(isHome == true) {
+		if(isHome) {
 			liquidWealth += h.getHomeEquity(); // assume h will sell current home
 		}
 		
@@ -270,8 +270,8 @@ public class Bank implements Serializable {
 	/**********************************************
 	 * Get the Loan-To-Value ratio applicable to a given household.
 	 * 
-	 * @param h The houshold that is applying for the mortgage
-	 * @param isHome true if 'h' plans to live in the house
+	 * @param firstTimeBuyer true if the household is a first time buyer
+	 * @param isHome true if the household plans to live in the house
 	 * @return The loan-to-value ratio applicable to the given household.
 	 *********************************************/
 	public double loanToValue(boolean firstTimeBuyer, boolean isHome) {
@@ -287,6 +287,12 @@ public class Bank implements Serializable {
 		return(limit);
 	}
 
+	/**********************************************
+	 * Get the Loan-To-Income ratio applicable to a given household.
+	 *
+	 * @param firstTimeBuyer true if the household is a first time buyer
+	 * @return The loan-to-income ratio applicable to the given household.
+	 *********************************************/
 	public double loanToIncome(boolean firstTimeBuyer) {
 		double limit;
 		limit = MAX_OO_LTI;

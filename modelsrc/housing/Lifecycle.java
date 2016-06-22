@@ -19,9 +19,7 @@ public class Lifecycle implements Serializable {
 	
 	/*** 
 	 * TODO: Make this age dependent
-	 * 
-	 * @param age
-	 * @param percentile
+	 *
 	 * @return Household income given age and percentile of population
 	 */
 	public double annualIncome() {
