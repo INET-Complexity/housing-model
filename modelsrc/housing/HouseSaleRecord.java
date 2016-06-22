@@ -71,7 +71,10 @@ public class HouseSaleRecord extends HousingMarketRecord {
 		recalcYield();
 	}
 
-	
+	/**
+	 * Record a match of an offer with a bid
+	 * @param bid the bid being matched to the offer
+     */
 	public void matchWith(HouseBuyerRecord bid) {
 //		if(house.owner != bid.buyer) {
 			matchedBids.add(bid);

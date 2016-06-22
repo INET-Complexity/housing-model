@@ -154,11 +154,11 @@ public class HouseSaleMarket extends HousingMarket {
 	
 	protected PriorityQueue2D<HousingMarketRecord>	offersPY;	
 
-	/**
+	/*
 	 * Buy to let investors get randomly offered the chance to buy houses that
 	 * are still on the market after non-investors have been cleared.
 	 */
-	/***
+	/*
 	public void clearBuyToLetMarket() {
 		HouseBuyerRecord buyer;
 		HouseSaleRecord  seller;

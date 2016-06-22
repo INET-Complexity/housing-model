@@ -181,7 +181,7 @@ public class Bank implements Serializable {
 		double lti_principal, affordable_principal, icr_principal;
 		double liquidWealth = h.bankBalance;
 		
-		if(isHome == true) liquidWealth += h.getHomeEquity();		
+		if(isHome) liquidWealth += h.getHomeEquity();
 
 		// --- LTV constraint
 		approval.principal = housePrice*loanToValue(h.isFirstTimeBuyer(), isHome);

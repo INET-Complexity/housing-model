@@ -50,7 +50,7 @@ public abstract class HousingMarket implements Serializable {
 
 	
 	public HousingMarket() {
-		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator());
+		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator()); //Priority Queue of (Price, Quality)
 		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
 		HPIRecord = new DescriptiveStatistics(Config.HPI_LENGTH);
 		quarterlyHPI.addValue(1.0);
@@ -115,8 +115,28 @@ public abstract class HousingMarket implements Serializable {
 		// match bid with current offers
 	}
 
-	/**
-	 * Iterate through all bids and, for each bid, try to find the best offer and match it
+
+	/***************************
+	 * Get the highest quality offer for a price up to that of the bid
+	 *
+	 * @param bid the highest possible price we are looking for
+	 * @return the highest quality house being offered for a price <= bid
+     */
+	protected HouseSaleRecord getBestOffer(HouseBuyerRecord bid) {
+		return (HouseSaleRecord)offersPQ.peek(bid);
+	}
+	
+	public Iterator<HousingMarketRecord> offersIterator() {
+		return(offersPQ.iterator());
+	}
+
+	/**********************************
+	 * The first step to clear the market.
+	 *
+	 * Iterate through all *bids* and, for each bid, find the best house being offered
+	 * for that price or lower (if it exists) and record the match. Note that
+	 * offers could be matched with multiple bids.
+	 *
 	 */
 	protected void matchBidsWithOffers() {
 		HouseSaleRecord offer;
@@ -126,20 +146,17 @@ public abstract class HousingMarket implements Serializable {
 				offer.matchWith(bid);
 			}
 		}
-		bids.clear();		
+		bids.clear();
 	}
 
-
-	protected HouseSaleRecord getBestOffer(HouseBuyerRecord bid) {
-		return (HouseSaleRecord)offersPQ.peek(bid);
-	}
-	
-	public Iterator<HousingMarketRecord> offersIterator() {
-		return(offersPQ.iterator());
-	}
-
-	/**
-	 * The main routine to clear the market.
+	/***********************************
+	 * The second step to clear the market.
+	 *
+	 * Iterate through all *offers* and, for each offer, loop through its matched bids.
+	 *
+	 * If BIDUP is implemented, the offer price is bid up according to a geometric distribution with
+	 * mean dependent on the number of matched bids.
+	 *
 	 */
 	protected void clearMatches() {
 		// --- clear and resolve oversubscribed offers
@@ -154,7 +171,7 @@ public abstract class HousingMarket implements Serializable {
 		Iterator<HousingMarketRecord> record = offersIterator();
 		while(record.hasNext()) {
 			offer = (HouseSaleRecord)record.next();
-			nBids = offer.matchedBids.size();
+			nBids = offer.matchedBids.size(); // if there are no bids matched, skip this offer
 			if(nBids > 0) {
 				// bid up the price
 				if(Config.BIDUP != 1.0) {
@@ -189,7 +206,10 @@ public abstract class HousingMarket implements Serializable {
 	}
 	
 	/**************************************************
-	 * Clears all current bids and offers on the housing market.
+	 * Main simulation step.
+	 *
+	 * For a number of rounds, matches bids with offers and
+	 * clears the matches.
 	 * 
 	 **************************************************/
 	public void clearMarket() {
@@ -200,8 +220,8 @@ public abstract class HousingMarket implements Serializable {
 		recordMarketStats();
 		int rounds = Math.min(Demographics.TARGET_POPULATION/1000,1 + (offersPQ.size()+bids.size())/500);
 		for(int i=0; i<rounds; ++i) {
-			matchBidsWithOffers();
-			clearMatches();
+			matchBidsWithOffers(); // Step 1: iterate through bids
+			clearMatches(); // Step 2: iterate through offers
 		}
 		bids.clear();
 		/*
