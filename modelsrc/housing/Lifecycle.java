@@ -18,7 +18,6 @@ public class Lifecycle implements Serializable {
 	}
 	
 	/*** 
-	 * TODO: Make this age dependent
 	 *
 	 * @return Household income given age and percentile of population
 	 */
@@ -31,8 +30,8 @@ public class Lifecycle implements Serializable {
 			boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportUpperBound() - 1e-7;
 		}
 		double income = data.Lifecycle.lnIncomeGivenAge.getBinAt(boundAge).inverseCumulativeProbability(incomePercentile);
-		income = Math.exp(income)*52.0;
-		if(income < 6000.0) income = 6000.0; // income support
+		income = Math.exp(income)*52.0; //is this to go from weekly to annual?
+		if(income < Government.Config.INCOME_SUPPORT) income = Government.Config.INCOME_SUPPORT; // minimum income is govt. support
 		return(income);
 	}
 

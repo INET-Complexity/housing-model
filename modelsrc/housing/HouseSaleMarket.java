@@ -126,7 +126,7 @@ public class HouseSaleMarket extends HousingMarket {
 	 *  (i.e. make an offer on a (yet to be decided) house).
 	 * 
 	 * @param buyer The household that is making the bid.
-	 * @param price The price that the household is willing to pay.
+	 * @param maxPrice The maximum price that the household is willing to pay.
 	 ******************************************/
 	public void BTLbid(Household buyer, double maxPrice) {
 		bids.add(new BtLBuyerRecord(buyer, maxPrice));

@@ -385,7 +385,7 @@ public abstract class HousingMarket implements Serializable {
 		// --- calculate from averageSalePrice array
 //		housePriceIndex = 0.0;
 //		for(Double price : averageSalePrice) {
-//			housePriceIndex += price; // TODO: assumes equal distribution of houses over qualities
+//			housePriceIndex += price; // assumes equal distribution of houses over qualities
 //		}
 //		housePriceIndex /= House.Config.N_QUALITY*data.HouseSaleMarket.HPI_REFERENCE;
 		

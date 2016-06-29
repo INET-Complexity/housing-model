@@ -74,7 +74,7 @@ public class Model extends SimState implements Steppable {
 		households.clear();
 		collectors.init();
 		t = 0;
-		if(monteCarloCheckpoint != "") {
+		if(!monteCarloCheckpoint.equals("")) {//changed this from != ""
 			File f = new File(monteCarloCheckpoint);
 			readFromCheckpoint(f);
 		}
@@ -88,7 +88,7 @@ public class Model extends SimState implements Steppable {
 		super.start();
         scheduleRepeat = schedule.scheduleRepeating(this);
 
-        if(monteCarloCheckpoint != "") {
+        if(!monteCarloCheckpoint.equals("")) {//changed from != ""
         	File f = new File(monteCarloCheckpoint);
         	readFromCheckpoint(f);
         }

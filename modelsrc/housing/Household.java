@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+
+import data.Households;
 import ec.util.MersenneTwisterFast;
 
 /**********************************************
@@ -68,7 +70,7 @@ public class Household implements IHouseOwner, Serializable {
 		
 		lifecycle.step();
 		monthlyEmploymentIncome = lifecycle.annualIncome()/12.0;
-		disposableIncome = getMonthlyPostTaxIncome() - 0.8 * Government.Config.INCOME_SUPPORT; // necessary consumption
+		disposableIncome = getMonthlyPostTaxIncome() - Households.ESSENTIAL_CONSUMPTION_FRACTION * Government.Config.INCOME_SUPPORT; // necessary consumption
 		for(PaymentAgreement payment : housePayments.values()) {
 			disposableIncome -= payment.makeMonthlyPayment();
 		}
@@ -189,8 +191,7 @@ public class Household implements IHouseOwner, Serializable {
 		}
 		MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(), behaviour.downPayment(this,sale.getPrice()), home == null, sale.house);
 		if(mortgage == null) {
-			// TODO: need to either provide a way for house sales to fall through or to
-			// TODO: ensure that pre-approvals are always satisfiable
+			// TODO: need to either provide a way for house sales to fall through or to ensure that pre-approvals are always satisfiable
 			System.out.println("Can't afford to buy house: strange");
 //			System.out.println("Want "+sale.getPrice()+" but can only get "+bank.getMaxMortgage(this,home==null));
 			System.out.println("Bank balance is "+bankBalance);
@@ -363,8 +364,7 @@ public class Household implements IHouseOwner, Serializable {
 	public double buyToLetRent(House h) {
 		return(behaviour.buyToLetRent(
 				Model.rentalMarket.getAverageSalePrice(h.getQuality()), 
-				Model.rentalMarket.averageDaysOnMarket,
-				mortgageFor(h),h));
+				Model.rentalMarket.averageDaysOnMarket,h));
 	}
 
 	/////////////////////////////////////////////////////////

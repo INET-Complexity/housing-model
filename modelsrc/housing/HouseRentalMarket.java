@@ -63,12 +63,11 @@ public class HouseRentalMarket extends HousingMarket {
 	/***
 	 * @param quality Quality of the house
 	 * @return Expected fraction of time that the house will be occupied, based on
-	 *         a 18 month average tenant stay (ARLA figures) and the average number
-	 *         of days on the rental market of a house of this quality.
-	 *         TODO: Take the 18 out as data
+	 *         the average tenant stay in months (18 months according to ARLA figures) and the average number
+	 *         of months on the rental market of a house of this quality.
 	 */
 	public double expectedOccupancy(int quality) {
-		return(18.0/(18.0 + monthsOnMarket[quality]));
+		return(data.HouseRentalMarket.AVERAGE_TENANCY_LENGTH/(data.HouseRentalMarket.AVERAGE_TENANCY_LENGTH + monthsOnMarket[quality]));
 	}
 
 	public double getExpectedGrossYield(int quality) {
