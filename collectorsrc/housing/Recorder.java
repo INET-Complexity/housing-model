@@ -46,7 +46,7 @@ public class Recorder {
 		        paramfile = new PrintWriter("parameters-"+Model.nSimulation+".csv", "UTF-8");
 		        paramfile.println("BtL P_INVESTOR, CentralBank ICR Limit");
 		        paramfile.println(
-		        		data.Households.P_INVESTOR+", "+
+		        		housing.HouseholdBehaviour.P_INVESTOR+", "+
 		        		Model.centralBank.interestCoverRatioLimit
 		        );
 		        paramfile.close();

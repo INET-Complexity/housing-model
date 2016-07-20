@@ -13,7 +13,6 @@ public class HouseRentalMarket extends HousingMarket {
 	static final double S = 10000.0/Demographics.TARGET_POPULATION; // Decay scaling factor
 	static final double K = Math.exp(-S/50.0); // decay rate for averageSoldGrossYield
 	static final double KL = Math.exp(-S/(50.0*200.0)); // decay rate for longTermAverageGrossYield
-	
 
 	public HouseRentalMarket() {
 		for(int i=0; i< House.Config.N_QUALITY; ++i) {

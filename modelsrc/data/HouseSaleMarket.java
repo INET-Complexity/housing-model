@@ -46,7 +46,7 @@ public class HouseSaleMarket {
  * ((land an buildings transaction tax in scotland) not applicable to inheritance/gift)
  * Ratio of monthly sales to stock: roughly 0.11
  * Variation in stock of houses on market roughly +- 20%
- * Number of households: 26.7 million (2014 ONS Families and Households)
+ * Number of households: 26.7 million (2014 ONS Families and households)
  * 
  * 37% of households own with mortgage, 32% own outright (Social Trends:Housing 2011 ONS)
  * 

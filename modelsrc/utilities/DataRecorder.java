@@ -18,8 +18,8 @@ public class DataRecorder extends XYSeries {
 	static public int MAX_DATA_LEN = 400;	// Maximum number of data points to remember
 	static public int CHUNK_SIZE = 5;		// number of datapoints to delete at a time
 	
-	public static interface Transform {
-		public double exec(double x);
+	public interface Transform {
+		double exec(double x);
 	}
 
 	/**

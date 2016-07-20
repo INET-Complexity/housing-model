@@ -17,6 +17,7 @@ import utilities.MeanAboveMedian;
  */
 public class CoreIndicators extends CollectorBase {
 	private static final long serialVersionUID = -7295853109870791276L;
+	static final double UK_HOUSEHOLDS = 26.5e6; // approx number of households in UK
 
 
 	public void step() {
@@ -278,5 +279,4 @@ public class CoreIndicators extends CollectorBase {
 		return((1.0-frac)*d[i] + frac*d[i+1]);		
 	}
 */
-	static final double UK_HOUSEHOLDS = 26.5e6; // approx number of households in UK
 }

@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import data.Households;
 import ec.util.MersenneTwisterFast;
 
 /**********************************************
@@ -70,7 +69,7 @@ public class Household implements IHouseOwner, Serializable {
 		
 		lifecycle.step();
 		monthlyEmploymentIncome = lifecycle.annualIncome()/12.0;
-		disposableIncome = getMonthlyPostTaxIncome() - Households.ESSENTIAL_CONSUMPTION_FRACTION * Government.Config.INCOME_SUPPORT; // necessary consumption
+		disposableIncome = getMonthlyPostTaxIncome() - HouseholdBehaviour.ESSENTIAL_CONSUMPTION_FRACTION * Government.Config.INCOME_SUPPORT; // necessary consumption
 		for(PaymentAgreement payment : housePayments.values()) {
 			disposableIncome -= payment.makeMonthlyPayment();
 		}
