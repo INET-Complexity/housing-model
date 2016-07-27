@@ -102,8 +102,8 @@ public class MicroDataRecorder {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else {
-			finish();
+		//} else {
+		//	finish();
 		}
 
 	}

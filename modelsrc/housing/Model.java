@@ -17,6 +17,8 @@ import sim.engine.SimState;
 import sim.engine.Steppable;
 import sim.engine.Stoppable;
 
+import LSTM.Predictor;
+
 /**
  * This is the root object of the simulation. Upon creation it creates
  * and initialises all the agents in the model.
@@ -26,6 +28,12 @@ import sim.engine.Stoppable;
  **/
 @SuppressWarnings("serial")
 public class Model extends SimState implements Steppable {
+
+	public static int N_STEPS = 10000; // timesteps
+	public static int N_SIMS = 1; // number of simulations to run (monte-carlo)
+	public boolean recordCoreIndicators = true; // set to true to write core indicators to a file
+	public boolean recordMicroData = false; // set to true to write micro transaction data to a file
+
 
 	public Model(long seed) {
 		super(seed);
@@ -43,6 +51,8 @@ public class Model extends SimState implements Steppable {
 		rentalMarket = mRentalMarket = new HouseRentalMarket();
 		mCollectors = new Collectors();
 		nSimulation = 0;
+
+		predictorLSTM = new Predictor();
 
 		setupStatics();
 		init();
@@ -85,6 +95,8 @@ public class Model extends SimState implements Steppable {
 	 * object to be stepped at each timestep and initialises the agents.
 	 */
 	public void start() {
+		setRecordCoreIndicators(recordCoreIndicators);
+		setRecordMicroData(recordMicroData);
 		super.start();
         scheduleRepeat = schedule.scheduleRepeating(this);
 
@@ -110,8 +122,8 @@ public class Model extends SimState implements Steppable {
 			nSimulation += 1;
 			if (nSimulation >= N_SIMS) {
 				// this was the last simulation
-				recorder.finish();
-				transactionRecorder.finish();
+				if(recordCoreIndicators) recorder.finish();
+				if(recordMicroData) transactionRecorder.finish();
 				simulationStateNow.kill();
 				return;
 			}
@@ -160,10 +172,6 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
-	public static int N_STEPS = 12*10000; // timesteps
-	public static int N_SIMS = 1; // number of simulations to run (monte-carlo) 
-
-
 	public Stoppable scheduleRepeat;
 
 	// non-statics for serialization
@@ -189,9 +197,9 @@ public class Model extends SimState implements Steppable {
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
 	public static MicroDataRecorder transactionRecorder;
-	public boolean recordCoreIndicators = false;
-	public boolean recordMicroData = false;
-	
+
+	public static Predictor			predictorLSTM;
+
 	public static int	nSimulation; // number of simulations run
 	public int	t; // time (months)
 //	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
@@ -272,11 +280,11 @@ public class Model extends SimState implements Steppable {
 			try {
 				recorder.start();
 			} catch (FileNotFoundException | UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
+				// complain
 				e.printStackTrace();
 			}
-		} else {
-			recorder.finish();
+		//} else {
+		//	recorder.finish();
 		}
 	}
 	public String nameRecordCoreIndicators() {return("Record core indicators");}

@@ -5,6 +5,7 @@ import java.io.Serializable;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
+import LSTM.Predictor;
 
 /**
  * This class implements the behavioural decisions made by households
@@ -47,6 +48,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 //	public final double INTENSITY_OF_CHOICE = 10.0;
 
+	static public int TIME_BEFORE_LSTM = 20*12; // Let the model spin for 20 years in order to generate long enough sequences for the LSTM
 
 
 	protected MersenneTwisterFast 	rand = Model.rand;
@@ -54,6 +56,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public double 					propensityToSave;
 	public double					desiredBalance;
 	public double 					BtLCapGainCoeff; // Sensitivity of BtL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
+	public double					annual_LSTM_prediction;
 
 	public double sigma(double x) { // the Logistic function, sometimes called sigma function, 1/1+e^(-x)
 		return 1.0/(1.0+Math.exp(-1.0*x));
@@ -69,6 +72,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public HouseholdBehaviour(double incomePercentile) {
 		propensityToSave = 0.1*Model.rand.nextGaussian();
 		BtLCapGainCoeff = 0.0;
+		annual_LSTM_prediction=0;
 		if(Household.BTL_ENABLED) {
 			if(incomePercentile > MIN_INVESTOR_PERCENTILE && rand.nextDouble() < P_INVESTOR/MIN_INVESTOR_PERCENTILE) {
 				BTLInvestor = true;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
@@ -155,8 +159,15 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean decideToSellHome(Household me) {
 		// TODO: need to add expenditure
 		if(isPropertyInvestor()) return(false);
-		return(rand.nextDouble() < P_SELL *(1.0 + 4.0*(0.05 - Model.housingMarket.offersPQ.size()*1.0/Model.households.size())) + 5.0*(0.03-Model.bank.getMortgageInterestRate()));
-
+		if ((Model.getTime()-me.timeOfBirth) < TIME_BEFORE_LSTM) {
+			return (rand.nextDouble() < P_SELL * (1.0 + 4.0 * (0.05 - Model.housingMarket.offersPQ.size() * 1.0 / Model.households.size())) + 5.0 * (0.03 - Model.bank.getMortgageInterestRate()));
+		} else {
+			if (me.newLSTM_PredictionNeeded) {
+				annual_LSTM_prediction=Model.predictorLSTM.predict(me.sequence_LSTM);
+				me.newLSTM_PredictionNeeded=false;
+			}
+			return (rand.nextDouble() < annual_LSTM_prediction*1.0/12.0);
+		}
 		// reference 
 		//int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
 		//double p_move = data.Households.P_FORCEDTOMOVE + (data.Households.P_SELL-data.Households.P_FORCEDTOMOVE)/(1.0+Math.exp(5.0-2.0*potentialQualityChange));
