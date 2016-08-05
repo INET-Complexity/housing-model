@@ -112,8 +112,8 @@ public class Model extends SimState implements Steppable {
 			nSimulation += 1;
 			if (nSimulation >= N_SIMS) {
 				// this was the last simulation
-				recorder.finish();
-				transactionRecorder.finish();
+				if(recordCoreIndicators) recorder.finish();
+				if(recordMicroData) transactionRecorder.finish();
 				simulationStateNow.kill();
 				return;
 			}
