@@ -25,7 +25,7 @@ public class Household implements IHouseOwner, Serializable {
 	private static final long serialVersionUID = -5042897399316333745L;
 	public static final boolean BTL_ENABLED = true;
 	public static int LSTM_SEQUENCES=18;
-	public static int LSTM_FEATURES=4;
+	public static int LSTM_FEATURES=2;
 
 	/********************************************************
 	 * Constructor.
@@ -50,12 +50,16 @@ public class Household implements IHouseOwner, Serializable {
 		desiredQuality = 0;
 		timeOfBirth=Model.getTime();
 
-		sequence_LSTM= new double[LSTM_SEQUENCES][LSTM_FEATURES];
-		last_sequence_pointer=0;
-		years_since_bought_home=0;
-		value_of_home=0;
-		newLSTM_PredictionNeeded=true;
+		monthsSinceLastPurchase=0;
+		valueOfPreviousHome=0;
 
+		if (Model.USING_LSTM) {
+			sequence_LSTM = new double[LSTM_SEQUENCES][LSTM_FEATURES];
+			newLSTM_PredictionNeeded=true;
+			last_sequence_pointer=0;
+		} else {
+			newLSTM_PredictionNeeded=false;
+		}
 	}
 
 
@@ -76,7 +80,8 @@ public class Household implements IHouseOwner, Serializable {
 	public void step() {
 		double disposableIncome;
 //		House  house;
-		
+
+		monthsSinceLastPurchase+=1;
 		lifecycle.step();
 		monthlyEmploymentIncome = lifecycle.annualIncome()/12.0;
 		disposableIncome = getMonthlyPostTaxIncome() - HouseholdBehaviour.ESSENTIAL_CONSUMPTION_FRACTION * Government.Config.INCOME_SUPPORT; // necessary consumption
@@ -92,7 +97,7 @@ public class Household implements IHouseOwner, Serializable {
 		}
 
 		// Here update the sequence of features to pass to the LSTM, do this once a year
-		if((Model.getTime()-timeOfBirth)%12==0) {
+		if(Model.USING_LSTM && ((Model.getTime()-timeOfBirth)%12==0)) {
 			update_sequenceLSTM();
 		}
 
@@ -231,8 +236,12 @@ public class Household implements IHouseOwner, Serializable {
 		}
 		isFirstTimeBuyer = false;
 
-		years_since_bought_home=0;
-		value_of_home=sale.getPrice();
+	}
+
+	public void resetLSTM(double purchasePrice) {
+		monthsSinceLastPurchase=0;
+		valueOfPreviousHome=purchasePrice;
+		newLSTM_PredictionNeeded=true;
 	}
 		
 	/********************************************************
@@ -457,8 +466,7 @@ public class Household implements IHouseOwner, Serializable {
 			home = h;
 			h.resident = this;
 			desiredQuality = h.getQuality();
-			years_since_bought_home=0;
-			value_of_home=Model.housingMarket.referencePrice(h.getQuality());
+			resetLSTM(Model.housingMarket.referencePrice(h.getQuality()));
 
 		} else if(behaviour.isPropertyInvestor()) {
 			if(BTL_ENABLED) {
@@ -577,14 +585,13 @@ public class Household implements IHouseOwner, Serializable {
 	Update the sequence of features to pass to the LSTM
 	 */
 	public void update_sequenceLSTM() {
-		years_since_bought_home+=1;
 
 		System.arraycopy(sequence_LSTM,1,sequence_LSTM,0,LSTM_SEQUENCES-1);
 
-		sequence_LSTM[LSTM_SEQUENCES-1][0]=value_of_home;//value of house
-		sequence_LSTM[LSTM_SEQUENCES-1][1]=years_since_bought_home;// year I bought house
-		sequence_LSTM[LSTM_SEQUENCES-1][2]=monthlyEmploymentIncome;// income last month
-		sequence_LSTM[LSTM_SEQUENCES-1][3]=monthlyEmploymentIncome*12.0;// income last year
+		sequence_LSTM[LSTM_SEQUENCES-1][0]=valueOfPreviousHome;//value of house
+		//sequence_LSTM[LSTM_SEQUENCES-1][1]=(int)monthsSinceLastPurchase*1.0/12.0;// year I bought house
+		//sequence_LSTM[LSTM_SEQUENCES-1][1]=monthlyEmploymentIncome;// income last month
+		sequence_LSTM[LSTM_SEQUENCES-1][1]=monthlyEmploymentIncome*12.0;// income last year
 
 		newLSTM_PredictionNeeded=true;
 
@@ -618,8 +625,8 @@ public class Household implements IHouseOwner, Serializable {
 
 	public double[][] sequence_LSTM;
 	public int last_sequence_pointer;
-	public double value_of_home;
-	public double years_since_bought_home;
+	public double valueOfPreviousHome;
+	public double monthsSinceLastPurchase;
 	/*
 	 * Second step in a time-step. At this point, the
 	 * household may have sold their house, but not managed

@@ -29,10 +29,12 @@ import LSTM.Predictor;
 @SuppressWarnings("serial")
 public class Model extends SimState implements Steppable {
 
-	public static int N_STEPS = 10000; // timesteps
+	public static int N_STEPS = 2000; // timesteps
 	public static int N_SIMS = 1; // number of simulations to run (monte-carlo)
 	public boolean recordCoreIndicators = true; // set to true to write core indicators to a file
-	public boolean recordMicroData = false; // set to true to write micro transaction data to a file
+	public boolean recordMicroData = true; // set to true to write micro transaction data to a file
+	public static boolean USING_LSTM=true;
+	public static boolean STATIC_PICTURE=true;
 
 
 	public Model(long seed) {
@@ -41,6 +43,7 @@ public class Model extends SimState implements Steppable {
 		demographics = new Demographics();
 		recorder = new Recorder();
 		transactionRecorder = new MicroDataRecorder();
+		staticPictureRecorder = new StaticPictureRecorder();
 		rand = new MersenneTwister(seed);
 
 		centralBank = new CentralBank();
@@ -52,7 +55,8 @@ public class Model extends SimState implements Steppable {
 		mCollectors = new Collectors();
 		nSimulation = 0;
 
-		predictorLSTM = new Predictor();
+		if(USING_LSTM) predictorLSTM = new Predictor();
+		else predictorLSTM=null;
 
 		setupStatics();
 		init();
@@ -97,6 +101,7 @@ public class Model extends SimState implements Steppable {
 	public void start() {
 		setRecordCoreIndicators(recordCoreIndicators);
 		setRecordMicroData(recordMicroData);
+		setStaticRecorder(STATIC_PICTURE);
 		super.start();
         scheduleRepeat = schedule.scheduleRepeating(this);
 
@@ -159,6 +164,7 @@ public class Model extends SimState implements Steppable {
 		super.finish();
 		if(recordCoreIndicators) recorder.finish();
 		if(recordMicroData) transactionRecorder.finish();
+		if(STATIC_PICTURE) staticPictureRecorder.finish();
 	}
 	
 	/*** @return simulated time in months */
@@ -197,6 +203,7 @@ public class Model extends SimState implements Steppable {
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
 	public static MicroDataRecorder transactionRecorder;
+	public static StaticPictureRecorder staticPictureRecorder;
 
 	public static Predictor			predictorLSTM;
 
@@ -296,6 +303,7 @@ public class Model extends SimState implements Steppable {
 	public void setRecordMicroData(boolean record) {
 		transactionRecorder.setActive(record);
 	}
+	public void setStaticRecorder(boolean record) {staticPictureRecorder.setActive(record);}
 	public String nameRecordMicroData() {return("Record micro data");}
 
 

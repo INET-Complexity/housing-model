@@ -159,7 +159,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean decideToSellHome(Household me) {
 		// TODO: need to add expenditure
 		if(isPropertyInvestor()) return(false);
-		if ((Model.getTime()-me.timeOfBirth) < TIME_BEFORE_LSTM) {
+		if (!Model.USING_LSTM || ((Model.getTime()-me.timeOfBirth) < TIME_BEFORE_LSTM)) {
 			return (rand.nextDouble() < P_SELL * (1.0 + 4.0 * (0.05 - Model.housingMarket.offersPQ.size() * 1.0 / Model.households.size())) + 5.0 * (0.03 - Model.bank.getMortgageInterestRate()));
 		} else {
 			if (me.newLSTM_PredictionNeeded) {

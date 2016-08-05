@@ -45,7 +45,10 @@ public class Government {
 	public double incomeTaxDue(double grossIncome) {
 		double tax = bandedPercentage(grossIncome, config.TAX_BANDS, config.TAX_RATES);
 		if(grossIncome > config.PERSONAL_ALLOWANCE_LIMIT) {
-			double personalAllowance = Math.max((grossIncome - config.PERSONAL_ALLOWANCE_LIMIT)/2.0,0.0);
+			//double personalAllowance = Math.max((grossIncome - config.PERSONAL_ALLOWANCE_LIMIT)/2.0,0.0);
+			double personalAllowance = Math.max(
+					config.TAX_BANDS[0]-(grossIncome-config.PERSONAL_ALLOWANCE_LIMIT)/2.0,
+					0.0);
 			tax += (config.TAX_BANDS[0]-personalAllowance)*config.TAX_RATES[0]; //what does this do?
 		}
 		return(tax);
