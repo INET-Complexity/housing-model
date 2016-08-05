@@ -63,6 +63,8 @@ public class Model extends SimState implements Steppable {
 		rentalMarket = mRentalMarket;
 		collectors = mCollectors;
 		root = this;
+		setRecordCoreIndicators(recordCoreIndicators);
+		setRecordMicroData(recordMicroData);
 	}
 
 	
@@ -189,8 +191,8 @@ public class Model extends SimState implements Steppable {
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
 	public static MicroDataRecorder transactionRecorder;
-	public boolean recordCoreIndicators = false;
-	public boolean recordMicroData = false;
+	public boolean recordCoreIndicators = true;
+	public boolean recordMicroData = true;
 	
 	public static int	nSimulation; // number of simulations run
 	public int	t; // time (months)
