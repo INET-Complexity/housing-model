@@ -39,7 +39,8 @@ public class HouseSaleMarket extends HousingMarket {
 		buyer.completeHousePurchase(sale);
 		Model.collectors.housingMarketStats.recordSale(purchase, sale);
 		sale.house.owner = buyer;
-		buyer.resetLSTM(sale.getPrice());
+		sale.house.inherited=false;
+		buyer.input_LSTM.newHouseValue(sale.getPrice());
 	}
 
 	@Override

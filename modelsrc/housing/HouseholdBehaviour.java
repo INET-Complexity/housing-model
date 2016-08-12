@@ -6,6 +6,7 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 import ec.util.MersenneTwisterFast;
 import LSTM.Predictor;
+import housing.Model;
 
 /**
  * This class implements the behavioural decisions made by households
@@ -13,18 +14,38 @@ import LSTM.Predictor;
  * @author daniel
  */
 public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
+
 	private static final long serialVersionUID = -7785886649432814279L;
 	public static LogNormalDistribution FTB_DOWNPAYMENT = new LogNormalDistribution(null, 10.30, 0.9093);
 	public static LogNormalDistribution OO_DOWNPAYMENT = new LogNormalDistribution(null, 11.155, 0.7538);
+	public static LogNormalDistribution SELLING_PDF = new LogNormalDistribution(null,2.73775,0.620489);
+
+
+	static public double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%)
+	static public double MIN_INVESTOR_PERCENTILE = 0.5; // minimum income percentile for a HH to be a BTL investor
+	static public double FUNDAMENTALIST_CAP_GAIN_COEFF = 0.5;// weight that fundamentalists put on cap gain
+	static public double TREND_CAP_GAIN_COEFF = 0.9;			// weight that trend-followers put on cap gain
+	static public double P_FUNDAMENTALIST = 0.5; 			// probability that BTL investor is a fundamentalist (otherwise is a trend-follower)
+	static public boolean BTL_YIELD_SCALING = false;			// which equation to use when making BTL buy/sell decisions
+
+	static public void resetParameters() {
+		if (Model.USING_SIMPLEX) {
+			P_INVESTOR 	 					= Model.parameters.P_INVESTOR.value;
+			//MIN_INVESTOR_PERCENTILE 		= Model.parameters.MIN_INVESTOR_PERCENTILE.value;
+//			FUNDAMENTALIST_CAP_GAIN_COEFF 	= Model.parameters.FUNDAMENTALIST_CAP_GAIN_COEFF.value;
+//			TREND_CAP_GAIN_COEFF  			= Model.parameters.TREND_CAP_GAIN_COEFF.value;
+			P_FUNDAMENTALIST 				= Model.parameters.P_FUNDAMENTALIST.value;
+		}
+	}
 
 
 	// Buy-To-Let parameters
-	static public double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%)
-	static public double MIN_INVESTOR_PERCENTILE = 0.5; // minimum income percentile for a HH to be a BTL investor
-	public final double FUNDAMENTALIST_CAP_GAIN_COEFF = 0.5;// weight that fundamentalists put on cap gain
-	public final double TREND_CAP_GAIN_COEFF = 0.9;			// weight that trend-followers put on cap gain
-	public final double P_FUNDAMENTALIST = 0.5; 			// probability that BTL investor is a fundamentalist (otherwise is a trend-follower)
-	public final boolean BTL_YIELD_SCALING = false;			// which equation to use when making BTL buy/sell decisions
+//	static public double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%)
+//	static public double MIN_INVESTOR_PERCENTILE = 0.5; // minimum income percentile for a HH to be a BTL investor
+//	public final double FUNDAMENTALIST_CAP_GAIN_COEFF = 0.5;// weight that fundamentalists put on cap gain
+//	public final double TREND_CAP_GAIN_COEFF = 0.9;			// weight that trend-followers put on cap gain
+//	public final double P_FUNDAMENTALIST = 0.5; 			// probability that BTL investor is a fundamentalist (otherwise is a trend-follower)
+//	public final boolean BTL_YIELD_SCALING = false;			// which equation to use when making BTL buy/sell decisions
 
 	// Rent parameters
 	public final double DESIRED_RENT_INCOME_FRACTION=0.33;	// proportion of income desired to be spent on rent
@@ -48,15 +69,11 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 //	public final double INTENSITY_OF_CHOICE = 10.0;
 
-	static public int TIME_BEFORE_LSTM = 20*12; // Let the model spin for 20 years in order to generate long enough sequences for the LSTM
-
-
 	protected MersenneTwisterFast 	rand = Model.rand;
 	public boolean					BTLInvestor;
 	public double 					propensityToSave;
 	public double					desiredBalance;
 	public double 					BtLCapGainCoeff; // Sensitivity of BtL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
-	public double					annual_LSTM_prediction;
 
 	public double sigma(double x) { // the Logistic function, sometimes called sigma function, 1/1+e^(-x)
 		return 1.0/(1.0+Math.exp(-1.0*x));
@@ -72,7 +89,6 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public HouseholdBehaviour(double incomePercentile) {
 		propensityToSave = 0.1*Model.rand.nextGaussian();
 		BtLCapGainCoeff = 0.0;
-		annual_LSTM_prediction=0;
 		if(Household.BTL_ENABLED) {
 			if(incomePercentile > MIN_INVESTOR_PERCENTILE && rand.nextDouble() < P_INVESTOR/MIN_INVESTOR_PERCENTILE) {
 				BTLInvestor = true;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
@@ -127,9 +143,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 ****************************/
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
 		final double beta = 0.08;//0.48;			// sensitivity to house price appreciation
-		final double EPSILON = 0.05;//0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
+		final double sigma = 0.05;//0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
 		final double alpha = 4.5;//4.2	// scale. Macro-calibrated against OO LTI and LTV, core indicators average 1987-2006
-		return(alpha*12.0*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - beta*HPAExpectation()));
+		return(alpha*12.0*monthlyIncome*Math.exp(sigma*Model.rand.nextGaussian())/(1.0 - beta*HPAExpectation()));
 		
 //		PurchasePlan plan = findBestPurchase(me);
 //		double housePrice = Model.housingMarket.getAverageSalePrice(plan.quality);//behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
@@ -154,19 +170,35 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	
 
 	/**
+	 * The selling rule.
+	 *
+	 * There are three implementations:
+	 * 1) Naive rule, based on a 1/11 years probability with a small correction for excessive housing stock and interest rate.
+	 * 2) Log normal distribution rule: based on the number of years that the household has been living in the house, draw
+	 * from a log-normal distribution calibrated against the BHPS.
+	 * 3) LSTM implementation: use a separately trained LSTM model (trained on Keras) and a number of features defined in
+	 * the LSTM class to perform a prediction on whether the household will sell or not.
+	 *
 	 * @return Does an owner-occupier decide to sell house?
 	 */
 	public boolean decideToSellHome(Household me) {
 		// TODO: need to add expenditure
 		if(isPropertyInvestor()) return(false);
-		if (!Model.USING_LSTM || ((Model.getTime()-me.timeOfBirth) < TIME_BEFORE_LSTM)) {
-			return (rand.nextDouble() < P_SELL * (1.0 + 4.0 * (0.05 - Model.housingMarket.offersPQ.size() * 1.0 / Model.households.size())) + 5.0 * (0.03 - Model.bank.getMortgageInterestRate()));
-		} else {
-			if (me.newLSTM_PredictionNeeded) {
-				annual_LSTM_prediction=Model.predictorLSTM.predict(me.sequence_LSTM);
-				me.newLSTM_PredictionNeeded=false;
-			}
-			return (rand.nextDouble() < annual_LSTM_prediction*1.0/12.0);
+		if (Model.USING_LSTM) return (rand.nextDouble() < me.input_LSTM.monthlySaleProbability());
+		if (Model.USING_SELLING_CDF) return (rand.nextDouble() < 1.0/12.0*SELLING_PDF.cumulativeProbability((me.monthsSinceLastPurchase*1.0/12.0)));
+		return (rand.nextDouble() < P_SELL * (1.0 + 4.0 * (0.05 - Model.housingMarket.offersPQ.size() * 1.0 / Model.households.size())) + 5.0 * (0.03 - Model.bank.getMortgageInterestRate()));
+
+//
+//
+//		if (!Model.USING_LSTM || ((Model.getTime()-me.timeOfBirth) < TIME_BEFORE_LSTM)) {
+//			if (Model.USING_SELLING_CDF) return (rand.nextDouble() < SELLING_PDF.cumulativeProbability(me.monthsSinceLastPurchase*1.0/12.0)/12.0);
+//			return (rand.nextDouble() < P_SELL * (1.0 + 4.0 * (0.05 - Model.housingMarket.offersPQ.size() * 1.0 / Model.households.size())) + 5.0 * (0.03 - Model.bank.getMortgageInterestRate()));
+//		} else {
+////			if (me.newLSTM_PredictionNeeded) {
+////				annual_LSTM_prediction=Model.predictorLSTM.predict(me.sequence_LSTM);
+////				me.newLSTM_PredictionNeeded=false;
+////			}
+//			return (rand.nextDouble() < me.input_LSTM.monthlySaleProbability());
 		}
 		// reference 
 		//int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
@@ -191,7 +223,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	//	System.out.println("Move utility = "+INTENSITY_OF_CHOICE*(plan.utility- currentUtility)+"  "+p_move);
 		return(rand.nextDouble() < p_move);
 		*/
-	}
+//	}
 
 	/**
 	 *

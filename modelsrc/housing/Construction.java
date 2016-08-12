@@ -18,7 +18,8 @@ public class Construction implements IHouseOwner, Serializable {
 	}
 	
 	public void init() {
-		housingStock = 0;		
+		housingStock = 0;
+		onMarket.clear();
 	}
 	
 	public void step() {

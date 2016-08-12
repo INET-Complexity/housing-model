@@ -21,6 +21,7 @@ public class House implements Comparable<House>, Serializable {
 		resident = null;
 		owner = null;
 		quality = (int)(Model.rand.nextDouble()*Config.N_QUALITY);
+		inherited = false;
 	}
 	
 	public boolean isOnMarket() {
@@ -64,6 +65,7 @@ public class House implements Comparable<House>, Serializable {
 	public int				id;
 	public HouseSaleRecord	saleRecord;
 	public HouseSaleRecord	rentalRecord;
+	public boolean			inherited;
 	
 	static int 				id_pool = 0;
 	

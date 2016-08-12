@@ -10,6 +10,7 @@ public class MicroDataRecorder {
 	public static int salesFromOwnerOccupiers=0;
 	public static int salesFromInvestors=0;
 	public static int salesTotal=0;
+	public static int inheritedHomes=0;
 
 	public void start() throws FileNotFoundException, UnsupportedEncodingException {
 		openNewFile();
@@ -19,7 +20,7 @@ public class MicroDataRecorder {
 //		String simID = Integer.toHexString(UUID.randomUUID().hashCode());
 		try {
 			if(Model.USING_LSTM) {
-				String filename = "transactions-LSTM-2" + Model.nSimulation + ".csv";
+				String filename = "transactions-LSTM-" + Model.nSimulation + ".csv";
 				outfile = new PrintWriter(new FileOutputStream(filename,false));
 
 				outfile.println(
@@ -53,6 +54,7 @@ public class MicroDataRecorder {
 			if (!active) return;
 			if (market instanceof HouseRentalMarket) return;
 			if (!(sale.house.owner instanceof Household)) return; //construction
+			if (sale.house.inherited) return; //inherited house
 			Household seller = (Household) sale.house.owner;
 			salesTotal+=1;
 			if (seller.behaviour.isPropertyInvestor()) {salesFromInvestors+=1; return;}
@@ -126,6 +128,7 @@ public class MicroDataRecorder {
 	public void finish() {
 		System.out.println("Sales from investors :"+salesFromInvestors);
 		System.out.println("Sales from Owner Occupiers :"+salesFromOwnerOccupiers);
+		System.out.println("Inherited homes :"+inheritedHomes);
 		System.out.println("Sales total :"+salesTotal+" should be "+(salesFromInvestors+salesFromOwnerOccupiers));
 
 		outfile.close();

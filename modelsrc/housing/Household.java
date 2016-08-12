@@ -24,8 +24,8 @@ public class Household implements IHouseOwner, Serializable {
 
 	private static final long serialVersionUID = -5042897399316333745L;
 	public static final boolean BTL_ENABLED = true;
-	public static int LSTM_SEQUENCES=18;
-	public static int LSTM_FEATURES=2;
+//	public static int LSTM_SEQUENCES=18;
+//	public static int LSTM_FEATURES=3;
 
 	/********************************************************
 	 * Constructor.
@@ -54,11 +54,9 @@ public class Household implements IHouseOwner, Serializable {
 		valueOfPreviousHome=0;
 
 		if (Model.USING_LSTM) {
-			sequence_LSTM = new double[LSTM_SEQUENCES][LSTM_FEATURES];
-			newLSTM_PredictionNeeded=true;
-			last_sequence_pointer=0;
+			input_LSTM = new LSTM_input(this);
 		} else {
-			newLSTM_PredictionNeeded=false;
+			input_LSTM=null;
 		}
 	}
 
@@ -98,7 +96,7 @@ public class Household implements IHouseOwner, Serializable {
 
 		// Here update the sequence of features to pass to the LSTM, do this once a year
 		if(Model.USING_LSTM && ((Model.getTime()-timeOfBirth)%12==0)) {
-			update_sequenceLSTM();
+			input_LSTM.update();
 		}
 
 		for(House h : housePayments.keySet()) {
@@ -230,6 +228,7 @@ public class Household implements IHouseOwner, Serializable {
 			sale.house.resident = this;
 //			System.out.println((sale.house.getQuality()-desiredQuality)*1.0/House.Config.N_QUALITY);
 			desiredQuality = sale.house.getQuality();
+			input_LSTM.newHouseValue(sale.getPrice());// update the LSTM
 		} else if(sale.house.resident == null) { // put empty buy-to-let house on rental market
 			Model.rentalMarket.offer(sale.house, buyToLetRent(sale.house));
 //			endOfLettingAgreement(sale.house);
@@ -238,11 +237,11 @@ public class Household implements IHouseOwner, Serializable {
 
 	}
 
-	public void resetLSTM(double purchasePrice) {
-		monthsSinceLastPurchase=0;
-		valueOfPreviousHome=purchasePrice;
-		newLSTM_PredictionNeeded=true;
-	}
+//	public void resetLSTM(double purchasePrice) {
+//		monthsSinceLastPurchase=0;
+//		valueOfPreviousHome=purchasePrice;
+//		newLSTM_PredictionNeeded=true;
+//	}
 		
 	/********************************************************
 	 * Do all stuff necessary when this household sells a house
@@ -466,7 +465,8 @@ public class Household implements IHouseOwner, Serializable {
 			home = h;
 			h.resident = this;
 			desiredQuality = h.getQuality();
-			resetLSTM(Model.housingMarket.referencePrice(h.getQuality()));
+//			input_LSTM.reset(Model.housingMarket.referencePrice(h.getQuality()));
+			input_LSTM.newHouseValue(Model.housingMarket.referencePrice(h.getQuality()));
 
 		} else if(behaviour.isPropertyInvestor()) {
 			if(BTL_ENABLED) {
@@ -485,6 +485,8 @@ public class Household implements IHouseOwner, Serializable {
 		} else {
 			// I'm an owner-occupier
 			if(BTL_ENABLED) {
+				MicroDataRecorder.inheritedHomes+=1;
+				h.inherited=true;
 				putHouseForSale(h);
 			} else {
 				if(wasHome) {
@@ -581,21 +583,22 @@ public class Household implements IHouseOwner, Serializable {
 		return(0.0);		
 	}
 
-	/**
-	Update the sequence of features to pass to the LSTM
-	 */
-	public void update_sequenceLSTM() {
-
-		System.arraycopy(sequence_LSTM,1,sequence_LSTM,0,LSTM_SEQUENCES-1);
-
-		sequence_LSTM[LSTM_SEQUENCES-1][0]=valueOfPreviousHome;//value of house
-		//sequence_LSTM[LSTM_SEQUENCES-1][1]=(int)monthsSinceLastPurchase*1.0/12.0;// year I bought house
-		//sequence_LSTM[LSTM_SEQUENCES-1][1]=monthlyEmploymentIncome;// income last month
-		sequence_LSTM[LSTM_SEQUENCES-1][1]=monthlyEmploymentIncome*12.0;// income last year
-
-		newLSTM_PredictionNeeded=true;
-
-	}
+//	/**
+//	Update the sequence of features to pass to the LSTM
+//	 */
+//	public void update_sequenceLSTM() {
+//
+//		System.arraycopy(sequence_LSTM,1,sequence_LSTM,0,LSTM_SEQUENCES-1);
+//
+//		sequence_LSTM[LSTM_SEQUENCES-1][0]=valueOfPreviousHome;//value of house
+//		//sequence_LSTM[LSTM_SEQUENCES-1][1]=(int)monthsSinceLastPurchase*1.0/12.0;// year I bought house
+//		//sequence_LSTM[LSTM_SEQUENCES-1][1]=monthlyEmploymentIncome;// income last month
+//		sequence_LSTM[LSTM_SEQUENCES-1][1]=monthlyEmploymentIncome*12.0;// income last year
+//		sequence_LSTM[LSTM_SEQUENCES-1][2]=(int)monthsSinceLastPurchase*1.0/12.0; // years since I bought house
+//
+//		newLSTM_PredictionNeeded=true;
+//
+//	}
 	///////////////////////////////////////////////
 	
 	public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
@@ -604,7 +607,6 @@ public class Household implements IHouseOwner, Serializable {
 //	HouseRentalMarket	rentalMarket;
 //	Bank				bank;
 
-	public boolean      newLSTM_PredictionNeeded;
 	public double       timeOfBirth;
 	public double	 	monthlyEmploymentIncome;
 	protected double 	bankBalance;
@@ -623,8 +625,7 @@ public class Household implements IHouseOwner, Serializable {
 //	static Diagnostics	diagnostics = new Diagnostics(Model.households);
 	static int		 id_pool;
 
-	public double[][] sequence_LSTM;
-	public int last_sequence_pointer;
+	public LSTM_input input_LSTM;
 	public double valueOfPreviousHome;
 	public double monthsSinceLastPurchase;
 	/*

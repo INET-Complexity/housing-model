@@ -1,15 +1,13 @@
 package housing;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.UUID;
 
-import org.apache.commons.math3.distribution.LogNormalDistribution;
+import optimiser.Optimiser;
+import optimiser.Parameters;
+import optimiser.SimulationRecord;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import ec.util.MersenneTwisterFast;
@@ -29,13 +27,15 @@ import LSTM.Predictor;
 @SuppressWarnings("serial")
 public class Model extends SimState implements Steppable {
 
-	public static int N_STEPS = 2000; // timesteps
-	public static int N_SIMS = 1; // number of simulations to run (monte-carlo)
-	public boolean recordCoreIndicators = true; // set to true to write core indicators to a file
-	public boolean recordMicroData = true; // set to true to write micro transaction data to a file
+	public static int N_STEPS = 400; // timesteps
+	public static int N_SIMS = 20; // number of simulations to run (monte-carlo)
+	public boolean recordCoreIndicators = false; // set to true to write core indicators to a file
+	public boolean recordMicroData = false; // set to true to write micro transaction data to a file
 	public static boolean USING_LSTM=true;
-	public static boolean STATIC_PICTURE=true;
-
+	public static boolean USING_SELLING_CDF = false;
+	public static boolean STATIC_PICTURE=false;
+	public static boolean USING_SIMPLEX=true;
+	public static boolean simplexDone = false;
 
 	public Model(long seed) {
 		super(seed);
@@ -45,7 +45,6 @@ public class Model extends SimState implements Steppable {
 		transactionRecorder = new MicroDataRecorder();
 		staticPictureRecorder = new StaticPictureRecorder();
 		rand = new MersenneTwister(seed);
-
 		centralBank = new CentralBank();
 		mBank = new Bank();
 		mConstruction = new Construction();
@@ -57,6 +56,14 @@ public class Model extends SimState implements Steppable {
 
 		if(USING_LSTM) predictorLSTM = new Predictor();
 		else predictorLSTM=null;
+
+		if(USING_SIMPLEX) {
+			parameters = new Parameters();
+			optimiser = new Optimiser(parameters);
+		} else {
+			parameters=null;
+			optimiser=null;
+		}
 
 		setupStatics();
 		init();
@@ -125,6 +132,22 @@ public class Model extends SimState implements Steppable {
 		if(t >= N_STEPS) {
 			// start new simulation
 			nSimulation += 1;
+
+			if(recordCoreIndicators) recorder.endOfSim();
+			if(recordMicroData) transactionRecorder.endOfSim();
+
+			// Last simulation using simplex, must finish recording properly.
+			if(USING_SIMPLEX) {
+				if (simplexDone) {
+					if (recordCoreIndicators) recorder.finish();
+					if (recordMicroData) transactionRecorder.finish();
+					simulationStateNow.kill();
+					return;
+				} else {
+					endSimplexSimulation();
+				}
+			}
+			// This was the last simulation, end.
 			if (nSimulation >= N_SIMS) {
 				// this was the last simulation
 				if(recordCoreIndicators) recorder.finish();
@@ -132,9 +155,8 @@ public class Model extends SimState implements Steppable {
 				simulationStateNow.kill();
 				return;
 			}
-			recorder.endOfSim();
-			transactionRecorder.endOfSim();
 			init();
+			start();
 		}
 		modelStep();
 		if(recordCoreIndicators) recorder.step();
@@ -176,6 +198,20 @@ public class Model extends SimState implements Steppable {
 		return(Model.root.t%12 + 1);
 	}
 
+	public void endSimplexSimulation() {
+		// Write the core indicators to the SimulationRecord object
+		SimulationRecord simRecord = new SimulationRecord(getCoreIndicators());
+		// Signal the Optimiser to compute fitness function, update parameter values, and store the results
+		optimiser.endOfSim(simRecord);
+		if (optimiser.state== Optimiser.OptimiserState.END) {
+			simplexDone = true;
+			return;
+		}
+		// Refresh parameters
+		parameters.refreshParameters(optimiser.nextSim);
+		HouseholdBehaviour.resetParameters();
+	}
+
 	////////////////////////////////////////////////////////////////////////
 
 	public Stoppable scheduleRepeat;
@@ -206,6 +242,9 @@ public class Model extends SimState implements Steppable {
 	public static StaticPictureRecorder staticPictureRecorder;
 
 	public static Predictor			predictorLSTM;
+
+	public static Parameters		parameters;
+	public static Optimiser			optimiser;
 
 	public static int	nSimulation; // number of simulations run
 	public int	t; // time (months)
@@ -255,6 +294,7 @@ public class Model extends SimState implements Steppable {
 	public static int getN_SIMS() {
 		return N_SIMS;
 	}
+	public static int getnSimulation() { return nSimulation;}
 
 	public static void setN_SIMS(int n_SIMS) {
 		N_SIMS = n_SIMS;
