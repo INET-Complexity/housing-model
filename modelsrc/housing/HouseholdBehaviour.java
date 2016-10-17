@@ -30,9 +30,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public final double PSYCHOLOGICAL_COST_OF_RENTING = 1.1/12.0; // annual psychological cost of renting
 	public final double SENSITIVITY_RENT_OR_PURCHASE = 1.0/3500.0;//1.0/100000.0;//0.005 // Heterogeneity of sensitivity of desire to first-time-buy to cost
 
-	// Buying and selling parameters
+	// General Parameters
 	public final double BANK_BALANCE_FOR_CASH_DOWNPAYMENT = 2.0; // if bankBalance/housePrice is above this, payment will be made fully in cash
-	public final double HPA_EXPECTATION_WEIGHT = 0.0;//0.5; 		// expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer: less than 1)
+	public final double HPA_EXPECTATION_WEIGHT = 0.5; 		// expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer: less than 1)
 	static public double P_SELL = 1.0/(11.0*12.0);  // monthly probability of Owner-Occupier selling home (British housing survey 2008)
 
 	// House price reduction behaviour. Calibrated against Zoopla data at BoE
@@ -43,6 +43,24 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	// Consumption
 	static public double CONSUMPTION_FRACTION=0.5; // Fraction of the monthly budget for consumption (budget is bank balance - minimum desired bank balance)
 	static public double ESSENTIAL_CONSUMPTION_FRACTION=0.8; // Fraction of Government support spent by all households each month as essential consumption
+
+	// Initial sale price
+	static public double SALE_ALPHA = 0.04;	// initial markup from average price (more like 0.2 from BoE calibration)
+	static public double SALE_BETA = 0.011;		// Size of Days-on-market effect
+	static public double SALE_EPSILON = 0.05;	// SD of noise
+	static public double SALE_ZETA = 1.0/31.0;
+
+	// Buyers' desired expenditure
+	static public double BUY_BETA = 0.08;//0.48;			// sensitivity to house price appreciation
+	static public double BUY_EPSILON = 0.14;//0.05;//0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
+	static public double BUY_ALPHA = 4.5;//4.2	// scale. Macro-calibrated against OO LTI and LTV, core indicators average 1987-2006
+
+	// Demanded rent
+	static public double RENT_ALPHA = 0.00; // markup over market price when zero days on market
+	static public double RENT_M = 6.0; // equilibrium months on market
+	static public double RENT_ZETA = 1.0/31.0;
+	static public double RENT_EPSILON = 0.05; //0.05;	// SD of noise
+
 
 //	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 //	public final double INTENSITY_OF_CHOICE = 10.0;
@@ -122,9 +140,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @return desired purchase price after having decided to buy a house
 	 ****************************/
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
-		final double beta = 0.08;//0.48;			// sensitivity to house price appreciation
-		final double EPSILON = 0.14;//0.05;//0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
-		final double alpha = 4.5;//4.2	// scale. Macro-calibrated against OO LTI and LTV, core indicators average 1987-2006
+		final double beta = BUY_BETA;
+		final double EPSILON = BUY_EPSILON;
+		final double alpha = BUY_ALPHA;
 		return(alpha*12.0*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - beta*HPAExpectation()));
 		
 //		PurchasePlan plan = findBestPurchase(me);
@@ -139,11 +157,11 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @return initial sale price of a house 
 	 ********************************/
 	public double initialSalePrice(double pbar, double d, double principal) {
-		final double alpha = 0.04;//0.02;	// initial markup from average price (more like 0.2 from BoE calibration)
-//		final double M = 18.0; // equilibrium months on market 
-		final double beta = 0.011;//C/Math.log(M);//0.024;//0.01;//0.001;		// Size of Days-on-market effect
-		final double epsilon = 0.05;//0.05; //0.05;	// SD of noise
-		final double zeta = 1.0/31.0;
+		final double alpha = SALE_ALPHA;
+		final double beta = SALE_BETA;
+		final double epsilon = SALE_EPSILON;
+		final double zeta = SALE_ZETA;
+
 		double exponent = alpha + Math.log(pbar) - beta*Math.log(zeta*(d + 1.0)) + epsilon*Model.rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
 	}
@@ -345,11 +363,12 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @param h house being offered for rent
 	 */
 	public double buyToLetRent(double rbar, double d, House h) {
-		final double alpha = 0.00; // markup over market price when zero days on market
-		final double M = 6.0; // equilibrium months on market 
+		final double alpha = RENT_ALPHA;
+		final double M = RENT_M;
 		final double beta = alpha/Math.log(M); // Size of Days-on-market effect
-		final double zeta = 1.0/31.0;
-		final double epsilon = 0.05; //0.05;	// SD of noise
+		final double zeta = RENT_ZETA;
+		final double epsilon = RENT_EPSILON;
+
 		double exponent = alpha + Math.log(rbar) - beta*Math.log(zeta*(d + 1.0)) + epsilon*Model.rand.nextGaussian();
 		double result = Math.exp(exponent);
 		double minAcceptable = Model.housingMarket.getAverageSalePrice(h.getQuality())*0.048/12.0; // fudge to keep rental yield up

@@ -29,8 +29,8 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
-	public static int N_STEPS = 12000; // Simulation duration in timesteps
-	public static int TIME_TO_START_RECORDING = 2000; // Timesteps to wait before recording statistics (initialisation time)
+	public static int N_STEPS = 1000; // Simulation duration in timesteps
+	public static int TIME_TO_START_RECORDING = 500; // Timesteps to wait before recording statistics (initialisation time)
 	public static int N_SIMS = 1; // Number of simulations to run (monte-carlo)
 
 	public boolean recordCoreIndicators = true; // True to write time series for each core indicator
