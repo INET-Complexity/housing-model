@@ -24,6 +24,8 @@ public class Household implements IHouseOwner, Serializable {
 
 	private static final long serialVersionUID = -5042897399316333745L;
 	public static final boolean BTL_ENABLED = true;
+
+	public static int bankruptcies = 0;
 	
 	/********************************************************
 	 * Constructor.
@@ -46,6 +48,7 @@ public class Household implements IHouseOwner, Serializable {
 		bankBalance = behaviour.desiredBankBalance(this);
 		monthlyPropertyIncome = 0.0;
 		desiredQuality = 0;
+		bankrupt=false;
 	}
 
 
@@ -77,8 +80,12 @@ public class Household implements IHouseOwner, Serializable {
 		// --- consume based on disposable income after house payments
 		bankBalance += disposableIncome;
 		if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.desiredConsumptionB(this);//getMonthlyPreTaxIncome(),bankBalance);
-		if(bankBalance < 0.0) { // bankrupt behaviour				
+		if(bankBalance < 0.0) { // bankrupt behaviour
 			bankBalance = 1.0;	// TODO: cash injection for now...
+			if (Model.getTime()>1000) {
+				if (!bankrupt) bankruptcies += 1;
+				bankrupt = true;
+			}
 		}
 
 		for(House h : housePayments.keySet()) {
@@ -576,6 +583,7 @@ public class Household implements IHouseOwner, Serializable {
 	
 //	static Diagnostics	diagnostics = new Diagnostics(Model.households);
 	static int		 id_pool;
+	boolean bankrupt;
 
 	/*
 	 * Second step in a time-step. At this point, the

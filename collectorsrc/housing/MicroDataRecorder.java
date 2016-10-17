@@ -103,7 +103,7 @@ public class MicroDataRecorder {
 				e.printStackTrace();
 			}
 		} else {
-			finish();
+			//finish();
 		}
 
 	}

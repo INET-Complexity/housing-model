@@ -18,7 +18,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 
 
 	// Buy-To-Let parameters
-	static public double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%)
+	static public double P_INVESTOR = 0.16; 		// Prior probability of being (wanting to be) a property investor (should be 4%)
 	static public double MIN_INVESTOR_PERCENTILE = 0.5; // minimum income percentile for a HH to be a BTL investor
 	public final double FUNDAMENTALIST_CAP_GAIN_COEFF = 0.5;// weight that fundamentalists put on cap gain
 	public final double TREND_CAP_GAIN_COEFF = 0.9;			// weight that trend-followers put on cap gain
@@ -32,7 +32,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 
 	// Buying and selling parameters
 	public final double BANK_BALANCE_FOR_CASH_DOWNPAYMENT = 2.0; // if bankBalance/housePrice is above this, payment will be made fully in cash
-	public final double HPA_EXPECTATION_WEIGHT = 0.5; 		// expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer: less than 1)
+	public final double HPA_EXPECTATION_WEIGHT = 0.0;//0.5; 		// expectation value for HPI(t+DT) = HPI(t) + WEIGHT*DT*dHPI/dt (John Muellbauer: less than 1)
 	static public double P_SELL = 1.0/(11.0*12.0);  // monthly probability of Owner-Occupier selling home (British housing survey 2008)
 
 	// House price reduction behaviour. Calibrated against Zoopla data at BoE
@@ -123,7 +123,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 ****************************/
 	public double desiredPurchasePrice(Household me, double monthlyIncome) {
 		final double beta = 0.08;//0.48;			// sensitivity to house price appreciation
-		final double EPSILON = 0.05;//0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
+		final double EPSILON = 0.14;//0.05;//0.17;//3;//0.36;//0.48;//0.365; // S.D. of noise
 		final double alpha = 4.5;//4.2	// scale. Macro-calibrated against OO LTI and LTV, core indicators average 1987-2006
 		return(alpha*12.0*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - beta*HPAExpectation()));
 		
@@ -197,7 +197,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		if(me.isFirstTimeBuyer()) {
 			downpayment = Model.housingMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,(me.lifecycle.incomePercentile-0.3)/0.7));
 		} else if(isPropertyInvestor()) {
-			downpayment = housePrice*(Math.max(0.0, 0.26+0.08*rand.nextGaussian())); // calibrated...
+			downpayment = housePrice*(Math.max(0.0, 0.3+0.1*rand.nextGaussian())); // calibrated...
+			//downpayment = housePrice*(Math.max(0.0, 0.26+0.08*rand.nextGaussian())); // calibrated...
 		} else {
 			downpayment = Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0, (me.lifecycle.incomePercentile-0.3)/0.7));
 		}

@@ -27,6 +27,17 @@ import sim.engine.Stoppable;
 @SuppressWarnings("serial")
 public class Model extends SimState implements Steppable {
 
+	////////////////////////////////////////////////////////////////////////
+
+	public static int N_STEPS = 12000; // Simulation duration in timesteps
+	public static int TIME_TO_START_RECORDING = 2000; // Timesteps to wait before recording statistics (initialisation time)
+	public static int N_SIMS = 1; // Number of simulations to run (monte-carlo)
+
+	public boolean recordCoreIndicators = true; // True to write time series for each core indicator
+	public boolean recordMicroData = false; // True to write micro data for each transaction made
+
+	////////////////////////////////////////////////////////////////////////
+
 	public Model(long seed) {
 		super(seed);
 		government = new Government();
@@ -83,7 +94,7 @@ public class Model extends SimState implements Steppable {
 	}
 
 	/**
-	 * This method is called before the simualtion starts. It schedules this
+	 * This method is called before the simulation starts. It schedules this
 	 * object to be stepped at each timestep and initialises the agents.
 	 */
 	public void start() {
@@ -111,19 +122,23 @@ public class Model extends SimState implements Steppable {
 			// start new simulation
 			nSimulation += 1;
 			if (nSimulation >= N_SIMS) {
-				// this was the last simulation
+				// this was the last simulation, clean up
 				if(recordCoreIndicators) recorder.finish();
 				if(recordMicroData) transactionRecorder.finish();
 				simulationStateNow.kill();
 				return;
 			}
-			recorder.endOfSim();
-			transactionRecorder.endOfSim();
+			if(recordCoreIndicators) recorder.endOfSim();
+			if(recordMicroData) transactionRecorder.endOfSim();
 			init();
 		}
+
 		modelStep();
-		if(recordCoreIndicators) recorder.step();
-//		if(this.getTime() % 1200) this.writeToCheckpoint("file");
+
+		if (t>=TIME_TO_START_RECORDING) {
+			if(recordCoreIndicators) recorder.step();
+		}
+
 		collectors.step();
 	}
 
@@ -160,12 +175,6 @@ public class Model extends SimState implements Steppable {
 		return(Model.root.t%12 + 1);
 	}
 
-	////////////////////////////////////////////////////////////////////////
-
-	public static int N_STEPS = 5000; // timesteps
-	public static int N_SIMS = 3; // number of simulations to run (monte-carlo)
-
-
 	public Stoppable scheduleRepeat;
 
 	// non-statics for serialization
@@ -191,9 +200,7 @@ public class Model extends SimState implements Steppable {
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
 	public static MicroDataRecorder transactionRecorder;
-	public boolean recordCoreIndicators = true;
-	public boolean recordMicroData = true;
-	
+
 	public static int	nSimulation; // number of simulations run
 	public int	t; // time (months)
 //	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
@@ -277,9 +284,10 @@ public class Model extends SimState implements Steppable {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else {
-			recorder.finish();
 		}
+// 		else {
+//			recorder.finish();
+//		}
 	}
 	public String nameRecordCoreIndicators() {return("Record core indicators");}
 
