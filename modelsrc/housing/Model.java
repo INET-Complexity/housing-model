@@ -38,6 +38,12 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
+	public static void main(String[] args) {
+		//doLoop(ModelNoGUI.class, args);
+		doLoop(Model.class,args);
+		System.exit(0);//Stop the program when finished.
+	}
+
 	public Model(long seed) {
 		super(seed);
 		government = new Government();
