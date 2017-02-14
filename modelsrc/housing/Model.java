@@ -29,22 +29,24 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
-	// ATTENTION: Seed for random number generation is set by calling the program with argument "-seed <your_seed>",
-	// where <your_seed> must be a positive integer. In the absence of this argument, seed is set from machine time.
+	/*
+	 * ATTENTION: Seed for random number generation is set by calling the program with argument "-seed <your_seed>",
+	 * where <your_seed> must be a positive integer. In the absence of this argument, seed is set from machine time.
+	 */
 
-	public static int N_STEPS = 1000; // Simulation duration in timesteps
-	public static int TIME_TO_START_RECORDING = 0; // Timesteps to wait before recording statistics (initialisation time)
-	public static int N_SIMS = 2; // Number of simulations to run (monte-carlo)
+	public static int N_STEPS = 100;				// Simulation duration in time steps
+	public static int TIME_TO_START_RECORDING = 0;	// Time steps before recording statistics (initialisation time)
+	public static int N_SIMS = 2; 					// Number of simulations to run (monte-carlo)
 
-	public boolean recordCoreIndicators = true; // True to write time series for each core indicator
-	public boolean recordMicroData = false; // True to write micro data for each transaction made
+	public boolean recordCoreIndicators = true;		// True to write time series for each core indicator
+	public boolean recordMicroData = false;			// True to write micro data for each transaction made
 
 	////////////////////////////////////////////////////////////////////////
 
 	public static void main(String[] args) {
 		//doLoop(ModelNoGUI.class, args);
 		doLoop(Model.class,args);
-		System.exit(0);//Stop the program when finished.
+		System.exit(0);							//Stop the program when finished.
 	}
 
 	public Model(long seed) {
@@ -59,13 +61,13 @@ public class Model extends SimState implements Steppable {
 		mBank = new Bank();
 		mConstruction = new Construction();
 		mHouseholds = new ArrayList<Household>(Demographics.TARGET_POPULATION*2);
-		housingMarket = mHousingMarket = new HouseSaleMarket();
-		rentalMarket = mRentalMarket = new HouseRentalMarket();
+		housingMarket = mHousingMarket = new HouseSaleMarket();		// Variables of housingMarket are initialised (including HPI)
+		rentalMarket = mRentalMarket = new HouseRentalMarket();		// Variables of rentalMarket are initialised (including HPI)
 		mCollectors = new Collectors();
 		nSimulation = 0;
 
 		setupStatics();
-		init();
+		init();		// Variables of both housingMarket and rentalMarket are initialised again (including HPI)
 	}
 
 	@Override
@@ -87,7 +89,6 @@ public class Model extends SimState implements Steppable {
 		setRecordMicroData(recordMicroData);
 	}
 
-
 	public void init() {
 		construction.init();
 		housingMarket.init();
@@ -96,7 +97,7 @@ public class Model extends SimState implements Steppable {
 		households.clear();
 		collectors.init();
 		t = 0;
-		if(!monteCarloCheckpoint.equals("")) {//changed this from != ""
+		if(!monteCarloCheckpoint.equals("")) {	//changed this from != ""
 			File f = new File(monteCarloCheckpoint);
 			readFromCheckpoint(f);
 		}
@@ -110,11 +111,11 @@ public class Model extends SimState implements Steppable {
 		super.start();
 		scheduleRepeat = schedule.scheduleRepeating(this);
 
-		if(!monteCarloCheckpoint.equals("")) {//changed from != ""
+		if(!monteCarloCheckpoint.equals("")) {	//changed from != ""
 			File f = new File(monteCarloCheckpoint);
 			readFromCheckpoint(f);
 		}
-			// recorder.start();
+//		recorder.start();
 	}
 
 	public void stop() {
@@ -139,12 +140,17 @@ public class Model extends SimState implements Steppable {
 			}
 			if(recordCoreIndicators) recorder.endOfSim();
 			if(recordMicroData) transactionRecorder.endOfSim();
-			init();
+			init();		// Variables of both housingMarket and rentalMarket are initialised again (including HPI)
 		}
 
+		/*
+		 * Steps model and stores ownership and rental markets bid and offer prices, and their averages, into their
+		 * respective variables
+		 */
 		modelStep();
 
 		if (t>=TIME_TO_START_RECORDING) {
+			// Finds values of variables and records them to their respective files
 			if(recordCoreIndicators) recorder.step();
 		}
 
@@ -156,8 +162,11 @@ public class Model extends SimState implements Steppable {
 		construction.step();
 
 		for(Household h : households) h.step();
+        // Stores ownership market bid and offer prices, and their averages, into their respective variables
 		collectors.housingMarketStats.record();
+        // Clears market and updates the HPI
 		housingMarket.clearMarket();
+        // Stores rental market bid and offer prices, and their averages, into their respective variables
 		collectors.rentalMarketStats.record();
 		rentalMarket.clearMarket();
 		bank.step();
@@ -175,7 +184,9 @@ public class Model extends SimState implements Steppable {
 		if(recordMicroData) transactionRecorder.finish();
 	}
 
-	/*** @return simulated time in months */
+	/**
+	 * @return simulated time in months
+	 */
 	static public int getTime() {
 		return(Model.root.t);
 	}
@@ -206,15 +217,17 @@ public class Model extends SimState implements Steppable {
 	public static MersenneTwister	rand;
 	public static Model				root;
 
-	public static Collectors		collectors;// = new Collectors();
-	public static Recorder			recorder; // records info to file
+	public static Collectors		collectors;	// = new Collectors();
+	public static Recorder			recorder;	// records info to file
 	public static MicroDataRecorder transactionRecorder;
 
-	public static int	nSimulation; // number of simulations run
-	public int	t; // time (months)
-//	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
+	public static int	nSimulation;	// number of simulations run
+	public int	t;	// time (months)
+//	public static LogNormalDistribution grossFinancialWealth;	// household wealth in bank balances and investments
 
-	/*** proxy class to allow us to work with apache.commons distributions */
+	/**
+	 * proxy class to allow us to work with apache.commons distributions
+	 */
 	public static class MersenneTwister extends MersenneTwisterFast implements RandomGenerator {
 		public MersenneTwister(long seed) {super(seed);}
 		public void setSeed(int arg0) {
