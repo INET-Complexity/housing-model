@@ -29,9 +29,12 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
+	// ATTENTION: Seed for random number generation is set by calling the program with argument "-seed <your_seed>",
+	// where <your_seed> must be a positive integer. In the absence of this argument, seed is set from machine time.
+
 	public static int N_STEPS = 1000; // Simulation duration in timesteps
-	public static int TIME_TO_START_RECORDING = 500; // Timesteps to wait before recording statistics (initialisation time)
-	public static int N_SIMS = 1; // Number of simulations to run (monte-carlo)
+	public static int TIME_TO_START_RECORDING = 0; // Timesteps to wait before recording statistics (initialisation time)
+	public static int N_SIMS = 2; // Number of simulations to run (monte-carlo)
 
 	public boolean recordCoreIndicators = true; // True to write time series for each core indicator
 	public boolean recordMicroData = false; // True to write micro data for each transaction made
@@ -64,13 +67,13 @@ public class Model extends SimState implements Steppable {
 		setupStatics();
 		init();
 	}
-	
+
 	@Override
 	public void awakeFromCheckpoint() {
 		super.awakeFromCheckpoint();
 		setupStatics();
 	}
-	
+
 	protected void setupStatics() {
 //		centralBank = mCentralBank;
 		bank = mBank;
@@ -84,7 +87,7 @@ public class Model extends SimState implements Steppable {
 		setRecordMicroData(recordMicroData);
 	}
 
-	
+
 	public void init() {
 		construction.init();
 		housingMarket.init();
@@ -105,15 +108,15 @@ public class Model extends SimState implements Steppable {
 	 */
 	public void start() {
 		super.start();
-        scheduleRepeat = schedule.scheduleRepeating(this);
+		scheduleRepeat = schedule.scheduleRepeating(this);
 
-        if(!monteCarloCheckpoint.equals("")) {//changed from != ""
-        	File f = new File(monteCarloCheckpoint);
-        	readFromCheckpoint(f);
-        }
+		if(!monteCarloCheckpoint.equals("")) {//changed from != ""
+			File f = new File(monteCarloCheckpoint);
+			readFromCheckpoint(f);
+		}
 			// recorder.start();
 	}
-	
+
 	public void stop() {
 		scheduleRepeat.stop();
 	}
@@ -151,18 +154,18 @@ public class Model extends SimState implements Steppable {
 	public void modelStep() {
 		demographics.step();
 		construction.step();
-		
+
 		for(Household h : households) h.step();
 		collectors.housingMarketStats.record();
 		housingMarket.clearMarket();
 		collectors.rentalMarketStats.record();
 		rentalMarket.clearMarket();
-        bank.step();
-        centralBank.step(getCoreIndicators());
-        t += 1;        
+		bank.step();
+		centralBank.step(getCoreIndicators());
+		t += 1;
 	}
-	
-	
+
+
 	/**
 	 * Cleans up after a simulation ends.
 	 */
@@ -171,7 +174,7 @@ public class Model extends SimState implements Steppable {
 		if(recordCoreIndicators) recorder.finish();
 		if(recordMicroData) transactionRecorder.finish();
 	}
-	
+
 	/*** @return simulated time in months */
 	static public int getTime() {
 		return(Model.root.t);
@@ -191,7 +194,7 @@ public class Model extends SimState implements Steppable {
 	public HouseSaleMarket			mHousingMarket;
 	public HouseRentalMarket		mRentalMarket;
 	public Collectors				mCollectors;
-	
+
 	public static CentralBank		centralBank;
 	public static Bank 				bank;
 	public static Government		government;
@@ -202,7 +205,7 @@ public class Model extends SimState implements Steppable {
 	public static Demographics		demographics;
 	public static MersenneTwister	rand;
 	public static Model				root;
-	
+
 	public static Collectors		collectors;// = new Collectors();
 	public static Recorder			recorder; // records info to file
 	public static MicroDataRecorder transactionRecorder;
@@ -216,13 +219,13 @@ public class Model extends SimState implements Steppable {
 		public MersenneTwister(long seed) {super(seed);}
 		public void setSeed(int arg0) {
 			super.setSeed((long)arg0);
-		}		
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////
 	// Getters/setters for MASON console
 	////////////////////////////////////////////////////////////////////////
-	
+
 	public CreditSupply getCreditSupply() {
 		return collectors.creditSupply;
 	}
@@ -241,8 +244,8 @@ public class Model extends SimState implements Steppable {
 
 	public HouseholdStats getHouseholdStats() {
 		return collectors.householdStats;
-	}	
-	
+	}
+
 	public static int getN_STEPS() {
 		return N_STEPS;
 	}
@@ -262,8 +265,8 @@ public class Model extends SimState implements Steppable {
 	public String nameN_SIMS() {return("Number of monte-carlo runs");}
 
 	String monteCarloCheckpoint = "";
-	
-	
+
+
 	public String getMonteCarloCheckpoint() {
 		return monteCarloCheckpoint;
 	}
