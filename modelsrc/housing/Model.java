@@ -51,11 +51,11 @@ public class Model extends SimState implements Steppable {
 
 	public Model(long seed) {
 		super(seed);
+		rand = new MersenneTwister(seed);
 		government = new Government();
 		demographics = new Demographics();
 		recorder = new Recorder();
 		transactionRecorder = new MicroDataRecorder();
-		rand = new MersenneTwister(seed);
 
 		centralBank = new CentralBank();
 		mBank = new Bank();

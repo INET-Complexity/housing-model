@@ -9,7 +9,7 @@ public class Lifecycle implements Serializable {
 
 	public Lifecycle(double iage) {
 		age = iage;
-		incomePercentile = Model.rand.nextDouble();
+		incomePercentile = rand.nextDouble();
 		
 	}
 			
@@ -51,6 +51,7 @@ public class Lifecycle implements Serializable {
 	public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
 //	public static LogNormalDistribution incomeDistribution = new LogNormalDistribution(INCOME_LOG_MEDIAN, INCOME_SHAPE);
 
+	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	double	age;				// age of representative householder
 	double	incomePercentile; 	// fixed for lifetime of household
 	static LogNormalDistribution [] incomeByAge = setupIncomeByAge();

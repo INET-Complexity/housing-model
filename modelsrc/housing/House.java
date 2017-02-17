@@ -20,7 +20,7 @@ public class House implements Comparable<House>, Serializable {
 		id = ++id_pool;	
 		resident = null;
 		owner = null;
-		quality = (int)(Model.rand.nextDouble()*Config.N_QUALITY);
+		quality = (int)(rand.nextDouble()*Config.N_QUALITY);
 	}
 	
 	public boolean isOnMarket() {
@@ -57,8 +57,8 @@ public class House implements Comparable<House>, Serializable {
 		return quality;
 	}
 
+	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	private int				quality;
-
 	public IHouseOwner  	owner;
 	public Household		resident;
 	public int				id;

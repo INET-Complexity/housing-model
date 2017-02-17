@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
-import ec.util.MersenneTwisterFast;
+//import ec.util.MersenneTwisterFast;
 
 /**
  * This class implements the behavioural decisions made by households
@@ -62,12 +62,12 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	static public double RENT_EPSILON = 0.05; //0.05;	// SD of noise
 
 
-//	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*Model.rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
+//	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 //	public final double INTENSITY_OF_CHOICE = 10.0;
 
 
 
-	protected MersenneTwisterFast 	rand = Model.rand;
+	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	public boolean					BTLInvestor;
 	public double 					propensityToSave;
 	public double					desiredBalance;
@@ -85,12 +85,12 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 *                         used to determine whether the household can be a BTL investor
      ***************************************************/
 	public HouseholdBehaviour(double incomePercentile) {
-		propensityToSave = 0.1*Model.rand.nextGaussian();
+		propensityToSave = 0.1*rand.nextGaussian();
 		BtLCapGainCoeff = 0.0;
 		if(Household.BTL_ENABLED) {
 			if(incomePercentile > MIN_INVESTOR_PERCENTILE && rand.nextDouble() < P_INVESTOR/MIN_INVESTOR_PERCENTILE) {
 				BTLInvestor = true;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
-				double type = Model.rand.nextDouble();
+				double type = rand.nextDouble();
 				if(type < P_FUNDAMENTALIST) {
 					BtLCapGainCoeff = FUNDAMENTALIST_CAP_GAIN_COEFF;
 				} else {
@@ -143,11 +143,11 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		final double beta = BUY_BETA;
 		final double EPSILON = BUY_EPSILON;
 		final double alpha = BUY_ALPHA;
-		return(alpha*12.0*monthlyIncome*Math.exp(EPSILON*Model.rand.nextGaussian())/(1.0 - beta*HPAExpectation()));
+		return(alpha*12.0*monthlyIncome*Math.exp(EPSILON*rand.nextGaussian())/(1.0 - beta*HPAExpectation()));
 		
 //		PurchasePlan plan = findBestPurchase(me);
 //		double housePrice = Model.housingMarket.getAverageSalePrice(plan.quality);//behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
-//		return(1.01*housePrice*Math.exp(0.05*Model.rand.nextGaussian()));
+//		return(1.01*housePrice*Math.exp(0.05*rand.nextGaussian()));
 	}
 
 	/********************************
@@ -162,7 +162,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		final double epsilon = SALE_EPSILON;
 		final double zeta = SALE_ZETA;
 
-		double exponent = alpha + Math.log(pbar) - beta*Math.log(zeta*(d + 1.0)) + epsilon*Model.rand.nextGaussian();
+		double exponent = alpha + Math.log(pbar) - beta*Math.log(zeta*(d + 1.0)) + epsilon*rand.nextGaussian();
 		return(Math.max(Math.exp(exponent), principal));
 	}
 	
@@ -284,7 +284,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		
 		double pBuy = 1.0/(1.0 + Math.exp(-INTENSITY_OF_CHOICE*(COST_OF_RENTING + purchase.utility - utilityOfRenting(me, rentQuality))));
 //		System.out.println(utilityOfRenting(me, rentQuality) + " : "+purchase.utility+" : "+INTENSITY_OF_CHOICE*(COST_OF_RENTING+purchase.utility-utilityOfRenting(me, rentQuality))+" ... "+pBuy);
-		return(Model.rand.nextDouble() < pBuy);
+		return(rand.nextDouble() < pBuy);
 				 */
 
 	}
@@ -297,7 +297,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		return(monthlyIncome * DESIRED_RENT_INCOME_FRACTION);
 
 //		int quality = findBestRentalQuality(me);
-//		return(1.01*Model.rentalMarket.getAverageSalePrice(quality)*Math.exp(0.1*Model.rand.nextGaussian()));
+//		return(1.01*Model.rentalMarket.getAverageSalePrice(quality)*Math.exp(0.1*rand.nextGaussian()));
 		
 		/*
 		// Zoopla calibrated values
@@ -308,7 +308,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		} else {
 			rent = 11.72*Math.pow(annualIncome, 0.372);
 		}
-		rent *= Math.exp(Model.rand.nextGaussian()*0.0826);
+		rent *= Math.exp(rand.nextGaussian()*0.0826);
 		return(rent);
 		*/
 	}
@@ -352,7 +352,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
 		double pKeep = Math.pow(sigma(INTENSITY*effectiveYield),AGGREGATE_RATE);
-		return(Model.rand.nextDouble() < (1.0-pKeep));
+		return(rand.nextDouble() < (1.0-pKeep));
 	}
 	
 
@@ -369,7 +369,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		final double zeta = RENT_ZETA;
 		final double epsilon = RENT_EPSILON;
 
-		double exponent = alpha + Math.log(rbar) - beta*Math.log(zeta*(d + 1.0)) + epsilon*Model.rand.nextGaussian();
+		double exponent = alpha + Math.log(rbar) - beta*Math.log(zeta*(d + 1.0)) + epsilon*rand.nextGaussian();
 		double result = Math.exp(exponent);
 		double minAcceptable = Model.housingMarket.getAverageSalePrice(h.getQuality())*0.048/12.0; // fudge to keep rental yield up
 		if(result < minAcceptable) result = minAcceptable;
@@ -429,8 +429,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
 		//double pDontBuy = Math.pow(1.0/(1.0 + Math.exp(INTENSITY*effectiveYield)),AGGREGATE_RATE);
-		//return(Model.rand.nextDouble() < (1.0-pDontBuy));
-	    return (Model.rand.nextDouble() < Math.pow(sigma(INTENSITY*effectiveYield),AGGREGATE_RATE));
+		//return(rand.nextDouble() < (1.0-pDontBuy));
+	    return (rand.nextDouble() < Math.pow(sigma(INTENSITY*effectiveYield),AGGREGATE_RATE));
 	}
 	
 	public double btlPurchaseBid(Household me) {

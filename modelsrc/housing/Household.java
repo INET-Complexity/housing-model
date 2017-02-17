@@ -6,7 +6,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-import ec.util.MersenneTwisterFast;
+//import ec.util.MersenneTwisterFast;
+//import org.apache.commons.math3.random.MersenneTwister;
 
 /**********************************************
  * This represents a household who receives an income, consumes,
@@ -38,7 +39,7 @@ public class Household implements IHouseOwner, Serializable {
 //		bank = Model.bank;
 //		houseMarket = Model.housingMarket;
 //		rentalMarket = Model.rentalMarket;
-		rand = Model.rand;
+		rand = Model.rand;	// Passes the Model's random number generator to a private field of each instance
 		home = null;
 		isFirstTimeBuyer = true;
 		id = ++id_pool;
@@ -575,7 +576,7 @@ public class Household implements IHouseOwner, Serializable {
 	private boolean		isFirstTimeBuyer;
 //	public	double		desiredPropertyInvestmentFraction;
 	public int		 	id;		// only to ensure deterministic execution
-	protected MersenneTwisterFast 	rand;
+	private Model.MersenneTwister rand;		// Private field to contain the Model's random number generator
 	
 	public Lifecycle	lifecycle;	// lifecycle plugin
 	public HouseholdBehaviour behaviour;

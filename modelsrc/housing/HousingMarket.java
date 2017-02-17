@@ -193,7 +193,7 @@ public abstract class HousingMarket implements Serializable {
 						--nBids;
 					}
 					++nBids;
-					winningBid = nBids + Model.rand.nextInt(offer.matchedBids.size()-nBids);
+					winningBid = nBids + rand.nextInt(offer.matchedBids.size()-nBids);
 				}
 				record.remove();
 				offer.setPrice(salePrice, authority);
@@ -406,6 +406,7 @@ public abstract class HousingMarket implements Serializable {
 	
 	// ---- statistics
 //	SimpleRegression housePriceRegression = new SimpleRegression(); // linear regression of (transaction price,reference price)
+	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	public double aveSoldRefPrice = 0.0;
 	public double aveSoldPrice = 0.0;
 	public int nSold = 0;
