@@ -34,12 +34,7 @@ public class Model extends SimState implements Steppable {
 	 * where <your_seed> must be a positive integer. In the absence of this argument, seed is set from machine time.
 	 */
 
-	public static int N_STEPS = 100;				// Simulation duration in time steps
-	public static int TIME_TO_START_RECORDING = 0;	// Time steps before recording statistics (initialisation time)
-	public static int N_SIMS = 2; 					// Number of simulations to run (monte-carlo)
-
-	public boolean recordCoreIndicators = true;		// True to write time series for each core indicator
-	public boolean recordMicroData = false;			// True to write micro data for each transaction made
+	public Config config;
 
 	////////////////////////////////////////////////////////////////////////
 
@@ -52,6 +47,8 @@ public class Model extends SimState implements Steppable {
 	public Model(long seed) {
 		super(seed);
 		rand = new MersenneTwister(seed);
+		config = new Config("config.properties");
+
 		government = new Government();
 		demographics = new Demographics();
 		recorder = new Recorder();
@@ -85,8 +82,8 @@ public class Model extends SimState implements Steppable {
 		rentalMarket = mRentalMarket;
 		collectors = mCollectors;
 		root = this;
-		setRecordCoreIndicators(recordCoreIndicators);
-		setRecordMicroData(recordMicroData);
+		setRecordCoreIndicators(config.recordCoreIndicators);
+		setRecordMicroData(config.recordMicroData);
 	}
 
 	public void init() {
@@ -127,19 +124,19 @@ public class Model extends SimState implements Steppable {
 	 * here.
 	 */
 	public void step(SimState simulationStateNow) {
-		if (schedule.getTime() >= N_STEPS*N_SIMS) simulationStateNow.kill();
-		if(t >= N_STEPS) {
+		if (schedule.getTime() >= config.N_STEPS*config.N_SIMS) simulationStateNow.kill();
+		if(t >= config.N_STEPS) {
 			// start new simulation
 			nSimulation += 1;
-			if (nSimulation >= N_SIMS) {
+			if (nSimulation >= config.N_SIMS) {
 				// this was the last simulation, clean up
-				if(recordCoreIndicators) recorder.finish();
-				if(recordMicroData) transactionRecorder.finish();
+				if(config.recordCoreIndicators) recorder.finish();
+				if(config.recordMicroData) transactionRecorder.finish();
 				simulationStateNow.kill();
 				return;
 			}
-			if(recordCoreIndicators) recorder.endOfSim();
-			if(recordMicroData) transactionRecorder.endOfSim();
+			if(config.recordCoreIndicators) recorder.endOfSim();
+			if(config.recordMicroData) transactionRecorder.endOfSim();
 			init();		// Variables of both housingMarket and rentalMarket are initialised again (including HPI)
 		}
 
@@ -149,9 +146,9 @@ public class Model extends SimState implements Steppable {
 		 */
 		modelStep();
 
-		if (t>=TIME_TO_START_RECORDING) {
+		if (t>=config.TIME_TO_START_RECORDING) {
 			// Finds values of variables and records them to their respective files
-			if(recordCoreIndicators) recorder.step();
+			if(config.recordCoreIndicators) recorder.step();
 		}
 
 		collectors.step();
@@ -180,8 +177,8 @@ public class Model extends SimState implements Steppable {
 	 */
 	public void finish() {
 		super.finish();
-		if(recordCoreIndicators) recorder.finish();
-		if(recordMicroData) transactionRecorder.finish();
+		if(config.recordCoreIndicators) recorder.finish();
+		if(config.recordMicroData) transactionRecorder.finish();
 	}
 
 	/**
@@ -259,26 +256,7 @@ public class Model extends SimState implements Steppable {
 		return collectors.householdStats;
 	}
 
-	public static int getN_STEPS() {
-		return N_STEPS;
-	}
-
-	public static void setN_STEPS(int n_STEPS) {
-		N_STEPS = n_STEPS;
-	}
-	public String nameN_STEPS() {return("Number of timesteps");}
-
-	public static int getN_SIMS() {
-		return N_SIMS;
-	}
-
-	public static void setN_SIMS(int n_SIMS) {
-		N_SIMS = n_SIMS;
-	}
-	public String nameN_SIMS() {return("Number of monte-carlo runs");}
-
 	String monteCarloCheckpoint = "";
-
 
 	public String getMonteCarloCheckpoint() {
 		return monteCarloCheckpoint;
@@ -288,12 +266,31 @@ public class Model extends SimState implements Steppable {
 		this.monteCarloCheckpoint = monteCarloCheckpoint;
 	}
 
-	public boolean isRecordCoreIndicators() {
-		return recordCoreIndicators;
-	}
+//	Deprecated getters/setters! New access to parameters is through instances of the Config class
+//	public static int getN_STEPS() {
+//		return N_STEPS;
+//	}
+//
+//	public static void setN_STEPS(int n_STEPS) {
+//		N_STEPS = n_STEPS;
+//	}
+//	public String nameN_STEPS() {return("Number of timesteps");}
+//
+//	public static int getN_SIMS() {
+//		return N_SIMS;
+//	}
+//
+//	public static void setN_SIMS(int n_SIMS) {
+//		N_SIMS = n_SIMS;
+//	}
+//	public String nameN_SIMS() {return("Number of monte-carlo runs");}
+//
+//	public boolean isRecordCoreIndicators() {
+//		return recordCoreIndicators;
+//	}
 
 	public void setRecordCoreIndicators(boolean recordCoreIndicators) {
-		this.recordCoreIndicators = recordCoreIndicators;
+		this.config.recordCoreIndicators = recordCoreIndicators;
 		if(recordCoreIndicators) {
 			collectors.coreIndicators.setActive(true);
 			collectors.creditSupply.setActive(true);
