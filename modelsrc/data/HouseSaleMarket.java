@@ -1,7 +1,9 @@
 package data;
 
+import housing.Config;
 import housing.House;
 
+import housing.Model;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 /***
@@ -11,6 +13,10 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
  * @author daniel
  */
 public class HouseSaleMarket {
+
+	// TODO: Clarify implications of declaring this static and of the imports of housing.Model and housing.Config
+	private static Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public static final double INITIAL_HPI = 0.8;
 	public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
 	public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
@@ -33,9 +39,9 @@ public class HouseSaleMarket {
 	 * @return Set up initial reference prices for each house quality
      */
 	static public double [] setupRefPrice() {
-		double [] result = new double[House.Config.N_QUALITY];
-		for(int q=0; q<House.Config.N_QUALITY; ++q) {
-			result[q] = INITIAL_HPI*listPriceDistribution.inverseCumulativeProbability((q+0.5)/House.Config.N_QUALITY);
+		double [] result = new double[config.N_QUALITY];
+		for(int q=0; q<config.N_QUALITY; ++q) {
+			result[q] = INITIAL_HPI*listPriceDistribution.inverseCumulativeProbability((q+0.5)/config.N_QUALITY);
 		}
 		return(result);
 	}

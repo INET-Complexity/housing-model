@@ -13,6 +13,9 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
  */
 public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
 	private static final long serialVersionUID = -7785886649432814279L;
+
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public static LogNormalDistribution FTB_DOWNPAYMENT = new LogNormalDistribution(null, 10.30, 0.9093);
 	public static LogNormalDistribution OO_DOWNPAYMENT = new LogNormalDistribution(null, 11.155, 0.7538);
 
@@ -434,7 +437,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	}
 	
 	public double btlPurchaseBid(Household me) {
-		return(Math.min(Model.bank.getMaxMortgage(me, false), 1.1*Model.housingMarket.getAverageSalePrice(House.Config.N_QUALITY-1)));
+		return(Math.min(Model.bank.getMaxMortgage(me, false), 1.1*Model.housingMarket.getAverageSalePrice(config.N_QUALITY-1)));
 	}
 
 	public boolean isPropertyInvestor() {

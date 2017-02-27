@@ -7,6 +7,8 @@ import java.util.HashSet;
 public class Construction implements IHouseOwner, Serializable {
 	private static final long serialVersionUID = -6288390048595500248L;
 
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public Construction() {
 		housesPerHousehold = 82.0/100.0;
 		housingStock = 0;
@@ -24,10 +26,10 @@ public class Construction implements IHouseOwner, Serializable {
 	
 	public void step() {
 		int targetStock;
-		if(Model.households.size() < Demographics.TARGET_POPULATION) {
+		if(Model.households.size() < config.TARGET_POPULATION) {
 			targetStock = (int)(Model.households.size()*housesPerHousehold);
 		} else {
-			targetStock = (int)(Demographics.TARGET_POPULATION*housesPerHousehold);			
+			targetStock = (int)(config.TARGET_POPULATION*housesPerHousehold);
 		}
 		int shortFall = targetStock - housingStock;
 		House newBuild;

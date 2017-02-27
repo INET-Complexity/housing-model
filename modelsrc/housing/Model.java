@@ -34,7 +34,7 @@ public class Model extends SimState implements Steppable {
 	 * where <your_seed> must be a positive integer. In the absence of this argument, seed is set from machine time.
 	 */
 
-	public Config config;
+	public static Config config;
 
 	////////////////////////////////////////////////////////////////////////
 
@@ -48,6 +48,8 @@ public class Model extends SimState implements Steppable {
 		super(seed);
 		rand = new MersenneTwister(seed);
 		config = new Config("config.properties");
+		System.out.println("Months under offer " + config.derivedParams.MONTHS_UNDER_OFFER);
+		System.exit(0);
 
 		government = new Government();
 		demographics = new Demographics();
@@ -57,7 +59,7 @@ public class Model extends SimState implements Steppable {
 		centralBank = new CentralBank();
 		mBank = new Bank();
 		mConstruction = new Construction();
-		mHouseholds = new ArrayList<Household>(Demographics.TARGET_POPULATION*2);
+		mHouseholds = new ArrayList<Household>(config.TARGET_POPULATION*2);
 		housingMarket = mHousingMarket = new HouseSaleMarket();		// Variables of housingMarket are initialised (including HPI)
 		rentalMarket = mRentalMarket = new HouseRentalMarket();		// Variables of rentalMarket are initialised (including HPI)
 		mCollectors = new Collectors();

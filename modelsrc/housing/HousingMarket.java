@@ -30,19 +30,21 @@ import utilities.PriorityQueue2D;
 public abstract class HousingMarket implements Serializable {
 	private static final long serialVersionUID = -7249221876467520088L;
 
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	/**
 	 * Configuration for the housing market.
 	 * @author daniel
 	 *
 	 */
-	static public class Config {
-		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
-		public static final double BIDUP = 1.0075; // smallest proportion increase in price that can cause a gazump
-		public static final double T = 0.02*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
-		public static final int HPI_LENGTH = 15; // Number of months to record HPI //F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
-		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market (in transactions)
-		public static final double G = Math.exp(-House.Config.N_QUALITY/T); // Decay const for averageListPrice averaging (in transactions)
-	}
+//	static public class Config {
+//		public static final double DAYS_UNDER_OFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
+//		public static final double BIDUP = 1.0075; // smallest proportion increase in price that can cause a gazump
+//		public static final double T = 0.02*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
+//		public static final int HPI_LENGTH = 15; // Number of months to record HPI //F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
+//		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market (in transactions)
+//		public static final double G = Math.exp(-House.Config.N_QUALITY/T); // Decay const for averageListPrice averaging (in transactions)
+//	}
 	
 	static public class Authority {
 		private Authority() {}
@@ -51,8 +53,8 @@ public abstract class HousingMarket implements Serializable {
 	
 	public HousingMarket() {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator()); //Priority Queue of (Price, Quality)
-		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
-		HPIRecord = new DescriptiveStatistics(Config.HPI_LENGTH);
+		bids = new ArrayList<>(config.TARGET_POPULATION/16);	// TODO: Clarify where does this 16 come from
+		HPIRecord = new DescriptiveStatistics(config.HPI_LENGTH);
 		quarterlyHPI.addValue(1.0);
 		quarterlyHPI.addValue(1.0);		
 		init();
@@ -60,12 +62,12 @@ public abstract class HousingMarket implements Serializable {
 	
 	public void init() {
 		int i;
-		for(i = 0; i<House.Config.N_QUALITY; ++i) {
+		for(i = 0; i<config.N_QUALITY; ++i) {
 			averageSalePrice[i] = referencePrice(i);
 		}
 		housePriceIndex = 1.0;
 		averageDaysOnMarket = 30;
-		for(i=0; i<Config.HPI_LENGTH; ++i) HPIRecord.addValue(1.0);
+		for(i=0; i<config.HPI_LENGTH; ++i) HPIRecord.addValue(1.0);
 		offersPQ.clear();
 //		matches.clear();
 	}
@@ -174,11 +176,11 @@ public abstract class HousingMarket implements Serializable {
 			nBids = offer.matchedBids.size(); // if there are no bids matched, skip this offer
 			if(nBids > 0) {
 				// bid up the price
-				if(Config.BIDUP != 1.0) {
-					enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/Demographics.TARGET_POPULATION));
-					pSuccessfulBid = Math.exp(-enoughBids*Config.UNDEROFFER);
+				if(config.BIDUP != 1.0) {
+					enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/config.TARGET_POPULATION));
+					pSuccessfulBid = Math.exp(-enoughBids*config.derivedParams.MONTHS_UNDER_OFFER);
 					geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
-					salePrice = offer.getPrice() * Math.pow(Config.BIDUP, geomDist.sample());
+					salePrice = offer.getPrice() * Math.pow(config.BIDUP, geomDist.sample());
 				} else {
 					salePrice = offer.getPrice();					
 				}
@@ -218,7 +220,7 @@ public abstract class HousingMarket implements Serializable {
 		// bids contains bids (HouseBuyerRecords) in an array
 		
 		recordMarketStats();
-		int rounds = Math.min(Demographics.TARGET_POPULATION/1000,1 + (offersPQ.size()+bids.size())/500);
+		int rounds = Math.min(config.TARGET_POPULATION/1000,1 + (offersPQ.size()+bids.size())/500);
 		for(int i=0; i<rounds; ++i) {
 			matchBidsWithOffers(); // Step 1: iterate through bids
 			clearMatches(); // Step 2: iterate through offers
@@ -292,8 +294,8 @@ public abstract class HousingMarket implements Serializable {
 	 **********************************************/
 	public void completeTransaction(HouseBuyerRecord b, HouseSaleRecord sale) {
 		// --- update sales statistics		
-		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.getTime() - sale.tInitialListing);
-		averageSalePrice[sale.getQuality()] = Config.G*averageSalePrice[sale.getQuality()] + (1.0-Config.G)*sale.getPrice();
+		averageDaysOnMarket = config.derivedParams.E*averageDaysOnMarket + (1.0-config.derivedParams.E)*30*(Model.getTime() - sale.tInitialListing);
+		averageSalePrice[sale.getQuality()] = config.derivedParams.G*averageSalePrice[sale.getQuality()] + (1.0-config.derivedParams.G)*sale.getPrice();
 		
 //		housePriceRegression.addData(referencePrice(sale.getQuality()), sale.getPrice());
 		aveSoldRefPrice += referencePrice(sale.getQuality());
@@ -312,8 +314,9 @@ public abstract class HousingMarket implements Serializable {
 	 * @return Annualised appreciation
 	 ***************************************************/
 	public double housePriceAppreciation() {
-		return((HPIRecord.getElement(Config.HPI_LENGTH-1)+HPIRecord.getElement(Config.HPI_LENGTH-2)+HPIRecord.getElement(Config.HPI_LENGTH-3))/
-				(HPIRecord.getElement(Config.HPI_LENGTH-13)+HPIRecord.getElement(Config.HPI_LENGTH-14)+HPIRecord.getElement(Config.HPI_LENGTH-15))
+		// TODO: Clarify where the integers in the following formulas come from
+		return((HPIRecord.getElement(config.HPI_LENGTH-1)+HPIRecord.getElement(config.HPI_LENGTH-2)+HPIRecord.getElement(config.HPI_LENGTH-3))/
+				(HPIRecord.getElement(config.HPI_LENGTH-13)+HPIRecord.getElement(config.HPI_LENGTH-14)+HPIRecord.getElement(config.HPI_LENGTH-15))
 				-1.0);
 //		return(HPIRecord.getElement(Config.HPI_LENGTH-1)/
 //				HPIRecord.getElement(Config.HPI_LENGTH-13)
@@ -348,7 +351,7 @@ public abstract class HousingMarket implements Serializable {
 	 * even lowest quality house.
 	 */
 	public int maxQualityGivenPrice(double price) {
-		int q=House.Config.N_QUALITY-1;
+		int q=config.N_QUALITY-1;
 		while(q >= 0 && averageSalePrice[q] > price) --q;
 		return(q);
 	}
@@ -364,6 +367,7 @@ public abstract class HousingMarket implements Serializable {
 		// --- calculate from avergeSalePrice from housePriceRegression
 //		if(housePriceRegression.getN() > 4) {
 		if(nSold > 4) {
+			// TODO: Where does this parameter come from?
 			final double DECAY = 0.25;
 //			housePriceRegression.regress();
 //			double m = housePriceRegression.getSlope();
@@ -375,7 +379,7 @@ public abstract class HousingMarket implements Serializable {
 
 			housePriceIndex = m;
 //			quarterlyHPI.addValue(m);
-			for(int q=0; q<House.Config.N_QUALITY; ++q) {
+			for(int q=0; q<config.N_QUALITY; ++q) {
 				averageSalePrice[q] = DECAY*averageSalePrice[q] + (1.0-DECAY)*(m*referencePrice(q) + c);
 //				averageSalePrice[q] = referencePrice(q)*quarterlyHPI.getMean();
 			}
@@ -411,7 +415,7 @@ public abstract class HousingMarket implements Serializable {
 	public double aveSoldPrice = 0.0;
 	public int nSold = 0;
 	public double averageDaysOnMarket;
-	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
+	protected double averageSalePrice[] = new double[config.N_QUALITY];
 	public DescriptiveStatistics HPIRecord;
 	public DescriptiveStatistics quarterlyHPI = new DescriptiveStatistics(3);
 	public double housePriceIndex;

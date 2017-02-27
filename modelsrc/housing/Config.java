@@ -23,6 +23,30 @@ public class Config {
     int N_SIMS; 					        // Number of simulations to run (monte-carlo)
     boolean recordCoreIndicators;		    // True to write time series for each core indicator
     boolean recordMicroData;			    // True to write micro data for each transaction made
+    // House parameters
+    public int N_QUALITY;                          // Number of quality bands for houses
+    // Housing market parameters
+    int DAYS_UNDER_OFFER;                   // Time (in days) that a house remains under offer
+    double BIDUP = 1.0075;                  // Smallest proportional increase in price that can cause a gazump
+    int HPI_LENGTH = 15;                    // Number of months to record HPI
+    // Demographic parameters
+    int TARGET_POPULATION;                  // Target number of households
+    boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
+
+    // Finally, create object containing all derived parameters
+    Config.DerivedParams derivedParams = new DerivedParams();
+
+    /**
+     * Class to contain all parameters which are not read from the configuration (.properties) file, but derived,
+     * instead, from these configuration parameters
+     */
+    public class DerivedParams {
+        double MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/30.0;  // Time (in months) that a house remains under offer
+        // TODO: Clarify where does this 0.2 come from
+        double T = 0.02*TARGET_POPULATION;                  // Characteristic number of data-points over which to average market statistics
+        double E = Math.exp(-1.0/T);                        // Decay constant for averaging days on market (in transactions)
+        double G = Math.exp(-N_QUALITY/T);                  // Decay constant for averageListPrice averaging (in transactions)
+    }
 
     /**
      * Empty constructor, mainly used for copying local instances of the Model Config instance into other classes
@@ -47,6 +71,7 @@ public class Config {
             prop.load(fileReader);
             // Run through all the fields of the Class using reflection
             for (Field field : this.getClass().getDeclaredFields()) {
+                System.out.println(field.getName());
                 // For int fields, parse the int with appropriate exception handling
                 if (field.getType().toString().equals("int")) {
                     try {

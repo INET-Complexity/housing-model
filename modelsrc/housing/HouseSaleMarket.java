@@ -1,7 +1,5 @@
 package housing;
 
-import housing.HousingMarket.Config;
-
 import java.util.Iterator;
 
 import org.apache.commons.math3.stat.regression.SimpleRegression;

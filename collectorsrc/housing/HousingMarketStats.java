@@ -2,10 +2,11 @@ package housing;
 
 import sim.util.Double2D;
 import sim.util.MutableDouble2D;
-import housing.HousingMarket.Config;
 
 public class HousingMarketStats extends CollectorBase {
 	private static final long serialVersionUID = -535310555732796139L;
+
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	public HousingMarketStats() {
 		setActive(true);
@@ -19,8 +20,8 @@ public class HousingMarketStats extends CollectorBase {
 		nBuyers = 0;
 		nSellers = 0;
 		nNewBuild = 0;
-        priceData = new double[2][House.Config.N_QUALITY];
-        referencePriceData = new double[2][House.Config.N_QUALITY];
+        priceData = new double[2][config.N_QUALITY];
+        referencePriceData = new double[2][config.N_QUALITY];
         
         nEmpty = 0;
 	}
@@ -30,7 +31,7 @@ public class HousingMarketStats extends CollectorBase {
 //		recorder = Model.transactionRecorder;
         int i;
         if(market != null) {
-        	for(i=0; i<House.Config.N_QUALITY; ++i) {
+        	for(i=0; i<config.N_QUALITY; ++i) {
         		priceData[0][i] = market.referencePrice(i);
         		referencePriceData[0][i] = market.referencePrice(i);
         		referencePriceData[1][i] = market.referencePrice(i);
@@ -79,7 +80,7 @@ public class HousingMarketStats extends CollectorBase {
 	
 	public void recordSale(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		if(sale.initialListedPrice > 0.01) {
-			averageSoldPriceToOLP = Config.E*averageSoldPriceToOLP + (1.0-Config.E)*sale.getPrice()/sale.initialListedPrice;
+			averageSoldPriceToOLP = config.derivedParams.E*averageSoldPriceToOLP + (1.0-config.derivedParams.E)*sale.getPrice()/sale.initialListedPrice;
 		}
 		saleCount += 1;
 		MortgageAgreement mortgage = purchase.buyer.mortgageFor(sale.house);
@@ -240,8 +241,8 @@ public class HousingMarketStats extends CollectorBase {
 
 	
     public Double2D [] getmasonPriceData() {
-    	Double2D [] data = new Double2D[House.Config.N_QUALITY];
-    	for(int i=0; i<House.Config.N_QUALITY; ++i) {
+    	Double2D [] data = new Double2D[config.N_QUALITY];
+    	for(int i=0; i<config.N_QUALITY; ++i) {
     		data[i] = new Double2D(market.referencePrice(i), market.getAverageSalePrice(i));    		
     	}
     	return data;
@@ -257,7 +258,7 @@ public class HousingMarketStats extends CollectorBase {
 
     public double [][] priceData() {
         int i;
-        for(i=0; i<House.Config.N_QUALITY; ++i) {
+        for(i=0; i<config.N_QUALITY; ++i) {
         	priceData[1][i] = market.averageSalePrice[i];
         }
         return(priceData);

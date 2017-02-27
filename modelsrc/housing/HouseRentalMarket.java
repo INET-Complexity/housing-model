@@ -10,12 +10,15 @@ import org.apache.commons.math3.stat.regression.SimpleRegression;
  **********************************************/
 public class HouseRentalMarket extends HousingMarket {
 	private static final long serialVersionUID = -3039057421808432696L;
-	static final double S = 10000.0/Demographics.TARGET_POPULATION; // Decay scaling factor
-	static final double K = Math.exp(-S/50.0); // decay rate for averageSoldGrossYield
-	static final double KL = Math.exp(-S/(50.0*200.0)); // decay rate for longTermAverageGrossYield
+
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
+	final double S = 10000.0/config.TARGET_POPULATION; // Decay scaling factor
+	final double K = Math.exp(-S/50.0); // decay rate for averageSoldGrossYield
+	final double KL = Math.exp(-S/(50.0*200.0)); // decay rate for longTermAverageGrossYield
 
 	public HouseRentalMarket() {
-		for(int i=0; i< House.Config.N_QUALITY; ++i) {
+		for(int i=0; i< config.N_QUALITY; ++i) {
 			monthsOnMarket[i] = 1.0;			
 		}
 		recalculateExpectedGrossYield();
@@ -26,7 +29,7 @@ public class HouseRentalMarket extends HousingMarket {
 	@Override
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		super.completeTransaction(purchase, sale);
-		monthsOnMarket[sale.house.getQuality()] = Config.E*monthsOnMarket[sale.house.getQuality()] + (1.0-Config.E)*(Model.getTime() - sale.tInitialListing);
+		monthsOnMarket[sale.house.getQuality()] = config.derivedParams.E*monthsOnMarket[sale.house.getQuality()] + (1.0-config.derivedParams.E)*(Model.getTime() - sale.tInitialListing);
 		sale.house.rentalRecord = null;
 		purchase.buyer.completeHouseRental(sale);
 		sale.house.owner.completeHouseLet(sale);
@@ -76,7 +79,7 @@ public class HouseRentalMarket extends HousingMarket {
 	
 	protected void recalculateExpectedGrossYield() {
 //		bestGrossYield = 0.0;
-		for(int q=0; q < House.Config.N_QUALITY; ++q) {
+		for(int q=0; q < config.N_QUALITY; ++q) {
 			expectedGrossYield[q] = getAverageSalePrice(q)*12.0*expectedOccupancy(q)/Model.housingMarket.getAverageSalePrice(q);
 //			if(expectedGrossYield[q] > bestGrossYield) bestGrossYield = expectedGrossYield[q];
 		}		
@@ -109,8 +112,8 @@ public class HouseRentalMarket extends HousingMarket {
 	}
 
 	
-	public double monthsOnMarket[] = new double[House.Config.N_QUALITY];
-	public double expectedGrossYield[] = new double[House.Config.N_QUALITY];
+	public double monthsOnMarket[] = new double[config.N_QUALITY];
+	public double expectedGrossYield[] = new double[config.N_QUALITY];
 	public double averageSoldGrossYield;
 	public double longTermAverageGrossYield; // averaged over a long time
 //	public double bestGrossYield;

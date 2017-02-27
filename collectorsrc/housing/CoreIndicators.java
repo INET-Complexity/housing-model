@@ -17,6 +17,9 @@ import utilities.MeanAboveMedian;
  */
 public class CoreIndicators extends CollectorBase {
 	private static final long serialVersionUID = -7295853109870791276L;
+
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	static final double UK_HOUSEHOLDS = 26.5e6; // approx number of households in UK
 
 
@@ -171,13 +174,13 @@ public class CoreIndicators extends CollectorBase {
 	public double getHousePriceGrowth() {
 //		return(100.0*Model.collectors.housingMarketStats.getHPA());
 		double lastHPI = 
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-4) +
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-5) +
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-6);
+				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-4) +
+				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-5) +
+				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-6);
 		double HPI = 
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-1) +
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-2) +
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-3);
+				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-1) +
+				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-2) +
+				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-3);
 		return(100.0*(HPI - lastHPI)/lastHPI);
 	}
 	public String desHousePriceGrowth() {

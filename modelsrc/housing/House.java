@@ -12,15 +12,17 @@ import java.io.Serializable;
 public class House implements Comparable<House>, Serializable {
 	private static final long serialVersionUID = 4538336934216907799L;
 
-	static public class Config {
-		public static int N_QUALITY = 48; // number of quality bands		
-	}
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
+//	static public class Config {
+//		public static int N_QUALITY = 48; // number of quality bands
+//	}
 	
 	public House() {
 		id = ++id_pool;	
 		resident = null;
 		owner = null;
-		quality = (int)(rand.nextDouble()*Config.N_QUALITY);
+		quality = (int)(rand.nextDouble()*config.N_QUALITY);
 	}
 	
 	public boolean isOnMarket() {
