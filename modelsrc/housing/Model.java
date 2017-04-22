@@ -48,7 +48,6 @@ public class Model extends SimState implements Steppable {
 		super(seed);
 		rand = new MersenneTwister(seed);
 		config = new Config("config.properties");
-		System.out.println("Months under offer " + config.derivedParams.MONTHS_UNDER_OFFER);
 		System.exit(0);
 
 		government = new Government();

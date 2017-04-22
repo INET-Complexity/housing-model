@@ -24,11 +24,11 @@ public class Config {
     boolean recordCoreIndicators;		    // True to write time series for each core indicator
     boolean recordMicroData;			    // True to write micro data for each transaction made
     // House parameters
-    public int N_QUALITY;                          // Number of quality bands for houses
+    public int N_QUALITY;                   // Number of quality bands for houses
     // Housing market parameters
     int DAYS_UNDER_OFFER;                   // Time (in days) that a house remains under offer
-    double BIDUP = 1.0075;                  // Smallest proportional increase in price that can cause a gazump
-    int HPI_LENGTH = 15;                    // Number of months to record HPI
+    double BIDUP;                           // Smallest proportional increase in price that can cause a gazump
+    int HPI_LENGTH;                         // Number of months to record HPI
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
     boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
@@ -41,11 +41,10 @@ public class Config {
      * instead, from these configuration parameters
      */
     public class DerivedParams {
-        double MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/30.0;  // Time (in months) that a house remains under offer
-        // TODO: Clarify where does this 0.2 come from
-        double T = 0.02*TARGET_POPULATION;                  // Characteristic number of data-points over which to average market statistics
-        double E = Math.exp(-1.0/T);                        // Decay constant for averaging days on market (in transactions)
-        double G = Math.exp(-N_QUALITY/T);                  // Decay constant for averageListPrice averaging (in transactions)
+        double MONTHS_UNDER_OFFER;      // Time (in months) that a house remains under offer
+        double T;                       // Characteristic number of data-points over which to average market statistics
+        double E;                       // Decay constant for averaging days on market (in transactions)
+        double G;                       // Decay constant for averageListPrice averaging (in transactions)
     }
 
     /**
@@ -85,7 +84,20 @@ public class Config {
                                 field.getName());
                         iae.printStackTrace();
                     }
-                // For int fields, parse the int with appropriate exception handling
+                // For double fields, parse the double with appropriate exception handling
+                } else if (field.getType().toString().equals("double")) {
+                        try {
+                            field.set(this, Double.parseDouble(prop.getProperty(field.getName())));
+                        } catch (NumberFormatException nfe) {
+                            System.out.println("Exception " + nfe + " while trying to parse the field " +
+                                    field.getName() + " for an double");
+                            nfe.printStackTrace();
+                        } catch (IllegalAccessException iae) {
+                            System.out.println("Exception " + iae + " while trying to set the field " +
+                                    field.getName());
+                            iae.printStackTrace();
+                        }
+                // For boolean fields, parse the boolean with appropriate exception handling
                 } else if (field.getType().toString().equals("boolean")) {
                     try {
                         if (prop.getProperty(field.getName()).equals("true") ||
@@ -110,6 +122,18 @@ public class Config {
             System.out.println("Exception " + ioe + " while trying to read file '" + configFileName + "'");
             ioe.printStackTrace();
         }
+        // Finally, compute and set values for all derived parameters
+        setDerivedParams();
+    }
+
+    /**
+     * Method to compute and set values for all derived parameters
+     */
+    private void setDerivedParams() {
+        derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/30.0;
+        derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from
+        derivedParams.E = Math.exp(-1.0/derivedParams.T);
+        derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);
     }
 
     /**

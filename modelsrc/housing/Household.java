@@ -26,7 +26,7 @@ public class Household implements IHouseOwner, Serializable {
 	private static final long serialVersionUID = -5042897399316333745L;
 	public static final boolean BTL_ENABLED = true;
 
-	public static int bankruptcies = 0;
+	public static int bankruptcies = 0;		// TODO: Unused variable... counts bankruptcies, but it's never used!
 	
 	/********************************************************
 	 * Constructor.
