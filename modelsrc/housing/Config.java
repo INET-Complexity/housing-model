@@ -32,6 +32,8 @@ public class Config {
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
     boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
+    // Household parameters
+    boolean BTL_ENABLED;
 
     // Finally, create object containing all derived parameters
     Config.DerivedParams derivedParams = new DerivedParams();

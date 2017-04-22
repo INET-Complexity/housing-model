@@ -90,7 +90,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public HouseholdBehaviour(double incomePercentile) {
 		propensityToSave = 0.1*rand.nextGaussian();
 		BtLCapGainCoeff = 0.0;
-		if(Household.BTL_ENABLED) {
+		if(config.BTL_ENABLED) {
 			if(incomePercentile > MIN_INVESTOR_PERCENTILE && rand.nextDouble() < P_INVESTOR/MIN_INVESTOR_PERCENTILE) {
 				BTLInvestor = true;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
 				double type = rand.nextDouble();

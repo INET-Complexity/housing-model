@@ -24,7 +24,8 @@ public class Household implements IHouseOwner, Serializable {
 	//////////////////////////////////////////////////////////////////////////////////////
 
 	private static final long serialVersionUID = -5042897399316333745L;
-	public static final boolean BTL_ENABLED = true;
+
+    private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	public static int bankruptcies = 0;		// TODO: Unused variable... counts bankruptcies, but it's never used!
 	
@@ -105,7 +106,7 @@ public class Household implements IHouseOwner, Serializable {
 //			for(House h : housePayments.keySet()) {
 //				manageHouse(h);
 //			}
-			if(BTL_ENABLED) {
+			if(config.BTL_ENABLED) {
 				if(behaviour.decideToBuyBuyToLet(this)) {
 					Model.housingMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
 				}
@@ -350,7 +351,7 @@ public class Household implements IHouseOwner, Serializable {
 		if(h == home) {
 			return(behaviour.decideToSellHome(this));
 		}
-		if(BTL_ENABLED) return(behaviour.decideToSellInvestmentProperty(h, this));
+		if(config.BTL_ENABLED) return(behaviour.decideToSellInvestmentProperty(h, this));
 		return(false);
 	}
 
@@ -448,7 +449,7 @@ public class Household implements IHouseOwner, Serializable {
 			h.resident = this;
 			desiredQuality = h.getQuality();
 		} else if(behaviour.isPropertyInvestor()) {
-			if(BTL_ENABLED) {
+			if(config.BTL_ENABLED) {
 				if(decideToSellHouse(h)) {
 					putHouseForSale(h);
 				} else if(h.resident == null) {
@@ -463,7 +464,7 @@ public class Household implements IHouseOwner, Serializable {
 			}
 		} else {
 			// I'm an owner-occupier
-			if(BTL_ENABLED) {
+			if(config.BTL_ENABLED) {
 				putHouseForSale(h);
 			} else {
 				if(wasHome) {
