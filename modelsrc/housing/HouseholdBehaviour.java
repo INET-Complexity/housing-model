@@ -16,15 +16,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 
 	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
-	// TODO: Move this to config.derivedParams
-	public static LogNormalDistribution FTB_DOWNPAYMENT = new LogNormalDistribution(null, 10.30, 0.9093);
-	public static LogNormalDistribution OO_DOWNPAYMENT = new LogNormalDistribution(null, 11.155, 0.7538);
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 //	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 //	public final double INTENSITY_OF_CHOICE = 10.0;
-
 
 	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	public boolean					BTLInvestor;
@@ -32,9 +26,16 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public double					desiredBalance;
 	public double 					BtLCapGainCoeff; // Sensitivity of BtL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
 
+    // Size distributions for downpayments of first-time-buyers and owner-occupiers
+    public LogNormalDistribution FTB_DOWNPAYMENT = new LogNormalDistribution(rand, config.DOWNPAYMENT_FTB_SCALE,
+            config.DOWNPAYMENT_FTB_SHAPE);
+    public LogNormalDistribution OO_DOWNPAYMENT = new LogNormalDistribution(rand, config.DOWNPAYMENT_OO_SCALE,
+            config.DOWNPAYMENT_OO_SHAPE);
+
 	public double sigma(double x) { // the Logistic function, sometimes called sigma function, 1/1+e^(-x)
 		return 1.0/(1.0+Math.exp(-1.0*x));
 	}
+
 	/***************************************
 	 * Constructor: initialise the behavioural variables for a new household: propensity to save, and
 	 * if the income percentile is above a minimum, decide whether to give the household
