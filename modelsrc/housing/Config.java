@@ -73,7 +73,15 @@ public class Config {
     double DOWNPAYMENT_FTB_SHAPE;           // Shape parameter for the log-normal distribution of downpayments by first-time-buyers
     double DOWNPAYMENT_OO_SCALE;            // Scale parameter for the log-normal distribution of downpayments by owner-occupiers
     double DOWNPAYMENT_OO_SHAPE;            // Shape parameter for the log-normal distribution of downpayments by owner-occupiers
-
+    // Household behaviour parameters: desired bank balance
+    double DESIRED_BANK_BALANCE_ALPHA;
+    double DESIRED_BANK_BALANCE_BETA;
+    double DESIRED_BANK_BALANCE_EPSILON;
+    // Household behaviour parameters: selling decision
+    double DECISION_TO_SELL_ALPHA;          // Weight of houses per capita effect
+    double DECISION_TO_SELL_BETA;           // Weight of interest rate effect
+    double DECISION_TO_SELL_HPC;            // TODO: fudge parameter, explicitly explained otherwise in the paper
+    double DECISION_TO_SELL_INTEREST;       // TODO: fudge parameter, explicitly explained otherwise in the paper
 
 
 

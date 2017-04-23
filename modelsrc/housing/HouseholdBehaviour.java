@@ -45,10 +45,12 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 *                         used to determine whether the household can be a BTL investor
      ***************************************************/
 	public HouseholdBehaviour(double incomePercentile) {
-		propensityToSave = 0.1*rand.nextGaussian();
+	    // Propensity to save is computed here so that it is constant for a given agent
+        propensityToSave = config.DESIRED_BANK_BALANCE_EPSILON*rand.nextGaussian();
 		BtLCapGainCoeff = 0.0;
 		if(config.BTL_ENABLED) {
-			if(incomePercentile > config.MIN_INVESTOR_PERCENTILE && rand.nextDouble() < config.P_INVESTOR/config.MIN_INVESTOR_PERCENTILE) {
+			if(incomePercentile > config.MIN_INVESTOR_PERCENTILE &&
+                    rand.nextDouble() < config.P_INVESTOR/config.MIN_INVESTOR_PERCENTILE) {
 				BTLInvestor = true;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
 				double type = rand.nextDouble();
 				if(type < config.P_FUNDAMENTALIST) {
@@ -76,7 +78,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @return Non-essential consumption for the month
 	 ********************************/
 	public double desiredConsumptionB(Household me) {//double monthlyIncome, double bankBalance) {
-		return(config.CONSUMPTION_FRACTION*Math.max(me.bankBalance - desiredBankBalance(me),0.0));
+		return(config.CONSUMPTION_FRACTION*Math.max(me.bankBalance - desiredBankBalance(me), 0.0));
 	}
 
 	/********************************
@@ -85,10 +87,14 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * Used to determine non-essential consumption.
      *********************************/
 	public double desiredBankBalance(Household me) {
-		if(desiredBalance == -1.0) { //TODO: why only if desired bank balance is set to -1? (does this get calculated only once?)
+        // TODO: why only if desired bank balance is set to -1? (does this get calculated only once? why?)
+		if(desiredBalance == -1.0) {
 //			desiredBalance = 3.0*Math.exp(4.07*Math.log(me.getMonthlyPreTaxIncome()*12.0)-33.1 - propensityToSave);
-			double lnDesiredBalance = -32.0013877 + 4.07 * Math.log(me.getMonthlyPreTaxIncome()*12.0) + propensityToSave;
-			desiredBalance=Math.exp(lnDesiredBalance);
+			double lnDesiredBalance = config.DESIRED_BANK_BALANCE_ALPHA
+                    + config.DESIRED_BANK_BALANCE_BETA
+                        * Math.log(me.getMonthlyPreTaxIncome()*config.constants.MONTHS_IN_YEAR) + propensityToSave;
+			desiredBalance = Math.exp(lnDesiredBalance);
+			// TODO: What is this next rule? Not declared in the article! Check if 0.3 should be included as a parameter
 			if(me.lifecycle.incomePercentile < 0.3 && !isPropertyInvestor()) desiredBalance = 1.0;
 		}
 		return(desiredBalance);
@@ -130,7 +136,10 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean decideToSellHome(Household me) {
 		// TODO: need to add expenditure
 		if(isPropertyInvestor()) return(false);
-		return(rand.nextDouble() < config.derivedParams.MONTHLY_P_SELL*(1.0 + 4.0*(0.05 - Model.housingMarket.offersPQ.size()*1.0/Model.households.size())) + 5.0*(0.03-Model.bank.getMortgageInterestRate()));
+		return(rand.nextDouble() < config.derivedParams.MONTHLY_P_SELL*(1.0
+                + config.DECISION_TO_SELL_ALPHA*(config.DECISION_TO_SELL_HPC
+                - Model.housingMarket.offersPQ.size()*1.0/Model.households.size()))
+                + config.DECISION_TO_SELL_BETA*(config.DECISION_TO_SELL_INTEREST - Model.bank.getMortgageInterestRate()));
 
 		// reference 
 		//int potentialQualityChange = Model.housingMarket.maxQualityGivenPrice(Model.bank.getMaxMortgage(me,true))- me.home.getQuality();
@@ -170,12 +179,14 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		}
 		double downpayment;
 		if(me.isFirstTimeBuyer()) {
-			downpayment = Model.housingMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,(me.lifecycle.incomePercentile-0.3)/0.7));
+			downpayment = Model.housingMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
+                    (me.lifecycle.incomePercentile-0.3)/0.7));
 		} else if(isPropertyInvestor()) {
 			downpayment = housePrice*(Math.max(0.0, 0.3+0.1*rand.nextGaussian())); // calibrated...
 			//downpayment = housePrice*(Math.max(0.0, 0.26+0.08*rand.nextGaussian())); // calibrated...
 		} else {
-			downpayment = Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0, (me.lifecycle.incomePercentile-0.3)/0.7));
+			downpayment = Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
+                    (me.lifecycle.incomePercentile-0.3)/0.7));
 		}
 		if(downpayment > me.bankBalance) downpayment = me.bankBalance;
 		return(downpayment);
@@ -215,17 +226,20 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean rentOrPurchaseDecision(Household me) {
 		if(isPropertyInvestor()) return(true);
 
-		double purchasePrice = Math.min(desiredPurchasePrice(me, me.monthlyEmploymentIncome), Model.bank.getMaxMortgage(me, true));
-		MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice, downPayment(me,purchasePrice), true);
+		double purchasePrice = Math.min(desiredPurchasePrice(me, me.monthlyEmploymentIncome),
+                Model.bank.getMaxMortgage(me, true));
+		MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
+                downPayment(me,purchasePrice), true);
 		int newHouseQuality = Model.housingMarket.maxQualityGivenPrice(purchasePrice);
 //		int rentalQuality = Model.rentalMarket.maxQualityGivenPrice(desiredRent(me, me.monthlyEmploymentIncome));
 //		if(rentalQuality > newHouseQuality+House.Config.N_QUALITY/8) return(false); // better quality to rent
 		if(newHouseQuality < 0) return(false); // can't afford a house anyway
-		double costOfHouse = mortgageApproval.monthlyPayment*12 - purchasePrice*HPAExpectation();
-		double costOfRent = Model.rentalMarket.getAverageSalePrice(newHouseQuality)*12;
+		double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR - purchasePrice*HPAExpectation();
+		double costOfRent = Model.rentalMarket.getAverageSalePrice(newHouseQuality)*config.constants.MONTHS_IN_YEAR;
 //		System.out.println(FTB_K*(costOfRent + COST_OF_RENTING - costOfHouse));
 		//return(rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent*(1.0+COST_OF_RENTING) - costOfHouse))));
-		return(rand.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0+config.PSYCHOLOGICAL_COST_OF_RENTING) - costOfHouse)));
+		return(rand.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
+                + config.PSYCHOLOGICAL_COST_OF_RENTING) - costOfHouse)));
 
 		/*
 		
@@ -301,10 +315,11 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double marketPrice = Model.housingMarket.getAverageSalePrice(h.getQuality());
 		double equity = Math.max(0.01, marketPrice - mortgage.principal);
 		double leverage = marketPrice/equity;
-		double rentalYield = h.rentalRecord.getPrice()*12.0/marketPrice;
-		double mortgageRate = mortgage.nextPayment()*12.0/equity;
+		double rentalYield = h.rentalRecord.getPrice()*config.constants.MONTHS_IN_YEAR/marketPrice;
+		double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
 		if(config.BTL_YIELD_SCALING) {
-			effectiveYield = leverage*((1.0-BtLCapGainCoeff)*rentalYield + BtLCapGainCoeff*(Model.rentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
+			effectiveYield = leverage*((1.0-BtLCapGainCoeff)*rentalYield
+                    + BtLCapGainCoeff*(Model.rentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
 		} else {
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
@@ -381,7 +396,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double rentalYield = Model.rentalMarket.averageSoldGrossYield;
 		double mortgageRate = m.monthlyPayment*12.0/m.downPayment;
 		if(config.BTL_YIELD_SCALING) {
-			effectiveYield = leverage*((1.0-BtLCapGainCoeff)*rentalYield + BtLCapGainCoeff*(Model.rentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
+			effectiveYield = leverage*((1.0-BtLCapGainCoeff)*rentalYield
+                    + BtLCapGainCoeff*(Model.rentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
 		} else {
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
@@ -391,7 +407,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	}
 	
 	public double btlPurchaseBid(Household me) {
-		return(Math.min(Model.bank.getMaxMortgage(me, false), 1.1*Model.housingMarket.getAverageSalePrice(config.N_QUALITY-1)));
+		return(Math.min(Model.bank.getMaxMortgage(me, false),
+                1.1*Model.housingMarket.getAverageSalePrice(config.N_QUALITY-1)));
 	}
 
 	public boolean isPropertyInvestor() {
