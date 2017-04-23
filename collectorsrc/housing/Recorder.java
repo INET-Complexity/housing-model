@@ -12,6 +12,8 @@ import org.apache.commons.math3.linear.ArrayRealVector;
  *
  */
 public class Recorder {
+
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 	
 	public void start() throws FileNotFoundException, UnsupportedEncodingException {
 		// --- open files for core indicators
@@ -46,7 +48,7 @@ public class Recorder {
 		        paramfile = new PrintWriter("parameters-"+Model.nSimulation+".csv", "UTF-8");
 		        paramfile.println("BtL P_INVESTOR, CentralBank ICR Limit");
 		        paramfile.println(
-		        		housing.HouseholdBehaviour.P_INVESTOR+", "+
+		        		config.P_INVESTOR+", "+
 		        		Model.centralBank.interestCoverRatioLimit
 		        );
 		        paramfile.close();

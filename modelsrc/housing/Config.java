@@ -33,20 +33,70 @@ public class Config {
     int TARGET_POPULATION;                  // Target number of households
     boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
     // Household parameters
-    boolean BTL_ENABLED;
+    boolean BTL_ENABLED;                    // True to have a buy-to-let sector // TODO: Useless parameter!
+    // Household behaviour parameters: buy-to-let
+    double P_INVESTOR;                      // Prior probability of being (wanting to be) a BTL investor
+    double MIN_INVESTOR_PERCENTILE;         // Minimum income percentile for a household to be a BTL investor
+    double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
+    double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
+    double P_FUNDAMENTALIST; 			    // Probability that a BTL investor is a fundamentalist versus a trend-follower
+    boolean BTL_YIELD_SCALING;			    // Chooses between two possible equations for BTL investors to make their buy/sell decisions
+    // Household behaviour parameters: rent
+    double DESIRED_RENT_INCOME_FRACTION;    // Desired proportion of income to be spent on rent
+    double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
+    double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
+    // Household behaviour parameters: general
+    double BANK_BALANCE_FOR_CASH_DOWNPAYMENT;   // If bankBalance/housePrice is above this, payment will be made fully in cash
+    double HPA_EXPECTATION_WEIGHT;              // Weight assigned to current trend when computing expectations
+    double HOLD_PERIOD;                         // Average period, in years, for which owner-occupiers hold their houses
+    // Household behaviour parameters: price reduction
+    double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
+    double REDUCTION_MU;                    // Mean percentage reduction for prices of houses on the market
+    double REDUCTION_SIGMA;                 // Standard deviation of percentage reductions for prices of houses on the market
+    // Household behaviour parameters: consumption
+    double CONSUMPTION_FRACTION;            // Fraction of monthly budget for consumption (monthly budget = bank balance - minimum desired bank balance)
+    double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
+    // Household behaviour parameters: initial sale price
+    double SALE_MARKUP;                     // Initial markup over average price of same quality houses
+    double SALE_WEIGHT_DAYS_ON_MARKET;      // Weight of the days-on-market effect
+    double SALE_EPSILON;                    // Standard deviation of the noise
+    // Household behaviour parameters: buyer's desired expenditure
+    double BUY_SCALE;                       // Scale, number of annual salaries the buyer is willing to spend for buying a house
+    double BUY_WEIGHT_HPA;                  // Weight given to house price appreciation when deciding how much to spend for buying a house
+    double BUY_EPSILON;                     // Standard deviation of the noise
+    // Household behaviour parameters: demand rent
+    double RENT_MARKUP;                     // Markup over average rent demanded for houses of the same quality
+    double RENT_EQ_MONTHS_ON_MARKET;        // Number of months on the market in an equilibrium situation
+    double RENT_EPSILON;                    // Standard deviation of the noise
 
-    // Finally, create object containing all derived parameters
+
+
+    // Create object containing all derived parameters
     Config.DerivedParams derivedParams = new DerivedParams();
+
+    // Finally, create object containing all constants
+    Config.Constants constants = new Constants();
 
     /**
      * Class to contain all parameters which are not read from the configuration (.properties) file, but derived,
      * instead, from these configuration parameters
      */
     public class DerivedParams {
+        // Housing market parameters
         double MONTHS_UNDER_OFFER;      // Time (in months) that a house remains under offer
         double T;                       // Characteristic number of data-points over which to average market statistics
         double E;                       // Decay constant for averaging days on market (in transactions)
         double G;                       // Decay constant for averageListPrice averaging (in transactions)
+        // Household behaviour parameters: general
+        double MONTHLY_P_SELL;          // Monthly probability for owner-occupiers to sell their houses
+    }
+
+    /**
+     * Class to contain all constants (not read from the configuration file nor derived from it)
+     */
+    public class Constants {
+        final int DAYS_IN_MONTH = 30;
+        final int MONTHS_IN_YEAR = 12;
     }
 
     /**
@@ -119,6 +169,7 @@ public class Config {
                         iae.printStackTrace();
                     }
                 }
+                // TODO: Add warning for unknown field type (taking into account derivedParams field type)
             }
         } catch (IOException ioe) {
             System.out.println("Exception " + ioe + " while trying to read file '" + configFileName + "'");
@@ -132,10 +183,13 @@ public class Config {
      * Method to compute and set values for all derived parameters
      */
     private void setDerivedParams() {
+        // Housing market parameters
         derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/30.0;
         derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from
         derivedParams.E = Math.exp(-1.0/derivedParams.T);
         derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);
+        // Household behaviour parameters: general
+        derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*12.0);
     }
 
     /**
