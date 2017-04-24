@@ -46,7 +46,7 @@ public class Household implements IHouseOwner, Serializable {
 		id = ++id_pool;
 		lifecycle = new Lifecycle(age);
 		behaviour = new HouseholdBehaviour(lifecycle.incomePercentile);
-		monthlyEmploymentIncome = lifecycle.annualIncome()/12.0;
+		monthlyEmploymentIncome = lifecycle.annualIncome()/config.constants.MONTHS_IN_YEAR;
 		bankBalance = behaviour.desiredBankBalance(this);
 		monthlyPropertyIncome = 0.0;
 		desiredQuality = 0;
@@ -73,15 +73,16 @@ public class Household implements IHouseOwner, Serializable {
 //		House  house;
 		
 		lifecycle.step();
-		monthlyEmploymentIncome = lifecycle.annualIncome()/12.0;
-		disposableIncome = getMonthlyPostTaxIncome() - config.ESSENTIAL_CONSUMPTION_FRACTION * Government.Config.INCOME_SUPPORT; // necessary consumption
+		monthlyEmploymentIncome = lifecycle.annualIncome()/config.constants.MONTHS_IN_YEAR;
+		disposableIncome = getMonthlyPostTaxIncome()
+				- config.ESSENTIAL_CONSUMPTION_FRACTION * Government.Config.INCOME_SUPPORT; // necessary consumption
 		for(PaymentAgreement payment : housePayments.values()) {
 			disposableIncome -= payment.makeMonthlyPayment();
 		}
 		
 		// --- consume based on disposable income after house payments
 		bankBalance += disposableIncome;
-		if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.desiredConsumptionB(this);//getMonthlyPreTaxIncome(),bankBalance);
+		if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.desiredConsumptionB(this); //getMonthlyPreTaxIncome(),bankBalance);
 		if(bankBalance < 0.0) { // bankrupt behaviour
 			bankBalance = 1.0;	// TODO: cash injection for now...
 			if (Model.getTime()>1000) {
@@ -203,7 +204,7 @@ public class Household implements IHouseOwner, Serializable {
 			System.out.println("Can't afford to buy house: strange");
 //			System.out.println("Want "+sale.getPrice()+" but can only get "+bank.getMaxMortgage(this,home==null));
 			System.out.println("Bank balance is "+bankBalance);
-			System.out.println("Annual income is "+ monthlyEmploymentIncome*12.0);
+			System.out.println("Annual income is "+ monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR);
 			if(isRenting()) System.out.println("Is renting");
 			if(isHomeowner()) System.out.println("Is homeowner");
 			if(isInSocialHousing()) System.out.println("Is homeless");
@@ -306,14 +307,15 @@ public class Household implements IHouseOwner, Serializable {
 		if(sale.house.owner != this) { // if renting own house, no need for contract
 			RentalAgreement rent = new RentalAgreement();
 			rent.monthlyPayment = sale.getPrice();
-			rent.nPayments = data.HouseRentalMarket.AVERAGE_TENANCY_LENGTH + rand.nextInt(13) - 6;
+			rent.nPayments = config.TENANCY_LENGTH_AVERAGE
+                    + rand.nextInt(2*config.TENANCY_LENGTH_EPSILON + 1) - config.TENANCY_LENGTH_EPSILON;
 //			rent.principal = rent.monthlyPayment*rent.nPayments;
 			housePayments.put(sale.house, rent);
 		}
 		if(home != null) System.out.println("Strange: I'm renting a house but not homeless");
 		home = sale.house;
 		if(sale.house.resident != null) {
-			System.out.println("Strange: tennant moving into an occupied house");
+			System.out.println("Strange: tenant moving into an occupied house");
 			if(sale.house.resident == this) System.out.println("...It's me!");
 			if(sale.house.owner == this) System.out.println("...It's my house!");
 			if(sale.house.owner == sale.house.resident) System.out.println("...It's a homeowner!");
@@ -517,7 +519,10 @@ public class Household implements IHouseOwner, Serializable {
 	 * @return monthly disposable (i.e., after tax) income
 	 */
 	public double getMonthlyPostTaxIncome() {
-		return getMonthlyPreTaxIncome() - (Model.government.incomeTaxDue(monthlyEmploymentIncome*12.0) + Model.government.class1NICsDue(monthlyEmploymentIncome*12.0)) / 12.0;
+		return getMonthlyPreTaxIncome()
+                - (Model.government.incomeTaxDue(monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR)
+                + Model.government.class1NICsDue(monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR))
+                / config.constants.MONTHS_IN_YEAR;
 	}
 	
 	/**
@@ -525,12 +530,12 @@ public class Household implements IHouseOwner, Serializable {
 	 */
 	public double getMonthlyPreTaxIncome() {
 		double monthlyTotalIncome = (monthlyEmploymentIncome +
-				monthlyPropertyIncome + bankBalance * RETURN_ON_FINANCIAL_WEALTH);
+				monthlyPropertyIncome + bankBalance * config.RETURN_ON_FINANCIAL_WEALTH);
 		return monthlyTotalIncome;
 	}
 	
 	public double annualEmploymentIncome() {
-		return monthlyEmploymentIncome*12.0;
+		return monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR;
 	}
 	
 	public int nInvestmentProperties() {
@@ -562,8 +567,6 @@ public class Household implements IHouseOwner, Serializable {
 	}
 	
 	///////////////////////////////////////////////
-	
-	public static double RETURN_ON_FINANCIAL_WEALTH = 0.002; // monthly percentage growth of financial investements
 
 //	HouseSaleMarket		houseMarket;
 //	HouseRentalMarket	rentalMarket;

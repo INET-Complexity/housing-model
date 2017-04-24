@@ -34,6 +34,10 @@ public class Config {
     boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
     // Household parameters
     boolean BTL_ENABLED;                    // True to have a buy-to-let sector // TODO: Useless parameter!
+    double RETURN_ON_FINANCIAL_WEALTH;      // Monthly percentage growth of financial investments
+    int TENANCY_LENGTH_AVERAGE;             // Average number of months a tenant will stay in a rented house
+    int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
+
     // Household behaviour parameters: buy-to-let
     double P_INVESTOR;                      // Prior probability of being (wanting to be) a BTL investor
     double MIN_INVESTOR_PERCENTILE;         // Minimum income percentile for a household to be a BTL investor
