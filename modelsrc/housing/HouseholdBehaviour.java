@@ -180,13 +180,14 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		double downpayment;
 		if(me.isFirstTimeBuyer()) {
 			downpayment = Model.housingMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
-                    (me.lifecycle.incomePercentile-0.3)/0.7));
+                    (me.lifecycle.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		} else if(isPropertyInvestor()) {
-			downpayment = housePrice*(Math.max(0.0, 0.3+0.1*rand.nextGaussian())); // calibrated...
+			downpayment = housePrice*(Math.max(0.0,
+					config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON*rand.nextGaussian())); // calibrated...
 			//downpayment = housePrice*(Math.max(0.0, 0.26+0.08*rand.nextGaussian())); // calibrated...
 		} else {
 			downpayment = Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
-                    (me.lifecycle.incomePercentile-0.3)/0.7));
+                    (me.lifecycle.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		}
 		if(downpayment > me.bankBalance) downpayment = me.bankBalance;
 		return(downpayment);
@@ -298,8 +299,6 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	public boolean decideToSellInvestmentProperty(House h, Household me) {
 		if(me.nInvestmentProperties() < 2) return(false); // Always keep at least one property
 
-		final double INTENSITY = 50.0; // intensity of choice on effective yield
-		final double AGGREGATE_RATE = 1.0/12.0; // controls the average rate of sales
 		double effectiveYield;
 		
 		// sell if not selling on rental market at interest coverage ratio of 1.0 (?)
@@ -313,18 +312,20 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		// TODO: add transaction costs to expected capital gain
 //		double icr = (h.rentalRecord.getPrice()-mortgage.nextPayment())/h.rentalRecord.getPrice();
 		double marketPrice = Model.housingMarket.getAverageSalePrice(h.getQuality());
-		double equity = Math.max(0.01, marketPrice - mortgage.principal);
+		// TODO: Why to call this "equity"? It is called "downpayment" in the article!
+        double equity = Math.max(0.01, marketPrice - mortgage.principal);   // Dummy security parameter to avoid dividing by zero
 		double leverage = marketPrice/equity;
 		double rentalYield = h.rentalRecord.getPrice()*config.constants.MONTHS_IN_YEAR/marketPrice;
 		double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
 		if(config.BTL_YIELD_SCALING) {
-			effectiveYield = leverage*((1.0-BtLCapGainCoeff)*rentalYield
+			effectiveYield = leverage*((1.0 - BtLCapGainCoeff)*rentalYield
                     + BtLCapGainCoeff*(Model.rentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
 		} else {
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
-		double pKeep = Math.pow(sigma(INTENSITY*effectiveYield),AGGREGATE_RATE);
-		return(rand.nextDouble() < (1.0-pKeep));
+		double pKeep = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*effectiveYield),
+                1.0/config.constants.MONTHS_IN_YEAR);
+		return(rand.nextDouble() < (1.0 - pKeep));
 	}
 	
 
@@ -342,8 +343,9 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
                 - beta*Math.log((d + 1.0)/(config.constants.DAYS_IN_MONTH + 1))
                 + config.RENT_EPSILON*rand.nextGaussian();
 		double result = Math.exp(exponent);
-        // TODO: The following contains a fudge to keep rental yield up
-		double minAcceptable = Model.housingMarket.getAverageSalePrice(h.getQuality())*0.048/12.0;
+        // TODO: The following contains a fudge (config.RENT_MAX_AMORTIZATION_PERIOD) to keep rental yield up
+		double minAcceptable = Model.housingMarket.getAverageSalePrice(h.getQuality())
+                /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
 		if(result < minAcceptable) result = minAcceptable;
 		return(result);
 
@@ -356,7 +358,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @return the new rent
      */
 	public double rethinkBuyToLetRent(HouseSaleRecord sale) {
-		return(0.95*sale.getPrice());
+		return((1.0 - config.RENT_REDUCTION)*sale.getPrice());
 //		if(rand.nextDouble() > 0.944) {
 //			double logReduction = Math.min(4.6, 1.603+(rand.nextGaussian()*0.6173));
 //			return(sale.getPrice() * (1.0-0.01*Math.exp(logReduction)));
@@ -378,12 +380,11 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		if(me.nInvestmentProperties() < 1) { // If I don't have any BTL properties, I always decide to buy one!!
 			return(true);
 		}
-		final double INTENSITY = 50.0;
-		final double AGGREGATE_RATE = 1.0/12.0;
 		double effectiveYield;
 		
 		if(!isPropertyInvestor()) return false;
-		if(me.bankBalance < desiredBankBalance(me)*0.75) {
+		// TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
+		if(me.bankBalance < desiredBankBalance(me)*config.BTL_CHOICE_MIN_BANK_BALANCE) {
 			return(false);
 		}
 		// --- calculate expected yield on zero quality house
@@ -394,16 +395,17 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		
 		double leverage = m.purchasePrice/m.downPayment;
 		double rentalYield = Model.rentalMarket.averageSoldGrossYield;
-		double mortgageRate = m.monthlyPayment*12.0/m.downPayment;
+		double mortgageRate = m.monthlyPayment*config.constants.MONTHS_IN_YEAR/m.downPayment;
 		if(config.BTL_YIELD_SCALING) {
-			effectiveYield = leverage*((1.0-BtLCapGainCoeff)*rentalYield
+			effectiveYield = leverage*((1.0 - BtLCapGainCoeff)*rentalYield
                     + BtLCapGainCoeff*(Model.rentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
 		} else {
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
 		//double pDontBuy = Math.pow(1.0/(1.0 + Math.exp(INTENSITY*effectiveYield)),AGGREGATE_RATE);
 		//return(rand.nextDouble() < (1.0-pDontBuy));
-	    return (rand.nextDouble() < Math.pow(sigma(INTENSITY*effectiveYield),AGGREGATE_RATE));
+	    return (rand.nextDouble() < Math.pow(sigma(config.BTL_CHOICE_INTENSITY*effectiveYield),
+                1.0/config.constants.MONTHS_IN_YEAR));
 	}
 	
 	public double btlPurchaseBid(Household me) {

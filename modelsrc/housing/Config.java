@@ -49,7 +49,7 @@ public class Config {
     double BANK_BALANCE_FOR_CASH_DOWNPAYMENT;   // If bankBalance/housePrice is above this, payment will be made fully in cash
     double HPA_EXPECTATION_WEIGHT;              // Weight assigned to current trend when computing expectations
     double HOLD_PERIOD;                         // Average period, in years, for which owner-occupiers hold their houses
-    // Household behaviour parameters: price reduction
+    // Household behaviour parameters: sale price reduction
     double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
     double REDUCTION_MU;                    // Mean percentage reduction for prices of houses on the market
     double REDUCTION_SIGMA;                 // Standard deviation of percentage reductions for prices of houses on the market
@@ -68,11 +68,16 @@ public class Config {
     double RENT_MARKUP;                     // Markup over average rent demanded for houses of the same quality
     double RENT_EQ_MONTHS_ON_MARKET;        // Number of months on the market in an equilibrium situation
     double RENT_EPSILON;                    // Standard deviation of the noise
+    double RENT_MAX_AMORTIZATION_PERIOD;    // Maximum period BTL investors are ready to wait to get back their investment, this determines their minimum demanded rent
+    double RENT_REDUCTION;                  // Percentage reduction of demanded rent for every month the property is in the market, not rented
     // Household behaviour parameters: downpayment
     double DOWNPAYMENT_FTB_SCALE;           // Scale parameter for the log-normal distribution of downpayments by first-time-buyers
     double DOWNPAYMENT_FTB_SHAPE;           // Shape parameter for the log-normal distribution of downpayments by first-time-buyers
     double DOWNPAYMENT_OO_SCALE;            // Scale parameter for the log-normal distribution of downpayments by owner-occupiers
     double DOWNPAYMENT_OO_SHAPE;            // Shape parameter for the log-normal distribution of downpayments by owner-occupiers
+    double DOWNPAYMENT_MIN_INCOME;          // Minimum income percentile to consider any downpayment, below this level, downpayment is set to 0
+    double DOWNPAYMENT_BTL_MEAN;            // Average downpayment, as percentage of house price, by but-to-let investors
+    double DOWNPAYMENT_BTL_EPSILON;         // Standard deviation of the noise
     // Household behaviour parameters: desired bank balance
     double DESIRED_BANK_BALANCE_ALPHA;
     double DESIRED_BANK_BALANCE_BETA;
@@ -82,6 +87,10 @@ public class Config {
     double DECISION_TO_SELL_BETA;           // Weight of interest rate effect
     double DECISION_TO_SELL_HPC;            // TODO: fudge parameter, explicitly explained otherwise in the paper
     double DECISION_TO_SELL_INTEREST;       // TODO: fudge parameter, explicitly explained otherwise in the paper
+    // Household behaviour parameters: BTL buy/sell choice
+    double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield
+    double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimun bank balance, as a percentage of the desired bank balance, to buy new properties
+
 
 
 
