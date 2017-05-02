@@ -18,8 +18,8 @@ public class HouseSaleMarket {
 	private static Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	public static final double INITIAL_HPI = 0.8;
-	public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 housse price index data tables table 34
-	public static final double HPI_SHAPE = 0.555; // shape parameter for lognormal dist. ONS: 2013 house price index data tables table 34
+	public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 house price index data tables table 34 (this is precisely the scale parameter mu of the log-normal dist.)
+	public static final double HPI_SHAPE = 0.555; // shape parameter for log-normal dist. ONS: 2013 house price index data tables table 34
 	public static final double HPI_REFERENCE = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0); // Mean of reference house prices
 	public static LogNormalDistribution listPriceDistribution = new LogNormalDistribution(HPI_LOG_MEDIAN, HPI_SHAPE);
 //	public static LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
