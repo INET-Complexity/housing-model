@@ -28,7 +28,6 @@ public class Config {
     // Housing market parameters
     int DAYS_UNDER_OFFER;                   // Time (in days) that a house remains under offer
     double BIDUP;                           // Smallest proportional increase in price that can cause a gazump
-    int HPI_LENGTH;                         // Number of months to record HPI
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
     boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
@@ -51,7 +50,8 @@ public class Config {
     double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
     // Household behaviour parameters: general
     double BANK_BALANCE_FOR_CASH_DOWNPAYMENT;   // If bankBalance/housePrice is above this, payment will be made fully in cash
-    double HPA_EXPECTATION_WEIGHT;              // Weight assigned to current trend when computing expectations
+    double HPA_EXPECTATION_FACTOR;              // Weight assigned to current trend when computing expectations
+    int HPA_YEARS_TO_CHECK = 1;                 // Number of years of the HPI record to check when computing the annual HPA
     double HOLD_PERIOD;                         // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: sale price reduction
     double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
@@ -110,6 +110,7 @@ public class Config {
      */
     public class DerivedParams {
         // Housing market parameters
+        int HPI_RECORD_LENGTH;          // Number of months to record HPI (to compute price growth at different time scales)
         double MONTHS_UNDER_OFFER;      // Time (in months) that a house remains under offer
         double T;                       // Characteristic number of data-points over which to average market statistics
         double E;                       // Decay constant for averaging days on market (in transactions)
@@ -211,6 +212,7 @@ public class Config {
      */
     private void setDerivedParams() {
         // Housing market parameters
+        derivedParams.HPI_RECORD_LENGTH = HPA_YEARS_TO_CHECK*constants.MONTHS_IN_YEAR + 3;  // Plus three months in a quarter
         derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/30.0;
         derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from
         derivedParams.E = Math.exp(-1.0/derivedParams.T);

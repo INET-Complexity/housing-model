@@ -216,7 +216,7 @@ public class HousingMarketStats extends CollectorBase {
 	}
 	
 	public double getHPA() {
-		return(market.housePriceAppreciation());
+		return(market.housePriceAppreciation(1));
 	}
 	public String nameHPA() {
 		return("Annualised house price growth");

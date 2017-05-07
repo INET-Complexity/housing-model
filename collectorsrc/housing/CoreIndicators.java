@@ -172,15 +172,14 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public double getHousePriceGrowth() {
+		// As opposed to HPA, this captures quarter to quarter housing price growth
 //		return(100.0*Model.collectors.housingMarketStats.getHPA());
-		double lastHPI = 
-				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-4) +
-				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-5) +
-				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-6);
-		double HPI = 
-				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-1) +
-				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-2) +
-				Model.housingMarket.HPIRecord.getElement(config.HPI_LENGTH-3);
+		double lastHPI = Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 4)
+                + Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 5)
+                + Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 6);
+		double HPI = Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 1)
+                + Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 2)
+                + Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 3);
 		return(100.0*(HPI - lastHPI)/lastHPI);
 	}
 	public String desHousePriceGrowth() {

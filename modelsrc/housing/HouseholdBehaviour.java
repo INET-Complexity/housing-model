@@ -427,8 +427,10 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 
 	/*** @returns expectation value of HPI in one year's time divided by today's HPI*/
 	public double HPAExpectation() {
-		return(Model.housingMarket.housePriceAppreciation()*config.HPA_EXPECTATION_WEIGHT);
-	}
+		// Dampening or multiplier factor, depending on its value being <1 or >1, for the current trend of HPA when
+		// computing expectations as in HPI(t+DT) = HPI(t) + FACTOR*DT*dHPI/dt (double)
+		return(Model.housingMarket.housePriceAppreciation(config.HPA_YEARS_TO_CHECK)*config.HPA_EXPECTATION_FACTOR);
+    }
 	
 	/*
 	public double utilityOfRenting(Household me, int q) {

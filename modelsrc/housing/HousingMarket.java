@@ -46,7 +46,7 @@ public abstract class HousingMarket implements Serializable {
 	public HousingMarket() {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator()); //Priority Queue of (Price, Quality)
 		bids = new ArrayList<>(config.TARGET_POPULATION/16);	// TODO: Clarify where does this 16 come from
-		HPIRecord = new DescriptiveStatistics(config.HPI_LENGTH);
+		HPIRecord = new DescriptiveStatistics(config.derivedParams.HPI_RECORD_LENGTH);
 		quarterlyHPI.addValue(1.0);
 		quarterlyHPI.addValue(1.0);		
 		init();
@@ -59,7 +59,7 @@ public abstract class HousingMarket implements Serializable {
 		}
 		housePriceIndex = 1.0;
 		averageDaysOnMarket = 30;
-		for(i=0; i<config.HPI_LENGTH; ++i) HPIRecord.addValue(1.0);
+		for(i=0; i<config.derivedParams.HPI_RECORD_LENGTH; ++i) HPIRecord.addValue(1.0);
 		offersPQ.clear();
 //		matches.clear();
 	}
@@ -301,18 +301,23 @@ public abstract class HousingMarket implements Serializable {
 	
 	/***************************************************
 	 * Get the annualised appreciation in house price index
-	 * (Compares the previous quarter to the quarter last year to get rid of seasonality)
-	 * 
+	 * It compares the previous quarter (previous 3 months, to smooth changes) to the quarter nYears years before
+     * (full years to avoid seasonal effects) to compute the geometric mean over the nYear years
+     *
+	 * @param nYears number of years to average house price growth
 	 * @return Annualised appreciation
 	 ***************************************************/
-	public double housePriceAppreciation() {
-		// TODO: Clarify where the integers in the following formulas come from
-		return((HPIRecord.getElement(config.HPI_LENGTH-1)+HPIRecord.getElement(config.HPI_LENGTH-2)+HPIRecord.getElement(config.HPI_LENGTH-3))/
-				(HPIRecord.getElement(config.HPI_LENGTH-13)+HPIRecord.getElement(config.HPI_LENGTH-14)+HPIRecord.getElement(config.HPI_LENGTH-15))
-				-1.0);
-//		return(HPIRecord.getElement(Config.HPI_LENGTH-1)/
-//				HPIRecord.getElement(Config.HPI_LENGTH-13)
-//				-1.0);
+	public double housePriceAppreciation(int nYears) {
+        double HPI = (HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 1)
+                + HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 2)
+                + HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 3));
+        double oldHPI = (HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH
+                - nYears*config.constants.MONTHS_IN_YEAR - 1)
+                + HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH
+                - nYears*config.constants.MONTHS_IN_YEAR - 2)
+                + HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH
+                - nYears*config.constants.MONTHS_IN_YEAR - 3));
+        return(Math.pow(HPI/oldHPI, 1.0/nYears) - 1.0);
 	}
 	
 	/***********************************************
