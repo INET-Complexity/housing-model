@@ -14,6 +14,8 @@ import sim.util.Double2D;
 public class CreditSupply extends CollectorBase {
 	private static final long serialVersionUID = 1630707025974306844L;
 
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public CreditSupply() {
 		mortgageCounter = 0;
 		ftbCounter = 0;
@@ -58,7 +60,7 @@ public class CreditSupply extends CollectorBase {
 				if(approval.isBuyToLet) {
 					btl_ltv.addValue(100.0*approval.principal/housePrice);
 //					double icr = Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
-					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
+					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.BANK_BTL_STRESSED_INTEREST);
 					btl_icr.addValue(icr);
 				} else {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);

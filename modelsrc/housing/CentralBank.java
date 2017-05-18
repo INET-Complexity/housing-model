@@ -5,11 +5,13 @@ import java.io.Serializable;
 public class CentralBank implements Serializable {
 	private static final long serialVersionUID = -2857716547766065142L;
 
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public CentralBank() {
 		// Setup initial values
 		firstTimeBuyerLTVLimit = 0.95;
 		ownerOccupierLTVLimit= 0.9;
-		buyToLetLTVLimit = Bank.MAX_BTL_LTV;
+		buyToLetLTVLimit = config.BANK_MAX_BTL_LTV;
 		
 		firstTimeBuyerLTILimit = 6.0;
 		ownerOccupierLTILimit = 6.0;

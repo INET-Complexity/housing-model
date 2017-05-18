@@ -15,6 +15,8 @@ import utilities.PriorityQueue2D;
 public class HouseSaleMarket extends HousingMarket {
 	private static final long serialVersionUID = -2878118108039744432L;
 
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public HouseSaleMarket() {
 		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
 	}
@@ -66,7 +68,7 @@ public class HouseSaleMarket extends HousingMarket {
 		if(bid.getClass() == BtLBuyerRecord.class) { // BTL buyer (yield driven)
 			HouseSaleRecord bestOffer = (HouseSaleRecord)offersPY.peek(bid);
 			if(bestOffer != null) {
-					double minDownpayment = bestOffer.getPrice()*(1.0 - Model.rentalMarket.averageSoldGrossYield/(Model.bank.interestCoverageRatio()*Model.bank.getBtLStressedMortgageInterestRate()));
+					double minDownpayment = bestOffer.getPrice()*(1.0 - Model.rentalMarket.averageSoldGrossYield/(Model.bank.interestCoverageRatio()*config.BANK_BTL_STRESSED_INTEREST));
 //					if(bestOffer.getExpectedAnnualRent()/(bestOffer.getPrice()-bid.buyer.behaviour.downPayment(bid.buyer, bestOffer.getPrice())) >= Model.bank.interestCoverageRatio()*Model.bank.getBtLStressedMortgageInterestRate()) {
 //						return(bestOffer);
 //					}

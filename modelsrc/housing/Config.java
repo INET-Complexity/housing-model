@@ -23,14 +23,18 @@ public class Config {
     int N_SIMS; 					        // Number of simulations to run (monte-carlo)
     boolean recordCoreIndicators;		    // True to write time series for each core indicator
     boolean recordMicroData;			    // True to write micro data for each transaction made
+
     // House parameters
     public int N_QUALITY;                   // Number of quality bands for houses
+
     // Housing market parameters
     int DAYS_UNDER_OFFER;                   // Time (in days) that a house remains under offer
     double BIDUP;                           // Smallest proportional increase in price that can cause a gazump
+
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
     boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
+
     // Household parameters
     boolean BTL_ENABLED;                    // True to have a buy-to-let sector // TODO: Useless parameter!
     double RETURN_ON_FINANCIAL_WEALTH;      // Monthly percentage growth of financial investments
@@ -95,7 +99,15 @@ public class Config {
     double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield
     double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimun bank balance, as a percentage of the desired bank balance, to buy new properties
 
-
+    // Bank parameters
+    int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
+    double BANK_INITIAL_BASE_RATE;          // Bank initial base-rate (currently remains unchanged)
+    double BANK_MAX_OO_LTV;		            // Maximum LTV ratio that the bank would allow for owner-occupiers when not regulated
+    double BANK_MAX_BTL_LTV;	            // Maximum LTV ratio that the bank would allow for BTL investors when not regulated
+    double BANK_MAX_OO_LTI;		            // Maximum LTI ratio that the bank would allow for owner-occupiers when not regulated
+    double BANK_AFFORDABILITY_COEFF;        // Maximum fraction of the household's income to be spent on mortgage repayments under stressed conditions
+    double BANK_BTL_STRESSED_INTEREST;      // Interest rate under stressed condition for BTL investors when calculating interest coverage ratios (ICR)
+    double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
 
 
     // Create object containing all derived parameters
@@ -117,6 +129,8 @@ public class Config {
         double G;                       // Decay constant for averageListPrice averaging (in transactions)
         // Household behaviour parameters: general
         double MONTHLY_P_SELL;          // Monthly probability for owner-occupiers to sell their houses
+        // Bank parameters
+        int N_PAYMENTS;                 // Number of monthly repayments (mortgage duration in months)
     }
 
     /**
@@ -219,6 +233,8 @@ public class Config {
         derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);
         // Household behaviour parameters: general
         derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*12.0);
+        // Bank parameters
+        derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
     }
 
     /**
