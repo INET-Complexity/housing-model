@@ -7,6 +7,8 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 public class Lifecycle implements Serializable {
 	private static final long serialVersionUID = -2455155016204679970L;
 
+    private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public Lifecycle(double iage) {
 		age = iage;
 		incomePercentile = rand.nextDouble();
@@ -14,7 +16,7 @@ public class Lifecycle implements Serializable {
 	}
 			
 	public void step() {
-		age += 1.0/12.0;
+		age += 1.0/config.constants.MONTHS_IN_YEAR;
 	}
 	
 	/*** 
@@ -30,29 +32,35 @@ public class Lifecycle implements Serializable {
 			boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportUpperBound() - 1e-7;
 		}
 		double income = data.Lifecycle.lnIncomeGivenAge.getBinAt(boundAge).inverseCumulativeProbability(incomePercentile);
-		income = Math.exp(income)*52.0; //is this to go from weekly to annual?
+//        income = Math.exp(income)*52;
+		income = Math.exp(income);
 		if(income < Government.Config.INCOME_SUPPORT) income = Government.Config.INCOME_SUPPORT; // minimum income is govt. support
 		return(income);
 	}
 
-	public static LogNormalDistribution [] setupIncomeByAge() {
-		LogNormalDistribution [] result = new LogNormalDistribution[100];
-		double median;
-		int age;
-		for(age = 0; age<100; ++age) {
-			median = -30*age*age + 2520*age - 14250;
-			if(median < 15000) median = 15000;
-			result[age] = new LogNormalDistribution(Math.log(median), INCOME_SHAPE);
-		}
-		return(result);
-	}
-	
-	public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
-	public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
+	// TODO: This function is never used, check if removing (it's an alternative method for computing income dist. using only shape and median params.)
+//	public static LogNormalDistribution [] setupIncomeByAge() {
+//		LogNormalDistribution [] result = new LogNormalDistribution[100];
+//		double median;
+//		int age;
+//		for(age = 0; age<100; ++age) {
+//			// TODO: Also, what are all these hidden parameters?
+//			median = -30*age*age + 2520*age - 14250;
+//			if(median < 15000) median = 15000;
+//			result[age] = new LogNormalDistribution(Math.log(median), INCOME_SHAPE);
+//		}
+//		return(result);
+//	}
+
+    // TODO: This is never used, check if removing (it's an alternative method for computing income dist. using only shape and median params.)
+//	public static double INCOME_LOG_MEDIAN = Math.log(29580); // Source: IFS: living standards, poverty and inequality in the UK (22,938 after taxes) //Math.log(20300); // Source: O.N.S 2011/2012
+//	public static double INCOME_SHAPE = (Math.log(44360) - INCOME_LOG_MEDIAN)/0.6745; // Source: IFS: living standards, poverty and inequality in the UK (75th percentile is 32692 after tax)
+
 //	public static LogNormalDistribution incomeDistribution = new LogNormalDistribution(INCOME_LOG_MEDIAN, INCOME_SHAPE);
 
 	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	double	age;				// age of representative householder
 	double	incomePercentile; 	// fixed for lifetime of household
-	static LogNormalDistribution [] incomeByAge = setupIncomeByAge();
+    // TODO: This is never used, check if removing (it's an alternative method for computing income dist. using only shape and median params.)
+//	static LogNormalDistribution [] incomeByAge = setupIncomeByAge();
 }
