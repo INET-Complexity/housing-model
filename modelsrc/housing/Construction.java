@@ -10,7 +10,6 @@ public class Construction implements IHouseOwner, Serializable {
 	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	public Construction() {
-		housesPerHousehold = 82.0/100.0;
 		housingStock = 0;
 		onMarket = new HashSet<>();
 //		for(j = 0; j<Nh; ++j) { // setup houses
@@ -27,9 +26,9 @@ public class Construction implements IHouseOwner, Serializable {
 	public void step() {
 		int targetStock;
 		if(Model.households.size() < config.TARGET_POPULATION) {
-			targetStock = (int)(Model.households.size()*housesPerHousehold);
+			targetStock = (int)(Model.households.size()*config.CONSTRUCTION_HOUSES_PER_HOUSEHOLD);
 		} else {
-			targetStock = (int)(config.TARGET_POPULATION*housesPerHousehold);
+			targetStock = (int)(config.TARGET_POPULATION*config.CONSTRUCTION_HOUSES_PER_HOUSEHOLD);
 		}
 		int shortFall = targetStock - housingStock;
 		House newBuild;
@@ -74,7 +73,6 @@ public class Construction implements IHouseOwner, Serializable {
 		// TODO Auto-generated method stub		
 	}
 
-	public double housesPerHousehold; 	// target number of houses per household
 	public int housingStock;			// total number of houses built
 	HashSet<House> onMarket; 
 }

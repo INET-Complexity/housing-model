@@ -25,15 +25,15 @@ public class Demographics {
 		// --- birth
 		int nBirths;
 		// TODO: Clarify what this spinup does and if it is actually needed
-		if(config.SPINUP && Model.getTime() < spinupYears*12) {
+		if(config.SPINUP && Model.getTime() < spinupYears*config.constants.MONTHS_IN_YEAR) {
 			// --- still in spinup phase of simulation
-			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.getTime()/12.0))*config.TARGET_POPULATION/12.0 + 0.5);
+			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.getTime()/config.constants.MONTHS_IN_YEAR))*config.TARGET_POPULATION/config.constants.MONTHS_IN_YEAR + 0.5);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfSpinupHouseholdAgeAtBirth.nextDouble()));
 			}
 		} else {
 			// --- in projection phase of simulation
-			nBirths = (int)(config.TARGET_POPULATION*data.Demographics.futureBirthRate(Model.getTime())/12.0 + 0.5);
+			nBirths = (int)(config.TARGET_POPULATION*data.Demographics.futureBirthRate(Model.getTime())/config.constants.MONTHS_IN_YEAR + 0.5);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
 			}
@@ -46,7 +46,7 @@ public class Demographics {
 //	    if(Model.getTime() > spinupYears*12) pMult = Model.households.size()/TARGET_POPULATION;
 		while(iterator.hasNext()) {
 		    Household h = iterator.next();
-		    pDeath = data.Demographics.probDeathGivenAge(h.lifecycle.age)/12.0;
+		    pDeath = data.Demographics.probDeathGivenAge(h.lifecycle.age)/config.constants.MONTHS_IN_YEAR;
 			if(rand.nextDouble() < pDeath) {
 				// --- inheritance
 				iterator.remove();

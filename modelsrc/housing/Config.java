@@ -116,6 +116,9 @@ public class Config {
     double CENTRAL_BANK_BTL_STRESSED_INTEREST;  // Interest rate under stressed condition for BTL investors when calculating interest coverage ratios (ICR)
     double CENTRAL_BANK_MAX_ICR;                // Interest coverage ratio (ICR) limit imposed by the central bank
 
+    // Construction sector parameters
+    double CONSTRUCTION_HOUSES_PER_HOUSEHOLD;   // Target ratio of houses per household
+
 
     // Create object containing all derived parameters
     Config.DerivedParams derivedParams = new DerivedParams();
