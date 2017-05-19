@@ -102,12 +102,19 @@ public class Config {
     // Bank parameters
     int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
     double BANK_INITIAL_BASE_RATE;          // Bank initial base-rate (currently remains unchanged)
-    double BANK_MAX_OO_LTV;		            // Maximum LTV ratio that the bank would allow for owner-occupiers when not regulated
-    double BANK_MAX_BTL_LTV;	            // Maximum LTV ratio that the bank would allow for BTL investors when not regulated
-    double BANK_MAX_OO_LTI;		            // Maximum LTI ratio that the bank would allow for owner-occupiers when not regulated
-    double BANK_AFFORDABILITY_COEFF;        // Maximum fraction of the household's income to be spent on mortgage repayments under stressed conditions
-    double BANK_BTL_STRESSED_INTEREST;      // Interest rate under stressed condition for BTL investors when calculating interest coverage ratios (ICR)
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
+
+    // Central bank parameters
+    double CENTRAL_BANK_MAX_FTB_LTV;		    // Maximum LTV ratio that the bank would allow for first-time-buyers when not regulated
+    double CENTRAL_BANK_MAX_OO_LTV;		        // Maximum LTV ratio that the bank would allow for owner-occupiers when not regulated
+    double CENTRAL_BANK_MAX_BTL_LTV;	        // Maximum LTV ratio that the bank would allow for BTL investors when not regulated
+    double CENTRAL_BANK_FRACTION_OVER_MAX_LTV;  // Maximum fraction of mortgages that the bank can give over the LTV ratio limit
+    double CENTRAL_BANK_MAX_FTB_LTI;		    // Maximum LTI ratio that the bank would allow for first-time-buyers when not regulated
+    double CENTRAL_BANK_MAX_OO_LTI;		        // Maximum LTI ratio that the bank would allow for owner-occupiers when not regulated
+    double CENTRAL_BANK_FRACTION_OVER_MAX_LTI;  // Maximum fraction of mortgages that the bank can give over the LTI ratio limit
+    double CENTRAL_BANK_AFFORDABILITY_COEFF;    // Maximum fraction of the household's income to be spent on mortgage repayments under stressed conditions
+    double CENTRAL_BANK_BTL_STRESSED_INTEREST;  // Interest rate under stressed condition for BTL investors when calculating interest coverage ratios (ICR)
+    double CENTRAL_BANK_MAX_ICR;                // Interest coverage ratio (ICR) limit imposed by the central bank
 
 
     // Create object containing all derived parameters

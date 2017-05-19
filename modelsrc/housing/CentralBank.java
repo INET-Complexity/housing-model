@@ -9,18 +9,17 @@ public class CentralBank implements Serializable {
 
 	public CentralBank() {
 		// Setup initial values
-		firstTimeBuyerLTVLimit = 0.95;
-		ownerOccupierLTVLimit= 0.9;
-		buyToLetLTVLimit = config.BANK_MAX_BTL_LTV;
+		firstTimeBuyerLTVLimit = config.CENTRAL_BANK_MAX_FTB_LTV;
+		ownerOccupierLTVLimit= config.CENTRAL_BANK_MAX_OO_LTV;
+		buyToLetLTVLimit = config.CENTRAL_BANK_MAX_BTL_LTV;
 		
-		firstTimeBuyerLTILimit = 6.0;
-		ownerOccupierLTILimit = 6.0;
-//		buyToLetLTILimit = 1000.0; // unregulated
+		firstTimeBuyerLTILimit = config.CENTRAL_BANK_MAX_FTB_LTI;
+		ownerOccupierLTILimit = config.CENTRAL_BANK_MAX_OO_LTI;
 
-		proportionOverLTILimit= 0.15;
-		proportionOverLTVLimit= 0.0;
-		
-		interestCoverRatioLimit = 1.25;
+        proportionOverLTVLimit = config.CENTRAL_BANK_FRACTION_OVER_MAX_LTV;
+        proportionOverLTILimit = config.CENTRAL_BANK_FRACTION_OVER_MAX_LTI;
+
+		interestCoverRatioLimit = config.CENTRAL_BANK_MAX_ICR;
 	}
 	
 	/***

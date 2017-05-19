@@ -184,7 +184,7 @@ public class Bank implements Serializable {
 
 		if(isHome) {
 			// --- affordability constraint TODO: affordability for BtL?
-			affordable_principal = Math.max(0.0,config.BANK_AFFORDABILITY_COEFF*h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
+			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 			approval.principal = Math.min(approval.principal, affordable_principal);
 
 			// --- lti constraint
@@ -192,7 +192,7 @@ public class Bank implements Serializable {
 			approval.principal = Math.min(approval.principal, lti_principal);
 		} else {
 			// --- BtL ICR constraint
-			icr_principal = Model.rentalMarket.averageSoldGrossYield*housePrice/(interestCoverageRatio()*config.BANK_BTL_STRESSED_INTEREST);
+			icr_principal = Model.rentalMarket.averageSoldGrossYield*housePrice/(interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
 			approval.principal = Math.min(approval.principal, icr_principal);
 	//		System.out.println(icr_principal/housePrice);
 		}
@@ -247,12 +247,12 @@ public class Bank implements Serializable {
 
 		if(isHome) { // no LTI for BtL investors
 //			lti_max = h.getMonthlyPreTaxIncome()*12.0* loanToIncome(h.isFirstTimeBuyer())/loanToValue(h.isFirstTimeBuyer(),isHome);
-			pdi_max = liquidWealth + Math.max(0.0,config.BANK_AFFORDABILITY_COEFF*h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
+			pdi_max = liquidWealth + Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 			max = Math.min(max, pdi_max);
 			lti_max = h.annualEmploymentIncome()* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
 			max = Math.min(max, lti_max);
 		} else {
-			icr_max = Model.rentalMarket.averageSoldGrossYield/(interestCoverageRatio()*config.BANK_BTL_STRESSED_INTEREST);
+			icr_max = Model.rentalMarket.averageSoldGrossYield/(interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
 			if(icr_max < 1.0) {
 				icr_max = liquidWealth/(1.0 - icr_max);
 				max = Math.min(max,  icr_max);
@@ -273,9 +273,9 @@ public class Bank implements Serializable {
 	public double loanToValue(boolean firstTimeBuyer, boolean isHome) {
 		double limit;
 		if(isHome) {
-			limit = config.BANK_MAX_OO_LTV;
+			limit = config.CENTRAL_BANK_MAX_OO_LTV;
 		} else {
-			limit = config.BANK_MAX_BTL_LTV;
+			limit = config.CENTRAL_BANK_MAX_BTL_LTV;
 		}
 		if((nOverLTVCapLoans+1.0)/(nLoans + 1.0) > Model.centralBank.proportionOverLTVLimit) {
 			limit = Math.min(limit, Model.centralBank.loanToValueRegulation(firstTimeBuyer, isHome));
@@ -291,7 +291,7 @@ public class Bank implements Serializable {
 	 *********************************************/
 	public double loanToIncome(boolean firstTimeBuyer) {
 		double limit;
-		limit = config.BANK_MAX_OO_LTI;
+		limit = config.CENTRAL_BANK_MAX_OO_LTI;
 		if((nOverLTICapLoans+1.0)/(nLoans + 1.0) > Model.centralBank.proportionOverLTILimit) {
 			limit = Math.min(limit, Model.centralBank.loanToIncomeRegulation(firstTimeBuyer));
 		}
@@ -304,7 +304,7 @@ public class Bank implements Serializable {
 
 	// TODO: Remove (no needed anymore)
 //	public double getBtLStressedMortgageInterestRate() {
-//		return(config.BANK_BTL_STRESSED_INTEREST);
+//		return(config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
 //	}
 	
 	public HashSet<MortgageAgreement>		mortgages;	// all unpaid mortgage contracts supplied by the bank
