@@ -75,7 +75,7 @@ public class Household implements IHouseOwner, Serializable {
 		lifecycle.step();
 		monthlyEmploymentIncome = lifecycle.annualIncome()/config.constants.MONTHS_IN_YEAR;
 		disposableIncome = getMonthlyPostTaxIncome()
-				- config.ESSENTIAL_CONSUMPTION_FRACTION * Government.Config.INCOME_SUPPORT; // necessary consumption
+				- config.ESSENTIAL_CONSUMPTION_FRACTION * config.GOVERNMENT_INCOME_SUPPORT; // necessary consumption
 		for(PaymentAgreement payment : housePayments.values()) {
 			disposableIncome -= payment.makeMonthlyPayment();
 		}

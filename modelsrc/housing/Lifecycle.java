@@ -34,7 +34,7 @@ public class Lifecycle implements Serializable {
 		double income = data.Lifecycle.lnIncomeGivenAge.getBinAt(boundAge).inverseCumulativeProbability(incomePercentile);
 //        income = Math.exp(income)*52;
 		income = Math.exp(income);
-		if(income < Government.Config.INCOME_SUPPORT) income = Government.Config.INCOME_SUPPORT; // minimum income is govt. support
+		if(income < config.GOVERNMENT_INCOME_SUPPORT) income = config.GOVERNMENT_INCOME_SUPPORT; // minimum income is govt. support
 		return(income);
 	}
 

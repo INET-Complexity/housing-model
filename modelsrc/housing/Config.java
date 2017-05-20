@@ -17,6 +17,9 @@ import java.lang.Integer;
  *
  ************************************************/
 public class Config {
+
+    /** Declaration of parameters **/       // They can be package-private
+
     // General model control parameters
     int N_STEPS;				            // Simulation duration in time steps
     int TIME_TO_START_RECORDING;	        // Time steps before recording statistics (initialisation time)
@@ -119,6 +122,17 @@ public class Config {
     // Construction sector parameters
     double CONSTRUCTION_HOUSES_PER_HOUSEHOLD;   // Target ratio of houses per household
 
+    // Government parameters
+    double GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT;     // Maximum personal allowance
+    double GOVERNMENT_INCOME_SUPPORT;               // Minimum monthly earnings for a married couple from income support
+
+    /** Declaration of addresses **/        // They must be public to be accessed from data package
+
+    // Data addresses: Government
+    public String DATA_TAX_RATES;                  // Address for tax bands and rates data
+    public String DATA_NATIONAL_INSURANCE_RATES;   // Address for national insurance bands and rates data
+
+    /** Construction of objects to contain derived parameters and constants **/
 
     // Create object containing all derived parameters
     Config.DerivedParams derivedParams = new DerivedParams();
@@ -220,8 +234,18 @@ public class Config {
                                 field.getName());
                         iae.printStackTrace();
                     }
+                // For string fields, parse the string with appropriate exception handling
                 }
-                // TODO: Add warning for unknown field type (taking into account derivedParams field type)
+                else if (field.getType().toString().equals("class java.lang.String")) {
+                    try {
+                        field.set(this, prop.getProperty(field.getName()).replace("\"", "").replace("\'", ""));
+                    } catch (IllegalAccessException iae) {
+                        System.out.println("Exception " + iae + " while trying to set the field " +
+                                field.getName());
+                        iae.printStackTrace();
+                    }
+                }
+                // TODO: Add warning for unknown field type (taking into account derivedParams field type) and for fields without value
             }
         } catch (IOException ioe) {
             System.out.println("Exception " + ioe + " while trying to read file '" + configFileName + "'");
