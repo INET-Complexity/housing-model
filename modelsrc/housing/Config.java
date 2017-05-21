@@ -33,6 +33,8 @@ public class Config {
     // Housing market parameters
     int DAYS_UNDER_OFFER;                   // Time (in days) that a house remains under offer
     double BIDUP;                           // Smallest proportional increase in price that can cause a gazump
+    double MARKET_AVERAGE_PRICE_DECAY;      // Decay constant for the exponential moving average of sale prices
+
 
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
@@ -134,11 +136,11 @@ public class Config {
 
     /** Construction of objects to contain derived parameters and constants **/
 
-    // Create object containing all derived parameters
-    Config.DerivedParams derivedParams = new DerivedParams();
-
-    // Finally, create object containing all constants
+    // Create object containing all constants
     Config.Constants constants = new Constants();
+
+    // Finally, create object containing all derived parameters
+    Config.DerivedParams derivedParams = new DerivedParams();
 
     /**
      * Class to contain all parameters which are not read from the configuration (.properties) file, but derived,
@@ -261,12 +263,12 @@ public class Config {
     private void setDerivedParams() {
         // Housing market parameters
         derivedParams.HPI_RECORD_LENGTH = HPA_YEARS_TO_CHECK*constants.MONTHS_IN_YEAR + 3;  // Plus three months in a quarter
-        derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/30.0;
+        derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/constants.DAYS_IN_MONTH;
         derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from
         derivedParams.E = Math.exp(-1.0/derivedParams.T);
         derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);
         // Household behaviour parameters: general
-        derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*12.0);
+        derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*constants.MONTHS_IN_YEAR);
         // Bank parameters
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
     }
