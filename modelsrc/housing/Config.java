@@ -157,6 +157,9 @@ public class Config {
         double MONTHLY_P_SELL;          // Monthly probability for owner-occupiers to sell their houses
         // Bank parameters
         int N_PAYMENTS;                 // Number of monthly repayments (mortgage duration in months)
+        // House rental market parameters
+        double K;                       // Decay factor for exponential moving average of gross yield from rentals (averageSoldGrossYield)
+        double KL;                      // Decay factor for long-term exponential moving average of gross yield from rentals (longTermAverageGrossYield)
     }
 
     /**
@@ -271,6 +274,9 @@ public class Config {
         derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*constants.MONTHS_IN_YEAR);
         // Bank parameters
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
+        // House rental market parameters
+        derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));
+        derivedParams.KL = Math.exp(-10000.0/(TARGET_POPULATION*50.0*200.0));
     }
 
     /**

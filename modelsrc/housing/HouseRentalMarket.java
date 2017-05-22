@@ -13,10 +13,6 @@ public class HouseRentalMarket extends HousingMarket {
 
 	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
-	final double S = 10000.0/config.TARGET_POPULATION; // Decay scaling factor
-	final double K = Math.exp(-S/50.0); // decay rate for averageSoldGrossYield
-	final double KL = Math.exp(-S/(50.0*200.0)); // decay rate for longTermAverageGrossYield
-
 	public HouseRentalMarket() {
 		for(int i=0; i< config.N_QUALITY; ++i) {
 			monthsOnMarket[i] = 1.0;			
@@ -34,9 +30,9 @@ public class HouseRentalMarket extends HousingMarket {
 		purchase.buyer.completeHouseRental(sale);
 		sale.house.owner.completeHouseLet(sale);
 		Model.collectors.rentalMarketStats.recordSale(purchase, sale);
-		double yield = sale.getPrice()*12.0/Model.housingMarket.getAverageSalePrice(sale.house.getQuality());
-		averageSoldGrossYield = averageSoldGrossYield*K + (1.0-K)*yield;
-		longTermAverageGrossYield = longTermAverageGrossYield*KL + (1.0-KL)*yield;
+		double yield = sale.getPrice()*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(sale.house.getQuality());
+		averageSoldGrossYield = averageSoldGrossYield*config.derivedParams.K + (1.0-config.derivedParams.K)*yield;
+		longTermAverageGrossYield = longTermAverageGrossYield*config.derivedParams.KL + (1.0-config.derivedParams.KL)*yield;
 	}
 	
 	public HouseSaleRecord offer(House house, double price) {
@@ -80,7 +76,7 @@ public class HouseRentalMarket extends HousingMarket {
 	protected void recalculateExpectedGrossYield() {
 //		bestGrossYield = 0.0;
 		for(int q=0; q < config.N_QUALITY; ++q) {
-			expectedGrossYield[q] = getAverageSalePrice(q)*12.0*expectedOccupancy(q)/Model.housingMarket.getAverageSalePrice(q);
+			expectedGrossYield[q] = getAverageSalePrice(q)*config.constants.MONTHS_IN_YEAR*expectedOccupancy(q)/Model.housingMarket.getAverageSalePrice(q);
 //			if(expectedGrossYield[q] > bestGrossYield) bestGrossYield = expectedGrossYield[q];
 		}		
 	}

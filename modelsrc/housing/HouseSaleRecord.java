@@ -13,6 +13,9 @@ import java.util.Comparator;
  *************************************************/
 public class HouseSaleRecord extends HousingMarketRecord {
 	private static final long serialVersionUID = 8626260055548234106L;
+
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	/***********************************************
 	 * Construct a new record.
 	 * 
@@ -26,7 +29,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 		initialListedPrice = price;
 //		quality = house.quality;
 		tInitialListing = Model.getTime();
-		matchedBids = new ArrayList<>(8); // Why 8 bids?
+		matchedBids = new ArrayList<>(8);		// TODO: Check if this initial size of 8 is good enough or can be improved
 		recalcYield();
 	}
 	
@@ -63,7 +66,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 //	}
 	
 	public double getExpectedAnnualRent() {
-		return(Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0);
+		return(Model.rentalMarket.getAverageSalePrice(house.getQuality())*config.constants.MONTHS_IN_YEAR);
 	}
 
 	public void setPrice(double newPrice, HousingMarket.Authority auth) {
