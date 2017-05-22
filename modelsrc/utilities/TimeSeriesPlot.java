@@ -14,6 +14,9 @@ import utilities.DataRecorder.Transform;
  *
  */
 public class TimeSeriesPlot {
+
+	// TODO: It appears that this class is never used. Check if we can remove it
+
 	/**
 	 * Constructor
 	 * @param title Title of the plot

@@ -12,6 +12,8 @@ import org.apache.commons.csv.CSVRecord;
 public class TimeSeriesData extends ArrayList<Double> {
 	private static final long serialVersionUID = 3375301779145102517L;
 
+	// TODO: Given that this whole class is not used, check if we can simply remove it
+
 	public TimeSeriesData(String filename, int field) throws IOException {
 		Reader in = new FileReader(filename);
 		Iterator<CSVRecord> records = CSVFormat.EXCEL.withHeader().parse(in).iterator();

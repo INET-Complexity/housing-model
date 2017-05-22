@@ -14,14 +14,11 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
  */
 public class HouseSaleMarket {
 
-	// TODO: Clarify implications of declaring this static and of the imports of housing.Model and housing.Config
+	// TODO: The whole of this class content can be easily moved to the HousingMarket or the HouseSaleMarket class in the housing package
+
 	private static Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
-	public static final double INITIAL_HPI = 0.8;
-	public static final double HPI_LOG_MEDIAN = Math.log(195000); // Median price from ONS: 2013 house price index data tables table 34 (this is precisely the scale parameter mu of the log-normal dist.)
-	public static final double HPI_SHAPE = 0.555; // shape parameter for log-normal dist. ONS: 2013 house price index data tables table 34
-	public static final double HPI_REFERENCE = Math.exp(HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0); // Mean of reference house prices
-	public static LogNormalDistribution listPriceDistribution = new LogNormalDistribution(HPI_LOG_MEDIAN, HPI_SHAPE);
+	public static LogNormalDistribution listPriceDistribution = new LogNormalDistribution(config.derivedParams.HPI_LOG_MEDIAN, config.HPI_SHAPE);
 //	public static LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
 //	public static double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)
 //	public static double SEASONAL_VOL_ADJ = 0.2; // amplitude of seasonal oscillation of volume of sales on market (approximated from HM Revenue and Customs UK Property Transactions Count - July 2015)
@@ -41,7 +38,8 @@ public class HouseSaleMarket {
 	static public double [] setupRefPrice() {
 		double [] result = new double[config.N_QUALITY];
 		for(int q=0; q<config.N_QUALITY; ++q) {
-			result[q] = INITIAL_HPI*listPriceDistribution.inverseCumulativeProbability((q+0.5)/config.N_QUALITY);
+		    // TODO: Why to discount these initial price distribution with INITIAL_HPI (which is < 1)?
+			result[q] = config.INITIAL_HPI*listPriceDistribution.inverseCumulativeProbability((q+0.5)/config.N_QUALITY);
 		}
 		return(result);
 	}

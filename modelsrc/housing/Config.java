@@ -34,7 +34,11 @@ public class Config {
     int DAYS_UNDER_OFFER;                   // Time (in days) that a house remains under offer
     double BIDUP;                           // Smallest proportional increase in price that can cause a gazump
     double MARKET_AVERAGE_PRICE_DECAY;      // Decay constant for the exponential moving average of sale prices
-
+    public double INITIAL_HPI;              // Initial housing price index
+    double HPI_MEDIAN;                      // Median house price
+    public double HPI_SHAPE;                // Shape parameter for the log-normal distribution of housing prices
+    public double AVERAGE_TENANCY_LENGTH;   // Average number of months a tenant will stay in a rented house
+    public double RENT_GROSS_YIELD;         // Profit margin for buy-to-let investors
 
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
@@ -60,7 +64,7 @@ public class Config {
     // Household behaviour parameters: general
     double BANK_BALANCE_FOR_CASH_DOWNPAYMENT;   // If bankBalance/housePrice is above this, payment will be made fully in cash
     double HPA_EXPECTATION_FACTOR;              // Weight assigned to current trend when computing expectations
-    int HPA_YEARS_TO_CHECK = 1;                 // Number of years of the HPI record to check when computing the annual HPA
+    int HPA_YEARS_TO_CHECK;                     // Number of years of the HPI record to check when computing the annual HPA
     double HOLD_PERIOD;                         // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: sale price reduction
     double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
@@ -131,16 +135,19 @@ public class Config {
     /** Declaration of addresses **/        // They must be public to be accessed from data package
 
     // Data addresses: Government
-    public String DATA_TAX_RATES;                  // Address for tax bands and rates data
-    public String DATA_NATIONAL_INSURANCE_RATES;   // Address for national insurance bands and rates data
+    public String DATA_TAX_RATES;                   // Address for tax bands and rates data
+    public String DATA_NATIONAL_INSURANCE_RATES;    // Address for national insurance bands and rates data
+
+    // Data addresses: Lifecycle
+    public String DATA_INCOME_GIVEN_AGE;            // Address for conditional probability of income band given age band
 
     /** Construction of objects to contain derived parameters and constants **/
 
     // Create object containing all constants
-    Config.Constants constants = new Constants();
+    public Config.Constants constants = new Constants();
 
     // Finally, create object containing all derived parameters
-    Config.DerivedParams derivedParams = new DerivedParams();
+    public Config.DerivedParams derivedParams = new DerivedParams();
 
     /**
      * Class to contain all parameters which are not read from the configuration (.properties) file, but derived,
@@ -153,6 +160,8 @@ public class Config {
         double T;                       // Characteristic number of data-points over which to average market statistics
         double E;                       // Decay constant for averaging days on market (in transactions)
         double G;                       // Decay constant for averageListPrice averaging (in transactions)
+        public double HPI_LOG_MEDIAN;   // Logarithmic median house price (scale parameter of the log-normal distribution)
+        public double HPI_REFERENCE;    // Mean of reference house prices
         // Household behaviour parameters: general
         double MONTHLY_P_SELL;          // Monthly probability for owner-occupiers to sell their houses
         // Bank parameters
@@ -167,7 +176,7 @@ public class Config {
      */
     public class Constants {
         final int DAYS_IN_MONTH = 30;
-        final int MONTHS_IN_YEAR = 12;
+        final public int MONTHS_IN_YEAR = 12;
     }
 
     /**
@@ -270,13 +279,15 @@ public class Config {
         derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from
         derivedParams.E = Math.exp(-1.0/derivedParams.T);
         derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);
+        derivedParams.HPI_LOG_MEDIAN = Math.log(HPI_MEDIAN);
+        derivedParams.HPI_REFERENCE = Math.exp(derivedParams.HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
         // Household behaviour parameters: general
         derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*constants.MONTHS_IN_YEAR);
         // Bank parameters
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
         // House rental market parameters
-        derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));
-        derivedParams.KL = Math.exp(-10000.0/(TARGET_POPULATION*50.0*200.0));
+        derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen?
+        derivedParams.KL = Math.exp(-10000.0/(TARGET_POPULATION*50.0*200.0));   // TODO: Also, they are not reported in the paper!
     }
 
     /**

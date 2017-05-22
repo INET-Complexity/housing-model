@@ -152,7 +152,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public double getPriceToIncome() {
-		return(Model.housingMarket.housePriceIndex*data.HouseSaleMarket.HPI_REFERENCE*(Model.collectors.householdStats.nHouseholds - Model.collectors.householdStats.nRenting - Model.collectors.householdStats.nHomeless)/(Model.collectors.householdStats.OOTotalAnnualIncome+Model.collectors.householdStats.BtLTotalAnnualIncome));
+		return(Model.housingMarket.housePriceIndex*config.derivedParams.HPI_REFERENCE*(Model.collectors.householdStats.nHouseholds - Model.collectors.householdStats.nRenting - Model.collectors.householdStats.nHomeless)/(Model.collectors.householdStats.OOTotalAnnualIncome+Model.collectors.householdStats.BtLTotalAnnualIncome));
 	}
 	public String desPriceToIncome() {
 		return("House price to household disposable income ratio");

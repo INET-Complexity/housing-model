@@ -18,8 +18,8 @@ public class HouseRentalMarket extends HousingMarket {
 			monthsOnMarket[i] = 1.0;			
 		}
 		recalculateExpectedGrossYield();
-		averageSoldGrossYield = data.HouseRentalMarket.RENT_GROSS_YIELD;
-		longTermAverageGrossYield = data.HouseRentalMarket.RENT_GROSS_YIELD;
+		averageSoldGrossYield = config.RENT_GROSS_YIELD;
+		longTermAverageGrossYield = config.RENT_GROSS_YIELD;
 	}
 	
 	@Override
@@ -65,7 +65,7 @@ public class HouseRentalMarket extends HousingMarket {
 	 *         of months on the rental market of a house of this quality.
 	 */
 	public double expectedOccupancy(int quality) {
-		return(data.HouseRentalMarket.AVERAGE_TENANCY_LENGTH/(data.HouseRentalMarket.AVERAGE_TENANCY_LENGTH + monthsOnMarket[quality]));
+		return(config.AVERAGE_TENANCY_LENGTH/(config.AVERAGE_TENANCY_LENGTH + monthsOnMarket[quality]));
 	}
 
 	public double getExpectedGrossYield(int quality) {
