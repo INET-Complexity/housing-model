@@ -37,6 +37,17 @@ public class Pdf implements Serializable {
 			e.printStackTrace();			
 		}
 	}
+
+    public Pdf(String filename, int NSamples) {
+        try {
+            BinnedDataDouble data = new BinnedDataDouble(filename);
+            setPdf(data, NSamples);
+        } catch (IOException e) {
+            System.out.println("Problem loading data from file while initialising Pdf");
+            System.out.println("filename = "+System.getProperty("user.dir")+"/"+filename);
+            e.printStackTrace();
+        }
+    }
 	
 	public Pdf(final BinnedDataDouble data) {
 		setPdf(data);
@@ -75,6 +86,17 @@ public class Pdf implements Serializable {
 		end = data.getSupportUpperBound();
 		nSamples = DEFAULT_CDF_SAMPLES;
 		initInverseCDF();		
+	}
+
+	public void setPdf(final BinnedDataDouble data, int NSamples) {
+		pdf = new DoubleUnaryOperator() {
+			public double applyAsDouble(double operand) {
+				return data.getBinAt(operand)/data.getBinWidth();
+			}};
+		start = data.getSupportLowerBound();
+		end = data.getSupportUpperBound();
+		nSamples = NSamples;
+		initInverseCDF();
 	}
 	
 	public double getSupportLowerBound() {

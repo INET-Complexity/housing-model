@@ -43,6 +43,7 @@ public class Config {
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
     boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
+    public double FUTURE_BIRTH_RATE;               // Future birth rate (births per year per capita), calibrated with flux of FTBs
 
     // Household parameters
     boolean BTL_ENABLED;                    // True to have a buy-to-let sector // TODO: Useless parameter!
@@ -140,6 +141,11 @@ public class Config {
 
     // Data addresses: Lifecycle
     public String DATA_INCOME_GIVEN_AGE;            // Address for conditional probability of income band given age band
+
+    // Data addresses: Demographics
+    public String DATA_AGE_MARGINAL_PDF;            // Address for target initial age probability density for household representative person
+    public String DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF;  // Address for pdf of household representative person's age at household birth
+    public String DATA_DEATH_PROB_GIVEN_AGE;        // Address for data on the probability of death given the age of the household representative person
 
     /** Construction of objects to contain derived parameters and constants **/
 

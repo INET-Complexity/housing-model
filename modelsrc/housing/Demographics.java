@@ -24,7 +24,7 @@ public class Demographics {
 	public void step() {
 		// --- birth
 		int nBirths;
-		// TODO: Clarify what this spinup does and if it is actually needed
+		// TODO: Clarify what this spinup does and if it is actually needed. Currently, SPINUP is set to False!
 		if(config.SPINUP && Model.getTime() < spinupYears*config.constants.MONTHS_IN_YEAR) {
 			// --- still in spinup phase of simulation
 			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.getTime()/config.constants.MONTHS_IN_YEAR))*config.TARGET_POPULATION/config.constants.MONTHS_IN_YEAR + 0.5);

@@ -39,7 +39,6 @@ public class Government {
      */
     public static BandsAndRates readBandsAndRates(String fileName) {
         BandsAndRates bandsAndRates = new BandsAndRates();
-//        bandsAndRates.bands = null;
         List<Double> dummyBands = new ArrayList<>();
         List<Double> dummyRates = new ArrayList<>();
         // Try-with-resources statement

@@ -1,21 +1,29 @@
 package data;
 
+import housing.Model;
 import org.apache.commons.math3.distribution.BetaDistribution;
 
+import utilities.BinnedDataDouble;
 import utilities.DoubleUnaryOperator;
 import utilities.Pdf;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Demographics {
 	//public static final int SPINUP_YEARS = 80;			// number of years to spinup
 //	public static final BetaDistribution betaDist = new BetaDistribution(null,2,2);
-	public static final BetaDistribution betaDist = new BetaDistribution(null,5,1);
+//	public static final BetaDistribution betaDist = new BetaDistribution(null,5,1);
 	
 	/**
 	 * Target probability density of age of representative householder
 	 * at time t=0
 	 * Calibrated against (LCFS 2012)
 	 */
-	public static Pdf pdfAge = new Pdf("modelsrc/data/AgeMarginalPDFstatic.csv");
+	public static Pdf pdfAge = new Pdf(Model.config.DATA_AGE_MARGINAL_PDF);
 
 	/**
 	 * Probability density by age of the representative householder given that
@@ -32,17 +40,9 @@ public class Demographics {
 //		}	
 //	});
 	// --- version to make correct age distribution at equilibrium demographics
-	public static Pdf pdfHouseholdAgeAtBirth = new Pdf(15.0, 55.0, new DoubleUnaryOperator() {
-		public double applyAsDouble(double age) {
-			if(age<15.0) return(0.0);
-			if(age<25.0) return(0.0198);
-			if(age<35.0) return(0.0528);
-			if(age<45.0) return(0.0162);
-			if(age<=55.0) return(0.0112);
-			return(0.0);
-		}	
-	},800);
+    public static Pdf pdfHouseholdAgeAtBirth = new Pdf(Model.config.DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF, 800);
 
+    // TODO: Is this really necessary? Do we really need to add these 3 parameters to the model? Remove or re-design! (currently unused, since SPINUP set to False)
 	public static Pdf pdfSpinupHouseholdAgeAtBirth = new Pdf(15.0, 29.0, new DoubleUnaryOperator() {
 		public double applyAsDouble(double age) {
 			if(age>=15.0 && age < 16.0) {
@@ -63,7 +63,9 @@ public class Demographics {
 //		return(0.0102);
 //	}
 	public static double futureBirthRate(double t) {
-		return(0.018); // calibrated against average advances to first time buyers, core indicators 1987-2006
+	    // TODO: Contradictory calibration information, check which version holds and replace data for 2011
+        // calibrated against average advances to first time buyers, core indicators 1987-2006
+		return(Model.config.FUTURE_BIRTH_RATE);
 	}
 	
 
@@ -74,21 +76,54 @@ public class Demographics {
 	 * there is no divorce and the male always dies first
 	 * TODO: Add marriage/co-habitation
 	 */
-	public static double probDeathGivenAge(double ageInYears) {
-		// calibrated against AgeMarginalPDF.csv for static age distribution
-		if(ageInYears<55.0) return(0.0);
-		if(ageInYears<65.0) return(0.0181);
-		if(ageInYears<75.0) return(0.0142);
-		if(ageInYears<85.0) return(0.0035);
-		if(ageInYears<95.0) return(0.02); // not calibrated (calibrated against FTBs per capita)
-		if(ageInYears<105.0) return(0.2); // not calibrated (calibrated against FTBs per capita)	
-		return(6.0); // kill off anyone over 105
-//		double PdeathOfFemale2012 = 3.788e-5*Math.exp(8.642e-2*ageInYears);
-//		double tempFudgeFactor = 0.0002*Math.exp(6.2e-2*ageInYears); // to ensure population doesn't decrease after spinup (i.e. to allow correct birth rate)
-		// ONS Statistical Bulletin: Historic and Projected Mortality. Data from the Period and Cohort
-		// Life Tables, 2012-based, UK, 1981-2062
-//		return(tempFudgeFactor*PdeathOfFemale2012);
-	}
+
+    // TODO: Clarify that the model was so far killing everybody over 105 only with a 50% chance every month
+    public static ArrayList<Double[]> probDeathGivenAgeData = readProbDeathGivenAge(Model.config.DATA_DEATH_PROB_GIVEN_AGE);
+
+    /**
+     * Method that gives, for a given age in years, its corresponding probability of death
+     * @param   ageInYears  age in years (double)
+     * @return  probability probability of death for the given age in years (double)
+     */
+    public static double probDeathGivenAge(double ageInYears) {
+        for (Double[] band : probDeathGivenAgeData) {
+            if(ageInYears<band[1]) return(band[2]);
+        }
+        return(Model.config.constants.MONTHS_IN_YEAR);
+    }
+
+    /**
+     * Method to read bin edges and the corresponding death probabilities from a file
+     * @param   fileName    String with name of file (address inside source folder)
+     * @return  probDeathGivenAgeData ArrayList of arrays of (3) Doubles (age edge min, age edge max, prob)
+     */
+    public static ArrayList<Double[]> readProbDeathGivenAge(String fileName) {
+        ArrayList<Double[]> probDeathGivenAgeData = new ArrayList<>();
+        // Try-with-resources statement
+        try (BufferedReader buffReader = new BufferedReader(new FileReader(fileName))) {
+            String line = buffReader.readLine();
+            while (line != null) {
+                if (line.charAt(0) != '#') {
+                    try {
+                        Double [] band = new Double[3];
+                        band[0] = Double.parseDouble(line.split(",")[0]);
+                        band[1] = Double.parseDouble(line.split(",")[1]);
+                        band[2] = Double.parseDouble(line.split(",")[2]);
+                        probDeathGivenAgeData.add(band);
+                    } catch (NumberFormatException nfe) {
+                        System.out.println("Exception " + nfe + " while trying to parse " +
+                                line.split(",")[0] + " for an double");
+                        nfe.printStackTrace();
+                    }
+                }
+                line = buffReader.readLine();
+            }
+        } catch (IOException ioe) {
+            System.out.println("Exception " + ioe + " while trying to read file '" + fileName + "'");
+            ioe.printStackTrace();
+        }
+        return probDeathGivenAgeData;
+    }
 
 	/*
 	 * This calculates the pdf of Household age at death from probDeathGivenAge() according to
