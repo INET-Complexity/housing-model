@@ -3,6 +3,8 @@ package housing;
 public class HouseholdStats extends CollectorBase {
 	private static final long serialVersionUID = -402486195880710795L;
 
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public void step() {
 		BtLTotalAnnualIncome = 0.0;
     	OOTotalAnnualIncome = 0.0;
@@ -23,7 +25,7 @@ public class HouseholdStats extends CollectorBase {
     	    	NonOwnerTotalAnnualIncome += h.monthlyEmploymentIncome;
     		} else if(h.isRenting()) {
     			++nRenting;
-    			rentalYield += h.housePayments.get(h.home).monthlyPayment*12.0/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
+    			rentalYield += h.housePayments.get(h.home).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
     	    	NonOwnerTotalAnnualIncome += h.monthlyEmploymentIncome;
     		} else {
     			OOTotalAnnualIncome += h.monthlyEmploymentIncome;
@@ -32,9 +34,9 @@ public class HouseholdStats extends CollectorBase {
     	if(rentalYield > 0.0) rentalYield /= nRenting;
     	nNonOwner = nHomeless + nRenting;
     	nEmpty = Model.construction.housingStock + nHomeless - nHouseholds;
-    	BtLTotalAnnualIncome *= 12.0; // annualise
-    	OOTotalAnnualIncome *= 12.0;
-    	NonOwnerTotalAnnualIncome *= 12.0;
+    	BtLTotalAnnualIncome *= config.constants.MONTHS_IN_YEAR; // annualise
+    	OOTotalAnnualIncome *= config.constants.MONTHS_IN_YEAR;
+    	NonOwnerTotalAnnualIncome *= config.constants.MONTHS_IN_YEAR;
 
 	}
 
@@ -131,7 +133,7 @@ public class HouseholdStats extends CollectorBase {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(h.isRenting() && i<nRenting) {
-				result[i++] = h.housePayments.get(h.home).monthlyPayment*12.0/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
+				result[i++] = h.housePayments.get(h.home).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
 			}
 		}
 		return(result);

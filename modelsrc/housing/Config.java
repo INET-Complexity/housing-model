@@ -3,8 +3,10 @@ package housing;
 import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.HashSet;
 import java.util.Properties;
 import java.lang.Integer;
+import java.util.Set;
 
 /************************************************
  * Class to encapsulate all the configuration parameters
@@ -37,16 +39,16 @@ public class Config {
     public double INITIAL_HPI;              // Initial housing price index
     double HPI_MEDIAN;                      // Median house price
     public double HPI_SHAPE;                // Shape parameter for the log-normal distribution of housing prices
-    public double AVERAGE_TENANCY_LENGTH;   // Average number of months a tenant will stay in a rented house
+    double AVERAGE_TENANCY_LENGTH;          // Average number of months a tenant will stay in a rented house
     public double RENT_GROSS_YIELD;         // Profit margin for buy-to-let investors
 
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
     boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
-    public double FUTURE_BIRTH_RATE;               // Future birth rate (births per year per capita), calibrated with flux of FTBs
+    public double FUTURE_BIRTH_RATE;        // Future birth rate (births per year per capita), calibrated with flux of FTBs
 
     // Household parameters
-    boolean BTL_ENABLED;                    // True to have a buy-to-let sector // TODO: Useless parameter!
+    boolean BTL_ENABLED;                    // True to have a buy-to-let sector // TODO: Currently pretty much useless parameter!
     double RETURN_ON_FINANCIAL_WEALTH;      // Monthly percentage growth of financial investments
     int TENANCY_LENGTH_AVERAGE;             // Average number of months a tenant will stay in a rented house
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
@@ -130,8 +132,12 @@ public class Config {
     double CONSTRUCTION_HOUSES_PER_HOUSEHOLD;   // Target ratio of houses per household
 
     // Government parameters
-    double GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT;     // Maximum personal allowance
-    double GOVERNMENT_INCOME_SUPPORT;               // Minimum monthly earnings for a married couple from income support
+    double GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT; // Maximum personal allowance
+    double GOVERNMENT_INCOME_SUPPORT;           // Minimum monthly earnings for a married couple from income support
+
+    // Collectors parameters
+    double UK_HOUSEHOLDS;                       // Approximate number of households in UK, used to scale up results for core indicators
+    boolean MORTGAGE_DIAGNOSTICS_ACTIVE;        // Whether to record mortgage statistics
 
     /** Declaration of addresses **/        // They must be public to be accessed from data package
 
@@ -167,7 +173,7 @@ public class Config {
         double E;                       // Decay constant for averaging days on market (in transactions)
         double G;                       // Decay constant for averageListPrice averaging (in transactions)
         public double HPI_LOG_MEDIAN;   // Logarithmic median house price (scale parameter of the log-normal distribution)
-        public double HPI_REFERENCE;    // Mean of reference house prices
+        double HPI_REFERENCE;           // Mean of reference house prices
         // Household behaviour parameters: general
         double MONTHLY_P_SELL;          // Monthly probability for owner-occupiers to sell their houses
         // Bank parameters
@@ -175,6 +181,8 @@ public class Config {
         // House rental market parameters
         double K;                       // Decay factor for exponential moving average of gross yield from rentals (averageSoldGrossYield)
         double KL;                      // Decay factor for long-term exponential moving average of gross yield from rentals (longTermAverageGrossYield)
+        // Collectors parameters
+        double AFFORDABILITY_DECAY; 	// Decay constant for the exponential moving average of affordability
     }
 
     /**
@@ -201,30 +209,48 @@ public class Config {
      * Method to read configuration parameters from a configuration (.properties) file
      * @param   configFileName    String with name of configuration (.properties) file (address inside source folder)
      */
-    public void getConfigValues(String configFileName) {
+    private void getConfigValues(String configFileName) {
         // Try-with-resources statement
         try (FileReader fileReader = new FileReader(configFileName)) {
             Properties prop = new Properties();
             prop.load(fileReader);
+            // Check that all parameters declared in the configuration (.properties) file are also declared in this class
+            try {
+                Set<String> setOfFields = new HashSet<>();
+                for (Field field : this.getClass().getDeclaredFields()) {
+                    setOfFields.add(field.getName());
+                }
+                for (String property: prop.stringPropertyNames()) {
+                    if (!setOfFields.contains(property)) {
+                        throw new UndeclaredPropertyException(property);
+                    }
+                }
+            } catch (UndeclaredPropertyException upe) {
+                upe.printStackTrace();
+            }
             // Run through all the fields of the Class using reflection
             for (Field field : this.getClass().getDeclaredFields()) {
-                System.out.println(field.getName());
-                // For int fields, parse the int with appropriate exception handling
-                if (field.getType().toString().equals("int")) {
-                    try {
-                        field.set(this, Integer.parseInt(prop.getProperty(field.getName())));
-                    } catch (NumberFormatException nfe) {
-                        System.out.println("Exception " + nfe + " while trying to parse the field " +
-                                field.getName() + " for an integer");
-                        nfe.printStackTrace();
-                    } catch (IllegalAccessException iae) {
-                        System.out.println("Exception " + iae + " while trying to set the field " +
-                                field.getName());
-                        iae.printStackTrace();
-                    }
-                // For double fields, parse the double with appropriate exception handling
-                } else if (field.getType().toString().equals("double")) {
+                try {
+                    // For int fields, parse the int with appropriate exception handling
+                    if (field.getType().toString().equals("int")) {
                         try {
+                            if (prop.getProperty(field.getName()) == null) {throw new FieldNotInFileException(field);}
+                            field.set(this, Integer.parseInt(prop.getProperty(field.getName())));
+                        } catch (NumberFormatException nfe) {
+                            System.out.println("Exception " + nfe + " while trying to parse the field " +
+                                    field.getName() + " for an integer");
+                            nfe.printStackTrace();
+                        } catch (IllegalAccessException iae) {
+                            System.out.println("Exception " + iae + " while trying to set the field " +
+                                    field.getName());
+                            iae.printStackTrace();
+                        } catch (FieldNotInFileException fnife) {
+                            fnife.printStackTrace();
+                        }
+                    // For double fields, parse the double with appropriate exception handling
+                    } else if (field.getType().toString().equals("double")) {
+                        try {
+                            if (prop.getProperty(field.getName()) == null) {throw new FieldNotInFileException(field);}
                             field.set(this, Double.parseDouble(prop.getProperty(field.getName())));
                         } catch (NumberFormatException nfe) {
                             System.out.println("Exception " + nfe + " while trying to parse the field " +
@@ -234,38 +260,50 @@ public class Config {
                             System.out.println("Exception " + iae + " while trying to set the field " +
                                     field.getName());
                             iae.printStackTrace();
+                        } catch (FieldNotInFileException fnife) {
+                            fnife.printStackTrace();
                         }
-                // For boolean fields, parse the boolean with appropriate exception handling
-                } else if (field.getType().toString().equals("boolean")) {
-                    try {
-                        if (prop.getProperty(field.getName()).equals("true") ||
-                                prop.getProperty(field.getName()).equals("false")) {
-                            field.set(this, Boolean.parseBoolean(prop.getProperty(field.getName())));
-                        } else {
-                            throw new BooleanFormatException("For input string \"" + prop.getProperty(field.getName()) +
-                                    "\"");
+                    // For boolean fields, parse the boolean with appropriate exception handling
+                    } else if (field.getType().toString().equals("boolean")) {
+                        try {
+                            if (prop.getProperty(field.getName()) == null) {throw new FieldNotInFileException(field);}
+                            if (prop.getProperty(field.getName()).equals("true") ||
+                                    prop.getProperty(field.getName()).equals("false")) {
+                                field.set(this, Boolean.parseBoolean(prop.getProperty(field.getName())));
+                            } else {
+                                throw new BooleanFormatException("For input string \"" +
+                                        prop.getProperty(field.getName()) + "\"");
+                            }
+                        } catch (BooleanFormatException bfe) {
+                            System.out.println("Exception " + bfe + " while trying to parse the field " +
+                                    field.getName() + " for a boolean");
+                            bfe.printStackTrace();
+                        } catch (IllegalAccessException iae) {
+                            System.out.println("Exception " + iae + " while trying to set the field " +
+                                    field.getName());
+                            iae.printStackTrace();
+                        } catch (FieldNotInFileException fnife) {
+                            fnife.printStackTrace();
                         }
-                    } catch (BooleanFormatException bfe) {
-                        System.out.println("Exception " + bfe + " while trying to parse the field " +
-                                field.getName() + " for a boolean");
-                        bfe.printStackTrace();
-                    } catch (IllegalAccessException iae) {
-                        System.out.println("Exception " + iae + " while trying to set the field " +
-                                field.getName());
-                        iae.printStackTrace();
+                    // For string fields, parse the string with appropriate exception handling
+                    } else if (field.getType().toString().equals("class java.lang.String")) {
+                        try {
+                            if (prop.getProperty(field.getName()) == null) {throw new FieldNotInFileException(field);}
+                            field.set(this, prop.getProperty(field.getName()).replace("\"", "").replace("\'", ""));
+                        } catch (IllegalAccessException iae) {
+                            System.out.println("Exception " + iae + " while trying to set the field " +
+                                    field.getName());
+                            iae.printStackTrace();
+                        } catch (FieldNotInFileException fnife) {
+                            fnife.printStackTrace();
+                        }
+                    // For unrecognised field types, except derivedParams and constants, throw exception
+                    } else if (!field.getName().equals("derivedParams") && !field.getName().equals("constants")) {
+                        throw new UnrecognisedFieldTypeException(field);
                     }
-                // For string fields, parse the string with appropriate exception handling
+                } catch (UnrecognisedFieldTypeException ufte) {
+                    ufte.printStackTrace();
                 }
-                else if (field.getType().toString().equals("class java.lang.String")) {
-                    try {
-                        field.set(this, prop.getProperty(field.getName()).replace("\"", "").replace("\'", ""));
-                    } catch (IllegalAccessException iae) {
-                        System.out.println("Exception " + iae + " while trying to set the field " +
-                                field.getName());
-                        iae.printStackTrace();
-                    }
-                }
-                // TODO: Add warning for unknown field type (taking into account derivedParams field type) and for fields without value
             }
         } catch (IOException ioe) {
             System.out.println("Exception " + ioe + " while trying to read file '" + configFileName + "'");
@@ -294,15 +332,42 @@ public class Config {
         // House rental market parameters
         derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen?
         derivedParams.KL = Math.exp(-10000.0/(TARGET_POPULATION*50.0*200.0));   // TODO: Also, they are not reported in the paper!
+        // Collectors parameters
+        derivedParams.AFFORDABILITY_DECAY = Math.exp(-1.0/100.0);
     }
 
     /**
      * Equivalent to NumberFormatException for detecting problems when parsing for boolean values
      */
     public class BooleanFormatException extends RuntimeException {
-        public BooleanFormatException() { super(); }
-        public BooleanFormatException(String message) { super(message); }
-        public BooleanFormatException(Throwable cause) { super(cause); }
-        public BooleanFormatException(String message, Throwable cause) { super(message, cause); }
+        BooleanFormatException(String message) { super(message); }
+    }
+
+    /**
+     * Exception for detecting unrecognised (not implemented) field types
+     */
+    public class UnrecognisedFieldTypeException extends Exception {
+        UnrecognisedFieldTypeException(Field field) {
+            super("Field type \"" + field.getType().toString() + "\", found at field \"" + field.getName() +
+                    "\", could not be recognised as any of the implemented types");
+        }
+    }
+
+    /**
+     * Exception for detecting fields declared in the code but not present in the config.properties file
+     */
+    public class FieldNotInFileException extends Exception {
+        FieldNotInFileException(Field field) {
+            super("Field \"" + field.getName() + "\" could not be found in the config.properties file");
+        }
+    }
+
+    /**
+     * Exception for detecting properties present in the config.properties file but not declared in the code
+     */
+    public class UndeclaredPropertyException extends Exception {
+        UndeclaredPropertyException(Object property) {
+            super("Property \"" + property + "\" could not be found among the fields declared within the Config class");
+        }
     }
 }

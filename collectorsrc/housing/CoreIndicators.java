@@ -20,9 +20,6 @@ public class CoreIndicators extends CollectorBase {
 
 	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
-	static final double UK_HOUSEHOLDS = 26.5e6; // approx number of households in UK
-
-
 	public void step() {
 	}
 	
@@ -101,7 +98,7 @@ public class CoreIndicators extends CollectorBase {
 	 * 
 	 */
 	public int getMortgageApprovals() {
-		return((int)(Model.collectors.creditSupply.nApprovedMortgages*UK_HOUSEHOLDS/Model.households.size()));
+		return((int)(Model.collectors.creditSupply.nApprovedMortgages*config.UK_HOUSEHOLDS/Model.households.size()));
 	}
 	public String desMortgageApprovals() {
 		return("Number of mortgage approvals per month (scaled for 26.5 million households)");
@@ -112,7 +109,7 @@ public class CoreIndicators extends CollectorBase {
 	
 	
 	public int getHousingTransactions() {
-		return((int)(Model.collectors.housingMarketStats.nSales*UK_HOUSEHOLDS/Model.households.size()));
+		return((int)(Model.collectors.housingMarketStats.nSales*config.UK_HOUSEHOLDS/Model.households.size()));
 	}
 	public String desHousingTransactions() {
 		return("Number of houses bought/sold per month (scaled for 26.5 million households)");
@@ -122,7 +119,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 	
 	public int getAdvancesToFTBs() {
-		return((int)(Model.collectors.creditSupply.nFTBMortgages*UK_HOUSEHOLDS/Model.households.size()));
+		return((int)(Model.collectors.creditSupply.nFTBMortgages*config.UK_HOUSEHOLDS/Model.households.size()));
 	}
 	public String desAdvancesToFTBs() {
 		return("Number of advances to first-time-buyers (scaled for 26.5 million households)");
@@ -132,7 +129,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public int getAdvancesToBTL() {
-		return((int)(Model.collectors.creditSupply.nBTLMortgages*UK_HOUSEHOLDS/Model.households.size()));
+		return((int)(Model.collectors.creditSupply.nBTLMortgages*config.UK_HOUSEHOLDS/Model.households.size()));
 	}
 	public String desAdvancesToBTL() {
 		return("Number of advances to buy-to-let purchasers (scaled for 26.5 million households)");
