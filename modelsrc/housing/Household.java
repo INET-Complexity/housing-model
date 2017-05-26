@@ -334,8 +334,8 @@ public class Household implements IHouseOwner, Serializable {
 	 ********************************************************/
 	protected void bidForAHome() {
 		double maxMortgage = Model.bank.getMaxMortgage(this, true);
-		if(behaviour.rentOrPurchaseDecision(this)) {
-			double price = behaviour.desiredPurchasePrice(this, monthlyEmploymentIncome);
+        double price = behaviour.desiredPurchasePrice(this, monthlyEmploymentIncome);
+		if(behaviour.rentOrPurchaseDecision(this, price)) {
 			if(price > maxMortgage - 1.0) {
 				price = maxMortgage -1.0;
 			}

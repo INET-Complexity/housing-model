@@ -261,6 +261,42 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 
 	}
 
+    public boolean rentOrPurchaseDecision(Household me, double desiredPurchasePrice) {
+        if(isPropertyInvestor()) return(true);
+
+        double purchasePrice = Math.min(desiredPurchasePrice, Model.bank.getMaxMortgage(me, true));
+        MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
+                downPayment(me,purchasePrice), true);
+        int newHouseQuality = Model.housingMarket.maxQualityGivenPrice(purchasePrice);
+//		int rentalQuality = Model.rentalMarket.maxQualityGivenPrice(desiredRent(me, me.monthlyEmploymentIncome));
+//		if(rentalQuality > newHouseQuality+House.Config.N_QUALITY/8) return(false); // better quality to rent
+        if(newHouseQuality < 0) return(false); // can't afford a house anyway
+        double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR - purchasePrice*HPAExpectation();
+        double costOfRent = Model.rentalMarket.getAverageSalePrice(newHouseQuality)*config.constants.MONTHS_IN_YEAR;
+//		System.out.println(FTB_K*(costOfRent + COST_OF_RENTING - costOfHouse));
+        //return(rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent*(1.0+COST_OF_RENTING) - costOfHouse))));
+        return(rand.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
+                + config.PSYCHOLOGICAL_COST_OF_RENTING) - costOfHouse)));
+
+		/*
+
+		PurchasePlan purchase = findBestPurchase(me);
+		if(purchase.quality == 0 && purchase.utility <-10.0) return(false); // can't afford to buy anyway
+		int rentQuality = findBestRentalQuality(me);
+
+		if(me.isFirstTimeBuyer()) {
+			COST_OF_RENTING = 0.001;
+		} else {
+			COST_OF_RENTING = 0.01;
+		}
+
+		double pBuy = 1.0/(1.0 + Math.exp(-INTENSITY_OF_CHOICE*(COST_OF_RENTING + purchase.utility - utilityOfRenting(me, rentQuality))));
+//		System.out.println(utilityOfRenting(me, rentQuality) + " : "+purchase.utility+" : "+INTENSITY_OF_CHOICE*(COST_OF_RENTING+purchase.utility-utilityOfRenting(me, rentQuality))+" ... "+pBuy);
+		return(rand.nextDouble() < pBuy);
+				 */
+
+    }
+
 	/********************************************************
 	 * Decide how much to bid on the rental market
 	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
