@@ -14,10 +14,13 @@ import sim.util.Double2D;
 public class CreditSupply extends CollectorBase {
 	private static final long serialVersionUID = 1630707025974306844L;
 
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
 	public CreditSupply() {
 		mortgageCounter = 0;
 		ftbCounter = 0;
 		btlCounter = 0;
+		// TODO: This limit in the number of events taken into account to build statistics is not explained in the paper (affects oo_lti, oo_ltv, btl_ltv, btl_icr, downpayments)
 		setArchiveLength(10000);
 	}
 
@@ -51,14 +54,14 @@ public class CreditSupply extends CollectorBase {
 	 */
 	public void recordLoan(Household h, MortgageAgreement approval, House house) {
 		double housePrice;
-		if(DIAGNOSTICS_ACTIVE) {
+		if(config.MORTGAGE_DIAGNOSTICS_ACTIVE) {
 			housePrice = approval.principal + approval.downPayment;
-			affordability = AFFORDABILITY_DECAY*affordability + (1.0-AFFORDABILITY_DECAY)*approval.monthlyPayment/(h.monthlyEmploymentIncome);
+			affordability = config.derivedParams.AFFORDABILITY_DECAY*affordability + (1.0-config.derivedParams.AFFORDABILITY_DECAY)*approval.monthlyPayment/(h.monthlyEmploymentIncome);
 			if(approval.principal > 1.0) {
 				if(approval.isBuyToLet) {
 					btl_ltv.addValue(100.0*approval.principal/housePrice);
 //					double icr = Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
-					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
+					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
 					btl_icr.addValue(icr);
 				} else {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);
@@ -144,12 +147,8 @@ public class CreditSupply extends CollectorBase {
 	}
 
 
-
-
-	public double AFFORDABILITY_DECAY = Math.exp(-1.0/100.0); 	// Decay constant for exp averaging of affordability
-	public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
-	public boolean DIAGNOSTICS_ACTIVE = true; // record mortgage statistics?
-	public int 	HISTOGRAM_NBINS = 101;
+	//public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
+	//public int 	HISTOGRAM_NBINS = 101;
 
 	public int archiveLength; // number of mortgage approvals to remember
 	public double affordability = 0.0;

@@ -17,8 +17,8 @@ import utilities.MeanAboveMedian;
  */
 public class CoreIndicators extends CollectorBase {
 	private static final long serialVersionUID = -7295853109870791276L;
-	static final double UK_HOUSEHOLDS = 26.5e6; // approx number of households in UK
 
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	public void step() {
 	}
@@ -98,7 +98,7 @@ public class CoreIndicators extends CollectorBase {
 	 * 
 	 */
 	public int getMortgageApprovals() {
-		return((int)(Model.collectors.creditSupply.nApprovedMortgages*UK_HOUSEHOLDS/Model.households.size()));
+		return((int)(Model.collectors.creditSupply.nApprovedMortgages*config.UK_HOUSEHOLDS/Model.households.size()));
 	}
 	public String desMortgageApprovals() {
 		return("Number of mortgage approvals per month (scaled for 26.5 million households)");
@@ -109,7 +109,7 @@ public class CoreIndicators extends CollectorBase {
 	
 	
 	public int getHousingTransactions() {
-		return((int)(Model.collectors.housingMarketStats.nSales*UK_HOUSEHOLDS/Model.households.size()));
+		return((int)(Model.collectors.housingMarketStats.nSales*config.UK_HOUSEHOLDS/Model.households.size()));
 	}
 	public String desHousingTransactions() {
 		return("Number of houses bought/sold per month (scaled for 26.5 million households)");
@@ -119,7 +119,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 	
 	public int getAdvancesToFTBs() {
-		return((int)(Model.collectors.creditSupply.nFTBMortgages*UK_HOUSEHOLDS/Model.households.size()));
+		return((int)(Model.collectors.creditSupply.nFTBMortgages*config.UK_HOUSEHOLDS/Model.households.size()));
 	}
 	public String desAdvancesToFTBs() {
 		return("Number of advances to first-time-buyers (scaled for 26.5 million households)");
@@ -129,7 +129,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public int getAdvancesToBTL() {
-		return((int)(Model.collectors.creditSupply.nBTLMortgages*UK_HOUSEHOLDS/Model.households.size()));
+		return((int)(Model.collectors.creditSupply.nBTLMortgages*config.UK_HOUSEHOLDS/Model.households.size()));
 	}
 	public String desAdvancesToBTL() {
 		return("Number of advances to buy-to-let purchasers (scaled for 26.5 million households)");
@@ -149,7 +149,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public double getPriceToIncome() {
-		return(Model.housingMarket.housePriceIndex*data.HouseSaleMarket.HPI_REFERENCE*(Model.collectors.householdStats.nHouseholds - Model.collectors.householdStats.nRenting - Model.collectors.householdStats.nHomeless)/(Model.collectors.householdStats.OOTotalAnnualIncome+Model.collectors.householdStats.BtLTotalAnnualIncome));
+		return(Model.housingMarket.housePriceIndex*config.derivedParams.HPI_REFERENCE*(Model.collectors.householdStats.nHouseholds - Model.collectors.householdStats.nRenting - Model.collectors.householdStats.nHomeless)/(Model.collectors.householdStats.OOTotalAnnualIncome+Model.collectors.householdStats.BtLTotalAnnualIncome));
 	}
 	public String desPriceToIncome() {
 		return("House price to household disposable income ratio");
@@ -169,15 +169,14 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public double getHousePriceGrowth() {
+		// As opposed to HPA, this captures quarter to quarter housing price growth
 //		return(100.0*Model.collectors.housingMarketStats.getHPA());
-		double lastHPI = 
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-4) +
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-5) +
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-6);
-		double HPI = 
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-1) +
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-2) +
-				Model.housingMarket.HPIRecord.getElement(HousingMarket.Config.HPI_LENGTH-3);
+		double lastHPI = Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 4)
+                + Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 5)
+                + Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 6);
+		double HPI = Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 1)
+                + Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 2)
+                + Model.housingMarket.HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 3);
 		return(100.0*(HPI - lastHPI)/lastHPI);
 	}
 	public String desHousePriceGrowth() {

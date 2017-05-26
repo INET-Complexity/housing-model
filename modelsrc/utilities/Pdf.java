@@ -3,6 +3,7 @@ package utilities;
 import java.io.IOException;
 import java.io.Serializable;
 
+import ec.util.MersenneTwisterFast;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import housing.Model;
@@ -36,6 +37,17 @@ public class Pdf implements Serializable {
 			e.printStackTrace();			
 		}
 	}
+
+    public Pdf(String filename, int NSamples) {
+        try {
+            BinnedDataDouble data = new BinnedDataDouble(filename);
+            setPdf(data, NSamples);
+        } catch (IOException e) {
+            System.out.println("Problem loading data from file while initialising Pdf");
+            System.out.println("filename = "+System.getProperty("user.dir")+"/"+filename);
+            e.printStackTrace();
+        }
+    }
 	
 	public Pdf(final BinnedDataDouble data) {
 		setPdf(data);
@@ -74,6 +86,17 @@ public class Pdf implements Serializable {
 		end = data.getSupportUpperBound();
 		nSamples = DEFAULT_CDF_SAMPLES;
 		initInverseCDF();		
+	}
+
+	public void setPdf(final BinnedDataDouble data, int NSamples) {
+		pdf = new DoubleUnaryOperator() {
+			public double applyAsDouble(double operand) {
+				return data.getBinAt(operand)/data.getBinWidth();
+			}};
+		start = data.getSupportLowerBound();
+		end = data.getSupportUpperBound();
+		nSamples = NSamples;
+		initInverseCDF();
 	}
 	
 	public double getSupportLowerBound() {
@@ -144,19 +167,19 @@ public class Pdf implements Serializable {
 	 * @return A random sample from the PDF
 	 */
 	public double nextDouble() {
-		return(inverseCumulativeProbability(Model.rand.nextDouble()));
-//		double uniform = Model.rand.nextDouble(); // uniform random sample on [0:1)
+		return(inverseCumulativeProbability(rand.nextDouble()));
+//		double uniform = rand.nextDouble(); // uniform random sample on [0:1)
 //		int i = (int)(uniform*(nSamples-1));
 //		double remainder = uniform*(nSamples-1.0) - i;
 //		return((1.0-remainder)*inverseCDF[i] + remainder*inverseCDF[i+1]);
 	}
-	
-//	RandomGenerator		rand;				// supplied random number generator
-	DoubleUnaryOperator	pdf;				// function that gives the pdf
-	public double		start;				// lowest value of x that has a non-zero probability
-	public double		end;				// highest value of x that has a non-zero probability
-	double []			inverseCDF;			// pre-computed equi-spaced points on the inverse CDF including 0 and 1
-	double 				dx;					// dx between samples
-	int					nSamples;			// number of sample	points on the CDF
-	static final int	DEFAULT_CDF_SAMPLES = 100;
+
+	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
+	DoubleUnaryOperator				pdf;				// function that gives the pdf
+	public double					start;				// lowest value of x that has a non-zero probability
+	public double					end;				// highest value of x that has a non-zero probability
+	double []						inverseCDF;			// pre-computed equi-spaced points on the inverse CDF including 0 and 1
+	double 							dx;					// dx between samples
+	int								nSamples;			// number of sample	points on the CDF
+	static final int				DEFAULT_CDF_SAMPLES = 100;
 }

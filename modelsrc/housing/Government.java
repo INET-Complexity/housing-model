@@ -8,32 +8,8 @@ package housing;
  *
  ****************************************/
 public class Government {
-	
-	/**
-	 * Configuration for the govenment. This contains tax banding, NI rates etc.
-	 * @author daniel
-	 *
-	 */
-	static public class Config {
-		public double PERSONAL_ALLOWANCE_LIMIT = 100000.0;
 
-		// -- 2013/2014 rates
-		public double [] TAX_BANDS = {9440, 9440+32010, 9440+150000};
-		public double [] TAX_RATES = {.20, .40, .45};
-
-		public double [] NI_BANDS = {7755, 41450};
-		public double [] NI_RATES = {.12, .02};
-		
-		static double INCOME_SUPPORT = 113.7*52.0/12.0; // married couple's monthly lower earnings from income support Source: www.nidirect.gov.uk
-	}
-	
-	public Government() {
-		this(new Government.Config());
-	}
-
-	public Government(Government.Config c) {
-		config = c;
-	}
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	/******************************************
 	 * Calculates the income tax due in one year for a given 
@@ -43,13 +19,13 @@ public class Government {
 	 * @return The annual income tax due in pounds.
 	 ******************************************/
 	public double incomeTaxDue(double grossIncome) {
-		double tax = bandedPercentage(grossIncome, config.TAX_BANDS, config.TAX_RATES);
-		if(grossIncome > config.PERSONAL_ALLOWANCE_LIMIT) {
-			//double personalAllowance = Math.max((grossIncome - config.PERSONAL_ALLOWANCE_LIMIT)/2.0,0.0);
+		double tax = bandedPercentage(grossIncome, data.Government.tax.bands, data.Government.tax.rates);
+		if(grossIncome > config.GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT) {
+			//double personalAllowance = Math.max((grossIncome - config.GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT)/2.0,0.0);
 			double personalAllowance = Math.max(
-					config.TAX_BANDS[0]-(grossIncome-config.PERSONAL_ALLOWANCE_LIMIT)/2.0,
+					data.Government.tax.bands[0]-(grossIncome-config.GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT)/2.0,
 					0.0);
-			tax += (config.TAX_BANDS[0]-personalAllowance)*config.TAX_RATES[0]; //what does this do?
+			tax += (data.Government.tax.bands[0]-personalAllowance)*data.Government.tax.rates[0]; // TODO: what does this do?
 		}
 		return(tax);
 	}
@@ -62,7 +38,7 @@ public class Government {
 	 * @return Annual class 1 NICs due.
 	 **********************************/
 	public double class1NICsDue(double grossIncome) {
-		return(bandedPercentage(grossIncome, config.NI_BANDS, config.NI_RATES));
+		return(bandedPercentage(grossIncome, data.Government.nationalInsurance.bands, data.Government.nationalInsurance.rates));
 	}
 	
 	/**********************************
@@ -80,7 +56,7 @@ public class Government {
 	 * @param rates an array holding the percentage applicable to each band
 	 * @return The banded percentage of 'taxableIncome'
 	 ***********************************/
-	protected double bandedPercentage(double taxableIncome, double [] bands, double [] rates) {
+	protected double bandedPercentage(double taxableIncome, Double [] bands, Double [] rates) {
 		int i = 0;
 		double lastRate = 0.0;
 		double tax = 0.0;
@@ -92,7 +68,4 @@ public class Government {
 		}
 		return(tax);
 	}
-
-	Government.Config	config;
-	
 }

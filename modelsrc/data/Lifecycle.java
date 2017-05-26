@@ -1,5 +1,7 @@
 package data;
 
+import housing.Model;
+
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -30,7 +32,7 @@ public class Lifecycle {
 		
 		Iterator<CSVRecord> records;
 		try {
-			Reader in = new FileReader("modelsrc/data/IncomeGivenAge.csv");
+			Reader in = new FileReader(Model.config.DATA_INCOME_GIVEN_AGE);
 			records = CSVFormat.EXCEL.withHeader().parse(in).iterator();
 			CSVRecord record;
 			if(records.hasNext()) {

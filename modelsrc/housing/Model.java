@@ -29,48 +29,51 @@ public class Model extends SimState implements Steppable {
 
 	////////////////////////////////////////////////////////////////////////
 
-	public static int N_STEPS = 1000; // Simulation duration in timesteps
-	public static int TIME_TO_START_RECORDING = 500; // Timesteps to wait before recording statistics (initialisation time)
-	public static int N_SIMS = 1; // Number of simulations to run (monte-carlo)
+	/*
+	 * ATTENTION: Seed for random number generation is set by calling the program with argument "-seed <your_seed>",
+	 * where <your_seed> must be a positive integer. In the absence of this argument, seed is set from machine time.
+	 */
 
-	public boolean recordCoreIndicators = true; // True to write time series for each core indicator
-	public boolean recordMicroData = false; // True to write micro data for each transaction made
+	public static Config config;
 
 	////////////////////////////////////////////////////////////////////////
 
 	public static void main(String[] args) {
 		//doLoop(ModelNoGUI.class, args);
 		doLoop(Model.class,args);
-		System.exit(0);//Stop the program when finished.
+		System.exit(0);							//Stop the program when finished.
 	}
 
 	public Model(long seed) {
 		super(seed);
+		rand = new MersenneTwister(seed);
+		config = new Config("config.properties");
+		//System.exit(0);
+
 		government = new Government();
 		demographics = new Demographics();
 		recorder = new Recorder();
 		transactionRecorder = new MicroDataRecorder();
-		rand = new MersenneTwister(seed);
 
 		centralBank = new CentralBank();
 		mBank = new Bank();
 		mConstruction = new Construction();
-		mHouseholds = new ArrayList<Household>(Demographics.TARGET_POPULATION*2);
-		housingMarket = mHousingMarket = new HouseSaleMarket();
-		rentalMarket = mRentalMarket = new HouseRentalMarket();
+		mHouseholds = new ArrayList<Household>(config.TARGET_POPULATION*2);
+		housingMarket = mHousingMarket = new HouseSaleMarket();		// Variables of housingMarket are initialised (including HPI)
+		rentalMarket = mRentalMarket = new HouseRentalMarket();		// Variables of rentalMarket are initialised (including HPI)
 		mCollectors = new Collectors();
 		nSimulation = 0;
 
 		setupStatics();
-		init();
+		init();		// Variables of both housingMarket and rentalMarket are initialised again (including HPI)
 	}
-	
+
 	@Override
 	public void awakeFromCheckpoint() {
 		super.awakeFromCheckpoint();
 		setupStatics();
 	}
-	
+
 	protected void setupStatics() {
 //		centralBank = mCentralBank;
 		bank = mBank;
@@ -80,11 +83,10 @@ public class Model extends SimState implements Steppable {
 		rentalMarket = mRentalMarket;
 		collectors = mCollectors;
 		root = this;
-		setRecordCoreIndicators(recordCoreIndicators);
-		setRecordMicroData(recordMicroData);
+		setRecordCoreIndicators(config.recordCoreIndicators);
+		setRecordMicroData(config.recordMicroData);
 	}
 
-	
 	public void init() {
 		construction.init();
 		housingMarket.init();
@@ -93,7 +95,7 @@ public class Model extends SimState implements Steppable {
 		households.clear();
 		collectors.init();
 		t = 0;
-		if(!monteCarloCheckpoint.equals("")) {//changed this from != ""
+		if(!monteCarloCheckpoint.equals("")) {	//changed this from != ""
 			File f = new File(monteCarloCheckpoint);
 			readFromCheckpoint(f);
 		}
@@ -105,15 +107,15 @@ public class Model extends SimState implements Steppable {
 	 */
 	public void start() {
 		super.start();
-        scheduleRepeat = schedule.scheduleRepeating(this);
+		scheduleRepeat = schedule.scheduleRepeating(this);
 
-        if(!monteCarloCheckpoint.equals("")) {//changed from != ""
-        	File f = new File(monteCarloCheckpoint);
-        	readFromCheckpoint(f);
-        }
-			// recorder.start();
+		if(!monteCarloCheckpoint.equals("")) {	//changed from != ""
+			File f = new File(monteCarloCheckpoint);
+			readFromCheckpoint(f);
+		}
+//		recorder.start();
 	}
-	
+
 	public void stop() {
 		scheduleRepeat.stop();
 	}
@@ -123,26 +125,31 @@ public class Model extends SimState implements Steppable {
 	 * here.
 	 */
 	public void step(SimState simulationStateNow) {
-		if (schedule.getTime() >= N_STEPS*N_SIMS) simulationStateNow.kill();
-		if(t >= N_STEPS) {
+		if (schedule.getTime() >= config.N_STEPS*config.N_SIMS) simulationStateNow.kill();
+		if(t >= config.N_STEPS) {
 			// start new simulation
 			nSimulation += 1;
-			if (nSimulation >= N_SIMS) {
+			if (nSimulation >= config.N_SIMS) {
 				// this was the last simulation, clean up
-				if(recordCoreIndicators) recorder.finish();
-				if(recordMicroData) transactionRecorder.finish();
+				if(config.recordCoreIndicators) recorder.finish();
+				if(config.recordMicroData) transactionRecorder.finish();
 				simulationStateNow.kill();
 				return;
 			}
-			if(recordCoreIndicators) recorder.endOfSim();
-			if(recordMicroData) transactionRecorder.endOfSim();
-			init();
+			if(config.recordCoreIndicators) recorder.endOfSim();
+			if(config.recordMicroData) transactionRecorder.endOfSim();
+			init();		// Variables of both housingMarket and rentalMarket are initialised again (including HPI)
 		}
 
+		/*
+		 * Steps model and stores ownership and rental markets bid and offer prices, and their averages, into their
+		 * respective variables
+		 */
 		modelStep();
 
-		if (t>=TIME_TO_START_RECORDING) {
-			if(recordCoreIndicators) recorder.step();
+		if (t>=config.TIME_TO_START_RECORDING) {
+			// Finds values of variables and records them to their respective files
+			if(config.recordCoreIndicators) recorder.step();
 		}
 
 		collectors.step();
@@ -151,28 +158,33 @@ public class Model extends SimState implements Steppable {
 	public void modelStep() {
 		demographics.step();
 		construction.step();
-		
+
 		for(Household h : households) h.step();
+        // Stores ownership market bid and offer prices, and their averages, into their respective variables
 		collectors.housingMarketStats.record();
+        // Clears market and updates the HPI
 		housingMarket.clearMarket();
+        // Stores rental market bid and offer prices, and their averages, into their respective variables
 		collectors.rentalMarketStats.record();
 		rentalMarket.clearMarket();
-        bank.step();
-        centralBank.step(getCoreIndicators());
-        t += 1;        
+		bank.step();
+		centralBank.step(getCoreIndicators());
+		t += 1;
 	}
-	
-	
+
+
 	/**
 	 * Cleans up after a simulation ends.
 	 */
 	public void finish() {
 		super.finish();
-		if(recordCoreIndicators) recorder.finish();
-		if(recordMicroData) transactionRecorder.finish();
+		if(config.recordCoreIndicators) recorder.finish();
+		if(config.recordMicroData) transactionRecorder.finish();
 	}
-	
-	/*** @return simulated time in months */
+
+	/**
+	 * @return simulated time in months
+	 */
 	static public int getTime() {
 		return(Model.root.t);
 	}
@@ -191,7 +203,7 @@ public class Model extends SimState implements Steppable {
 	public HouseSaleMarket			mHousingMarket;
 	public HouseRentalMarket		mRentalMarket;
 	public Collectors				mCollectors;
-	
+
 	public static CentralBank		centralBank;
 	public static Bank 				bank;
 	public static Government		government;
@@ -202,27 +214,29 @@ public class Model extends SimState implements Steppable {
 	public static Demographics		demographics;
 	public static MersenneTwister	rand;
 	public static Model				root;
-	
-	public static Collectors		collectors;// = new Collectors();
-	public static Recorder			recorder; // records info to file
+
+	public static Collectors		collectors;	// = new Collectors();
+	public static Recorder			recorder;	// records info to file
 	public static MicroDataRecorder transactionRecorder;
 
-	public static int	nSimulation; // number of simulations run
-	public int	t; // time (months)
-//	public static LogNormalDistribution grossFinancialWealth;		// household wealth in bank balances and investments
+	public static int	nSimulation;	// number of simulations run
+	public int	t;	// time (months)
+//	public static LogNormalDistribution grossFinancialWealth;	// household wealth in bank balances and investments
 
-	/*** proxy class to allow us to work with apache.commons distributions */
+	/**
+	 * proxy class to allow us to work with apache.commons distributions
+	 */
 	public static class MersenneTwister extends MersenneTwisterFast implements RandomGenerator {
 		public MersenneTwister(long seed) {super(seed);}
 		public void setSeed(int arg0) {
 			super.setSeed((long)arg0);
-		}		
+		}
 	}
 
 	////////////////////////////////////////////////////////////////////////
 	// Getters/setters for MASON console
 	////////////////////////////////////////////////////////////////////////
-	
+
 	public CreditSupply getCreditSupply() {
 		return collectors.creditSupply;
 	}
@@ -241,29 +255,10 @@ public class Model extends SimState implements Steppable {
 
 	public HouseholdStats getHouseholdStats() {
 		return collectors.householdStats;
-	}	
-	
-	public static int getN_STEPS() {
-		return N_STEPS;
 	}
-
-	public static void setN_STEPS(int n_STEPS) {
-		N_STEPS = n_STEPS;
-	}
-	public String nameN_STEPS() {return("Number of timesteps");}
-
-	public static int getN_SIMS() {
-		return N_SIMS;
-	}
-
-	public static void setN_SIMS(int n_SIMS) {
-		N_SIMS = n_SIMS;
-	}
-	public String nameN_SIMS() {return("Number of monte-carlo runs");}
 
 	String monteCarloCheckpoint = "";
-	
-	
+
 	public String getMonteCarloCheckpoint() {
 		return monteCarloCheckpoint;
 	}
@@ -272,12 +267,31 @@ public class Model extends SimState implements Steppable {
 		this.monteCarloCheckpoint = monteCarloCheckpoint;
 	}
 
-	public boolean isRecordCoreIndicators() {
-		return recordCoreIndicators;
-	}
+//	Deprecated getters/setters! New access to parameters is through instances of the Config class
+//	public static int getN_STEPS() {
+//		return N_STEPS;
+//	}
+//
+//	public static void setN_STEPS(int n_STEPS) {
+//		N_STEPS = n_STEPS;
+//	}
+//	public String nameN_STEPS() {return("Number of timesteps");}
+//
+//	public static int getN_SIMS() {
+//		return N_SIMS;
+//	}
+//
+//	public static void setN_SIMS(int n_SIMS) {
+//		N_SIMS = n_SIMS;
+//	}
+//	public String nameN_SIMS() {return("Number of monte-carlo runs");}
+//
+//	public boolean isRecordCoreIndicators() {
+//		return recordCoreIndicators;
+//	}
 
 	public void setRecordCoreIndicators(boolean recordCoreIndicators) {
-		this.recordCoreIndicators = recordCoreIndicators;
+		this.config.recordCoreIndicators = recordCoreIndicators;
 		if(recordCoreIndicators) {
 			collectors.coreIndicators.setActive(true);
 			collectors.creditSupply.setActive(true);

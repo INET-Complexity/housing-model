@@ -3,18 +3,10 @@ package housing;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.commons.math3.distribution.GeometricDistribution;
-import org.apache.commons.math3.distribution.LogNormalDistribution;
-import org.apache.commons.math3.distribution.PoissonDistribution;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
 
 import utilities.PriorityQueue2D;
 
@@ -30,29 +22,20 @@ import utilities.PriorityQueue2D;
 public abstract class HousingMarket implements Serializable {
 	private static final long serialVersionUID = -7249221876467520088L;
 
-	/**
-	 * Configuration for the housing market.
-	 * @author daniel
-	 *
-	 */
-	static public class Config {
-		public static final double UNDEROFFER = 7.0/30.0; // time (in months) that a house remains 'under offer'
-		public static final double BIDUP = 1.0075; // smallest proportion increase in price that can cause a gazump
-		public static final double T = 0.02*Demographics.TARGET_POPULATION; // characteristic number of data-points over which to average market statistics
-		public static final int HPI_LENGTH = 15; // Number of months to record HPI //F = Math.exp(-1.0/4.0); // House Price Index appreciation decay const (in market clearings)
-		public static final double E = Math.exp(-1.0/T); // decay const for averaging days on market (in transactions)
-		public static final double G = Math.exp(-House.Config.N_QUALITY/T); // Decay const for averageListPrice averaging (in transactions)
-	}
-	
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+
+    // TODO: Make sure this authority class is actually needed
 	static public class Authority {
 		private Authority() {}
 	}
 
-	
 	public HousingMarket() {
 		offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator()); //Priority Queue of (Price, Quality)
-		bids = new ArrayList<>(Demographics.TARGET_POPULATION/16);
-		HPIRecord = new DescriptiveStatistics(Config.HPI_LENGTH);
+        // The integer passed to the ArrayList constructor is an initially declared capacity (for initial memory
+        // allocation purposes), it will actually have size zero and only grow by adding elements
+        // TODO: Check if this integer is too large or small, check speed penalty for using ArrayList as opposed to normal arrays
+		bids = new ArrayList<>(config.TARGET_POPULATION/16);
+		HPIRecord = new DescriptiveStatistics(config.derivedParams.HPI_RECORD_LENGTH);
 		quarterlyHPI.addValue(1.0);
 		quarterlyHPI.addValue(1.0);		
 		init();
@@ -60,12 +43,14 @@ public abstract class HousingMarket implements Serializable {
 	
 	public void init() {
 		int i;
-		for(i = 0; i<House.Config.N_QUALITY; ++i) {
+		for(i = 0; i<config.N_QUALITY; ++i) {
 			averageSalePrice[i] = referencePrice(i);
 		}
 		housePriceIndex = 1.0;
-		averageDaysOnMarket = 30;
-		for(i=0; i<Config.HPI_LENGTH; ++i) HPIRecord.addValue(1.0);
+		// TODO: Why to initiate averageDaysOnMarket to 30? Check if this has any influence!
+        // TODO: Make this and any other dummy initial values explicit in the paper
+		averageDaysOnMarket = config.constants.DAYS_IN_MONTH;
+		for(i=0; i<config.derivedParams.HPI_RECORD_LENGTH; ++i) HPIRecord.addValue(1.0);
 		offersPQ.clear();
 //		matches.clear();
 	}
@@ -174,11 +159,12 @@ public abstract class HousingMarket implements Serializable {
 			nBids = offer.matchedBids.size(); // if there are no bids matched, skip this offer
 			if(nBids > 0) {
 				// bid up the price
-				if(Config.BIDUP != 1.0) {
-					enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/Demographics.TARGET_POPULATION));
-					pSuccessfulBid = Math.exp(-enoughBids*Config.UNDEROFFER);
+				if(config.BIDUP != 1.0) {
+				    // TODO: the 10000/N factor, the 0.5 added, and the topping of the function at 4 are not declared in the paper. Remove or explain!
+					enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/config.TARGET_POPULATION));
+					pSuccessfulBid = Math.exp(-enoughBids*config.derivedParams.MONTHS_UNDER_OFFER);
 					geomDist = new GeometricDistribution(Model.rand, pSuccessfulBid);
-					salePrice = offer.getPrice() * Math.pow(Config.BIDUP, geomDist.sample());
+					salePrice = offer.getPrice() * Math.pow(config.BIDUP, geomDist.sample());
 				} else {
 					salePrice = offer.getPrice();					
 				}
@@ -193,7 +179,7 @@ public abstract class HousingMarket implements Serializable {
 						--nBids;
 					}
 					++nBids;
-					winningBid = nBids + Model.rand.nextInt(offer.matchedBids.size()-nBids);
+					winningBid = nBids + rand.nextInt(offer.matchedBids.size()-nBids);
 				}
 				record.remove();
 				offer.setPrice(salePrice, authority);
@@ -218,7 +204,10 @@ public abstract class HousingMarket implements Serializable {
 		// bids contains bids (HouseBuyerRecords) in an array
 		
 		recordMarketStats();
-		int rounds = Math.min(Demographics.TARGET_POPULATION/1000,1 + (offersPQ.size()+bids.size())/500);
+		// TODO: 500 is reported in the paper as 5000000. In any case, why this number? Why the 1000?
+        // TODO: These numbers should be made a less arbitrary or better justified "model rule", not even parameters
+        // TODO: Also, why to necessarily iterate rounds times if market might be cleared before? Is this often the case?
+		int rounds = Math.min(config.TARGET_POPULATION/1000,1 + (offersPQ.size()+bids.size())/500);
 		for(int i=0; i<rounds; ++i) {
 			matchBidsWithOffers(); // Step 1: iterate through bids
 			clearMatches(); // Step 2: iterate through offers
@@ -291,9 +280,11 @@ public abstract class HousingMarket implements Serializable {
 	 * @param sale The seller's record
 	 **********************************************/
 	public void completeTransaction(HouseBuyerRecord b, HouseSaleRecord sale) {
-		// --- update sales statistics		
-		averageDaysOnMarket = Config.E*averageDaysOnMarket + (1.0-Config.E)*30*(Model.getTime() - sale.tInitialListing);
-		averageSalePrice[sale.getQuality()] = Config.G*averageSalePrice[sale.getQuality()] + (1.0-Config.G)*sale.getPrice();
+		// --- update sales statistics
+        // TODO: This an exponential moving average with smoothing parameter E. Not explained in the paper!
+        // TODO: No justification is given for the smoothing parameter... check how much it matters for the results
+		averageDaysOnMarket = config.derivedParams.E*averageDaysOnMarket + (1.0-config.derivedParams.E)*config.constants.DAYS_IN_MONTH*(Model.getTime() - sale.tInitialListing);
+		averageSalePrice[sale.getQuality()] = config.derivedParams.G*averageSalePrice[sale.getQuality()] + (1.0-config.derivedParams.G)*sale.getPrice();
 		
 //		housePriceRegression.addData(referencePrice(sale.getQuality()), sale.getPrice());
 		aveSoldRefPrice += referencePrice(sale.getQuality());
@@ -307,17 +298,23 @@ public abstract class HousingMarket implements Serializable {
 	
 	/***************************************************
 	 * Get the annualised appreciation in house price index
-	 * (Compares the previous quarter to the quarter last year to get rid of seasonality)
-	 * 
+	 * It compares the previous quarter (previous 3 months, to smooth changes) to the quarter nYears years before
+     * (full years to avoid seasonal effects) to compute the geometric mean over the nYear years
+     *
+	 * @param nYears number of years to average house price growth
 	 * @return Annualised appreciation
 	 ***************************************************/
-	public double housePriceAppreciation() {
-		return((HPIRecord.getElement(Config.HPI_LENGTH-1)+HPIRecord.getElement(Config.HPI_LENGTH-2)+HPIRecord.getElement(Config.HPI_LENGTH-3))/
-				(HPIRecord.getElement(Config.HPI_LENGTH-13)+HPIRecord.getElement(Config.HPI_LENGTH-14)+HPIRecord.getElement(Config.HPI_LENGTH-15))
-				-1.0);
-//		return(HPIRecord.getElement(Config.HPI_LENGTH-1)/
-//				HPIRecord.getElement(Config.HPI_LENGTH-13)
-//				-1.0);
+	public double housePriceAppreciation(int nYears) {
+        double HPI = (HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 1)
+                + HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 2)
+                + HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH - 3));
+        double oldHPI = (HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH
+                - nYears*config.constants.MONTHS_IN_YEAR - 1)
+                + HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH
+                - nYears*config.constants.MONTHS_IN_YEAR - 2)
+                + HPIRecord.getElement(config.derivedParams.HPI_RECORD_LENGTH
+                - nYears*config.constants.MONTHS_IN_YEAR - 3));
+        return(Math.pow(HPI/oldHPI, 1.0/nYears) - 1.0);
 	}
 	
 	/***********************************************
@@ -348,7 +345,7 @@ public abstract class HousingMarket implements Serializable {
 	 * even lowest quality house.
 	 */
 	public int maxQualityGivenPrice(double price) {
-		int q=House.Config.N_QUALITY-1;
+		int q=config.N_QUALITY-1;
 		while(q >= 0 && averageSalePrice[q] > price) --q;
 		return(q);
 	}
@@ -363,10 +360,11 @@ public abstract class HousingMarket implements Serializable {
 		// ###### TODO: TEST!!!
 		// --- calculate from avergeSalePrice from housePriceRegression
 //		if(housePriceRegression.getN() > 4) {
+        // TODO: Why only when nSold greater than 4? Undeclared in the paper!
 		if(nSold > 4) {
-			final double DECAY = 0.25;
 //			housePriceRegression.regress();
 //			double m = housePriceRegression.getSlope();
+            // TODO: Is this a parameter? Could we remove it?
 			double c = 0.0;//housePriceRegression.getIntercept();
 			double m = aveSoldPrice/aveSoldRefPrice;
 			aveSoldPrice = 0.0;
@@ -375,8 +373,8 @@ public abstract class HousingMarket implements Serializable {
 
 			housePriceIndex = m;
 //			quarterlyHPI.addValue(m);
-			for(int q=0; q<House.Config.N_QUALITY; ++q) {
-				averageSalePrice[q] = DECAY*averageSalePrice[q] + (1.0-DECAY)*(m*referencePrice(q) + c);
+			for(int q=0; q<config.N_QUALITY; ++q) {
+				averageSalePrice[q] = config.MARKET_AVERAGE_PRICE_DECAY*averageSalePrice[q] + (1.0-config.MARKET_AVERAGE_PRICE_DECAY)*(m*referencePrice(q) + c);
 //				averageSalePrice[q] = referencePrice(q)*quarterlyHPI.getMean();
 			}
 		}
@@ -406,11 +404,12 @@ public abstract class HousingMarket implements Serializable {
 	
 	// ---- statistics
 //	SimpleRegression housePriceRegression = new SimpleRegression(); // linear regression of (transaction price,reference price)
+	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	public double aveSoldRefPrice = 0.0;
 	public double aveSoldPrice = 0.0;
 	public int nSold = 0;
 	public double averageDaysOnMarket;
-	protected double averageSalePrice[] = new double[House.Config.N_QUALITY];
+	protected double averageSalePrice[] = new double[config.N_QUALITY];
 	public DescriptiveStatistics HPIRecord;
 	public DescriptiveStatistics quarterlyHPI = new DescriptiveStatistics(3);
 	public double housePriceIndex;

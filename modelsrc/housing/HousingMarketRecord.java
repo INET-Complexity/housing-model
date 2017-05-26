@@ -14,7 +14,8 @@ public abstract class HousingMarketRecord implements Serializable {
 		this.price = price;
 		id = id_pool++;
 	}
-	
+
+	// TODO: Check if we really need this to be abstract, or even to stay here
 	public abstract int getQuality();
 	//{
 	//	return 0;

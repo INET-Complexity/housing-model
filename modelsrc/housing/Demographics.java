@@ -14,8 +14,8 @@ import utilities.DoubleUnaryOperator;
 import utilities.Pdf;
 
 public class Demographics {
-	public static final int TARGET_POPULATION = 10000;  	// target number of households
-	public static final boolean SPINUP = false;
+
+	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	/***
 	 * Add newly 'born' households to the model and remove households that 'die'
@@ -24,15 +24,16 @@ public class Demographics {
 	public void step() {
 		// --- birth
 		int nBirths;
-		if(SPINUP && Model.getTime() < spinupYears*12) {
+		// TODO: Clarify what this spinup does and if it is actually needed. Currently, SPINUP is set to False!
+		if(config.SPINUP && Model.getTime() < spinupYears*config.constants.MONTHS_IN_YEAR) {
 			// --- still in spinup phase of simulation
-			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.getTime()/12.0))*TARGET_POPULATION/12.0 + 0.5);
+			nBirths = (int)(spinupBirthRatePerHousehold.getEntry((int)(Model.getTime()/config.constants.MONTHS_IN_YEAR))*config.TARGET_POPULATION/config.constants.MONTHS_IN_YEAR + 0.5);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfSpinupHouseholdAgeAtBirth.nextDouble()));
 			}
 		} else {
 			// --- in projection phase of simulation
-			nBirths = (int)(TARGET_POPULATION*data.Demographics.futureBirthRate(Model.getTime())/12.0 + 0.5);
+			nBirths = (int)(config.TARGET_POPULATION*data.Demographics.futureBirthRate(Model.getTime())/config.constants.MONTHS_IN_YEAR + 0.5);
 			while(--nBirths >= 0) {
 				Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
 			}
@@ -45,11 +46,11 @@ public class Demographics {
 //	    if(Model.getTime() > spinupYears*12) pMult = Model.households.size()/TARGET_POPULATION;
 		while(iterator.hasNext()) {
 		    Household h = iterator.next();
-		    pDeath = data.Demographics.probDeathGivenAge(h.lifecycle.age)/12.0;
-			if(Model.rand.nextDouble() < pDeath) {
+		    pDeath = data.Demographics.probDeathGivenAge(h.lifecycle.age)/config.constants.MONTHS_IN_YEAR;
+			if(rand.nextDouble() < pDeath) {
 				// --- inheritance
 				iterator.remove();
-				h.transferAllWealthTo(Model.households.get(Model.rand.nextInt(Model.households.size())));
+				h.transferAllWealthTo(Model.households.get(rand.nextInt(Model.households.size())));
 			}
 		}
 	}
@@ -92,7 +93,8 @@ public class Demographics {
 		DecompositionSolver solver = new LUDecomposition(M).getSolver();
 		return(solver.solve(targetDemographic));
 	}
-	
+
+	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	public static int spinupYears = (int)Math.ceil(data.Demographics.pdfAge.getSupportUpperBound()-data.Demographics.pdfAge.getSupportLowerBound());			// number of years to spinup
 	public static RealVector spinupBirthRatePerHousehold = spinupBirthRate(); // birth rate per year by year per household-at-year-0
 }
