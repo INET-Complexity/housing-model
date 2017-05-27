@@ -1,4 +1,4 @@
-package housing;
+package collectors;
 
 import java.io.Serializable;
 

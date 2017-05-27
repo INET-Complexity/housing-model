@@ -1,4 +1,6 @@
-package housing;
+package collectors;
+
+import housing.Model;
 
 import java.io.Serializable;
 

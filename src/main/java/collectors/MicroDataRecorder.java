@@ -1,4 +1,6 @@
-package housing;
+package collectors;
+
+import housing.*;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -13,7 +15,7 @@ public class MicroDataRecorder {
 	public void openNewFile() {
 //		String simID = Integer.toHexString(UUID.randomUUID().hashCode());
 		try {
-			outfile = new PrintWriter("transactions-"+Model.nSimulation+".csv", "UTF-8");
+			outfile = new PrintWriter("transactions-"+ Model.nSimulation+".csv", "UTF-8");
 			outfile.println(
 					"Timestamp, transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, "+
 					"buyerId, buyerAge(years), buyerHasBTLGene, buyerMonthlyPreTaxIncome, buyerMonthlyEmploymentIncome, buyerBankBalance, buyerCapGainCoeff, "+

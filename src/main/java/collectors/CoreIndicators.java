@@ -1,5 +1,7 @@
-package housing;
+package collectors;
 
+import housing.Config;
+import housing.Model;
 import utilities.MeanAboveMedian;
 
 /***
@@ -18,7 +20,7 @@ import utilities.MeanAboveMedian;
 public class CoreIndicators extends CollectorBase {
 	private static final long serialVersionUID = -7295853109870791276L;
 
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	public void step() {
 	}

@@ -1,9 +1,13 @@
-package housing;
+package collectors;
+
+import housing.Config;
+import housing.Household;
+import housing.Model;
 
 public class HouseholdStats extends CollectorBase {
 	private static final long serialVersionUID = -402486195880710795L;
 
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	public void step() {
 		BtLTotalAnnualIncome = 0.0;

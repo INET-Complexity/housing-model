@@ -1,11 +1,12 @@
-package housing;
+package collectors;
 
+import housing.*;
 import sim.util.Double2D;
 
 public class HousingMarketStats extends CollectorBase {
 	private static final long serialVersionUID = -535310555732796139L;
 
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
 	public HousingMarketStats() {
 		setActive(true);

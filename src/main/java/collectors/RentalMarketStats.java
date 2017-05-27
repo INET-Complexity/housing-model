@@ -1,5 +1,7 @@
-package housing;
+package collectors;
 
+import housing.Config;
+import housing.Model;
 import sim.util.Double2D;
 
 public class RentalMarketStats extends HousingMarketStats {
@@ -7,7 +9,7 @@ public class RentalMarketStats extends HousingMarketStats {
 //		return(Model.rentalMarket.expectedGrossYield);
 //	}
 
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 	
     public Double2D [] getExpectedGrossYieldByQuality() {
     	Double2D [] data = new Double2D[config.N_QUALITY];

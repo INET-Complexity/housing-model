@@ -1,15 +1,16 @@
 package housing;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.UUID;
 
-import org.apache.commons.math3.distribution.LogNormalDistribution;
+import collectors.CoreIndicators;
+import collectors.CreditSupply;
+import collectors.HouseholdStats;
+import collectors.HousingMarketStats;
+import collectors.MicroDataRecorder;
+import collectors.Recorder;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import ec.util.MersenneTwisterFast;
@@ -52,8 +53,8 @@ public class Model extends SimState implements Steppable {
 
 		government = new Government();
 		demographics = new Demographics();
-		recorder = new Recorder();
-		transactionRecorder = new MicroDataRecorder();
+		recorder = new collectors.Recorder();
+		transactionRecorder = new collectors.MicroDataRecorder();
 
 		centralBank = new CentralBank();
 		mBank = new Bank();
@@ -61,7 +62,7 @@ public class Model extends SimState implements Steppable {
 		mHouseholds = new ArrayList<Household>(config.TARGET_POPULATION*2);
 		housingMarket = mHousingMarket = new HouseSaleMarket();		// Variables of housingMarket are initialised (including HPI)
 		rentalMarket = mRentalMarket = new HouseRentalMarket();		// Variables of rentalMarket are initialised (including HPI)
-		mCollectors = new Collectors();
+		mCollectors = new collectors.Collectors();
 		nSimulation = 0;
 
 		setupStatics();
@@ -202,7 +203,7 @@ public class Model extends SimState implements Steppable {
 	public Construction				mConstruction;
 	public HouseSaleMarket			mHousingMarket;
 	public HouseRentalMarket		mRentalMarket;
-	public Collectors				mCollectors;
+	public collectors.Collectors mCollectors;
 
 	public static CentralBank		centralBank;
 	public static Bank 				bank;
@@ -215,8 +216,8 @@ public class Model extends SimState implements Steppable {
 	public static MersenneTwister	rand;
 	public static Model				root;
 
-	public static Collectors		collectors;	// = new Collectors();
-	public static Recorder			recorder;	// records info to file
+	public static collectors.Collectors collectors;	// = new Collectors();
+	public static Recorder recorder;	// records info to file
 	public static MicroDataRecorder transactionRecorder;
 
 	public static int	nSimulation;	// number of simulations run
@@ -241,7 +242,7 @@ public class Model extends SimState implements Steppable {
 		return collectors.creditSupply;
 	}
 
-	public HousingMarketStats getHousingMarketStats() {
+	public collectors.HousingMarketStats getHousingMarketStats() {
 		return collectors.housingMarketStats;
 	}
 

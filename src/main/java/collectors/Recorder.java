@@ -1,9 +1,11 @@
-package housing;
+package collectors;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import housing.Config;
+import housing.Model;
 import org.apache.commons.math3.linear.ArrayRealVector;
 
 /***
@@ -13,7 +15,7 @@ import org.apache.commons.math3.linear.ArrayRealVector;
  */
 public class Recorder {
 
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 	
 	public void start() throws FileNotFoundException, UnsupportedEncodingException {
 		// --- open files for core indicators
