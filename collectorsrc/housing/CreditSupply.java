@@ -3,13 +3,8 @@ package housing;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-
-import sim.util.Double2D;
 
 public class CreditSupply extends CollectorBase {
 	private static final long serialVersionUID = 1630707025974306844L;
