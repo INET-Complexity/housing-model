@@ -50,14 +50,14 @@ public class CreditSupply extends CollectorBase {
 	 */
 	public void recordLoan(Household h, MortgageAgreement approval, House house) {
 		double housePrice;
-		if(config.MORTGAGE_DIAGNOSTICS_ACTIVE) {
+		if(config.isMortgageDiagnosticsActive()) {
 			housePrice = approval.principal + approval.downPayment;
-			affordability = config.derivedParams.AFFORDABILITY_DECAY*affordability + (1.0-config.derivedParams.AFFORDABILITY_DECAY)*approval.monthlyPayment/(h.monthlyEmploymentIncome);
+			affordability = config.derivedParams.getAffordabilityDecay()*affordability + (1.0-config.derivedParams.getAffordabilityDecay())*approval.monthlyPayment/(h.monthlyEmploymentIncome);
 			if(approval.principal > 1.0) {
 				if(approval.isBuyToLet) {
 					btl_ltv.addValue(100.0*approval.principal/housePrice);
 //					double icr = Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
-					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
+					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.getCentralBankBTLStressedInterest());
 					btl_icr.addValue(icr);
 				} else {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);

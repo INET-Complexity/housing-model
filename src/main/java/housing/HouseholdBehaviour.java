@@ -50,7 +50,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		BtLCapGainCoeff = 0.0;
 		if(config.BTL_ENABLED) {
 			if(incomePercentile > config.MIN_INVESTOR_PERCENTILE &&
-                    rand.nextDouble() < config.P_INVESTOR/config.MIN_INVESTOR_PERCENTILE) {
+                    rand.nextDouble() < config.getPInvestor()/config.MIN_INVESTOR_PERCENTILE) {
 				BTLInvestor = true;//(data.Households.buyToLetDistribution.inverseCumulativeProbability(rand.nextDouble())+0.5);
 				double type = rand.nextDouble();
 				if(type < config.P_FUNDAMENTALIST) {
@@ -78,7 +78,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 	 * @return Non-essential consumption for the month
 	 ********************************/
 	public double desiredConsumptionB(Household me) {//double monthlyIncome, double bankBalance) {
-		return(config.CONSUMPTION_FRACTION*Math.max(me.bankBalance - desiredBankBalance(me), 0.0));
+		return(config.CONSUMPTION_FRACTION*Math.max(me.getBankBalance() - desiredBankBalance(me), 0.0));
 	}
 
 	/********************************
@@ -173,8 +173,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
      * @return the downpayment
      */
 	public double downPayment(Household me, double housePrice) {
-//		return(me.bankBalance - (1.0 - DOWNPAYMENT_FRACTION)*desiredBankBalance(me));
-		if(me.bankBalance > housePrice*config.BANK_BALANCE_FOR_CASH_DOWNPAYMENT) { // calibrated against mortgage approval/housing transaction ratio, core indicators average 1987-2006
+//		return(me.getBankBalance() - (1.0 - DOWNPAYMENT_FRACTION)*desiredBankBalance(me));
+		if(me.getBankBalance() > housePrice*config.BANK_BALANCE_FOR_CASH_DOWNPAYMENT) { // calibrated against mortgage approval/housing transaction ratio, core indicators average 1987-2006
 			return(housePrice);
 		}
 		double downpayment;
@@ -189,7 +189,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 			downpayment = Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
                     (me.lifecycle.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		}
-		if(downpayment > me.bankBalance) downpayment = me.bankBalance;
+		if(downpayment > me.getBankBalance()) downpayment = me.getBankBalance();
 		return(downpayment);
 //		return(Model.housingMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(me.lifecycle.incomePercentile));	
 	}
@@ -420,7 +420,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 		
 		if(!isPropertyInvestor()) return false;
 		// TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
-		if(me.bankBalance < desiredBankBalance(me)*config.BTL_CHOICE_MIN_BANK_BALANCE) {
+		if(me.getBankBalance() < desiredBankBalance(me)*config.BTL_CHOICE_MIN_BANK_BALANCE) {
 			return(false);
 		}
 		// --- calculate expected yield on zero quality house

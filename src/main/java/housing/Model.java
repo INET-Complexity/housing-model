@@ -48,7 +48,7 @@ public class Model extends SimState implements Steppable {
 	public Model(long seed) {
 		super(seed);
 		rand = new MersenneTwister(seed);
-		config = new Config("config.properties");
+		config = new Config("src/main/resources/config.properties");
 		//System.exit(0);
 
 		government = new Government();

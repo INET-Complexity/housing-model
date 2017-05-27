@@ -20,7 +20,7 @@ import java.util.Set;
  ************************************************/
 public class Config {
 
-    /** Declaration of parameters **/       // They can be package-private
+    /** Declaration of parameters **/
 
     // General model control parameters
     int N_STEPS;				            // Simulation duration in time steps
@@ -54,7 +54,7 @@ public class Config {
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
 
     // Household behaviour parameters: buy-to-let
-    double P_INVESTOR;                      // Prior probability of being (wanting to be) a BTL investor
+    private double P_INVESTOR;                      // Prior probability of being (wanting to be) a BTL investor
     double MIN_INVESTOR_PERCENTILE;         // Minimum income percentile for a household to be a BTL investor
     double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
     double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
@@ -183,6 +183,23 @@ public class Config {
         double KL;                      // Decay factor for long-term exponential moving average of gross yield from rentals (longTermAverageGrossYield)
         // Collectors parameters
         double AFFORDABILITY_DECAY; 	// Decay constant for the exponential moving average of affordability
+
+        public double getAffordabilityDecay() {
+          return AFFORDABILITY_DECAY;
+        }
+
+        public double getE() {
+            return E;
+        }
+
+        public int getHPIRecordLength() {
+            return HPI_RECORD_LENGTH;
+        }
+
+        public double getHPIReference() {
+            return HPI_REFERENCE;
+        }
+
     }
 
     /**
@@ -203,6 +220,22 @@ public class Config {
      */
     public Config (String configFileName) {
         getConfigValues(configFileName);
+    }
+
+    public boolean isMortgageDiagnosticsActive() {
+        return MORTGAGE_DIAGNOSTICS_ACTIVE;
+    }
+
+    public double getCentralBankBTLStressedInterest() {
+        return CENTRAL_BANK_BTL_STRESSED_INTEREST;
+    }
+
+    public double getUKHouseholds() {
+        return UK_HOUSEHOLDS;
+    }
+
+    public double getPInvestor() {
+        return P_INVESTOR;
     }
 
     /**

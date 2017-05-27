@@ -45,26 +45,26 @@ public class HousingMarketStats extends CollectorBase {
 		nBTLSales = btlSaleCount; btlSaleCount = 0;
 		nNewBuild = 0;
 		nEmpty = 0;
-		nSellers = market.offersPQ.size();
-		nBuyers = market.bids.size();
+		nSellers = market.getOffersPQ().size();
+		nBuyers = market.getBids().size();
 
 		// -- Record average bid price
 		// ---------------------------
 		averageBidPrice = 0.0;
-		for(HouseBuyerRecord buyer : market.bids) {
+		for(HouseBuyerRecord buyer : market.getBids()) {
 			averageBidPrice += buyer.getPrice();
 		}
-		if(market.bids.size() > 0) averageBidPrice /= market.bids.size();
+		if(market.getBids().size() > 0) averageBidPrice /= market.getBids().size();
 
 		// -- Record average offer price
 		// -----------------------------
 		averageOfferPrice = 0.0;
-		for(HousingMarketRecord sale : market.offersPQ) {
+		for(HousingMarketRecord sale : market.getOffersPQ()) {
 			averageOfferPrice += sale.getPrice();
 			if(((HouseSaleRecord)sale).house.owner == Model.construction) nNewBuild++;
 			if(((HouseSaleRecord)sale).house.resident == null) nEmpty++;
 		}
-		if(market.offersPQ.size() > 0) averageOfferPrice /= market.offersPQ.size();
+		if(market.getOffersPQ().size() > 0) averageOfferPrice /= market.getOffersPQ().size();
 		recordOfferPrices();
 		recordBidPrices();
 	}
@@ -80,7 +80,7 @@ public class HousingMarketStats extends CollectorBase {
 	
 	public void recordSale(HouseBuyerRecord purchase, HouseSaleRecord sale) {
 		if(sale.initialListedPrice > 0.01) {
-			averageSoldPriceToOLP = config.derivedParams.E*averageSoldPriceToOLP + (1.0-config.derivedParams.E)*sale.getPrice()/sale.initialListedPrice;
+			averageSoldPriceToOLP = config.derivedParams.getE()*averageSoldPriceToOLP + (1.0-config.derivedParams.getE())*sale.getPrice()/sale.initialListedPrice;
 		}
 		saleCount += 1;
 		MortgageAgreement mortgage = purchase.buyer.mortgageFor(sale.house);
@@ -95,19 +95,19 @@ public class HousingMarketStats extends CollectorBase {
 	}
 		
 	protected void recordOfferPrices() {
-		offerPrices = new double[market.offersPQ.size()];
+		offerPrices = new double[market.getOffersPQ().size()];
 		int i = 0;
-		for(HousingMarketRecord sale : market.offersPQ) {
+		for(HousingMarketRecord sale : market.getOffersPQ()) {
 			offerPrices[i] = sale.getPrice();
 			++i;
 		}
 	}
 
 	protected void recordBidPrices() {
-		bidPrices = new double[market.bids.size()];
+		bidPrices = new double[market.getBids().size()];
 		int i = 0;
 		
-		for(HouseBuyerRecord bid : market.bids) {
+		for(HouseBuyerRecord bid : market.getBids()) {
 			bidPrices[i] = bid.getPrice();
 			++i;
 		}
@@ -259,7 +259,7 @@ public class HousingMarketStats extends CollectorBase {
     public double [][] priceData() {
         int i;
         for(i=0; i<config.N_QUALITY; ++i) {
-        	priceData[1][i] = market.averageSalePrice[i];
+        	priceData[1][i] = market.getAverageSalePrice()[i];
         }
         return(priceData);
     }

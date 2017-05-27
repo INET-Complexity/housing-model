@@ -175,7 +175,7 @@ public class Bank implements Serializable {
 		MortgageAgreement approval = new MortgageAgreement(h, !isHome);
 		double r = getMortgageInterestRate()/config.constants.MONTHS_IN_YEAR; // monthly interest rate
 		double lti_principal, affordable_principal, icr_principal;
-		double liquidWealth = h.bankBalance;
+		double liquidWealth = h.getBankBalance();
 		
 		if(isHome) liquidWealth += h.getHomeEquity();
 
@@ -237,7 +237,7 @@ public class Bank implements Serializable {
 		double pdi_max; // disposable income constraint
 		double lti_max; // loan to income constraint
 		double icr_max; // interest rate coverage
-		double liquidWealth = h.bankBalance;
+		double liquidWealth = h.getBankBalance();
 
 		if(isHome) {
 			liquidWealth += h.getHomeEquity(); // assume h will sell current home

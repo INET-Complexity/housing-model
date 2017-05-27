@@ -72,7 +72,7 @@ public class HouseSaleMarket extends HousingMarket {
 //					if(bestOffer.getExpectedAnnualRent()/(bestOffer.getPrice()-bid.buyer.behaviour.downPayment(bid.buyer, bestOffer.getPrice())) >= Model.bank.interestCoverageRatio()*Model.bank.getBtLStressedMortgageInterestRate()) {
 //						return(bestOffer);
 //					}
-					if(bid.buyer.bankBalance >= minDownpayment) {
+					if(bid.buyer.getBankBalance() >= minDownpayment) {
 						return(bestOffer);
 					}
 			}

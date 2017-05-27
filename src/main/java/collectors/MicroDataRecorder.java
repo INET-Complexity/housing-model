@@ -44,11 +44,11 @@ public class MicroDataRecorder {
     			sale.tInitialListing+", "+
     			sale.getPrice()+", "+
     			purchase.buyer.id+", "+
-    			purchase.buyer.lifecycle.age+", "+
+    			purchase.buyer.lifecycle.getAge()+", "+
     			purchase.buyer.behaviour.isPropertyInvestor()+", "+
     			purchase.buyer.getMonthlyPreTaxIncome()+", "+
     			purchase.buyer.monthlyEmploymentIncome+", "+
-    			purchase.buyer.bankBalance+", "+
+    			purchase.buyer.getBankBalance()+", "+
     			purchase.buyer.behaviour.BtLCapGainCoeff+", "
 				);
 		if(mortgage != null) {
@@ -64,11 +64,11 @@ public class MicroDataRecorder {
 			Household seller = (Household)sale.house.owner;
 			outfile.println(
 					seller.id+", "+
-					seller.lifecycle.age+", "+
+					seller.lifecycle.getAge()+", "+
 					seller.behaviour.isPropertyInvestor()+", "+
 					seller.getMonthlyPreTaxIncome()+", "+
 					seller.monthlyEmploymentIncome+", "+
-					seller.bankBalance+", "+
+					seller.getBankBalance()+", "+
 					seller.behaviour.BtLCapGainCoeff
 					);			
 		} else {

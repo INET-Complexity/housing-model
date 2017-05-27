@@ -46,7 +46,7 @@ public class Demographics {
 //	    if(Model.getTime() > spinupYears*12) pMult = Model.households.size()/TARGET_POPULATION;
 		while(iterator.hasNext()) {
 		    Household h = iterator.next();
-		    pDeath = data.Demographics.probDeathGivenAge(h.lifecycle.age)/config.constants.MONTHS_IN_YEAR;
+		    pDeath = data.Demographics.probDeathGivenAge(h.lifecycle.getAge())/config.constants.MONTHS_IN_YEAR;
 			if(rand.nextDouble() < pDeath) {
 				// --- inheritance
 				iterator.remove();

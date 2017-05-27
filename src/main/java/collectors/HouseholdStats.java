@@ -29,7 +29,7 @@ public class HouseholdStats extends CollectorBase {
     	    	NonOwnerTotalAnnualIncome += h.monthlyEmploymentIncome;
     		} else if(h.isRenting()) {
     			++nRenting;
-    			rentalYield += h.housePayments.get(h.home).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
+    			rentalYield += h.getHousePayments().get(h.getHome()).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(h.getHome().getQuality());
     	    	NonOwnerTotalAnnualIncome += h.monthlyEmploymentIncome;
     		} else {
     			OOTotalAnnualIncome += h.monthlyEmploymentIncome;
@@ -48,7 +48,7 @@ public class HouseholdStats extends CollectorBase {
 		double [] result = new double[Model.households.size()];
 		int i = 0;
 		for(Household h : Model.households) {
-			result[i] = h.lifecycle.age;
+			result[i] = h.lifecycle.getAge();
 			++i;
 		}
 		return(result);
@@ -65,7 +65,7 @@ public class HouseholdStats extends CollectorBase {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(!h.isHomeowner() && i < nNonOwner) {
-				result[i++] = h.lifecycle.age;
+				result[i++] = h.lifecycle.getAge();
 			}
 		}
 		while(i < nNonOwner) {
@@ -85,7 +85,7 @@ public class HouseholdStats extends CollectorBase {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(!h.isHomeowner() && i < nNonOwner) {
-				result[i] = h.lifecycle.age;
+				result[i] = h.lifecycle.getAge();
 				++i;
 			}
 		}
@@ -137,7 +137,7 @@ public class HouseholdStats extends CollectorBase {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(h.isRenting() && i<nRenting) {
-				result[i++] = h.housePayments.get(h.home).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(h.home.getQuality());
+				result[i++] = h.getHousePayments().get(h.getHome()).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(h.getHome().getQuality());
 			}
 		}
 		return(result);
@@ -162,7 +162,7 @@ public class HouseholdStats extends CollectorBase {
 		double [] result = new double[Model.households.size()];
 		int i = 0;
 		for(Household h : Model.households) {
-			result[i++] = Math.log(Math.max(0.0, h.bankBalance));
+			result[i++] = Math.log(Math.max(0.0, h.getBankBalance()));
 		}
 		return(result);
 	}
