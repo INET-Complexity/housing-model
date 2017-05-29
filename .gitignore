@@ -1,4 +1,13 @@
 /bin/
 /experiments
+
+# ignore Intellij IDEA cruft
 .idea/
 *.iml
+/target
+
+# ignore Ecplise IDE cruft
+.classpath
+.project
+
+
