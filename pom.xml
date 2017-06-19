@@ -11,7 +11,19 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>local</id>
+            <url>file://${project.basedir}/lib</url>
+        </repository>
+    </repositories>
+
     <dependencies>
+        <dependency>
+            <groupId>org</groupId>
+            <artifactId>mason</artifactId>
+            <version>19</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
@@ -32,6 +44,7 @@
             <artifactId>jcommon</artifactId>
             <version>1.0.21</version>
         </dependency>
+
     </dependencies>
 
     <build>
