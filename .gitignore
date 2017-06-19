@@ -10,7 +10,5 @@
 .classpath
 .project
 
-# ignore jar files in lib
-/lib
 
 
