@@ -13,11 +13,13 @@ public class ModelConfig {
 
     private HousingMarketConfig housingMarketConfig;
     private GovernmentConfig governmentConfig;
+    private CentralBankConfig centralBankConfig;
 
     public ModelConfig(String filename) {
         Config config = ConfigFactory.load(filename);
         housingMarketConfig = new HousingMarketConfig(config.getConfig("simulation.housing-market"));
-        governmentConfig = new GovernmentConfig(config.getConfig("simulation.governmentConfig"));
+        governmentConfig = new GovernmentConfig(config.getConfig("simulation.government"));
+        centralBankConfig = new CentralBankConfig(config.getConfig("simulation.central-bank"));
     }
 
     /** Housing Market Configuration
@@ -28,8 +30,20 @@ public class ModelConfig {
         return housingMarketConfig;
     }
 
+    /** Government Configuration
+     *
+     * @return a `GovernmentConfig` object encapsulating the government parameters.
+     */
     public GovernmentConfig getGovernmentConfig() {
         return governmentConfig;
+    }
+
+    /** Central Bank Configuration
+     *
+     * @return a `CentralBankConfig` object encapsulating the central bank parameters.
+     */
+    public CentralBankConfig getCentralBankConfig() {
+        return centralBankConfig;
     }
 
 }

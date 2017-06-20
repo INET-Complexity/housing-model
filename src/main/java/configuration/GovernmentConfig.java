@@ -4,6 +4,10 @@ package configuration;
 import com.typesafe.config.Config;
 
 
+/**
+ *
+ * @author davidrpugh
+ */
 public class GovernmentConfig {
 
     private double personalAllowanceLimit;
