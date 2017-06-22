@@ -117,23 +117,10 @@ public class Config {
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
 
     // Central bank parameters
-    double CENTRAL_BANK_MAX_FTB_LTV;		    // Maximum LTV ratio that the bank would allow for first-time-buyers when not regulated
-    double CENTRAL_BANK_MAX_OO_LTV;		        // Maximum LTV ratio that the bank would allow for owner-occupiers when not regulated
-    double CENTRAL_BANK_MAX_BTL_LTV;	        // Maximum LTV ratio that the bank would allow for BTL investors when not regulated
-    double CENTRAL_BANK_FRACTION_OVER_MAX_LTV;  // Maximum fraction of mortgages that the bank can give over the LTV ratio limit
-    double CENTRAL_BANK_MAX_FTB_LTI;		    // Maximum LTI ratio that the bank would allow for first-time-buyers when not regulated
-    double CENTRAL_BANK_MAX_OO_LTI;		        // Maximum LTI ratio that the bank would allow for owner-occupiers when not regulated
-    double CENTRAL_BANK_FRACTION_OVER_MAX_LTI;  // Maximum fraction of mortgages that the bank can give over the LTI ratio limit
-    double CENTRAL_BANK_AFFORDABILITY_COEFF;    // Maximum fraction of the household's income to be spent on mortgage repayments under stressed conditions
     double CENTRAL_BANK_BTL_STRESSED_INTEREST;  // Interest rate under stressed condition for BTL investors when calculating interest coverage ratios (ICR)
-    double CENTRAL_BANK_MAX_ICR;                // Interest coverage ratio (ICR) limit imposed by the central bank
 
     // Construction sector parameters
     double CONSTRUCTION_HOUSES_PER_HOUSEHOLD;   // Target ratio of houses per household
-
-    // Government parameters
-    double GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT; // Maximum personal allowance
-    double GOVERNMENT_INCOME_SUPPORT;           // Minimum monthly earnings for a married couple from income support
 
     // Collectors parameters
     double UK_HOUSEHOLDS;                       // Approximate number of households in UK, used to scale up results for core indicators

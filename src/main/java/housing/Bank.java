@@ -15,8 +15,6 @@ import java.util.HashSet;
 public class Bank implements Serializable {
 	private static final long serialVersionUID = -8301089924358306706L;
 
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
-
 //	public double INTEREST_MARGIN = 0.03; // Interest rate rise in affordability stress test (http://www.bankofengland.co.uk/financialstability/Pages/fpc/intereststress.aspx)
 	
 	/********************************

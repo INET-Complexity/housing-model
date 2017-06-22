@@ -25,8 +25,6 @@ public class Household implements IHouseOwner, Serializable {
 
     private static final long serialVersionUID = -5042897399316333745L;
 
-    private Config    config = Model.config;    // Passes the Model's configuration parameters object to a private field
-
     public static int bankruptcies = 0;        // TODO: Unused variable... counts bankruptcies, but it's never used!
     
     /********************************************************

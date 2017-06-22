@@ -14,8 +14,6 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
 	private static final long serialVersionUID = -7785886649432814279L;
 
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 //	public final double INTENSITY_OF_CHOICE = 10.0;

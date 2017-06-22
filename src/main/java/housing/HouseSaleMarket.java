@@ -14,9 +14,7 @@ import utilities.PriorityQueue2D;
  *****************************************************/
 public class HouseSaleMarket extends HousingMarket {
 	private static final long serialVersionUID = -2878118108039744432L;
-
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
-
+	
 	public HouseSaleMarket() {
 		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
 	}

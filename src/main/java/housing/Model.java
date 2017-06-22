@@ -58,7 +58,7 @@ public class Model extends SimState implements Steppable {
         recorder = new collectors.Recorder();
         transactionRecorder = new collectors.MicroDataRecorder();
 
-        centralBank = new CentralBank();
+        centralBank = new CentralBank(config.getCentralBankConfig());
         mBank = new Bank();
         mConstruction = new Construction();
         mHouseholds = new ArrayList<Household>(config.TARGET_POPULATION*2);
