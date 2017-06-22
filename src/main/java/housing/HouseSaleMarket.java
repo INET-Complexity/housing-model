@@ -14,7 +14,7 @@ import utilities.PriorityQueue2D;
  *****************************************************/
 public class HouseSaleMarket extends HousingMarket {
 	private static final long serialVersionUID = -2878118108039744432L;
-	
+
 	public HouseSaleMarket() {
 		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
 	}

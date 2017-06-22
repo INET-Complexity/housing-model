@@ -14,12 +14,14 @@ public class ModelConfig {
     private HousingMarketConfig housingMarketConfig;
     private GovernmentConfig governmentConfig;
     private CentralBankConfig centralBankConfig;
+    private HouseholdBehaviorConfig householdBehaviorConfig;
 
     public ModelConfig(String filename) {
         Config config = ConfigFactory.load(filename);
         housingMarketConfig = new HousingMarketConfig(config.getConfig("simulation.housing-market"));
         governmentConfig = new GovernmentConfig(config.getConfig("simulation.government"));
         centralBankConfig = new CentralBankConfig(config.getConfig("simulation.central-bank"));
+        householdConfig = new HouseholdBehaviorConfig(config.getConfig("simulation.households"))
     }
 
     /** Housing Market Configuration
