@@ -3,6 +3,7 @@ package configuration;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import housing.Bank;
 
 
 /** Class encapsulating all of the model parameters.
@@ -15,13 +16,15 @@ public class ModelConfig {
     private GovernmentConfig governmentConfig;
     private CentralBankConfig centralBankConfig;
     private HouseholdBehaviorConfig householdBehaviorConfig;
+    private BankConfig bankConfig;
 
     public ModelConfig(String filename) {
         Config config = ConfigFactory.load(filename);
         housingMarketConfig = new HousingMarketConfig(config.getConfig("simulation.housing-market"));
         governmentConfig = new GovernmentConfig(config.getConfig("simulation.government"));
         centralBankConfig = new CentralBankConfig(config.getConfig("simulation.central-bank"));
-        householdConfig = new HouseholdBehaviorConfig(config.getConfig("simulation.households"))
+        householdBehaviorConfig = new HouseholdBehaviorConfig(config.getConfig("simulation.households"));
+        bankConfig = new BankConfig(config.getConfig("simulation.bank"));
     }
 
     /** Housing Market Configuration
@@ -47,5 +50,17 @@ public class ModelConfig {
     public CentralBankConfig getCentralBankConfig() {
         return centralBankConfig;
     }
+
+    /** Household Behavior Configuration.
+     *
+     * @return A `HouseholdBehaviorConfig` object encapsulating the household behavior parameters.
+     */
+    public HouseholdBehaviorConfig getHouseholdBehaviorConfig() { return householdBehaviorConfig; }
+
+    /** Bank Configuration.
+     *
+     * @return A `BankConfig` object encapsulating the bank parameters.
+     */
+    public BankConfig getBankConfig() { return bankConfig; }
 
 }
