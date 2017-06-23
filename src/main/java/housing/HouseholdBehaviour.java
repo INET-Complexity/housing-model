@@ -81,7 +81,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
      * @return Non-essential consumption for the month
      ********************************/
     public double desiredConsumptionB(Household me) {//double monthlyIncome, double bankBalance) {
-        return(config.CONSUMPTION_FRACTION*Math.max(me.getBankBalance() - desiredBankBalance(me), 0.0));
+        return(config.getConsumptionDecisionRuleConfig().getConsumptionFraction()*Math.max(me.getBankBalance() - desiredBankBalance(me), 0.0));
     }
 
     /********************************
