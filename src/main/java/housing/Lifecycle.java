@@ -7,8 +7,6 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 public class Lifecycle implements Serializable {
     private static final long serialVersionUID = -2455155016204679970L;
 
-    private Config    config = Model.config;    // Passes the Model's configuration parameters object to a private field
-
     public Lifecycle(double iage) {
         age = iage;
         incomePercentile = rand.nextDouble();
