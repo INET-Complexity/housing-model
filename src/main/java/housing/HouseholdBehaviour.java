@@ -15,6 +15,7 @@ import org.apache.commons.math3.distribution.LogNormalDistribution;
 public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
     private static final long serialVersionUID = -7785886649432814279L;
 
+    private HouseholdBehaviorConfig config;
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //    public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 //    public final double INTENSITY_OF_CHOICE = 10.0;
@@ -44,9 +45,10 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
      *                         used to determine whether the household can be a BTL investor
      ***************************************************/
     public HouseholdBehaviour(HouseholdBehaviorConfig config, double incomePercentile) {
-        
+        this.config = config;
+
         // Propensity to save is computed here so that it is constant for a given agent
-        propensityToSave = config.DESIRED_BANK_BALANCE_EPSILON*rand.nextGaussian();
+        propensityToSave = config.getDesiredBankBalanceConfig().getEpsilon()*rand.nextGaussian();
         BtLCapGainCoeff = 0.0;
         if(config.BTL_ENABLED) {
             if(incomePercentile > config.getBuyToLetConfig().getMinIncomePercentile() &&
@@ -66,6 +68,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
         }
         desiredBalance = -1.0;
     }
+
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Owner-Ocupier behaviour
     ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,8 +93,8 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
         // TODO: why only if desired bank balance is set to -1? (does this get calculated only once? why?)
         if(desiredBalance == -1.0) {
 //            desiredBalance = 3.0*Math.exp(4.07*Math.log(me.getMonthlyPreTaxIncome()*12.0)-33.1 - propensityToSave);
-            double lnDesiredBalance = config.DESIRED_BANK_BALANCE_ALPHA
-                    + config.DESIRED_BANK_BALANCE_BETA
+            double lnDesiredBalance = config.getDesiredBankBalanceConfig().getAlpha()
+                    + config.getDesiredBankBalanceConfig().getBeta()
                         * Math.log(me.getMonthlyPreTaxIncome()*config.constants.MONTHS_IN_YEAR) + propensityToSave;
             desiredBalance = Math.exp(lnDesiredBalance);
             // TODO: What is this next rule? Not declared in the article! Check if 0.3 should be included as a parameter

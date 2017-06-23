@@ -3,6 +3,11 @@ package configuration;
 
 import com.typesafe.config.Config;
 
+
+/** Class encapsulating all of the household parameters.
+ *
+ * @author davidrpugh
+ */
 public class HouseholdConfig {
 
     private HouseholdBehaviorConfig behaviorConfig;
