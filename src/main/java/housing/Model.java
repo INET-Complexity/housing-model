@@ -1,6 +1,5 @@
 package housing;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
@@ -11,9 +10,7 @@ import collectors.HouseholdStats;
 import collectors.HousingMarketStats;
 import collectors.MicroDataRecorder;
 import collectors.Recorder;
-import org.apache.commons.math3.random.RandomGenerator;
-
-import ec.util.MersenneTwisterFast;
+import org.apache.commons.math3.random.MersenneTwister;
 
 /**
  * This is the root object of the simulation. Upon creation it creates
@@ -189,12 +186,12 @@ public class Model {
 	/**
 	 * proxy class to allow us to work with apache.commons distributions
 	 */
-	public static class MersenneTwister extends MersenneTwisterFast implements RandomGenerator {
-		public MersenneTwister(long seed) {super(seed);}
-		public void setSeed(int arg0) {
-			super.setSeed((long)arg0);
-		}
-	}
+//	public static class MersenneTwister extends MersenneTwisterFast implements RandomGenerator {
+//		public MersenneTwister(long seed) {super(seed);}
+//		public void setSeed(int arg0) {
+//			super.setSeed((long)arg0);
+//		}
+//	}
 
 	////////////////////////////////////////////////////////////////////////
 	// Getters/setters for MASON console

@@ -3,8 +3,7 @@ package utilities;
 import java.io.IOException;
 import java.io.Serializable;
 
-import ec.util.MersenneTwisterFast;
-import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.MersenneTwister;
 
 import housing.Model;
 
@@ -174,7 +173,7 @@ public class Pdf implements Serializable {
 //		return((1.0-remainder)*inverseCDF[i] + remainder*inverseCDF[i+1]);
 	}
 
-	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
+	private MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	DoubleUnaryOperator				pdf;				// function that gives the pdf
 	public double					start;				// lowest value of x that has a non-zero probability
 	public double					end;				// highest value of x that has a non-zero probability
