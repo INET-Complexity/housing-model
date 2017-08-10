@@ -14,9 +14,6 @@ import collectors.Recorder;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import ec.util.MersenneTwisterFast;
-import sim.engine.SimState;
-import sim.engine.Steppable;
-import sim.engine.Stoppable;
 
 /**
  * This is the root object of the simulation. Upon creation it creates
@@ -26,7 +23,7 @@ import sim.engine.Stoppable;
  *
  **/
 @SuppressWarnings("serial")
-public class Model extends SimState implements Steppable {
+public class Model {
 
 	////////////////////////////////////////////////////////////////////////
 
@@ -40,13 +37,55 @@ public class Model extends SimState implements Steppable {
 	////////////////////////////////////////////////////////////////////////
 
 	public static void main(String[] args) {
-		//doLoop(ModelNoGUI.class, args);
-		doLoop(Model.class,args);
-		System.exit(0);							//Stop the program when finished.
+
+	    // Create an instance of Model in order to initialise it (reading config file)
+	    new Model(1);
+
+        // Perform config.N_SIMS simulations
+		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
+
+		    // For each simulation, initialise both housingMarket and rentalMarket variables (including HPI)
+            init();
+
+            // For each simulation, run config.N_STEPS time steps
+			for (t = 0; t <= config.N_STEPS; t += 1) {
+
+                /*
+		         * Steps model and stores ownership and rental markets bid and offer prices, and their averages, into
+		         * their respective variables
+		         */
+                modelStep();
+
+                // TODO: More efficient to not check every time step but rather divide the external for into 2
+                if (t>=config.TIME_TO_START_RECORDING) {
+                    // Finds values of variables and records them to their respective files
+                    if(config.recordCoreIndicators) recorder.step();
+                }
+
+                collectors.step();
+
+                // Print time information to screen
+                if (t % 100 == 0) {
+                    System.out.println("Simulation: " + nSimulation + ", time: " + t);
+                }
+            }
+
+			// Finish each simulation within the recorders
+            // TODO: Check what this is actually doing and if it is necessary
+            if(config.recordCoreIndicators) recorder.endOfSim();
+            if(config.recordMicroData) transactionRecorder.endOfSim();
+		}
+
+        // After the last simulation, clean up
+        if(config.recordCoreIndicators) recorder.finish();
+        if(config.recordMicroData) transactionRecorder.finish();
+
+        //Stop the program when finished.
+		System.exit(0);
 	}
 
 	public Model(long seed) {
-		super(seed);
+        // TODO: Check that random numbers are working properly!
 		rand = new MersenneTwister(seed);
 		config = new Config("src/main/resources/config.properties");
 		//System.exit(0);
@@ -69,12 +108,6 @@ public class Model extends SimState implements Steppable {
 		init();		// Variables of both housingMarket and rentalMarket are initialised again (including HPI)
 	}
 
-	@Override
-	public void awakeFromCheckpoint() {
-		super.awakeFromCheckpoint();
-		setupStatics();
-	}
-
 	protected void setupStatics() {
 //		centralBank = mCentralBank;
 		bank = mBank;
@@ -88,75 +121,17 @@ public class Model extends SimState implements Steppable {
 		setRecordMicroData(config.recordMicroData);
 	}
 
-	public void init() {
+	public static void init() {
 		construction.init();
 		housingMarket.init();
 		rentalMarket.init();
 		bank.init();
 		households.clear();
 		collectors.init();
-		t = 0;
-		if(!monteCarloCheckpoint.equals("")) {	//changed this from != ""
-			File f = new File(monteCarloCheckpoint);
-			readFromCheckpoint(f);
-		}
 	}
 
-	/**
-	 * This method is called before the simulation starts. It schedules this
-	 * object to be stepped at each timestep and initialises the agents.
-	 */
-	public void start() {
-		super.start();
-		scheduleRepeat = schedule.scheduleRepeating(this);
 
-		if(!monteCarloCheckpoint.equals("")) {	//changed from != ""
-			File f = new File(monteCarloCheckpoint);
-			readFromCheckpoint(f);
-		}
-//		recorder.start();
-	}
-
-	public void stop() {
-		scheduleRepeat.stop();
-	}
-
-	/**
-	 * This is the main time-step of the whole simulation. Everything starts
-	 * here.
-	 */
-	public void step(SimState simulationStateNow) {
-		if (schedule.getTime() >= config.N_STEPS*config.N_SIMS) simulationStateNow.kill();
-		if(t >= config.N_STEPS) {
-			// start new simulation
-			nSimulation += 1;
-			if (nSimulation >= config.N_SIMS) {
-				// this was the last simulation, clean up
-				if(config.recordCoreIndicators) recorder.finish();
-				if(config.recordMicroData) transactionRecorder.finish();
-				simulationStateNow.kill();
-				return;
-			}
-			if(config.recordCoreIndicators) recorder.endOfSim();
-			if(config.recordMicroData) transactionRecorder.endOfSim();
-			init();		// Variables of both housingMarket and rentalMarket are initialised again (including HPI)
-		}
-
-		/*
-		 * Steps model and stores ownership and rental markets bid and offer prices, and their averages, into their
-		 * respective variables
-		 */
-		modelStep();
-
-		if (t>=config.TIME_TO_START_RECORDING) {
-			// Finds values of variables and records them to their respective files
-			if(config.recordCoreIndicators) recorder.step();
-		}
-
-		collectors.step();
-	}
-
-	public void modelStep() {
+	public static void modelStep() {
 		demographics.step();
 		construction.step();
 
@@ -170,18 +145,8 @@ public class Model extends SimState implements Steppable {
 		rentalMarket.clearMarket();
 		bank.step();
 		centralBank.step(getCoreIndicators());
-		t += 1;
 	}
 
-
-	/**
-	 * Cleans up after a simulation ends.
-	 */
-	public void finish() {
-		super.finish();
-		if(config.recordCoreIndicators) recorder.finish();
-		if(config.recordMicroData) transactionRecorder.finish();
-	}
 
 	/**
 	 * @return simulated time in months
@@ -193,8 +158,6 @@ public class Model extends SimState implements Steppable {
 	static public int getMonth() {
 		return(Model.root.t%12 + 1);
 	}
-
-	public Stoppable scheduleRepeat;
 
 	// non-statics for serialization
 	public ArrayList<Household>    	mHouseholds;
@@ -221,8 +184,7 @@ public class Model extends SimState implements Steppable {
 	public static MicroDataRecorder transactionRecorder;
 
 	public static int	nSimulation;	// number of simulations run
-	public int	t;	// time (months)
-//	public static LogNormalDistribution grossFinancialWealth;	// household wealth in bank balances and investments
+	public static int	t;	// time (months)
 
 	/**
 	 * proxy class to allow us to work with apache.commons distributions
@@ -250,46 +212,13 @@ public class Model extends SimState implements Steppable {
 		return collectors.rentalMarketStats;
 	}
 
-	public CoreIndicators getCoreIndicators() {
+	public static CoreIndicators getCoreIndicators() {
 		return collectors.coreIndicators;
 	}
 
 	public HouseholdStats getHouseholdStats() {
 		return collectors.householdStats;
 	}
-
-	String monteCarloCheckpoint = "";
-
-	public String getMonteCarloCheckpoint() {
-		return monteCarloCheckpoint;
-	}
-
-	public void setMonteCarloCheckpoint(String monteCarloCheckpoint) {
-		this.monteCarloCheckpoint = monteCarloCheckpoint;
-	}
-
-//	Deprecated getters/setters! New access to parameters is through instances of the Config class
-//	public static int getN_STEPS() {
-//		return N_STEPS;
-//	}
-//
-//	public static void setN_STEPS(int n_STEPS) {
-//		N_STEPS = n_STEPS;
-//	}
-//	public String nameN_STEPS() {return("Number of timesteps");}
-//
-//	public static int getN_SIMS() {
-//		return N_SIMS;
-//	}
-//
-//	public static void setN_SIMS(int n_SIMS) {
-//		N_SIMS = n_SIMS;
-//	}
-//	public String nameN_SIMS() {return("Number of monte-carlo runs");}
-//
-//	public boolean isRecordCoreIndicators() {
-//		return recordCoreIndicators;
-//	}
 
 	public void setRecordCoreIndicators(boolean recordCoreIndicators) {
 		this.config.recordCoreIndicators = recordCoreIndicators;
@@ -306,9 +235,6 @@ public class Model extends SimState implements Steppable {
 				e.printStackTrace();
 			}
 		}
-// 		else {
-//			recorder.finish();
-//		}
 	}
 	public String nameRecordCoreIndicators() {return("Record core indicators");}
 
