@@ -10,6 +10,8 @@ import org.apache.commons.math3.linear.LUDecomposition;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 
+import org.apache.commons.math3.random.MersenneTwister;
+
 import utilities.DoubleUnaryOperator;
 import utilities.Pdf;
 
@@ -94,7 +96,7 @@ public class Demographics {
 		return(solver.solve(targetDemographic));
 	}
 
-	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
+	private MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	public static int spinupYears = (int)Math.ceil(data.Demographics.pdfAge.getSupportUpperBound()-data.Demographics.pdfAge.getSupportLowerBound());			// number of years to spinup
 	public static RealVector spinupBirthRatePerHousehold = spinupBirthRate(); // birth rate per year by year per household-at-year-0
 }

@@ -2,7 +2,7 @@ package housing;
 
 import java.io.Serializable;
 
-import org.apache.commons.math3.distribution.LogNormalDistribution;
+import org.apache.commons.math3.random.MersenneTwister;
 
 public class Lifecycle implements Serializable {
     private static final long serialVersionUID = -2455155016204679970L;
@@ -62,7 +62,7 @@ public class Lifecycle implements Serializable {
 
 //    public static LogNormalDistribution incomeDistribution = new LogNormalDistribution(INCOME_LOG_MEDIAN, INCOME_SHAPE);
 
-    private Model.MersenneTwister    rand = Model.rand;    // Passes the Model's random number generator to a private field
+    private MersenneTwister    rand = Model.rand;    // Passes the Model's random number generator to a private field
     private double age;                // age of representative householder
     double    incomePercentile;     // fixed for lifetime of household
     // TODO: This is never used, check if removing (it's an alternative method for computing income dist. using only shape and median params.)

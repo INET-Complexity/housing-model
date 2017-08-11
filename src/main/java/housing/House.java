@@ -1,6 +1,7 @@
 package housing;
 
 import java.io.Serializable;
+import org.apache.commons.math3.random.MersenneTwister;
 
 /************************************************
  * Class representing a house.
@@ -59,7 +60,7 @@ public class House implements Comparable<House>, Serializable {
 		return quality;
 	}
 
-	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
+	private MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	private int				quality;
 	public IHouseOwner  	owner;
 	public Household		resident;

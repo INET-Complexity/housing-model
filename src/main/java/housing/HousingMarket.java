@@ -8,6 +8,8 @@ import java.util.Iterator;
 import org.apache.commons.math3.distribution.GeometricDistribution;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+import org.apache.commons.math3.random.MersenneTwister;
+
 import utilities.PriorityQueue2D;
 
 /**********************************************************
@@ -416,7 +418,7 @@ public abstract class HousingMarket implements Serializable {
     
     // ---- statistics
 //    SimpleRegression housePriceRegression = new SimpleRegression(); // linear regression of (transaction price,reference price)
-    private Model.MersenneTwister    rand = Model.rand;    // Passes the Model's random number generator to a private field
+    private MersenneTwister    rand = Model.rand;    // Passes the Model's random number generator to a private field
     public double aveSoldRefPrice = 0.0;
     public double aveSoldPrice = 0.0;
     public int nSold = 0;

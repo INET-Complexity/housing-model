@@ -2,7 +2,7 @@ package collectors;
 
 import housing.Config;
 import housing.Model;
-import sim.util.Double2D;
+import java.awt.geom.Point2D;
 
 public class RentalMarketStats extends HousingMarketStats {
 //	public double[] getExpectedGrossYieldByQuality() {
@@ -11,18 +11,18 @@ public class RentalMarketStats extends HousingMarketStats {
 
 	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 	
-    public Double2D [] getExpectedGrossYieldByQuality() {
-    	Double2D [] data = new Double2D[config.N_QUALITY];
+    public Point2D [] getExpectedGrossYieldByQuality() {
+		Point2D [] data = new Point2D[config.N_QUALITY];
     	for(int i=0; i<config.N_QUALITY; ++i) {
-    		data[i] = new Double2D(i, Model.rentalMarket.getExpectedGrossYield(i));    		
+    		data[i] = new Point2D.Double(i, Model.rentalMarket.getExpectedGrossYield(i));
     	}
     	return data;
 	}
 
-    public Double2D [] getExpectedOccupancyByQuality() {
-    	Double2D [] data = new Double2D[config.N_QUALITY];
+    public Point2D [] getExpectedOccupancyByQuality() {
+		Point2D [] data = new Point2D[config.N_QUALITY];
     	for(int i=0; i<config.N_QUALITY; ++i) {
-    		data[i] = new Double2D(i, Model.rentalMarket.expectedOccupancy(i));    		
+    		data[i] = new Point2D.Double(i, Model.rentalMarket.expectedOccupancy(i));
     	}
     	return data;
 	}

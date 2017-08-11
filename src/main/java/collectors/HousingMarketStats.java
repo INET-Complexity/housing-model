@@ -1,7 +1,7 @@
 package collectors;
 
 import housing.*;
-import sim.util.Double2D;
+import java.awt.geom.Point2D;
 
 public class HousingMarketStats extends CollectorBase {
 	private static final long serialVersionUID = -535310555732796139L;
@@ -240,10 +240,10 @@ public class HousingMarketStats extends CollectorBase {
 	}
 
 	
-    public Double2D [] getmasonPriceData() {
-    	Double2D [] data = new Double2D[config.N_QUALITY];
+    public Point2D [] getmasonPriceData() {
+    	Point2D [] data = new Point2D[config.N_QUALITY];
     	for(int i=0; i<config.N_QUALITY; ++i) {
-    		data[i] = new Double2D(market.referencePrice(i), market.getAverageSalePrice(i));    		
+    		data[i] = new Point2D.Double(market.referencePrice(i), market.getAverageSalePrice(i));
     	}
     	return data;
 	}

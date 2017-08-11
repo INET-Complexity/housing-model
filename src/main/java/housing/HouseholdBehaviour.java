@@ -3,6 +3,7 @@ package housing;
 import java.io.Serializable;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
+import org.apache.commons.math3.random.MersenneTwister;
 
 //import ec.util.MersenneTwisterFast;
 
@@ -20,7 +21,7 @@ public class HouseholdBehaviour implements Serializable {// implements IHousehol
 //	public final double DOWNPAYMENT_FRACTION = 0.75 + 0.0025*rand.nextGaussian(); // Fraction of bank-balance household would like to spend on mortgage downpayments
 //	public final double INTENSITY_OF_CHOICE = 10.0;
 
-	private Model.MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
+	private MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
 	public boolean					BTLInvestor;
 	public double 					propensityToSave;
 	public double					desiredBalance;
