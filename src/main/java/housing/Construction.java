@@ -50,12 +50,6 @@ public class Construction implements IHouseOwner, Serializable {
 			--shortFall;
 		}
 	}
-	
-	@Override
-	public void completeHousePurchase(HouseSaleRecord sale) {
-		// TODO Auto-generated method stub
-
-	}
 
 	@Override
 	public void completeHouseSale(HouseSaleRecord sale) {
@@ -64,13 +58,15 @@ public class Construction implements IHouseOwner, Serializable {
 
 	@Override
 	public void endOfLettingAgreement(House h, PaymentAgreement p) {
-		// TODO Auto-generated method stub
+        System.out.println("Strange: a tenant is moving out of a house owned by the construction sector!");
+		System.exit(0);
 
 	}
 
 	@Override
 	public void completeHouseLet(HouseSaleRecord sale) {
-		// TODO Auto-generated method stub		
+        System.out.println("Strange: the construction sector is trying to let a house!");
+        System.exit(0);
 	}
 
 	public int housingStock;			// total number of houses built
