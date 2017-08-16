@@ -123,7 +123,7 @@ public class CreditSupply extends CollectorBase {
 	}
 	
 	public void writeDistributionToFile(double [] vals, String filename) throws FileNotFoundException, UnsupportedEncodingException {
-        PrintWriter dist = new PrintWriter(filename, "UTF-8");
+        PrintWriter dist = new PrintWriter(Model.outputFolder + filename, "UTF-8");
         if(vals.length > 0) {
         	dist.print(vals[0]);
         	for(int i=1; i<vals.length; ++i) {
