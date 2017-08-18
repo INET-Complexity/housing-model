@@ -5,14 +5,12 @@ import java.io.Serializable;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.random.MersenneTwister;
 
-//import ec.util.MersenneTwisterFast;
-
 /**
  * This class implements the behavioural decisions made by households
  *
  * @author daniel
  */
-public class HouseholdBehaviour implements Serializable {// implements IHouseholdBehaviour {
+public class HouseholdBehaviour implements Serializable {
 	private static final long serialVersionUID = -7785886649432814279L;
 
 	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field

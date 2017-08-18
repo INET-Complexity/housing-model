@@ -23,6 +23,7 @@ public class Config {
     /** Declaration of parameters **/
 
     // General model control parameters
+    int SEED;                               // Seed for the random number generator
     int N_STEPS;				            // Simulation duration in time steps
     int TIME_TO_START_RECORDING;	        // Time steps before recording statistics (initialisation time)
     int N_SIMS; 					        // Number of simulations to run (monte-carlo)

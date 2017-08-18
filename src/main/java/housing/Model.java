@@ -1,8 +1,12 @@
 package housing;
 
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.time.Instant;
+import java.util.Scanner;
 
 import collectors.CoreIndicators;
 import collectors.CreditSupply;
@@ -10,33 +14,46 @@ import collectors.HouseholdStats;
 import collectors.HousingMarketStats;
 import collectors.MicroDataRecorder;
 import collectors.Recorder;
+
 import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.cli.*;
+import org.apache.commons.io.FileUtils;
 
-/**
- * This is the root object of the simulation. Upon creation it creates
- * and initialises all the agents in the model.
- * 
- * @author daniel
+/**************************************************************************************************
+ * This is the root object of the simulation. Upon creation it creates and initialises all the
+ * agents in the model.
  *
- **/
+ * The project is prepared to be run with maven, and it takes the following command line input
+ * arguments:
+ *
+ * -configFile <arg>    Configuration file to be used (address within project folder). By default,
+ *                      'src/main/resources/config.properties' is used.
+ * -outputFolder <arg>  Folder in which to collect all results (address within project folder). By
+ *                      default, 'Results/<current date and time>/' is used. The folder will be
+ *                      created if it does not exist.
+ * -dev                 Removes security question before erasing the content inside output folder
+ *                      (if the folder already exists).
+ * -help                Print input arguments usage information.
+ *
+ * Note that the seed for random number generation is set from the config file.
+ *
+ * @author daniel, Adrian Carro
+ *
+ *************************************************************************************************/
+
 @SuppressWarnings("serial")
+
 public class Model {
-
-	////////////////////////////////////////////////////////////////////////
-
-	/*
-	 * ATTENTION: Seed for random number generation is set by calling the program with argument "-seed <your_seed>",
-	 * where <your_seed> must be a positive integer. In the absence of this argument, seed is set from machine time.
-	 */
 
 	public static Config config;
 
-	////////////////////////////////////////////////////////////////////////
-
 	public static void main(String[] args) {
 
+	    // Handle input arguments from command line
+        handleInputArguments(args);
+
 	    // Create an instance of Model in order to initialise it (reading config file)
-	    new Model(1);
+	    new Model(configFileName, outputFolder);
 
         // Perform config.N_SIMS simulations
 		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
@@ -81,16 +98,15 @@ public class Model {
 		System.exit(0);
 	}
 
-	public Model(long seed) {
+	public Model(String configFileName, String outputFolder) {
         // TODO: Check that random numbers are working properly!
-		rand = new MersenneTwister(seed);
-		config = new Config("src/main/resources/config.properties");
-		//System.exit(0);
+        config = new Config(configFileName);
+        rand = new MersenneTwister(config.SEED);
 
 		government = new Government();
 		demographics = new Demographics();
-		recorder = new collectors.Recorder();
-		transactionRecorder = new collectors.MicroDataRecorder();
+		recorder = new collectors.Recorder(outputFolder);
+		transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
 
 		centralBank = new CentralBank();
 		mBank = new Bank();
@@ -98,7 +114,7 @@ public class Model {
 		mHouseholds = new ArrayList<Household>(config.TARGET_POPULATION*2);
 		housingMarket = mHousingMarket = new HouseSaleMarket();		// Variables of housingMarket are initialised (including HPI)
 		rentalMarket = mRentalMarket = new HouseRentalMarket();		// Variables of rentalMarket are initialised (including HPI)
-		mCollectors = new collectors.Collectors();
+		mCollectors = new collectors.Collectors(outputFolder);
 		nSimulation = 0;
 
 		setupStatics();
@@ -127,7 +143,6 @@ public class Model {
 		collectors.init();
 	}
 
-
 	public static void modelStep() {
 		demographics.step();
 		construction.step();
@@ -144,6 +159,105 @@ public class Model {
 		centralBank.step(getCoreIndicators());
 	}
 
+    /**
+     * This method handles command line input arguments to
+     * determine the address of the input config file and
+     * the folder for outputs
+     **/
+	private static void handleInputArguments(String[] args) {
+
+        // Create Options object
+        Options options = new Options();
+
+        // Add configFile and outputFolder options
+        options.addOption("configFile", true, "Configuration file to be used (address within " +
+                "project folder). By default, 'src/main/resources/config.properties' is used.");
+        options.addOption("outputFolder", true, "Folder in which to collect all results " +
+                "(address within project folder). By default, 'Results/<current date and time>/' is used. The " +
+                "folder will be created if it does not exist.");
+        options.addOption("dev", false, "Removes security question before erasing the content" +
+                "inside output folder (if the folder already exists).");
+        options.addOption("help", false, "Print input arguments usage information.");
+
+        // Create help formatter in case it will be needed
+        HelpFormatter formatter = new HelpFormatter();
+
+        // Parse command line arguments and perform appropriate actions
+        // Create a parser and a boolean variable for later control
+        CommandLineParser parser = new DefaultParser();
+        boolean devBoolean = false;
+        try {
+            // Parse command line arguments into a CommandLine instance
+            CommandLine cmd = parser.parse(options, args);
+            // Check if help argument has been passed
+            if(cmd.hasOption("help")) {
+                // If it has, then print formatted help to screen and stop program
+                formatter.printHelp( "spatial-housing-model", options );
+                System.exit(0);
+            }
+            // Check if dev argument has been passed
+            if(cmd.hasOption("dev")) {
+                // If it has, then activate boolean variable for later control
+                devBoolean = true;
+            }
+            // Check if configFile argument has been passed
+            if(cmd.hasOption("configFile")) {
+                // If it has, then use its value to initialise the respective member variable
+                configFileName = cmd.getOptionValue("configFile");
+            } else {
+                // If not, use the default value to initialise the respective member variable
+                configFileName = "src/main/resources/config.properties";
+            }
+            // Check if outputFolder argument has been passed
+            if(cmd.hasOption("outputFolder")) {
+                // If it has, then use its value to initialise the respective member variable
+                outputFolder = cmd.getOptionValue("outputFolder");
+                // If outputFolder does not end with "/", add it
+                if (!outputFolder.endsWith("/")) { outputFolder += "/"; }
+            } else {
+                // If not, use the default value to initialise the respective member variable
+                outputFolder = "Results/" + Instant.now().toString().replace(":", "-") + "/";
+            }
+        }
+        catch(ParseException pex) {
+            // Catch possible parsing errors
+            System.err.println("Parsing failed. Reason: " + pex.getMessage());
+            // And print input arguments usage information
+            formatter.printHelp( "spatial-housing-model", options );
+        }
+
+        // Check if outputFolder directory already exists
+        File f = new File(outputFolder);
+        if (f.exists() && !devBoolean) {
+            // If it does, try removing everything inside (with a warning that requests approval!)
+            Scanner reader = new Scanner(System.in);
+            System.out.println("\nATTENTION:\n\nThe folder chosen for output, '" + outputFolder + "', already exists and " +
+                    "might contain relevant files.\nDo you still want to proceed and erase all content?");
+            String reply = reader.next();
+            if (!reply.equalsIgnoreCase("yes") && !reply.equalsIgnoreCase("y")) {
+                // If user does not clearly reply "yes", then stop the program
+                System.exit(0);
+            } else {
+                // Otherwise, try to erase everything inside the folder
+                try {
+                    FileUtils.cleanDirectory(f);
+                } catch (IOException ioe) {
+                    // Catch possible folder cleaning errors
+                    System.err.println("Folder cleaning failed. Reason: " + ioe.getMessage());
+                }
+            }
+        } else {
+            // If it doesn't, simply create it
+            f.mkdirs();
+        }
+
+        // Copy config file to output folder
+        try {
+            FileUtils.copyFileToDirectory(new File(configFileName), new File(outputFolder));
+        } catch (IOException ioe) {
+            System.err.println("Copying config file to output folder failed. Reason: " + ioe.getMessage());
+        }
+    }
 
 	/**
 	 * @return simulated time in months
@@ -176,22 +290,14 @@ public class Model {
 	public static MersenneTwister	rand;
 	public static Model				root;
 
+	public static String            configFileName;
+    public static String            outputFolder;
 	public static collectors.Collectors collectors;	// = new Collectors();
 	public static Recorder recorder;	// records info to file
 	public static MicroDataRecorder transactionRecorder;
 
 	public static int	nSimulation;	// number of simulations run
 	public static int	t;	// time (months)
-
-	/**
-	 * proxy class to allow us to work with apache.commons distributions
-	 */
-//	public static class MersenneTwister extends MersenneTwisterFast implements RandomGenerator {
-//		public MersenneTwister(long seed) {super(seed);}
-//		public void setSeed(int arg0) {
-//			super.setSeed((long)arg0);
-//		}
-//	}
 
 	////////////////////////////////////////////////////////////////////////
 	// Getters/setters for MASON console

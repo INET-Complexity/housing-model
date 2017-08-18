@@ -8,6 +8,10 @@ import java.io.UnsupportedEncodingException;
 
 public class MicroDataRecorder {
 
+    public MicroDataRecorder(String outputFolder) {
+        outputFolderCopy = outputFolder;
+    }
+
 	public void start() throws FileNotFoundException, UnsupportedEncodingException {
 		openNewFile();
 	}
@@ -15,7 +19,7 @@ public class MicroDataRecorder {
 	public void openNewFile() {
 //		String simID = Integer.toHexString(UUID.randomUUID().hashCode());
 		try {
-			outfile = new PrintWriter("transactions-"+ Model.nSimulation+".csv", "UTF-8");
+			outfile = new PrintWriter(outputFolderCopy + "transactions-"+ Model.nSimulation+".csv", "UTF-8");
 			outfile.println(
 					"Timestamp, transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, "+
 					"buyerId, buyerAge(years), buyerHasBTLGene, buyerMonthlyPreTaxIncome, buyerMonthlyEmploymentIncome, buyerBankBalance, buyerCapGainCoeff, "+
@@ -109,4 +113,5 @@ public class MicroDataRecorder {
 
 	PrintWriter 	outfile;
 	public boolean  active=false;
+	private String outputFolderCopy;
 }
