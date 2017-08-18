@@ -19,29 +19,33 @@ import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
 
-/**
- * This is the root object of the simulation. Upon creation it creates
- * and initialises all the agents in the model.
- * 
+/**************************************************************************************************
+ * This is the root object of the simulation. Upon creation it creates and initialises all the
+ * agents in the model.
+ *
+ * The project is prepared to be run with maven, and it takes the following command line input
+ * arguments:
+ *
+ * -configFile <arg>    Configuration file to be used (address within project folder). By default,
+ *                      'src/main/resources/config.properties' is used.
+ * -outputFolder <arg>  Folder in which to collect all results (address within project folder). By
+ *                      default, 'Results/<current date and time>/' is used. The folder will be
+ *                      created if it does not exist.
+ * -dev                 Removes security question before erasing the content inside output folder
+ *                      (if the folder already exists).
+ * -help                Print input arguments usage information.
+ *
+ * Note that the seed for random number generation is set from the config file.
+ *
  * @author daniel, Adrian Carro
  *
- **/
+ *************************************************************************************************/
 
 @SuppressWarnings("serial")
 
 public class Model {
 
-	////////////////////////////////////////////////////////////////////////
-
-	/*
-	 * ATTENTION: Seed for random number generation is set by calling the program with argument "-seed <your_seed>",
-	 * where <your_seed> must be a positive integer (Note the need for -Dexec.args="-seed <your_seed>" in maven).
-	 * In the absence of this argument, seed is set from machine time.
-	 */
-
 	public static Config config;
-
-	////////////////////////////////////////////////////////////////////////
 
 	public static void main(String[] args) {
 
@@ -49,7 +53,7 @@ public class Model {
         handleInputArguments(args);
 
 	    // Create an instance of Model in order to initialise it (reading config file)
-	    new Model(configFileName);
+	    new Model(configFileName, outputFolder);
 
         // Perform config.N_SIMS simulations
 		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
@@ -94,15 +98,15 @@ public class Model {
 		System.exit(0);
 	}
 
-	public Model(String configFileName) {
+	public Model(String configFileName, String outputFolder) {
         // TODO: Check that random numbers are working properly!
         config = new Config(configFileName);
         rand = new MersenneTwister(config.SEED);
 
 		government = new Government();
 		demographics = new Demographics();
-		recorder = new collectors.Recorder();
-		transactionRecorder = new collectors.MicroDataRecorder();
+		recorder = new collectors.Recorder(outputFolder);
+		transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
 
 		centralBank = new CentralBank();
 		mBank = new Bank();
@@ -110,7 +114,7 @@ public class Model {
 		mHouseholds = new ArrayList<Household>(config.TARGET_POPULATION*2);
 		housingMarket = mHousingMarket = new HouseSaleMarket();		// Variables of housingMarket are initialised (including HPI)
 		rentalMarket = mRentalMarket = new HouseRentalMarket();		// Variables of rentalMarket are initialised (including HPI)
-		mCollectors = new collectors.Collectors();
+		mCollectors = new collectors.Collectors(outputFolder);
 		nSimulation = 0;
 
 		setupStatics();
