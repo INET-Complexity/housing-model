@@ -48,7 +48,7 @@ public class MicroDataRecorder {
     			sale.tInitialListing+", "+
     			sale.getPrice()+", "+
     			purchase.buyer.id+", "+
-    			purchase.buyer.lifecycle.getAge()+", "+
+    			purchase.buyer.getAge()+", "+
     			purchase.buyer.behaviour.isPropertyInvestor()+", "+
     			purchase.buyer.getMonthlyPreTaxIncome()+", "+
     			purchase.buyer.monthlyEmploymentIncome+", "+
@@ -68,7 +68,7 @@ public class MicroDataRecorder {
 			Household seller = (Household)sale.house.owner;
 			outfile.println(
 					seller.id+", "+
-					seller.lifecycle.getAge()+", "+
+					seller.getAge()+", "+
 					seller.behaviour.isPropertyInvestor()+", "+
 					seller.getMonthlyPreTaxIncome()+", "+
 					seller.monthlyEmploymentIncome+", "+

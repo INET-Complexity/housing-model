@@ -51,8 +51,8 @@ public class Model {
     public static CentralBank		    centralBank;
     public static Bank 				    bank;
     public static Construction		    construction;
-    public static HouseSaleMarket 	    housingMarket;
-    public static HouseRentalMarket	    rentalMarket;
+    public static HouseSaleMarket       houseSaleMarkets;
+    public static HouseRentalMarket     houseRentalMarkets;
     public static ArrayList<Household>  households;
     public static MersenneTwister	    rand;
     public static Collectors            collectors;
@@ -88,9 +88,9 @@ public class Model {
         centralBank = new CentralBank();
         bank = new Bank();
         construction = new Construction();
-        households = new ArrayList<Household>(config.TARGET_POPULATION*2);
-        housingMarket = new HouseSaleMarket();		// Variables of housingMarket are initialised (including HPI)
-        rentalMarket = new HouseRentalMarket();		// Variables of rentalMarket are initialised (including HPI)
+        households = new ArrayList<>(config.TARGET_POPULATION*2);
+        houseSaleMarkets = new HouseSaleMarket();
+        houseRentalMarkets = new HouseRentalMarket();
         collectors = new collectors.Collectors(outputFolder);
         nSimulation = 0;
     }
@@ -113,7 +113,7 @@ public class Model {
         // Perform config.N_SIMS simulations
 		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
 
-		    // For each simulation, initialise both housingMarket and rentalMarket variables (including HPI)
+		    // For each simulation, initialise both houseSaleMarkets and houseRentalMarkets variables (including HPI)
             init();
 
             // For each simulation, run config.N_STEPS time steps
@@ -160,8 +160,8 @@ public class Model {
 
 	private static void init() {
 		construction.init();
-		housingMarket.init();
-		rentalMarket.init();
+		houseSaleMarkets.init();
+		houseRentalMarkets.init();
 		bank.init();
 		households.clear();
 		collectors.init();
@@ -175,10 +175,10 @@ public class Model {
         // Stores ownership market bid and offer prices, and their averages, into their respective variables
 		collectors.housingMarketStats.record();
         // Clears market and updates the HPI
-		housingMarket.clearMarket();
+		houseSaleMarkets.clearMarket();
         // Stores rental market bid and offer prices, and their averages, into their respective variables
 		collectors.rentalMarketStats.record();
-		rentalMarket.clearMarket();
+		houseRentalMarkets.clearMarket();
 		bank.step();
 		centralBank.step(getCoreIndicators());
 	}
