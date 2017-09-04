@@ -14,10 +14,6 @@ public class House implements Comparable<House>, Serializable {
 	private static final long serialVersionUID = 4538336934216907799L;
 
 	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
-
-//	static public class Config {
-//		public static int N_QUALITY = 48; // number of quality bands
-//	}
 	
 	public House() {
 		id = ++id_pool;	

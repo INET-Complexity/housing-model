@@ -16,8 +16,8 @@ public class Collectors implements Serializable {
     }
 	
 	public void init() {
-		housingMarketStats.init(Model.housingMarket);
-		rentalMarketStats.init(Model.rentalMarket);
+		housingMarketStats.init(Model.houseSaleMarkets);
+		rentalMarketStats.init(Model.houseRentalMarkets);
 	}
 	
 	public void step() {

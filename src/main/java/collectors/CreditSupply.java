@@ -57,8 +57,8 @@ public class CreditSupply extends CollectorBase {
 			if(approval.principal > 1.0) {
 				if(approval.isBuyToLet) {
 					btl_ltv.addValue(100.0*approval.principal/housePrice);
-//					double icr = Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
-					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.getCentralBankBTLStressedInterest());
+//					double icr = Model.houseRentalMarkets.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
+					double icr = Model.houseRentalMarkets.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.getCentralBankBTLStressedInterest());
 					btl_icr.addValue(icr);
 				} else {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);

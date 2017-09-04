@@ -8,49 +8,66 @@ import java.util.TreeMap;
 
 import org.apache.commons.math3.random.MersenneTwister;
 
-/**********************************************
- * This represents a household who receives an income, consumes,
- * saves and can buy/sell/let/invest-in houses.
- * 
- * @author daniel, davidrpugh
+/**************************************************************************************************
+ * This represents a household who receives an income, consumes, saves and can buy, sell, let, and
+ * invest in houses.
  *
- **********************************************/
+ * @author daniel, davidrpugh, Adrian Carro
+ *
+ *************************************************************************************************/
+
 public class Household implements IHouseOwner, Serializable {
 
+    //------------------//
+    //----- Fields -----//
+    //------------------//
 
-    //////////////////////////////////////////////////////////////////////////////////////
-    // Model
-    //////////////////////////////////////////////////////////////////////////////////////
+    private static final long   serialVersionUID = -5042897399316333745L;
+    private static int          bankruptcies = 0; // TODO: Unused variable... counts bankruptcies, but it's never used!
+    private static int          id_pool;
 
-    private static final long serialVersionUID = -5042897399316333745L;
+    public int                  id; // Only used for identifying households within the class MicroDataRecorder
+    public double               monthlyEmploymentIncome;
+    public HouseholdBehaviour   behaviour; // Behavioural plugin
 
-    private Config    config = Model.config;    // Passes the Model's configuration parameters object to a private field
+    double                      incomePercentile; // Fixed for the whole lifetime of the household
 
-    public static int bankruptcies = 0;        // TODO: Unused variable... counts bankruptcies, but it's never used!
-    
+    private double                          age; // Age of the household representative person
+    private double                          bankBalance;
+    private double                          monthlyPropertyIncome;
+    private boolean                         isFirstTimeBuyer;
+    private boolean                         isBankrupt;
+    private House                           home;
+    private Map<House, PaymentAgreement>    housePayments = new TreeMap<>(); // Houses owned and their payment agreements
+    private Config                          config = Model.config; // Passes the Model's configuration parameters object to a private field
+    private MersenneTwister                 rand; // Private field to contain the Model's random number generator
+
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
+
     /********************************************************
-     * Constructor.
-     *
      * Initialises behaviour (determine whether the household
      * will be a BTL investor). Households start off in social
      * housing and with their 'desired bank balance' in the bank.
      ********************************************************/
-    public Household(double age) {
-//        bank = Model.bank;
-//        houseMarket = Model.housingMarket;
-//        rentalMarket = Model.rentalMarket;
+    public Household(double householdAgeAtBirth) {
         rand = Model.rand;    // Passes the Model's random number generator to a private field of each instance
         home = null;
         isFirstTimeBuyer = true;
         id = ++id_pool;
-        lifecycle = new Lifecycle(age);
-        behaviour = new HouseholdBehaviour(lifecycle.incomePercentile);
-        monthlyEmploymentIncome = lifecycle.annualIncome()/config.constants.MONTHS_IN_YEAR;
+        age = householdAgeAtBirth;
+        incomePercentile = rand.nextDouble();
+        behaviour = new HouseholdBehaviour(incomePercentile);
+        monthlyEmploymentIncome = annualIncome()/config.constants.MONTHS_IN_YEAR;
         bankBalance = behaviour.desiredBankBalance(this);
         monthlyPropertyIncome = 0.0;
-        desiredQuality = 0;
-        bankrupt=false;
+        isBankrupt =false;
     }
+
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
 
     public double getBankBalance() {
         return bankBalance;
@@ -63,7 +80,7 @@ public class Household implements IHouseOwner, Serializable {
     public Map<House, PaymentAgreement> getHousePayments() {
         return housePayments;
     }
-    
+
     /////////////////////////////////////////////////////////
     // House market behaviour
     /////////////////////////////////////////////////////////
@@ -80,9 +97,9 @@ public class Household implements IHouseOwner, Serializable {
     public void step() {
         double disposableIncome;
 //        House  house;
-        
-        lifecycle.step();
-        monthlyEmploymentIncome = lifecycle.annualIncome()/config.constants.MONTHS_IN_YEAR;
+
+        age += 1.0/config.constants.MONTHS_IN_YEAR;
+        monthlyEmploymentIncome = annualIncome()/config.constants.MONTHS_IN_YEAR;
         disposableIncome = getMonthlyPostTaxIncome()
                 - config.ESSENTIAL_CONSUMPTION_FRACTION * config.GOVERNMENT_INCOME_SUPPORT; // necessary consumption
         for(PaymentAgreement payment : housePayments.values()) {
@@ -92,11 +109,11 @@ public class Household implements IHouseOwner, Serializable {
         // --- consume based on disposable income after house payments
         bankBalance += disposableIncome;
         if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.desiredConsumptionB(this); //getMonthlyPreTaxIncome(),bankBalance);
-        if(bankBalance < 0.0) { // bankrupt behaviour
+        if(bankBalance < 0.0) { // Behaviour is household is bankrupt
             bankBalance = 1.0;    // TODO: cash injection for now...
             if (Model.getTime()>1000) {
-                if (!bankrupt) bankruptcies += 1;
-                bankrupt = true;
+                if (!isBankrupt) bankruptcies += 1;
+                isBankrupt = true;
             }
         }
 
@@ -118,7 +135,7 @@ public class Household implements IHouseOwner, Serializable {
 //            }
             if(config.BTL_ENABLED) {
                 if(behaviour.decideToBuyBuyToLet(this)) {
-                    Model.housingMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
+                    Model.houseSaleMarkets.BTLbid(this, behaviour.btlPurchaseBid(this));
                 }
             }        
         } else if(isHomeowner()) {
@@ -131,6 +148,23 @@ public class Household implements IHouseOwner, Serializable {
 //        makeHousingDecision();
     }
 
+    /***
+     * @return Household income given age and percentile of population
+     */
+    private double annualIncome() {
+        double boundAge = age;
+        if(boundAge < data.Lifecycle.lnIncomeGivenAge.getSupportLowerBound()) {
+            boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportLowerBound();
+        }
+        else if(boundAge > data.Lifecycle.lnIncomeGivenAge.getSupportUpperBound()) {
+            boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportUpperBound() - 1e-7;
+        }
+        double income = data.Lifecycle.lnIncomeGivenAge.getBinAt(boundAge).inverseCumulativeProbability(incomePercentile);
+        income = Math.exp(income);
+        if(income < config.GOVERNMENT_INCOME_SUPPORT) income = config.GOVERNMENT_INCOME_SUPPORT; // minimum income is govt. support
+        return(income);
+    }
+
     /******************************
      * Decide what to do with a house h owned by the household:
      *  - if the household lives in h, decide whether to sell it
@@ -139,7 +173,7 @@ public class Household implements IHouseOwner, Serializable {
      *
      * @param h a house owned by the household
      *****************************/
-    protected void manageHouse(House h) {
+    private void manageHouse(House h) {
         HouseSaleRecord forSale, forRent;
         double newPrice;
         
@@ -147,22 +181,22 @@ public class Household implements IHouseOwner, Serializable {
         if(forSale != null) { // reprice house for sale
             newPrice = behaviour.rethinkHouseSalePrice(forSale);
             if(newPrice > mortgageFor(h).principal) {
-                Model.housingMarket.updateOffer(forSale, newPrice);                        
+                Model.houseSaleMarkets.updateOffer(forSale, newPrice);
             } else {
-                Model.housingMarket.removeOffer(forSale);
+                Model.houseSaleMarkets.removeOffer(forSale);
                 if(h != home && h.resident == null) {
-                    Model.rentalMarket.offer(h, buyToLetRent(h));
+                    Model.houseRentalMarkets.offer(h, buyToLetRent(h));
                 }
             }
         } else if(decideToSellHouse(h)) { // put house on market?
-            if(h.isOnRentalMarket()) Model.rentalMarket.removeOffer(h.getRentalRecord());
+            if(h.isOnRentalMarket()) Model.houseRentalMarkets.removeOffer(h.getRentalRecord());
             putHouseForSale(h);
         }
         
         forRent = h.getRentalRecord();
         if(forRent != null) { // reprice house for rent
             newPrice = behaviour.rethinkBuyToLetRent(forRent);
-            Model.rentalMarket.updateOffer(forRent, newPrice);        
+            Model.houseRentalMarkets.updateOffer(forRent, newPrice);
         }        
     }
 
@@ -171,7 +205,7 @@ public class Household implements IHouseOwner, Serializable {
      *
      * @param h the house being sold
      ******************************************************/
-    protected void putHouseForSale(House h) {
+    private void putHouseForSale(House h) {
         double principal;
         MortgageAgreement mortgage = mortgageFor(h);
         if(mortgage != null) {
@@ -179,13 +213,13 @@ public class Household implements IHouseOwner, Serializable {
         } else {
             principal = 0.0;
         }
-        Model.housingMarket.offer(h, behaviour.initialSalePrice(
-                Model.housingMarket.averageSalePrice[h.getQuality()],
-                Model.housingMarket.averageDaysOnMarket,
+        Model.houseSaleMarkets.offer(h, behaviour.initialSalePrice(
+                Model.houseSaleMarkets.averageSalePrice[h.getQuality()],
+                Model.houseSaleMarkets.averageDaysOnMarket,
                 principal
         ));
     }
-    
+
     /////////////////////////////////////////////////////////
     // Houseowner interface
     /////////////////////////////////////////////////////////
@@ -198,7 +232,7 @@ public class Household implements IHouseOwner, Serializable {
      * Pay for house,
      * Put house on rental market if buy-to-let and no tenant.
      ********************************************************/
-    public void completeHousePurchase(HouseSaleRecord sale) {
+    void completeHousePurchase(HouseSaleRecord sale) {
         if(isRenting()) { // give immediate notice to landlord and move out
             if(sale.house.resident != null) System.out.println("Strange: my new house has someone in it!");
             if(home == sale.house) {
@@ -227,15 +261,13 @@ public class Household implements IHouseOwner, Serializable {
         if(home == null) { // move in to house
             home = sale.house;
             sale.house.resident = this;
-//            System.out.println((sale.house.getQuality()-desiredQuality)*1.0/House.Config.N_QUALITY);
-            desiredQuality = sale.house.getQuality();
         } else if(sale.house.resident == null) { // put empty buy-to-let house on rental market
-            Model.rentalMarket.offer(sale.house, buyToLetRent(sale.house));
+            Model.houseRentalMarkets.offer(sale.house, buyToLetRent(sale.house));
 //            endOfLettingAgreement(sale.house);
         }
         isFirstTimeBuyer = false;
     }
-        
+
     /********************************************************
      * Do all stuff necessary when this household sells a house
      ********************************************************/
@@ -244,7 +276,7 @@ public class Household implements IHouseOwner, Serializable {
         bankBalance += sale.getPrice();
         bankBalance -= mortgage.payoff(bankBalance);
         if(sale.house.isOnRentalMarket()) {
-            Model.rentalMarket.removeOffer(sale);
+            Model.houseRentalMarkets.removeOffer(sale);
         }
         if(mortgage.nPayments == 0) {
             housePayments.remove(sale.house);
@@ -277,7 +309,7 @@ public class Household implements IHouseOwner, Serializable {
 //        if(h.resident != null) System.out.println("Strange: renting out a house that has a resident");        
 //        if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");        
         if(h.isOnRentalMarket()) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
-        if(!h.isOnMarket()) Model.rentalMarket.offer(h, buyToLetRent(h));
+        if(!h.isOnMarket()) Model.houseRentalMarkets.offer(h, buyToLetRent(h));
     }
 
     /**********************************************************
@@ -285,7 +317,7 @@ public class Household implements IHouseOwner, Serializable {
      * and becomes homeless (possibly temporarily). Move out,
      * inform landlord and delete rental agreement.
      **********************************************************/
-    public void endTenancy() {
+    private void endTenancy() {
         home.owner.endOfLettingAgreement(home, housePayments.get(home));
         housePayments.remove(home);
         home.resident = null;
@@ -294,7 +326,7 @@ public class Household implements IHouseOwner, Serializable {
     }
     
     /*** Landlord has told this household to get out: leave without informing landlord */
-    public void getEvicted() {
+    private void getEvicted() {
         if(home == null) {
             System.out.println("Strange: got evicted but I'm homeless");            
         }
@@ -312,7 +344,7 @@ public class Household implements IHouseOwner, Serializable {
      * in to rented accommodation (i.e. set up a regular
      * payment contract. At present we use a MortgageApproval).
      ********************************************************/
-    public void completeHouseRental(HouseSaleRecord sale) {
+    void completeHouseRental(HouseSaleRecord sale) {
         if(sale.house.owner != this) { // if renting own house, no need for contract
             RentalAgreement rent = new RentalAgreement();
             rent.monthlyPayment = sale.getPrice();
@@ -330,7 +362,6 @@ public class Household implements IHouseOwner, Serializable {
             if(sale.house.owner == sale.house.resident) System.out.println("...It's a homeowner!");
         }
         sale.house.resident = this;
-        desiredQuality = sale.house.getQuality();
     }
 
 
@@ -341,16 +372,16 @@ public class Household implements IHouseOwner, Serializable {
      * COST_OF_RENTING being an intrinsic psychological cost of not
      * owning. 
      ********************************************************/
-    protected void bidForAHome() {
+    private void bidForAHome() {
         double maxMortgage = Model.bank.getMaxMortgage(this, true);
         double price = behaviour.desiredPurchasePrice(this, monthlyEmploymentIncome);
         if(behaviour.rentOrPurchaseDecision(this, price)) {
             if(price > maxMortgage - 1.0) {
                 price = maxMortgage -1.0;
             }
-            Model.housingMarket.bid(this, price);
+            Model.houseSaleMarkets.bid(this, price);
         } else {
-            Model.rentalMarket.bid(this, behaviour.desiredRent(this, monthlyEmploymentIncome));
+            Model.houseRentalMarkets.bid(this, behaviour.desiredRent(this, monthlyEmploymentIncome));
         }
     }
     
@@ -366,7 +397,7 @@ public class Household implements IHouseOwner, Serializable {
         return(false);
     }
 
-        
+
 
     /***
      * Do stuff necessary when BTL investor lets out a rental
@@ -375,15 +406,15 @@ public class Household implements IHouseOwner, Serializable {
     @Override
     public void completeHouseLet(HouseSaleRecord sale) {
         if(sale.house.isOnMarket()) {
-            Model.housingMarket.removeOffer(sale.house.getSaleRecord());
+            Model.houseSaleMarkets.removeOffer(sale.house.getSaleRecord());
         }
         monthlyPropertyIncome += sale.getPrice();
     }
 
-    public double buyToLetRent(House h) {
+    private double buyToLetRent(House h) {
         return(behaviour.buyToLetRent(
-                Model.rentalMarket.getAverageSalePrice(h.getQuality()), 
-                Model.rentalMarket.averageDaysOnMarket,h));
+                Model.houseRentalMarkets.getAverageSalePrice(h.getQuality()),
+                Model.houseRentalMarkets.averageDaysOnMarket,h));
     }
 
     /////////////////////////////////////////////////////////
@@ -397,7 +428,7 @@ public class Household implements IHouseOwner, Serializable {
      * bank balance to the beneficiary.
      * @param beneficiary The household that will inherit the wealth
      */
-    public void transferAllWealthTo(Household beneficiary) {
+    void transferAllWealthTo(Household beneficiary) {
         if(beneficiary == this) System.out.println("Strange: I'm transfering all my wealth to myself");
         boolean isHome;
         Iterator<Entry<House, PaymentAgreement>> paymentIt = housePayments.entrySet().iterator();
@@ -416,8 +447,8 @@ public class Household implements IHouseOwner, Serializable {
                 isHome = false;
             }
             if(h.owner == this) {
-                if(h.isOnRentalMarket()) Model.rentalMarket.removeOffer(h.getRentalRecord());
-                if(h.isOnMarket()) Model.housingMarket.removeOffer(h.getSaleRecord());
+                if(h.isOnRentalMarket()) Model.houseRentalMarkets.removeOffer(h.getRentalRecord());
+                if(h.isOnMarket()) Model.houseSaleMarkets.removeOffer(h.getSaleRecord());
                 if(h.resident != null) h.resident.getEvicted();
                 beneficiary.inheritHouse(h, isHome);
             } else {
@@ -438,7 +469,7 @@ public class Household implements IHouseOwner, Serializable {
      * 
      * @param h House to inherit
      */
-    public void inheritHouse(House h, boolean wasHome) {
+    private void inheritHouse(House h, boolean wasHome) {
         MortgageAgreement nullMortgage = new MortgageAgreement(this,false);
         nullMortgage.nPayments = 0;
         nullMortgage.downPayment = 0.0;
@@ -458,19 +489,18 @@ public class Household implements IHouseOwner, Serializable {
             }
             home = h;
             h.resident = this;
-            desiredQuality = h.getQuality();
         } else if(behaviour.isPropertyInvestor()) {
             if(config.BTL_ENABLED) {
                 if(decideToSellHouse(h)) {
                     putHouseForSale(h);
                 } else if(h.resident == null) {
-                    Model.rentalMarket.offer(h, buyToLetRent(h));
+                    Model.houseRentalMarkets.offer(h, buyToLetRent(h));
                 }
             } else {
                 if(wasHome) {
                     putHouseForSale(h);
                 } else if(h.resident == null) {
-                    Model.rentalMarket.offer(h, buyToLetRent(h));
+                    Model.houseRentalMarkets.offer(h, buyToLetRent(h));
                 }
             }
         } else {
@@ -483,7 +513,7 @@ public class Household implements IHouseOwner, Serializable {
                 } else {
                     behaviour.setPropertyInvestor(true);
                     if(h.resident == null) {
-                        Model.rentalMarket.offer(h, buyToLetRent(h));
+                        Model.houseRentalMarkets.offer(h, buyToLetRent(h));
                     }                    
                 }
             }
@@ -494,6 +524,9 @@ public class Household implements IHouseOwner, Serializable {
     // Helpers
     /////////////////////////////////////////////////////////
 
+    public double getAge() {
+        return age;
+    }
 
     public boolean isHomeowner() {
         if(home == null) return(false);
@@ -509,7 +542,7 @@ public class Household implements IHouseOwner, Serializable {
         return(home == null);
     }
 
-    public boolean isFirstTimeBuyer() {
+    boolean isFirstTimeBuyer() {
         return isFirstTimeBuyer;
     }
     
@@ -527,7 +560,7 @@ public class Household implements IHouseOwner, Serializable {
     /**
      * @return monthly disposable (i.e., after tax) income
      */
-    public double getMonthlyPostTaxIncome() {
+    double getMonthlyPostTaxIncome() {
         return getMonthlyPreTaxIncome()
                 - (Model.government.incomeTaxDue(monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR)
                 + Model.government.class1NICsDue(monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR))
@@ -538,9 +571,8 @@ public class Household implements IHouseOwner, Serializable {
      * @return gross monthly total income
      */
     public double getMonthlyPreTaxIncome() {
-        double monthlyTotalIncome = (monthlyEmploymentIncome +
-                monthlyPropertyIncome + bankBalance * config.RETURN_ON_FINANCIAL_WEALTH);
-        return monthlyTotalIncome;
+        return (monthlyEmploymentIncome + monthlyPropertyIncome +
+                bankBalance * config.RETURN_ON_FINANCIAL_WEALTH);
     }
     
     public double annualEmploymentIncome() {
@@ -554,9 +586,9 @@ public class Household implements IHouseOwner, Serializable {
     /***
      * @return Current mark-to-market equity in this household's home.
      */
-    public double getHomeEquity() {
+    double getHomeEquity() {
         if(!isHomeowner()) return(0.0);
-        return(Model.housingMarket.getAverageSalePrice(home.getQuality()) - mortgageFor(home).principal);
+        return(Model.houseSaleMarkets.getAverageSalePrice(home.getQuality()) - mortgageFor(home).principal);
     }
     
     public MortgageAgreement mortgageFor(House h) {
@@ -574,161 +606,4 @@ public class Household implements IHouseOwner, Serializable {
         }
         return(0.0);        
     }
-    
-    ///////////////////////////////////////////////
-
-//    HouseSaleMarket        houseMarket;
-//    HouseRentalMarket    rentalMarket;
-//    Bank                bank;
-
-    public double monthlyEmploymentIncome;
-    private double bankBalance;
-    private House home;
-    private Map<House, PaymentAgreement> housePayments = new TreeMap<House, PaymentAgreement>(); // houses owned
-    double monthlyPropertyIncome;
-    private boolean isFirstTimeBuyer;
-//    public    double        desiredPropertyInvestmentFraction;
-    public int id;        // only to ensure deterministic execution
-    private MersenneTwister rand;        // Private field to contain the Model's random number generator
-    
-    public Lifecycle lifecycle;    // lifecycle plugin
-    public HouseholdBehaviour behaviour;
-    public int desiredQuality;
-    
-//    static Diagnostics    diagnostics = new Diagnostics(Model.households);
-    static int id_pool;
-    boolean bankrupt;
-
-    /*
-     * Second step in a time-step. At this point, the
-     * household may have sold their house, but not managed
-     * to buy a new one, so must enter the rental market.
-     * 
-     * This is also where investors get to bid for buy-to-let
-     * housing.
-     ********************************************************/
-//    public void preRentalClearingStep() {
-//    }
-    
-    /*
-     *  Make decision to buy/sell houses
-     ********************************************************/
-    /*
-    void makeHousingDecision() {
-        // --- add and manage houses for sale
-        HouseSaleRecord forSale, forRent;
-        double newPrice;
-        
-        for(House h : housePayments.keySet()) {
-            if(h.owner == this) {
-                forSale = h.getSaleRecord();
-                if(forSale != null) { // reprice house for sale
-                    newPrice = behaviour.rethinkHouseSalePrice(forSale);
-                    if(newPrice > mortgageFor(h).principal) {
-                        houseMarket.updateOffer(forSale, newPrice);                        
-                    } else {
-                        houseMarket.removeOffer(forSale);
-                        if(h != home && h.resident == null) {
-                            rentalMarket.offer(h, buyToLetRent(h));
-                        }
-                    }
-                } else if(decideToSellHouse(h)) { // put house on market?
-                    if(h.isOnRentalMarket()) rentalMarket.removeOffer(h.getRentalRecord());
-                    putHouseForSale(h);
-                }
-                
-                forRent = h.getRentalRecord();
-                if(forRent != null) {
-                    newPrice = behaviour.rethinkBuyToLetRent(forRent);
-                    rentalMarket.updateOffer(forRent, newPrice);        
-                }
-            }
-        }        
-    }
-    */
-    /*
-     * This gets called when we are a renter and a tenancy
-     * agreement has come to an end. Move out and inform landlord.
-     * Don't delete rental agreement because we're probably iterating over payments.
-     */
-    /*
-    public void endOfTenancyAgreement(House house, PaymentAgreement rentalContract) {
-        if(home == null) System.out.println("Strange: paying rent and homeless");
-        if(house != home) System.out.println("Strange: I seem to have been renting a house but not living in it");
-        if(home.resident != this) System.out.println("home/resident link is broken");
-        house.owner.endOfLettingAgreement(house, rentalContract);        
-        home.resident = null;
-        home = null;
-    }
-    */
-    /*
-     * Decide whether to buy a house as a buy-to-let investment
-     ********************************************************/
-//    public boolean decideToBuyBuyToLet(House h, double price) {
-//        return(behaviour.decideToBuyBuyToLet(h, this, price));
-//    }
-    /////////////////////////////////////////////////////////
-    // Homeowner helper stuff
-    /////////////////////////////////////////////////////////
-
-    /*
-     * Put a bid on the housing market if this household can afford a
-     * mortgage at its desired price.
-     * 
-     * @param p The probability that the household will actually bid,
-     * given that it can afford a mortgage.
-     ****************************************/
-    /*
-    protected void bidOnHousingMarket(double p) {
-        double desiredPrice = behaviour.desiredPurchasePrice(getMonthlyPreTaxIncome(), houseMarket.housePriceAppreciation());
-        double maxMortgage = bank.getMaxMortgage(this, true);
-//        double ltiConstraint =  annualEmploymentIncome * bank.loanToIncome(isFirstTimeBuyer(),true)/bank.loanToValue(isFirstTimeBuyer(), true); // ##### TEST #####
-//        if(desiredPrice > ltiConstraint) desiredPrice = ltiConstraint - 1.0; // ##### TEST #####
-        if(desiredPrice >= maxMortgage) desiredPrice = maxMortgage - 1;
-//        desiredPrice = maxMortgage-1; // ####################### TEST!!!!!
-        if(desiredPrice <= maxMortgage) {
-            if(p<1.0) {
-                if(rand.nextDouble() < p) houseMarket.bid(this, desiredPrice);
-            } else {
-                // no need to call random if p = 1.0
-                houseMarket.bid(this, desiredPrice);                
-            }
-        }
-    }
-    */
-//    public boolean isCollectingRentFrom(House h) {
-//    return(h.owner == this && h != home && h.resident != null);
-//}
-
-    //////////////////////////////////////////////////////////////////
-    // Fraction of property+financial wealth that I want to invest
-    // in buy-to-let housing
-    //////////////////////////////////////////////////////////////////
-//    public void setDesiredPropertyInvestmentFraction(double val) {
-//        this.desiredPropertyInvestmentFraction = val;
-//    }
-
-    /////////////////////////////////////////////////////////////////
-    // Current valuation of buy-to-let properties, not including
-    // houses up for sale.
-    /////////////////////////////////////////////////////////////////
-    /*
-    public double getPropertyInvestmentValuation() {
-        double valuation = 0.0;
-        for(House h : housePayments.keySet()) {
-            if(h.owner == this && h != home && !h.isOnMarket()) {
-                valuation += houseMarket.getAverageSalePrice(h.getQuality());
-            }
-        }
-        return(valuation);
-    }
-    */
-    ///////////////////////////////////////////////////////////////
-    // returns current desired cash value of buy-to-let property investment
-    //////////////////////////////////////////////////////////////
-//    public double getDesiredPropertyInvestmentValue() {
-//        return(desiredPropertyInvestmentFraction * (getPropertyInvestmentValuation() + bankBalance));
-//    }
-
-
 }

@@ -1,7 +1,6 @@
 package housing;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 
 /*************************************************
  * This is the record containing information on a house that is for-sale.
@@ -66,7 +65,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 //	}
 	
 	public double getExpectedAnnualRent() {
-		return(Model.rentalMarket.getAverageSalePrice(house.getQuality())*config.constants.MONTHS_IN_YEAR);
+		return(Model.houseRentalMarkets.getAverageSalePrice(house.getQuality())*config.constants.MONTHS_IN_YEAR);
 	}
 
 	public void setPrice(double newPrice, HousingMarket.Authority auth) {
@@ -86,7 +85,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	
 	protected void recalcYield() {
 		int q = house.getQuality();
-		yield = Model.rentalMarket.getExpectedGrossYield(q)*Model.housingMarket.getAverageSalePrice(q)/getPrice();		
+		yield = Model.houseRentalMarkets.getExpectedGrossYield(q)*Model.houseSaleMarkets.getAverageSalePrice(q)/getPrice();
 	}
 	
 	public House 	house;

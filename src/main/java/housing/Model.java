@@ -5,13 +5,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.time.Instant;
 import java.util.Scanner;
+import java.time.Instant;
 
+import collectors.Collectors;
 import collectors.CoreIndicators;
-import collectors.CreditSupply;
-import collectors.HouseholdStats;
-import collectors.HousingMarketStats;
 import collectors.MicroDataRecorder;
 import collectors.Recorder;
 
@@ -45,20 +43,77 @@ import org.apache.commons.io.FileUtils;
 
 public class Model {
 
-	public static Config config;
+    //------------------//
+    //----- Fields -----//
+    //------------------//
+
+    public static Config                config;
+    public static CentralBank		    centralBank;
+    public static Bank 				    bank;
+    public static Construction		    construction;
+    public static HouseSaleMarket       houseSaleMarkets;
+    public static HouseRentalMarket     houseRentalMarkets;
+    public static ArrayList<Household>  households;
+    public static MersenneTwister	    rand;
+    public static Collectors            collectors;
+    public static MicroDataRecorder     transactionRecorder;
+    public static int	                nSimulation;	// To keep track of the simulation number
+    public static int	                t;              // To keep track of time (in months)
+
+    static Government		            government;
+
+    private static Demographics		    demographics;
+    private static Recorder             recorder;
+    private static String               configFileName;
+    private static String               outputFolder;
+
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
+
+    /**
+     * @param configFileName String with the address of the configuration file
+     * @param outputFolder String with the address of the folder for storing results
+     */
+    public Model(String configFileName, String outputFolder) {
+        // TODO: Check that random numbers are working properly!
+        config = new Config(configFileName);
+        rand = new MersenneTwister(config.SEED);
+
+        government = new Government();
+        demographics = new Demographics();
+        recorder = new collectors.Recorder(outputFolder);
+        transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
+
+        centralBank = new CentralBank();
+        bank = new Bank();
+        construction = new Construction();
+        households = new ArrayList<>(config.TARGET_POPULATION*2);
+        houseSaleMarkets = new HouseSaleMarket();
+        houseRentalMarkets = new HouseRentalMarket();
+        collectors = new collectors.Collectors(outputFolder);
+        nSimulation = 0;
+    }
+
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
 
 	public static void main(String[] args) {
 
 	    // Handle input arguments from command line
         handleInputArguments(args);
 
-	    // Create an instance of Model in order to initialise it (reading config file)
-	    new Model(configFileName, outputFolder);
+        // Create an instance of Model in order to initialise it (reading config file)
+        new Model(configFileName, outputFolder);
+
+        // Start data recorders for output
+        setupStatics();
 
         // Perform config.N_SIMS simulations
 		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
 
-		    // For each simulation, initialise both housingMarket and rentalMarket variables (including HPI)
+		    // For each simulation, initialise both houseSaleMarkets and houseRentalMarkets variables (including HPI)
             init();
 
             // For each simulation, run config.N_STEPS time steps
@@ -98,52 +153,21 @@ public class Model {
 		System.exit(0);
 	}
 
-	public Model(String configFileName, String outputFolder) {
-        // TODO: Check that random numbers are working properly!
-        config = new Config(configFileName);
-        rand = new MersenneTwister(config.SEED);
-
-		government = new Government();
-		demographics = new Demographics();
-		recorder = new collectors.Recorder(outputFolder);
-		transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
-
-		centralBank = new CentralBank();
-		mBank = new Bank();
-		mConstruction = new Construction();
-		mHouseholds = new ArrayList<Household>(config.TARGET_POPULATION*2);
-		housingMarket = mHousingMarket = new HouseSaleMarket();		// Variables of housingMarket are initialised (including HPI)
-		rentalMarket = mRentalMarket = new HouseRentalMarket();		// Variables of rentalMarket are initialised (including HPI)
-		mCollectors = new collectors.Collectors(outputFolder);
-		nSimulation = 0;
-
-		setupStatics();
-		init();		// Variables of both housingMarket and rentalMarket are initialised again (including HPI)
-	}
-
-	protected void setupStatics() {
-//		centralBank = mCentralBank;
-		bank = mBank;
-		construction = mConstruction;
-		households = mHouseholds;
-		housingMarket = mHousingMarket;
-		rentalMarket = mRentalMarket;
-		collectors = mCollectors;
-		root = this;
+	private static void setupStatics() {
 		setRecordCoreIndicators(config.recordCoreIndicators);
 		setRecordMicroData(config.recordMicroData);
 	}
 
-	public static void init() {
+	private static void init() {
 		construction.init();
-		housingMarket.init();
-		rentalMarket.init();
+		houseSaleMarkets.init();
+		houseRentalMarkets.init();
 		bank.init();
 		households.clear();
 		collectors.init();
 	}
 
-	public static void modelStep() {
+	private static void modelStep() {
 		demographics.step();
 		construction.step();
 
@@ -151,10 +175,10 @@ public class Model {
         // Stores ownership market bid and offer prices, and their averages, into their respective variables
 		collectors.housingMarketStats.record();
         // Clears market and updates the HPI
-		housingMarket.clearMarket();
+		houseSaleMarkets.clearMarket();
         // Stores rental market bid and offer prices, and their averages, into their respective variables
 		collectors.rentalMarketStats.record();
-		rentalMarket.clearMarket();
+		houseRentalMarkets.clearMarket();
 		bank.step();
 		centralBank.step(getCoreIndicators());
 	}
@@ -163,6 +187,7 @@ public class Model {
      * This method handles command line input arguments to
      * determine the address of the input config file and
      * the folder for outputs
+     * @param args String with the command line arguments
      **/
 	private static void handleInputArguments(String[] args) {
 
@@ -260,71 +285,27 @@ public class Model {
     }
 
 	/**
-	 * @return simulated time in months
+	 * @return Simulated time in months
 	 */
 	static public int getTime() {
-		return(Model.root.t);
+		return(t);
 	}
 
+    /**
+     * @return Current month of the simulation
+     */
 	static public int getMonth() {
-		return(Model.root.t%12 + 1);
+		return(t%12 + 1);
 	}
 
-	// non-statics for serialization
-	public ArrayList<Household>    	mHouseholds;
-	public Bank						mBank;
-//	public CentralBank				mCentralBank;
-	public Construction				mConstruction;
-	public HouseSaleMarket			mHousingMarket;
-	public HouseRentalMarket		mRentalMarket;
-	public collectors.Collectors mCollectors;
-
-	public static CentralBank		centralBank;
-	public static Bank 				bank;
-	public static Government		government;
-	public static Construction		construction;
-	public static HouseSaleMarket 	housingMarket;
-	public static HouseRentalMarket	rentalMarket;
-	public static ArrayList<Household>	households;
-	public static Demographics		demographics;
-	public static MersenneTwister	rand;
-	public static Model				root;
-
-	public static String            configFileName;
-    public static String            outputFolder;
-	public static collectors.Collectors collectors;	// = new Collectors();
-	public static Recorder recorder;	// records info to file
-	public static MicroDataRecorder transactionRecorder;
-
-	public static int	nSimulation;	// number of simulations run
-	public static int	t;	// time (months)
-
-	////////////////////////////////////////////////////////////////////////
-	// Getters/setters for MASON console
-	////////////////////////////////////////////////////////////////////////
-
-	public CreditSupply getCreditSupply() {
-		return collectors.creditSupply;
-	}
-
-	public collectors.HousingMarketStats getHousingMarketStats() {
-		return collectors.housingMarketStats;
-	}
-
-	public HousingMarketStats getRentalMarketStats() {
-		return collectors.rentalMarketStats;
-	}
-
-	public static CoreIndicators getCoreIndicators() {
+    /**
+     * @return Core indicators collector
+     */
+	private static CoreIndicators getCoreIndicators() {
 		return collectors.coreIndicators;
 	}
 
-	public HouseholdStats getHouseholdStats() {
-		return collectors.householdStats;
-	}
-
-	public void setRecordCoreIndicators(boolean recordCoreIndicators) {
-		this.config.recordCoreIndicators = recordCoreIndicators;
+	private static void setRecordCoreIndicators(boolean recordCoreIndicators) {
 		if(recordCoreIndicators) {
 			collectors.coreIndicators.setActive(true);
 			collectors.creditSupply.setActive(true);
@@ -334,21 +315,13 @@ public class Model {
 			try {
 				recorder.start();
 			} catch (FileNotFoundException | UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
-	public String nameRecordCoreIndicators() {return("Record core indicators");}
 
-	public boolean isRecordMicroData() {
-		return transactionRecorder.isActive();
-	}
-
-	public void setRecordMicroData(boolean record) {
+	private static void setRecordMicroData(boolean record) {
 		transactionRecorder.setActive(record);
 	}
-	public String nameRecordMicroData() {return("Record micro data");}
-
 
 }
