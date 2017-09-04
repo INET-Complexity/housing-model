@@ -8,17 +8,19 @@ import java.util.Properties;
 import java.lang.Integer;
 import java.util.Set;
 
-/************************************************
- * Class to encapsulate all the configuration parameters
- * of the model
- * It also contains all methods needed to read these
- * parameter values from a configuration properties file
+/**************************************************************************************************
+ * Class to encapsulate all the configuration parameters of the model. It also contains all methods
+ * needed to read these parameter values from a configuration properties file.
  *
  * @author Adrian Carro
  * @since 20/02/2017
  *
- ************************************************/
+ *************************************************************************************************/
 public class Config {
+
+    //---------------------------------//
+    //----- Fields and subclasses -----//
+    //---------------------------------//
 
     /** Declaration of parameters **/
 
@@ -45,7 +47,6 @@ public class Config {
 
     // Demographic parameters
     int TARGET_POPULATION;                  // Target number of households
-    boolean SPINUP;                         // TODO: Unclear parameter related to the creation of the population
     public double FUTURE_BIRTH_RATE;        // Future birth rate (births per year per capita), calibrated with flux of FTBs
 
     // Household parameters
@@ -55,7 +56,7 @@ public class Config {
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
 
     // Household behaviour parameters: buy-to-let
-    private double P_INVESTOR;                      // Prior probability of being (wanting to be) a BTL investor
+    double P_INVESTOR;                      // Prior probability of being (wanting to be) a BTL investor
     double MIN_INVESTOR_PERCENTILE;         // Minimum income percentile for a household to be a BTL investor
     double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
     double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
@@ -211,6 +212,10 @@ public class Config {
         final public int MONTHS_IN_YEAR = 12;
     }
 
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
+
     /**
      * Empty constructor, mainly used for copying local instances of the Model Config instance into other classes
      */
@@ -222,6 +227,10 @@ public class Config {
     public Config (String configFileName) {
         getConfigValues(configFileName);
     }
+
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
 
     public boolean isMortgageDiagnosticsActive() {
         return MORTGAGE_DIAGNOSTICS_ACTIVE;
