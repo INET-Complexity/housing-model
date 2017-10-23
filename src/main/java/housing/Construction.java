@@ -34,15 +34,15 @@ public class Construction implements IHouseOwner, Serializable {
 		House newBuild;
 		double price;
 		for(House h : onMarket) {
-			Model.houseSaleMarkets.updateOffer(h.getSaleRecord(), h.getSaleRecord().getPrice()*0.95);
+			Model.houseSaleMarket.updateOffer(h.getSaleRecord(), h.getSaleRecord().getPrice()*0.95);
 		}
 		while(shortFall > 0) {
 			newBuild = new House();
 			newBuild.owner = this;
 			++housingStock;
-			price = Model.houseSaleMarkets.referencePrice(newBuild.getQuality());
+			price = Model.houseSaleMarket.referencePrice(newBuild.getQuality());
 //			if(Model.rand.nextDouble() < 0.9) {
-			Model.houseSaleMarkets.offer(newBuild, price);
+			Model.houseSaleMarket.offer(newBuild, price);
 			onMarket.add(newBuild);
 //			} else {
 //				Model.households.get(Model.rand.nextInt(Model.households.size())).inheritHouse(newBuild);

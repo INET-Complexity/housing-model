@@ -129,7 +129,7 @@ public class HouseholdBehaviour implements Serializable {
 		if(isPropertyInvestor()) return(false);
 		return(rand.nextDouble() < config.derivedParams.MONTHLY_P_SELL*(1.0
                 + config.DECISION_TO_SELL_ALPHA*(config.DECISION_TO_SELL_HPC
-                - Model.houseSaleMarkets.offersPQ.size()*1.0/Model.households.size()))
+                - Model.houseSaleMarket.offersPQ.size()*1.0/Model.households.size()))
                 + config.DECISION_TO_SELL_BETA*(config.DECISION_TO_SELL_INTEREST - Model.bank.getMortgageInterestRate()));
 	}
 
@@ -146,19 +146,19 @@ public class HouseholdBehaviour implements Serializable {
 		}
 		double downpayment;
 		if(me.isFirstTimeBuyer()) {
-			downpayment = Model.houseSaleMarkets.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
+			downpayment = Model.houseSaleMarket.housePriceIndex*FTB_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
                     (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		} else if(isPropertyInvestor()) {
 			downpayment = housePrice*(Math.max(0.0,
 					config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON*rand.nextGaussian())); // calibrated...
 			//downpayment = housePrice*(Math.max(0.0, 0.26+0.08*rand.nextGaussian())); // calibrated...
 		} else {
-			downpayment = Model.houseSaleMarkets.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
+			downpayment = Model.houseSaleMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(Math.max(0.0,
                     (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		}
 		if(downpayment > me.getBankBalance()) downpayment = me.getBankBalance();
 		return(downpayment);
-//		return(Model.houseSaleMarkets.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(me.lifecycle.incomePercentile));
+//		return(Model.houseSaleMarket.housePriceIndex*OO_DOWNPAYMENT.inverseCumulativeProbability(me.lifecycle.incomePercentile));
 	}
 
 	
@@ -198,12 +198,12 @@ public class HouseholdBehaviour implements Serializable {
                 Model.bank.getMaxMortgage(me, true));
 		MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
                 downPayment(me,purchasePrice), true);
-		int newHouseQuality = Model.houseSaleMarkets.maxQualityGivenPrice(purchasePrice);
-//		int rentalQuality = Model.houseRentalMarkets.maxQualityGivenPrice(desiredRent(me, me.monthlyEmploymentIncome));
+		int newHouseQuality = Model.houseSaleMarket.maxQualityGivenPrice(purchasePrice);
+//		int rentalQuality = Model.houseRentalMarket.maxQualityGivenPrice(desiredRent(me, me.monthlyEmploymentIncome));
 //		if(rentalQuality > newHouseQuality+House.Config.N_QUALITY/8) return(false); // better quality to rent
 		if(newHouseQuality < 0) return(false); // can't afford a house anyway
 		double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR - purchasePrice*HPAExpectation();
-		double costOfRent = Model.houseRentalMarkets.getAverageSalePrice(newHouseQuality)*config.constants.MONTHS_IN_YEAR;
+		double costOfRent = Model.houseRentalMarket.getAverageSalePrice(newHouseQuality)*config.constants.MONTHS_IN_YEAR;
 //		System.out.println(FTB_K*(costOfRent + COST_OF_RENTING - costOfHouse));
 		//return(rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent*(1.0+COST_OF_RENTING) - costOfHouse))));
 		return(rand.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
@@ -216,12 +216,12 @@ public class HouseholdBehaviour implements Serializable {
         double purchasePrice = Math.min(desiredPurchasePrice, Model.bank.getMaxMortgage(me, true));
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
                 downPayment(me,purchasePrice), true);
-        int newHouseQuality = Model.houseSaleMarkets.maxQualityGivenPrice(purchasePrice);
-//		int rentalQuality = Model.houseRentalMarkets.maxQualityGivenPrice(desiredRent(me, me.monthlyEmploymentIncome));
+        int newHouseQuality = Model.houseSaleMarket.maxQualityGivenPrice(purchasePrice);
+//		int rentalQuality = Model.houseRentalMarket.maxQualityGivenPrice(desiredRent(me, me.monthlyEmploymentIncome));
 //		if(rentalQuality > newHouseQuality+House.Config.N_QUALITY/8) return(false); // better quality to rent
         if(newHouseQuality < 0) return(false); // can't afford a house anyway
         double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR - purchasePrice*HPAExpectation();
-        double costOfRent = Model.houseRentalMarkets.getAverageSalePrice(newHouseQuality)*config.constants.MONTHS_IN_YEAR;
+        double costOfRent = Model.houseRentalMarket.getAverageSalePrice(newHouseQuality)*config.constants.MONTHS_IN_YEAR;
 //		System.out.println(FTB_K*(costOfRent + COST_OF_RENTING - costOfHouse));
         //return(rand.nextDouble() < 1.0/(1.0 + Math.exp(-FTB_K*(costOfRent*(1.0+COST_OF_RENTING) - costOfHouse))));
         return(rand.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
@@ -262,7 +262,7 @@ public class HouseholdBehaviour implements Serializable {
 		}
 		// TODO: add transaction costs to expected capital gain
 //		double icr = (h.rentalRecord.getPrice()-mortgage.nextPayment())/h.rentalRecord.getPrice();
-		double marketPrice = Model.houseSaleMarkets.getAverageSalePrice(h.getQuality());
+		double marketPrice = Model.houseSaleMarket.getAverageSalePrice(h.getQuality());
 		// TODO: Why to call this "equity"? It is called "downpayment" in the article!
         double equity = Math.max(0.01, marketPrice - mortgage.principal);   // Dummy security parameter to avoid dividing by zero
 		double leverage = marketPrice/equity;
@@ -270,7 +270,7 @@ public class HouseholdBehaviour implements Serializable {
 		double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
 		if(config.BTL_YIELD_SCALING) {
 			effectiveYield = leverage*((1.0 - BtLCapGainCoeff)*rentalYield
-                    + BtLCapGainCoeff*(Model.houseRentalMarkets.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
+                    + BtLCapGainCoeff*(Model.houseRentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
 		} else {
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
@@ -295,7 +295,7 @@ public class HouseholdBehaviour implements Serializable {
                 + config.RENT_EPSILON*rand.nextGaussian();
 		double result = Math.exp(exponent);
         // TODO: The following contains a fudge (config.RENT_MAX_AMORTIZATION_PERIOD) to keep rental yield up
-		double minAcceptable = Model.houseSaleMarkets.getAverageSalePrice(h.getQuality())
+		double minAcceptable = Model.houseSaleMarket.getAverageSalePrice(h.getQuality())
                 /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
 		if(result < minAcceptable) result = minAcceptable;
 		return(result);
@@ -335,16 +335,16 @@ public class HouseholdBehaviour implements Serializable {
 		}
 		// --- calculate expected yield on zero quality house
 		double maxPrice = Model.bank.getMaxMortgage(me, false);
-		if(maxPrice < Model.houseSaleMarkets.getAverageSalePrice(0)) return false;
+		if(maxPrice < Model.houseSaleMarket.getAverageSalePrice(0)) return false;
 		
 		MortgageAgreement m = Model.bank.requestApproval(me, maxPrice, 0.0, false); // maximise leverage with min downpayment
 		
 		double leverage = m.purchasePrice/m.downPayment;
-		double rentalYield = Model.houseRentalMarkets.averageSoldGrossYield;
+		double rentalYield = Model.houseRentalMarket.averageSoldGrossYield;
 		double mortgageRate = m.monthlyPayment*config.constants.MONTHS_IN_YEAR/m.downPayment;
 		if(config.BTL_YIELD_SCALING) {
 			effectiveYield = leverage*((1.0 - BtLCapGainCoeff)*rentalYield
-                    + BtLCapGainCoeff*(Model.houseRentalMarkets.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
+                    + BtLCapGainCoeff*(Model.houseRentalMarket.longTermAverageGrossYield + HPAExpectation())) - mortgageRate;
 		} else {
 			effectiveYield = leverage*(rentalYield + BtLCapGainCoeff*HPAExpectation()) - mortgageRate;
 		}
@@ -356,7 +356,7 @@ public class HouseholdBehaviour implements Serializable {
 	
 	public double btlPurchaseBid(Household me) {
 		return(Math.min(Model.bank.getMaxMortgage(me, false),
-                1.1*Model.houseSaleMarkets.getAverageSalePrice(config.N_QUALITY-1)));
+                1.1*Model.houseSaleMarket.getAverageSalePrice(config.N_QUALITY-1)));
 	}
 
 	public boolean isPropertyInvestor() {
@@ -371,6 +371,6 @@ public class HouseholdBehaviour implements Serializable {
 	public double HPAExpectation() {
 		// Dampening or multiplier factor, depending on its value being <1 or >1, for the current trend of HPA when
 		// computing expectations as in HPI(t+DT) = HPI(t) + FACTOR*DT*dHPI/dt (double)
-		return(Model.houseSaleMarkets.housePriceAppreciation(config.HPA_YEARS_TO_CHECK)*config.HPA_EXPECTATION_FACTOR);
+		return(Model.houseSaleMarket.housePriceAppreciation(config.HPA_YEARS_TO_CHECK)*config.HPA_EXPECTATION_FACTOR);
     }
 }

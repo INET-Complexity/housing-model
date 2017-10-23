@@ -1,17 +1,12 @@
 package housing;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.time.Instant;
 
-import collectors.Collectors;
-import collectors.CoreIndicators;
-import collectors.MicroDataRecorder;
-import collectors.Recorder;
+import collectors.*;
 
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.cli.*;
@@ -48,17 +43,21 @@ public class Model {
     //------------------//
 
     public static Config                config;
+    public static Construction		    construction;
     public static CentralBank		    centralBank;
     public static Bank 				    bank;
-    public static Construction		    construction;
-    public static HouseSaleMarket       houseSaleMarkets;
-    public static HouseRentalMarket     houseRentalMarkets;
+    public static HouseSaleMarket houseSaleMarket;
+    public static HouseRentalMarket houseRentalMarket;
     public static ArrayList<Household>  households;
     public static MersenneTwister	    rand;
-    public static Collectors            collectors;
+    public static CreditSupply          creditSupply;
+    public static CoreIndicators        coreIndicators;
+    public static HouseholdStats        householdStats;
+    public static HousingMarketStats    housingMarketStats;
+    public static RentalMarketStats     rentalMarketStats;
     public static MicroDataRecorder     transactionRecorder;
-    public static int	                nSimulation;	// To keep track of the simulation number
-    public static int	                t;              // To keep track of time (in months)
+    public static int	                nSimulation; // To keep track of the simulation number
+    public static int	                t; // To keep track of time (in months)
 
     static Government		            government;
 
@@ -82,16 +81,21 @@ public class Model {
 
         government = new Government();
         demographics = new Demographics();
-        recorder = new collectors.Recorder(outputFolder);
-        transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
-
+        construction = new Construction();
         centralBank = new CentralBank();
         bank = new Bank();
-        construction = new Construction();
         households = new ArrayList<>(config.TARGET_POPULATION*2);
-        houseSaleMarkets = new HouseSaleMarket();
-        houseRentalMarkets = new HouseRentalMarket();
-        collectors = new collectors.Collectors(outputFolder);
+        houseSaleMarket = new HouseSaleMarket();
+        houseRentalMarket = new HouseRentalMarket();
+
+        recorder = new collectors.Recorder(outputFolder);
+        transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
+        creditSupply = new collectors.CreditSupply(outputFolder);
+        coreIndicators = new collectors.CoreIndicators();
+        householdStats = new collectors.HouseholdStats();
+        housingMarketStats = new collectors.HousingMarketStats();
+        rentalMarketStats = new collectors.RentalMarketStats();
+
         nSimulation = 0;
     }
 
@@ -110,28 +114,29 @@ public class Model {
         // Start data recorders for output
         setupStatics();
 
+        // Open files for writing multiple runs results
+        recorder.openMultiRunFiles(config.recordCoreIndicators);
+
         // Perform config.N_SIMS simulations
 		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
 
-		    // For each simulation, initialise both houseSaleMarkets and houseRentalMarkets variables (including HPI)
+            // For each simulation, open files for writing single-run results
+            recorder.openSingleRunFiles(nSimulation);
+
+		    // For each simulation, initialise both houseSaleMarket and houseRentalMarket variables (including HPI)
             init();
 
             // For each simulation, run config.N_STEPS time steps
 			for (t = 0; t <= config.N_STEPS; t += 1) {
 
-                /*
-		         * Steps model and stores ownership and rental markets bid and offer prices, and their averages, into
-		         * their respective variables
-		         */
+                // Steps model and stores sale and rental markets bid and offer prices, and their averages, into their
+                // respective variables
                 modelStep();
 
-                // TODO: More efficient to not check every time step but rather divide the external for into 2
-                if (t>=config.TIME_TO_START_RECORDING) {
-                    // Finds values of variables and records them to their respective files
-                    if(config.recordCoreIndicators) recorder.step();
-                }
-
-                collectors.step();
+//                if (t >= config.TIME_TO_START_RECORDING) {
+                    // Write results of this time step and run to both multi- and single-run files
+                    recorder.writeTimeStampResults(config.recordCoreIndicators, t);
+//                }
 
                 // Print time information to screen
                 if (t % 100 == 0) {
@@ -139,56 +144,74 @@ public class Model {
                 }
             }
 
-			// Finish each simulation within the recorders
+			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
+            recorder.finishRun(config.recordCoreIndicators);
             // TODO: Check what this is actually doing and if it is necessary
-            if(config.recordCoreIndicators) recorder.endOfSim();
             if(config.recordMicroData) transactionRecorder.endOfSim();
 		}
 
         // After the last simulation, clean up
-        if(config.recordCoreIndicators) recorder.finish();
+        recorder.finish(config.recordCoreIndicators);
         if(config.recordMicroData) transactionRecorder.finish();
 
-        //Stop the program when finished.
+        //Stop the program when finished
 		System.exit(0);
 	}
 
 	private static void setupStatics() {
+        setRecordGeneral();
 		setRecordCoreIndicators(config.recordCoreIndicators);
 		setRecordMicroData(config.recordMicroData);
 	}
 
 	private static void init() {
+        demographics.init();
 		construction.init();
-		houseSaleMarkets.init();
-		houseRentalMarkets.init();
+		houseSaleMarket.init();
+		houseRentalMarket.init();
 		bank.init();
-		households.clear();
-		collectors.init();
+        housingMarketStats.init();
+        rentalMarketStats.init();
+        householdStats.init();
+        households.clear();
 	}
 
 	private static void modelStep() {
-		demographics.step();
-		construction.step();
-
+        // Update population with births and deaths
+        demographics.step();
+        // Update number of houses
+        construction.step();
+        // Updates regional households consumption, housing decisions, and corresponding regional bids and offers
 		for(Household h : households) h.step();
-        // Stores ownership market bid and offer prices, and their averages, into their respective variables
-		collectors.housingMarketStats.record();
-        // Clears market and updates the HPI
-		houseSaleMarkets.clearMarket();
-        // Stores rental market bid and offer prices, and their averages, into their respective variables
-		collectors.rentalMarketStats.record();
-		houseRentalMarkets.clearMarket();
-		bank.step();
-		centralBank.step(getCoreIndicators());
+        // Stores sale market bid and offer prices and averages before bids are matched by clearing the market
+        housingMarketStats.preClearingRecord();
+        // Clears sale market and updates the HPI
+        houseSaleMarket.clearMarket();
+        // Computes and stores several housing market statistics after bids are matched by clearing the market (such as HPI, HPA)
+        housingMarketStats.postClearingRecord();
+        // Stores rental market bid and offer prices and averages before bids are matched by clearing the market
+        rentalMarketStats.preClearingRecord();
+        // Clears rental market
+        houseRentalMarket.clearMarket();
+        // Computes and stores several rental market statistics after bids are matched by clearing the market (such as HPI, HPA)
+        rentalMarketStats.postClearingRecord();
+        // Stores household statistics after both regional markets have been cleared
+        householdStats.record();
+        // Update credit supply statistics // TODO: Check what this actually does and if it should go elsewhere!
+        creditSupply.step();
+		// Update bank and interest rate for new mortgages
+		bank.step(demographics.getTotalPopulation());
+        // Update central bank policies (currently empty!)
+		centralBank.step(coreIndicators);
 	}
 
     /**
      * This method handles command line input arguments to
      * determine the address of the input config file and
      * the folder for outputs
+     *
      * @param args String with the command line arguments
-     **/
+     */
 	private static void handleInputArguments(String[] args) {
 
         // Create Options object
@@ -288,40 +311,27 @@ public class Model {
 	 * @return Simulated time in months
 	 */
 	static public int getTime() {
-		return(t);
+		return t;
 	}
 
     /**
      * @return Current month of the simulation
      */
 	static public int getMonth() {
-		return(t%12 + 1);
+		return t%12 + 1;
 	}
 
-    /**
-     * @return Core indicators collector
-     */
-	private static CoreIndicators getCoreIndicators() {
-		return collectors.coreIndicators;
-	}
+    private static void setRecordGeneral() {
+        creditSupply.setActive(true);
+        householdStats.setActive(true);
+        housingMarketStats.setActive(true);
+        rentalMarketStats.setActive(true);
+    }
 
 	private static void setRecordCoreIndicators(boolean recordCoreIndicators) {
-		if(recordCoreIndicators) {
-			collectors.coreIndicators.setActive(true);
-			collectors.creditSupply.setActive(true);
-			collectors.householdStats.setActive(true);
-			collectors.housingMarketStats.setActive(true);
-			collectors.rentalMarketStats.setActive(true);
-			try {
-				recorder.start();
-			} catch (FileNotFoundException | UnsupportedEncodingException e) {
-				e.printStackTrace();
-			}
-		}
+	    coreIndicators.setActive(recordCoreIndicators);
 	}
 
-	private static void setRecordMicroData(boolean record) {
-		transactionRecorder.setActive(record);
-	}
+	private static void setRecordMicroData(boolean record) { transactionRecorder.setActive(record); }
 
 }

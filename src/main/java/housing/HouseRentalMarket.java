@@ -28,7 +28,7 @@ public class HouseRentalMarket extends HousingMarket {
 		purchase.buyer.completeHouseRental(sale);
 		sale.house.owner.completeHouseLet(sale);
 		Model.collectors.rentalMarketStats.recordSale(purchase, sale);
-		double yield = sale.getPrice()*config.constants.MONTHS_IN_YEAR/Model.houseSaleMarkets.getAverageSalePrice(sale.house.getQuality());
+		double yield = sale.getPrice()*config.constants.MONTHS_IN_YEAR/Model.houseSaleMarket.getAverageSalePrice(sale.house.getQuality());
 		averageSoldGrossYield = averageSoldGrossYield*config.derivedParams.K + (1.0-config.derivedParams.K)*yield;
 		longTermAverageGrossYield = longTermAverageGrossYield*config.derivedParams.KL + (1.0-config.derivedParams.KL)*yield;
 	}
@@ -74,7 +74,7 @@ public class HouseRentalMarket extends HousingMarket {
 	protected void recalculateExpectedGrossYield() {
 //		bestGrossYield = 0.0;
 		for(int q=0; q < config.N_QUALITY; ++q) {
-			expectedGrossYield[q] = getAverageSalePrice(q)*config.constants.MONTHS_IN_YEAR*expectedOccupancy(q)/Model.houseSaleMarkets.getAverageSalePrice(q);
+			expectedGrossYield[q] = getAverageSalePrice(q)*config.constants.MONTHS_IN_YEAR*expectedOccupancy(q)/Model.houseSaleMarket.getAverageSalePrice(q);
 //			if(expectedGrossYield[q] > bestGrossYield) bestGrossYield = expectedGrossYield[q];
 		}		
 	}

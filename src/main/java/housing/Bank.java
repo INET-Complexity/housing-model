@@ -192,7 +192,7 @@ public class Bank implements Serializable {
 			approval.principal = Math.min(approval.principal, lti_principal);
 		} else {
 			// --- BtL ICR constraint
-			icr_principal = Model.houseRentalMarkets.averageSoldGrossYield*housePrice/(interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
+			icr_principal = Model.houseRentalMarket.averageSoldGrossYield*housePrice/(interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
 			approval.principal = Math.min(approval.principal, icr_principal);
 	//		System.out.println(icr_principal/housePrice);
 		}
@@ -252,7 +252,7 @@ public class Bank implements Serializable {
 			lti_max = h.annualEmploymentIncome()* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
 			max = Math.min(max, lti_max);
 		} else {
-			icr_max = Model.houseRentalMarkets.averageSoldGrossYield/(interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
+			icr_max = Model.houseRentalMarket.averageSoldGrossYield/(interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
 			if(icr_max < 1.0) {
 				icr_max = liquidWealth/(1.0 - icr_max);
 				max = Math.min(max,  icr_max);

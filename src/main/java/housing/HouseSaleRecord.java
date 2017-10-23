@@ -65,7 +65,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 //	}
 	
 	public double getExpectedAnnualRent() {
-		return(Model.houseRentalMarkets.getAverageSalePrice(house.getQuality())*config.constants.MONTHS_IN_YEAR);
+		return(Model.houseRentalMarket.getAverageSalePrice(house.getQuality())*config.constants.MONTHS_IN_YEAR);
 	}
 
 	public void setPrice(double newPrice, HousingMarket.Authority auth) {
@@ -85,7 +85,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	
 	protected void recalcYield() {
 		int q = house.getQuality();
-		yield = Model.houseRentalMarkets.getExpectedGrossYield(q)*Model.houseSaleMarkets.getAverageSalePrice(q)/getPrice();
+		yield = Model.houseRentalMarket.getExpectedGrossYield(q)*Model.houseSaleMarket.getAverageSalePrice(q)/getPrice();
 	}
 	
 	public House 	house;

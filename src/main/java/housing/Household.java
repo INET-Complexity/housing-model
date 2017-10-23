@@ -135,7 +135,7 @@ public class Household implements IHouseOwner, Serializable {
 //            }
             if(config.BTL_ENABLED) {
                 if(behaviour.decideToBuyBuyToLet(this)) {
-                    Model.houseSaleMarkets.BTLbid(this, behaviour.btlPurchaseBid(this));
+                    Model.houseSaleMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
                 }
             }        
         } else if(isHomeowner()) {
@@ -181,22 +181,22 @@ public class Household implements IHouseOwner, Serializable {
         if(forSale != null) { // reprice house for sale
             newPrice = behaviour.rethinkHouseSalePrice(forSale);
             if(newPrice > mortgageFor(h).principal) {
-                Model.houseSaleMarkets.updateOffer(forSale, newPrice);
+                Model.houseSaleMarket.updateOffer(forSale, newPrice);
             } else {
-                Model.houseSaleMarkets.removeOffer(forSale);
+                Model.houseSaleMarket.removeOffer(forSale);
                 if(h != home && h.resident == null) {
-                    Model.houseRentalMarkets.offer(h, buyToLetRent(h));
+                    Model.houseRentalMarket.offer(h, buyToLetRent(h));
                 }
             }
         } else if(decideToSellHouse(h)) { // put house on market?
-            if(h.isOnRentalMarket()) Model.houseRentalMarkets.removeOffer(h.getRentalRecord());
+            if(h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
             putHouseForSale(h);
         }
         
         forRent = h.getRentalRecord();
         if(forRent != null) { // reprice house for rent
             newPrice = behaviour.rethinkBuyToLetRent(forRent);
-            Model.houseRentalMarkets.updateOffer(forRent, newPrice);
+            Model.houseRentalMarket.updateOffer(forRent, newPrice);
         }        
     }
 
@@ -213,9 +213,9 @@ public class Household implements IHouseOwner, Serializable {
         } else {
             principal = 0.0;
         }
-        Model.houseSaleMarkets.offer(h, behaviour.initialSalePrice(
-                Model.houseSaleMarkets.averageSalePrice[h.getQuality()],
-                Model.houseSaleMarkets.averageDaysOnMarket,
+        Model.houseSaleMarket.offer(h, behaviour.initialSalePrice(
+                Model.houseSaleMarket.averageSalePrice[h.getQuality()],
+                Model.houseSaleMarket.averageDaysOnMarket,
                 principal
         ));
     }
@@ -262,7 +262,7 @@ public class Household implements IHouseOwner, Serializable {
             home = sale.house;
             sale.house.resident = this;
         } else if(sale.house.resident == null) { // put empty buy-to-let house on rental market
-            Model.houseRentalMarkets.offer(sale.house, buyToLetRent(sale.house));
+            Model.houseRentalMarket.offer(sale.house, buyToLetRent(sale.house));
 //            endOfLettingAgreement(sale.house);
         }
         isFirstTimeBuyer = false;
@@ -276,7 +276,7 @@ public class Household implements IHouseOwner, Serializable {
         bankBalance += sale.getPrice();
         bankBalance -= mortgage.payoff(bankBalance);
         if(sale.house.isOnRentalMarket()) {
-            Model.houseRentalMarkets.removeOffer(sale);
+            Model.houseRentalMarket.removeOffer(sale);
         }
         if(mortgage.nPayments == 0) {
             housePayments.remove(sale.house);
@@ -309,7 +309,7 @@ public class Household implements IHouseOwner, Serializable {
 //        if(h.resident != null) System.out.println("Strange: renting out a house that has a resident");        
 //        if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");        
         if(h.isOnRentalMarket()) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
-        if(!h.isOnMarket()) Model.houseRentalMarkets.offer(h, buyToLetRent(h));
+        if(!h.isOnMarket()) Model.houseRentalMarket.offer(h, buyToLetRent(h));
     }
 
     /**********************************************************
@@ -379,9 +379,9 @@ public class Household implements IHouseOwner, Serializable {
             if(price > maxMortgage - 1.0) {
                 price = maxMortgage -1.0;
             }
-            Model.houseSaleMarkets.bid(this, price);
+            Model.houseSaleMarket.bid(this, price);
         } else {
-            Model.houseRentalMarkets.bid(this, behaviour.desiredRent(this, monthlyEmploymentIncome));
+            Model.houseRentalMarket.bid(this, behaviour.desiredRent(this, monthlyEmploymentIncome));
         }
     }
     
@@ -406,15 +406,15 @@ public class Household implements IHouseOwner, Serializable {
     @Override
     public void completeHouseLet(HouseSaleRecord sale) {
         if(sale.house.isOnMarket()) {
-            Model.houseSaleMarkets.removeOffer(sale.house.getSaleRecord());
+            Model.houseSaleMarket.removeOffer(sale.house.getSaleRecord());
         }
         monthlyPropertyIncome += sale.getPrice();
     }
 
     private double buyToLetRent(House h) {
         return(behaviour.buyToLetRent(
-                Model.houseRentalMarkets.getAverageSalePrice(h.getQuality()),
-                Model.houseRentalMarkets.averageDaysOnMarket,h));
+                Model.houseRentalMarket.getAverageSalePrice(h.getQuality()),
+                Model.houseRentalMarket.averageDaysOnMarket,h));
     }
 
     /////////////////////////////////////////////////////////
@@ -447,8 +447,8 @@ public class Household implements IHouseOwner, Serializable {
                 isHome = false;
             }
             if(h.owner == this) {
-                if(h.isOnRentalMarket()) Model.houseRentalMarkets.removeOffer(h.getRentalRecord());
-                if(h.isOnMarket()) Model.houseSaleMarkets.removeOffer(h.getSaleRecord());
+                if(h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
+                if(h.isOnMarket()) Model.houseSaleMarket.removeOffer(h.getSaleRecord());
                 if(h.resident != null) h.resident.getEvicted();
                 beneficiary.inheritHouse(h, isHome);
             } else {
@@ -494,13 +494,13 @@ public class Household implements IHouseOwner, Serializable {
                 if(decideToSellHouse(h)) {
                     putHouseForSale(h);
                 } else if(h.resident == null) {
-                    Model.houseRentalMarkets.offer(h, buyToLetRent(h));
+                    Model.houseRentalMarket.offer(h, buyToLetRent(h));
                 }
             } else {
                 if(wasHome) {
                     putHouseForSale(h);
                 } else if(h.resident == null) {
-                    Model.houseRentalMarkets.offer(h, buyToLetRent(h));
+                    Model.houseRentalMarket.offer(h, buyToLetRent(h));
                 }
             }
         } else {
@@ -513,7 +513,7 @@ public class Household implements IHouseOwner, Serializable {
                 } else {
                     behaviour.setPropertyInvestor(true);
                     if(h.resident == null) {
-                        Model.houseRentalMarkets.offer(h, buyToLetRent(h));
+                        Model.houseRentalMarket.offer(h, buyToLetRent(h));
                     }                    
                 }
             }
@@ -588,7 +588,7 @@ public class Household implements IHouseOwner, Serializable {
      */
     double getHomeEquity() {
         if(!isHomeowner()) return(0.0);
-        return(Model.houseSaleMarkets.getAverageSalePrice(home.getQuality()) - mortgageFor(home).principal);
+        return(Model.houseSaleMarket.getAverageSalePrice(home.getQuality()) - mortgageFor(home).principal);
     }
     
     public MortgageAgreement mortgageFor(House h) {

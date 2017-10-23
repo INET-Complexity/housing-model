@@ -66,7 +66,7 @@ public class HouseSaleMarket extends HousingMarket {
 		if(bid.getClass() == BtLBuyerRecord.class) { // BTL buyer (yield driven)
 			HouseSaleRecord bestOffer = (HouseSaleRecord)offersPY.peek(bid);
 			if(bestOffer != null) {
-					double minDownpayment = bestOffer.getPrice()*(1.0 - Model.houseRentalMarkets.averageSoldGrossYield/(Model.bank.interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+					double minDownpayment = bestOffer.getPrice()*(1.0 - Model.houseRentalMarket.averageSoldGrossYield/(Model.bank.interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
 //					if(bestOffer.getExpectedAnnualRent()/(bestOffer.getPrice()-bid.buyer.behaviour.downPayment(bid.buyer, bestOffer.getPrice())) >= Model.bank.interestCoverageRatio()*Model.bank.getBtLStressedMortgageInterestRate()) {
 //						return(bestOffer);
 //					}

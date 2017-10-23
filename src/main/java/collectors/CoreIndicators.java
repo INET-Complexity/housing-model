@@ -151,7 +151,7 @@ public class CoreIndicators extends CollectorBase {
 	}
 
 	public double getPriceToIncome() {
-		return(Model.houseSaleMarkets.housePriceIndex*config.derivedParams.getHPIReference()*(Model.collectors.householdStats.nHouseholds - Model.collectors.householdStats.nRenting - Model.collectors.householdStats.nHomeless)/(Model.collectors.householdStats.OOTotalAnnualIncome+Model.collectors.householdStats.BtLTotalAnnualIncome));
+		return(Model.houseSaleMarket.housePriceIndex*config.derivedParams.getHPIReference()*(Model.collectors.householdStats.nHouseholds - Model.collectors.householdStats.nRenting - Model.collectors.householdStats.nHomeless)/(Model.collectors.householdStats.OOTotalAnnualIncome+Model.collectors.householdStats.BtLTotalAnnualIncome));
 	}
 	public String desPriceToIncome() {
 		return("House price to household disposable income ratio");
@@ -173,12 +173,12 @@ public class CoreIndicators extends CollectorBase {
 	public double getHousePriceGrowth() {
 		// As opposed to HPA, this captures quarter to quarter housing price growth
 //		return(100.0*Model.collectors.housingMarketStats.getHPA());
-		double lastHPI = Model.houseSaleMarkets.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 4)
-                + Model.houseSaleMarkets.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 5)
-                + Model.houseSaleMarkets.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 6);
-		double HPI = Model.houseSaleMarkets.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 1)
-                + Model.houseSaleMarkets.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 2)
-                + Model.houseSaleMarkets.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 3);
+		double lastHPI = Model.houseSaleMarket.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 4)
+                + Model.houseSaleMarket.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 5)
+                + Model.houseSaleMarket.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 6);
+		double HPI = Model.houseSaleMarket.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 1)
+                + Model.houseSaleMarket.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 2)
+                + Model.houseSaleMarket.HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 3);
 		return(100.0*(HPI - lastHPI)/lastHPI);
 	}
 	public String desHousePriceGrowth() {

@@ -143,7 +143,7 @@ public class Recorder {
                 Model.collectors.rentalMarketStats.getnBuyers()+", "+
                 Model.collectors.rentalMarketStats.getnSellers()+", "+
                 Model.collectors.rentalMarketStats.getnSales()+", "+
-                Model.houseRentalMarkets.averageSoldGrossYield+", "+
+                Model.houseRentalMarket.averageSoldGrossYield+", "+
                 Model.collectors.householdStats.getnActiveBtL()+", "+
                 Model.collectors.householdStats.getBTLProportion());
     }
