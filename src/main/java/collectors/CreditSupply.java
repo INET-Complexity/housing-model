@@ -12,7 +12,8 @@ public class CreditSupply extends CollectorBase {
 
 	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
-	public CreditSupply() {
+	public CreditSupply(String outputFolder) {
+	    outputFolderCopy = outputFolder;
 		mortgageCounter = 0;
 		ftbCounter = 0;
 		btlCounter = 0;
@@ -56,8 +57,8 @@ public class CreditSupply extends CollectorBase {
 			if(approval.principal > 1.0) {
 				if(approval.isBuyToLet) {
 					btl_ltv.addValue(100.0*approval.principal/housePrice);
-//					double icr = Model.rentalMarket.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
-					double icr = Model.rentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.getCentralBankBTLStressedInterest());
+//					double icr = Model.houseRentalMarkets.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
+					double icr = Model.houseRentalMarkets.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.getCentralBankBTLStressedInterest());
 					btl_icr.addValue(icr);
 				} else {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);
@@ -75,7 +76,7 @@ public class CreditSupply extends CollectorBase {
 		}
 	}
 	
-
+    //TODO: Check which of these functions should be kept and which removed!
 	// ---- Mason stuff
 	// ----------------
 	public String desLTI() {return("Loan to Income constraint on mortgages");}
@@ -123,7 +124,7 @@ public class CreditSupply extends CollectorBase {
 	}
 	
 	public void writeDistributionToFile(double [] vals, String filename) throws FileNotFoundException, UnsupportedEncodingException {
-        PrintWriter dist = new PrintWriter(filename, "UTF-8");
+        PrintWriter dist = new PrintWriter(outputFolderCopy + filename, "UTF-8");
         if(vals.length > 0) {
         	dist.print(vals[0]);
         	for(int i=1; i<vals.length; ++i) {
@@ -164,4 +165,6 @@ public class CreditSupply extends CollectorBase {
 	public double totalBTLCredit = 0.0; // buy to let mortgage credit
 	public double totalOOCredit = 0.0; // owner-occupier mortgage credit	
 	public double netCreditGrowth; // rate of change of credit per month as percentage
+
+	private String outputFolderCopy;
 }

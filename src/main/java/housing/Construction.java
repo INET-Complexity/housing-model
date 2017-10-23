@@ -34,27 +34,21 @@ public class Construction implements IHouseOwner, Serializable {
 		House newBuild;
 		double price;
 		for(House h : onMarket) {
-			Model.housingMarket.updateOffer(h.getSaleRecord(), h.getSaleRecord().getPrice()*0.95);
+			Model.houseSaleMarkets.updateOffer(h.getSaleRecord(), h.getSaleRecord().getPrice()*0.95);
 		}
 		while(shortFall > 0) {
 			newBuild = new House();
 			newBuild.owner = this;
 			++housingStock;
-			price = Model.housingMarket.referencePrice(newBuild.getQuality());
+			price = Model.houseSaleMarkets.referencePrice(newBuild.getQuality());
 //			if(Model.rand.nextDouble() < 0.9) {
-			Model.housingMarket.offer(newBuild, price);
+			Model.houseSaleMarkets.offer(newBuild, price);
 			onMarket.add(newBuild);
 //			} else {
 //				Model.households.get(Model.rand.nextInt(Model.households.size())).inheritHouse(newBuild);
 //			}
 			--shortFall;
 		}
-	}
-	
-	@Override
-	public void completeHousePurchase(HouseSaleRecord sale) {
-		// TODO Auto-generated method stub
-
 	}
 
 	@Override
@@ -64,13 +58,15 @@ public class Construction implements IHouseOwner, Serializable {
 
 	@Override
 	public void endOfLettingAgreement(House h, PaymentAgreement p) {
-		// TODO Auto-generated method stub
+        System.out.println("Strange: a tenant is moving out of a house owned by the construction sector!");
+		System.exit(0);
 
 	}
 
 	@Override
 	public void completeHouseLet(HouseSaleRecord sale) {
-		// TODO Auto-generated method stub		
+        System.out.println("Strange: the construction sector is trying to let a house!");
+        System.exit(0);
 	}
 
 	public int housingStock;			// total number of houses built

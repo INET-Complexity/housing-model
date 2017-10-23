@@ -6,33 +6,57 @@ import java.io.UnsupportedEncodingException;
 
 import housing.Config;
 import housing.Model;
-import org.apache.commons.math3.linear.ArrayRealVector;
 
 /***
  * For recording output to file
- * @author daniel
+ * @author daniel, Adrian Carro
  *
  */
 public class Recorder {
 
     private Config config = Model.config;    // Passes the Model's configuration parameters object to a private field
+
+    private boolean newSim = true;
+    private String outputFolderCopy;
+
+    private PrintWriter ooLTI;
+    private PrintWriter btlLTV;
+    private PrintWriter creditGrowth;
+    private PrintWriter debtToIncome;
+    private PrintWriter ooDebtToIncome;
+    private PrintWriter mortgageApprovals;
+    private PrintWriter housingTransactions;
+    private PrintWriter advancesToFTBs;
+    private PrintWriter advancesToBTL;
+    private PrintWriter advancesToHomeMovers;
+    private PrintWriter priceToIncome;
+    private PrintWriter rentalYield;
+    private PrintWriter housePriceGrowth;
+    private PrintWriter interestRateSpread;
+
+    private PrintWriter outfile;
+    private PrintWriter paramfile;
+
+    public Recorder(String outputFolder) {
+        outputFolderCopy = outputFolder;
+    }
     
     public void start() throws FileNotFoundException, UnsupportedEncodingException {
         // --- open files for core indicators
-        ooLTI = new PrintWriter("coreIndicator-ooLTI.csv", "UTF-8");
-        btlLTV = new PrintWriter("coreIndicator-btlLTV.csv", "UTF-8");
-        creditGrowth = new PrintWriter("coreIndicator-creditGrowth.csv", "UTF-8");
-        debtToIncome = new PrintWriter("coreIndicator-debtToIncome.csv", "UTF-8");
-        ooDebtToIncome = new PrintWriter("coreIndicator-ooDebtToIncome.csv", "UTF-8");
-        mortgageApprovals = new PrintWriter("coreIndicator-mortgageApprovals.csv", "UTF-8");
-        housingTransactions = new PrintWriter("coreIndicator-housingTransactions.csv", "UTF-8");
-        advancesToFTBs = new PrintWriter("coreIndicator-advancesToFTB.csv", "UTF-8");
-        advancesToBTL = new PrintWriter("coreIndicator-advancesToBTL.csv", "UTF-8");
-        advancesToHomeMovers = new PrintWriter("coreIndicator-advancesToMovers.csv", "UTF-8");
-        priceToIncome = new PrintWriter("coreIndicator-priceToIncome.csv", "UTF-8");
-        rentalYield = new PrintWriter("coreIndicator-rentalYield.csv", "UTF-8");
-        housePriceGrowth = new PrintWriter("coreIndicator-housePriceGrowth.csv", "UTF-8");
-        interestRateSpread = new PrintWriter("coreIndicator-interestRateSpread.csv", "UTF-8");
+        ooLTI = new PrintWriter(outputFolderCopy + "coreIndicator-ooLTI.csv", "UTF-8");
+        btlLTV = new PrintWriter(outputFolderCopy + "coreIndicator-btlLTV.csv", "UTF-8");
+        creditGrowth = new PrintWriter(outputFolderCopy + "coreIndicator-creditGrowth.csv", "UTF-8");
+        debtToIncome = new PrintWriter(outputFolderCopy + "coreIndicator-debtToIncome.csv", "UTF-8");
+        ooDebtToIncome = new PrintWriter(outputFolderCopy + "coreIndicator-ooDebtToIncome.csv", "UTF-8");
+        mortgageApprovals = new PrintWriter(outputFolderCopy + "coreIndicator-mortgageApprovals.csv", "UTF-8");
+        housingTransactions = new PrintWriter(outputFolderCopy + "coreIndicator-housingTransactions.csv", "UTF-8");
+        advancesToFTBs = new PrintWriter(outputFolderCopy + "coreIndicator-advancesToFTB.csv", "UTF-8");
+        advancesToBTL = new PrintWriter(outputFolderCopy + "coreIndicator-advancesToBTL.csv", "UTF-8");
+        advancesToHomeMovers = new PrintWriter(outputFolderCopy + "coreIndicator-advancesToMovers.csv", "UTF-8");
+        priceToIncome = new PrintWriter(outputFolderCopy + "coreIndicator-priceToIncome.csv", "UTF-8");
+        rentalYield = new PrintWriter(outputFolderCopy + "coreIndicator-rentalYield.csv", "UTF-8");
+        housePriceGrowth = new PrintWriter(outputFolderCopy + "coreIndicator-housePriceGrowth.csv", "UTF-8");
+        interestRateSpread = new PrintWriter(outputFolderCopy + "coreIndicator-interestRateSpread.csv", "UTF-8");
         
         newSim = true;
     }
@@ -41,13 +65,13 @@ public class Recorder {
         if(newSim) {
 //            String simID = Integer.toHexString(UUID.randomUUID().hashCode());
             try {
-                outfile = new PrintWriter("output-"+Model.nSimulation+".csv", "UTF-8");
+                outfile = new PrintWriter(outputFolderCopy + "output-"+Model.nSimulation+".csv", "UTF-8");
                 outfile.println(
                         "Model time, NRegisteredMortgages, nBtL(gene), nEmpty, nHomeless, nHouseholds, nRenting, AverageBidPrice, "+
                         "AverageDaysOnMarket, AverageOfferPrice, BTLSalesProportion, FTBSalesProportion, HPA, HPI, nBuyers, "+
                         "nSellers, nSales, nNewBuild, Rental AverageBidPrice, Rental AverageDaysOnMarket, Rental AverageOfferPrice, Rental HPA, Rental HPI, "+
                         "Rental nBuyers, Rental nSellers, Rental nSales, averageNewRentalGrossYield, nBtL(active), ProportionOfHousingStockBtL");
-                paramfile = new PrintWriter("parameters-"+Model.nSimulation+".csv", "UTF-8");
+                paramfile = new PrintWriter(outputFolderCopy + "parameters-"+Model.nSimulation+".csv", "UTF-8");
                 paramfile.println("BtL P_INVESTOR, CentralBank ICR Limit");
                 paramfile.println(
                         config.getPInvestor()+", "+
@@ -119,7 +143,7 @@ public class Recorder {
                 Model.collectors.rentalMarketStats.getnBuyers()+", "+
                 Model.collectors.rentalMarketStats.getnSellers()+", "+
                 Model.collectors.rentalMarketStats.getnSales()+", "+
-                Model.rentalMarket.averageSoldGrossYield+", "+
+                Model.houseRentalMarkets.averageSoldGrossYield+", "+
                 Model.collectors.householdStats.getnActiveBtL()+", "+
                 Model.collectors.householdStats.getBTLProportion());
     }
@@ -171,24 +195,5 @@ public class Recorder {
         outfile.close();
         newSim = true;
     }
-    
-    PrintWriter ooLTI;
-    PrintWriter btlLTV;
-    PrintWriter creditGrowth;
-    PrintWriter debtToIncome;
-    PrintWriter ooDebtToIncome;
-    PrintWriter mortgageApprovals;
-    PrintWriter housingTransactions;
-    PrintWriter advancesToFTBs;
-    PrintWriter advancesToBTL;
-    PrintWriter advancesToHomeMovers;
-    PrintWriter priceToIncome;
-    PrintWriter    rentalYield;
-    PrintWriter    housePriceGrowth;
-    PrintWriter    interestRateSpread;
 
-    ArrayRealVector output;
-    PrintWriter     outfile;
-    PrintWriter     paramfile;
-    public boolean newSim = true;
 }

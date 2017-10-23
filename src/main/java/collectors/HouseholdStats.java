@@ -29,7 +29,7 @@ public class HouseholdStats extends CollectorBase {
     	    	NonOwnerTotalAnnualIncome += h.monthlyEmploymentIncome;
     		} else if(h.isRenting()) {
     			++nRenting;
-    			rentalYield += h.getHousePayments().get(h.getHome()).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(h.getHome().getQuality());
+    			rentalYield += h.getHousePayments().get(h.getHome()).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.houseSaleMarkets.getAverageSalePrice(h.getHome().getQuality());
     	    	NonOwnerTotalAnnualIncome += h.monthlyEmploymentIncome;
     		} else {
     			OOTotalAnnualIncome += h.monthlyEmploymentIncome;
@@ -48,7 +48,7 @@ public class HouseholdStats extends CollectorBase {
 		double [] result = new double[Model.households.size()];
 		int i = 0;
 		for(Household h : Model.households) {
-			result[i] = h.lifecycle.getAge();
+			result[i] = h.getAge();
 			++i;
 		}
 		return(result);
@@ -65,7 +65,7 @@ public class HouseholdStats extends CollectorBase {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(!h.isHomeowner() && i < nNonOwner) {
-				result[i++] = h.lifecycle.getAge();
+				result[i++] = h.getAge();
 			}
 		}
 		while(i < nNonOwner) {
@@ -85,7 +85,7 @@ public class HouseholdStats extends CollectorBase {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(!h.isHomeowner() && i < nNonOwner) {
-				result[i] = h.lifecycle.getAge();
+				result[i] = h.getAge();
 				++i;
 			}
 		}
@@ -137,7 +137,7 @@ public class HouseholdStats extends CollectorBase {
 		int i = 0;
 		for(Household h : Model.households) {
 			if(h.isRenting() && i<nRenting) {
-				result[i++] = h.getHousePayments().get(h.getHome()).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.housingMarket.getAverageSalePrice(h.getHome().getQuality());
+				result[i++] = h.getHousePayments().get(h.getHome()).monthlyPayment*config.constants.MONTHS_IN_YEAR/Model.houseSaleMarkets.getAverageSalePrice(h.getHome().getQuality());
 			}
 		}
 		return(result);

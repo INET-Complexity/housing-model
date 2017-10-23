@@ -6,10 +6,18 @@ import java.io.Serializable;
 
 public class Collectors implements Serializable {
 	private static final long serialVersionUID = -1116526042375828663L;
+
+	public Collectors(String outputFolder) {
+        creditSupply 	= new CreditSupply(outputFolder);
+        coreIndicators 	= new CoreIndicators();
+        householdStats	= new HouseholdStats();
+        housingMarketStats = new HousingMarketStats();
+        rentalMarketStats = new RentalMarketStats();
+    }
 	
 	public void init() {
-		housingMarketStats.init(Model.housingMarket);
-		rentalMarketStats.init(Model.rentalMarket);
+		housingMarketStats.init(Model.houseSaleMarkets);
+		rentalMarketStats.init(Model.houseRentalMarkets);
 	}
 	
 	public void step() {
@@ -19,14 +27,9 @@ public class Collectors implements Serializable {
 //		if(rentalMarketStats.isActive()) rentalMarketStats.step();
 	}
 		
-	public CreditSupply		creditSupply 	= new CreditSupply();
-	public CoreIndicators	coreIndicators 	= new CoreIndicators();
-	public HouseholdStats	householdStats	= new HouseholdStats();
-	public HousingMarketStats housingMarketStats = new HousingMarketStats();
-	public RentalMarketStats rentalMarketStats = new RentalMarketStats();
-	
-	/////////////////////////////////////////////////////////////////////
-	// Getters for MASON...yawn.
-	/////////////////////////////////////////////////////////////////////
-	
+	public CreditSupply		creditSupply;
+	public CoreIndicators	coreIndicators;
+	public HouseholdStats	householdStats;
+	public HousingMarketStats housingMarketStats;
+	public RentalMarketStats rentalMarketStats;
 }
