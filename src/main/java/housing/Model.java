@@ -93,8 +93,8 @@ public class Model {
         creditSupply = new collectors.CreditSupply(outputFolder);
         coreIndicators = new collectors.CoreIndicators();
         householdStats = new collectors.HouseholdStats();
-        housingMarketStats = new collectors.HousingMarketStats();
-        rentalMarketStats = new collectors.RentalMarketStats();
+        housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket);
+        rentalMarketStats = new collectors.RentalMarketStats(housingMarketStats, houseRentalMarket);
 
         nSimulation = 0;
     }
@@ -165,7 +165,6 @@ public class Model {
 	}
 
 	private static void init() {
-        demographics.init();
 		construction.init();
 		houseSaleMarket.init();
 		houseRentalMarket.init();
@@ -200,7 +199,7 @@ public class Model {
         // Update credit supply statistics // TODO: Check what this actually does and if it should go elsewhere!
         creditSupply.step();
 		// Update bank and interest rate for new mortgages
-		bank.step(demographics.getTotalPopulation());
+		bank.step(Model.households.size());
         // Update central bank policies (currently empty!)
 		centralBank.step(coreIndicators);
 	}

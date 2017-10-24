@@ -1,8 +1,8 @@
-/bin/
+/bin
 /experiments
 
 # ignore Intellij IDEA cruft
-.idea/
+/.idea
 *.iml
 /target
 
@@ -10,5 +10,8 @@
 .classpath
 .project
 
+# ignore results folder
+/results
 
-
+# ignore some documents
+/docs/ChangeLog

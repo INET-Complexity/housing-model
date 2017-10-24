@@ -272,6 +272,22 @@ public class HousingMarketStats extends CollectorBase {
         return(Math.pow(HPI/oldHPI, 1.0/nYears) - 1.0);
     }
 
+    /**
+     * This method computes the quarter on quarter appreciation in house price index by comparing the most recent
+     * quarter (previous 3 months, to smooth changes) to the previous one and computing the percentage change
+     *
+     * @return Quarter on quarter house price growth
+     */
+    double getQoQHousePriceGrowth() {
+        double HPI = HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 1)
+                + HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 2)
+                + HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 3);
+        double oldHPI = HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 4)
+                + HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 5)
+                + HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 6);
+        return(100.0*(HPI - oldHPI)/oldHPI);
+    }
+
     //----- Getter/setter methods -----//
 
     // Note that, for security reasons, getters should never give counter variables, as their value changes during

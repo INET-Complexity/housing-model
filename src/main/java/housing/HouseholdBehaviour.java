@@ -117,7 +117,6 @@ public class HouseholdBehaviour implements Serializable {
 	/**
      * Initial sale price of a house to be listed
      *
-	 * @param region Reference to the region where the house to be sold sits
 	 * @param quality Quality of the house ot be sold
 	 * @param principal Amount of principal left on any mortgage on this house
 	 */
@@ -264,7 +263,7 @@ public class HouseholdBehaviour implements Serializable {
 		double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
 		if(config.BTL_YIELD_SCALING) {
 			effectiveYield = leverage*((1.0 - BTLCapGainCoefficient)*rentalYield
-                    + BTLCapGainCoefficient*(Model.regionalRentalMarketStats.getLongTermExpAvFlowYield()
+                    + BTLCapGainCoefficient*(Model.rentalMarketStats.getLongTermExpAvFlowYield()
 					+ getLongTermHPAExpectation())) - mortgageRate;
 		} else {
 			effectiveYield = leverage*(rentalYield + BTLCapGainCoefficient*getLongTermHPAExpectation())
