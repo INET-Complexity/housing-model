@@ -21,8 +21,10 @@ public abstract class HousingMarketRecord implements Serializable {
 	//	return 0;
 	//}
 
+    // Dummy method so that it can be overridden at HouseSaleRecord
 	public double getYield() {
-		return 0.0;
+        System.out.println("Strange: The program shouldn't have entered here!");
+        return 0.0;
 	}
 	
 	public int getId() {
@@ -56,9 +58,6 @@ public abstract class HousingMarketRecord implements Serializable {
 			if(diff == 0) {
 				diff = arg0.getId() - arg1.getId();
 			}
-//			System.out.println(arg0.getQuality()+" "+arg1.getQuality());
-//			System.out.println(arg0.getId()+" "+arg1.getId());
-
 			return Integer.signum(diff);
 		}
 	}
@@ -69,9 +68,6 @@ public abstract class HousingMarketRecord implements Serializable {
 		@Override
 		public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
 			double diff = arg0.price - arg1.price;
-			if(Double.isNaN(diff)) {
-				System.out.println("Got price NaN in PYComparator");
-			}
 			if(diff == 0.0) {
 				diff = arg0.getId() - arg1.getId();
 			}
@@ -81,9 +77,6 @@ public abstract class HousingMarketRecord implements Serializable {
 		@Override
 		public int YCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
 			double diff = arg0.getYield() - arg1.getYield();
-			if(Double.isNaN(diff)) {
-				System.out.println("Got yield NaN in PYComparator");
-			}
 			if(diff == 0.0) {
 				diff = arg0.getId() - arg1.getId();
 			}
