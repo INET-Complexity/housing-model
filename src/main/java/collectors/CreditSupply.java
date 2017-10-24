@@ -17,7 +17,8 @@ public class CreditSupply extends CollectorBase {
 		mortgageCounter = 0;
 		ftbCounter = 0;
 		btlCounter = 0;
-		// TODO: This limit in the number of events taken into account to build statistics is not explained in the paper (affects oo_lti, oo_ltv, btl_ltv, btl_icr, downpayments)
+		// TODO: This limit in the number of events taken into account to build statistics is not explained in the paper
+        // TODO: (affects oo_lti, oo_ltv, btl_ltv, btl_icr, downpayments)
 		setArchiveLength(10000);
 	}
 
@@ -35,7 +36,11 @@ public class CreditSupply extends CollectorBase {
         		totalOOCredit += m.principal;
         	}
         }
-        netCreditGrowth = (totalOOCredit + totalBTLCredit - oldTotalCredit)/oldTotalCredit;
+        if (oldTotalCredit > 0.0) {
+            netCreditGrowth = (totalOOCredit + totalBTLCredit - oldTotalCredit)/oldTotalCredit;
+        } else {
+            netCreditGrowth = 0;
+        }
         nApprovedMortgages = mortgageCounter;
         nFTBMortgages = ftbCounter;
         nBTLMortgages = btlCounter;
@@ -53,12 +58,15 @@ public class CreditSupply extends CollectorBase {
 		double housePrice;
 		if(config.isMortgageDiagnosticsActive()) {
 			housePrice = approval.principal + approval.downPayment;
-			affordability = config.derivedParams.getAffordabilityDecay()*affordability + (1.0-config.derivedParams.getAffordabilityDecay())*approval.monthlyPayment/(h.monthlyEmploymentIncome);
-			if(approval.principal > 1.0) {
+			affordability = config.derivedParams.getAffordabilityDecay()*affordability +
+                    (1.0-config.derivedParams.getAffordabilityDecay())*approval.monthlyPayment/
+                            (h.monthlyEmploymentIncome);
+			// TODO: This condition is redundant, as the method is only called when approval.principal > 0
+			if(approval.principal > 0.0) {
 				if(approval.isBuyToLet) {
 					btl_ltv.addValue(100.0*approval.principal/housePrice);
-//					double icr = Model.houseRentalMarket.getAverageSalePrice(house.getQuality())*12.0/(approval.principal*Model.bank.getBtLStressedMortgageInterestRate());
-					double icr = Model.houseRentalMarket.averageSoldGrossYield*approval.purchasePrice/(approval.principal*config.getCentralBankBTLStressedInterest());
+					double icr = Model.rentalMarketStats.getExpAvFlowYield()*approval.purchasePrice/
+                            (approval.principal*config.getCentralBankBTLStressedInterest());
 					btl_icr.addValue(icr);
 				} else {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);
@@ -66,10 +74,6 @@ public class CreditSupply extends CollectorBase {
 				}
 				downpayments.addValue(approval.downPayment);
 			}
-//			approved_mortgages[0][approved_mortgages_index] = approval.principal/(h.annualEmploymentIncome());
-//			approved_mortgages[1][approved_mortgages_index] = approval.downPayment/(h.annualEmploymentIncome());
-//			approved_mortgages_index += 1;
-//			if(approved_mortgages_index == ARCHIVE_LEN) approved_mortgages_index = 0;
 			mortgageCounter += 1;
 			if(approval.isFirstTimeBuyer) ftbCounter += 1;
 			if(approval.isBuyToLet) btlCounter += 1;
@@ -79,11 +83,6 @@ public class CreditSupply extends CollectorBase {
     //TODO: Check which of these functions should be kept and which removed!
 	// ---- Mason stuff
 	// ----------------
-	public String desLTI() {return("Loan to Income constraint on mortgages");}
-	public String desTHETA_FTB() {return("Loan to Value haircut for first time buyers");}
-	public String desTHETA_HOME() {return("Loan to Value haircut for homeowners");}
-	public String desTHETA_BTL() {return("Loan to Value haircut for buy-to-let investors");}
-	public String desN_PAYMENTS() {return("Number of monthly repayments in a mortgage");}
 	public double getBaseRate() {
 		return Model.bank.getBaseRate();
 	}
@@ -115,15 +114,14 @@ public class CreditSupply extends CollectorBase {
     }
     
 
-    public int getNRegisteredMortgages() {
-    	return(Model.bank.mortgages.size());
-    }
+    public int getnRegisteredMortgages() { return(Model.bank.mortgages.size()); }
 
 	public int getArchiveLength() {
 		return archiveLength;
 	}
 	
-	public void writeDistributionToFile(double [] vals, String filename) throws FileNotFoundException, UnsupportedEncodingException {
+	public void writeDistributionToFile(double [] vals, String filename) throws FileNotFoundException,
+            UnsupportedEncodingException {
         PrintWriter dist = new PrintWriter(outputFolderCopy + filename, "UTF-8");
         if(vals.length > 0) {
         	dist.print(vals[0]);
@@ -144,24 +142,19 @@ public class CreditSupply extends CollectorBase {
 	}
 
 
-	//public double STATS_DECAY = 0.98; 	// Decay constant (per step) for exp averaging of stats
-	//public int 	HISTOGRAM_NBINS = 101;
-
 	public int archiveLength; // number of mortgage approvals to remember
 	public double affordability = 0.0;
 	public DescriptiveStatistics oo_lti;
 	public DescriptiveStatistics oo_ltv;
 	public DescriptiveStatistics btl_ltv;
 	public DescriptiveStatistics btl_icr;
-	public DescriptiveStatistics downpayments;
-//	public double [][] approved_mortgages = new double [2][ARCHIVE_LEN]; // (loan/income, downpayment/income) pairs
-//	public int approved_mortgages_index;
+	public DescriptiveStatistics downpayments; // TODO: This quantity only includes downpayments when the principal of the loan is > 0
 	public int mortgageCounter;
 	public int ftbCounter;	
 	public int btlCounter;	
 	public int nApprovedMortgages; // total number of new mortgages
 	public int nFTBMortgages; // number of new first time buyer mortgages given
-	public int nBTLMortgages; // number of new buy to let mortages given
+	public int nBTLMortgages; // number of new buy to let mortgages given
 	public double totalBTLCredit = 0.0; // buy to let mortgage credit
 	public double totalOOCredit = 0.0; // owner-occupier mortgage credit	
 	public double netCreditGrowth; // rate of change of credit per month as percentage
