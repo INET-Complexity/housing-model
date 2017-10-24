@@ -53,7 +53,7 @@ public class MicroDataRecorder {
     			purchase.buyer.getMonthlyPreTaxIncome()+", "+
     			purchase.buyer.monthlyEmploymentIncome+", "+
     			purchase.buyer.getBankBalance()+", "+
-    			purchase.buyer.behaviour.BtLCapGainCoeff+", "
+    			purchase.buyer.behaviour.getBTLCapGainCoefficient() +", "
 				);
 		if(mortgage != null) {
 			outfile.print(
@@ -73,7 +73,7 @@ public class MicroDataRecorder {
 					seller.getMonthlyPreTaxIncome()+", "+
 					seller.monthlyEmploymentIncome+", "+
 					seller.getBankBalance()+", "+
-					seller.behaviour.BtLCapGainCoeff
+					seller.behaviour.getBTLCapGainCoefficient()
 					);			
 		} else {
 			// must be construction sector
@@ -98,17 +98,14 @@ public class MicroDataRecorder {
 		this.active = isActive;
 		if(isActive) {
 			try {
-				Model.collectors.housingMarketStats.setActive(true);
-				Model.collectors.rentalMarketStats.setActive(true);
+				Model.housingMarketStats.setActive(true);
+				Model.rentalMarketStats.setActive(true);
 				start();
 			} catch (FileNotFoundException | UnsupportedEncodingException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		} else {
-			//finish();
 		}
-
 	}
 
 	PrintWriter 	outfile;
