@@ -22,7 +22,7 @@ public class Lifecycle {
 		final int varMinCol = 2;
 		final int varMaxCol = 3;
 		final int probCol = 4;
-		BinnedData<Pdf> data = new BinnedData<Pdf>(0.0, 0.0);
+		BinnedData<Pdf> data = new BinnedData<>(0.0, 0.0);
 		BinnedData<BinnedDataDouble> pdfData = new BinnedData<>(0.0,0.0);
 		BinnedDataDouble pdf;
 		double pdfBinMin;
