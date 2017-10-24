@@ -27,16 +27,16 @@ public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
 		/***
 		 * @return (-1, 0, 1) if this is (less than, equal to, greater than) other
 		 */
-		public int XCompareTo(T other);
-		public int YCompareTo(T other);
+        int XCompareTo(T other);
+		int YCompareTo(T other);
 	}
 
 	public interface XYComparator<T> extends Serializable {
 		/***
 		 * @return (-1, 0, 1) if arg0 is (less than, equal to, greater than) arg1
 		 */
-		public int XCompare(T arg0, T arg1);
-		public int YCompare(T arg0, T arg1);
+        int XCompare(T arg0, T arg1);
+		int YCompare(T arg0, T arg1);
 	}
 
 	public class XComparator implements Comparator<E>, Serializable {
@@ -139,7 +139,7 @@ public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
 	 * @param element Element to remove (must be an uncovered member of this set).
 	 */
 	protected void removeFromUncovered(E element) {
-		if(uncoveredElements.remove(element) == false) return;
+		if(!uncoveredElements.remove(element)) return;
 		if(ySortedElements.size() == 0) return;
 		boolean inclusive = false;
 		E nextxLower = uncoveredElements.lower(element);
@@ -170,26 +170,26 @@ public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
 //		System.out.println("done");
 	}
 	
-	/*** testing only */
-	public boolean checkConsistency() {
-		E last = null;
-		for(E element : uncoveredElements) {
-			if(last != null) {
-				if(comparator.YCompare(element, last) != 1) {
-					System.out.println("uncovered elements are not monotonically increasing");
-					return(false);
-				}
-				last = element;
-			}
-		}
-		for(E element : ySortedElements) {
-			if(isUncovered(element) && !uncoveredElements.contains(element)) {
-				System.out.println("uncovered elements are missing memebers");
-				return(false);
-			}
-		}
-		return(true);
-	}
+//	/*** testing only */
+//	public boolean checkConsistency() {
+//		E last = null;
+//		for(E element : uncoveredElements) {
+//			if(last != null) {
+//				if(comparator.YCompare(element, last) != 1) {
+//					System.out.println("uncovered elements are not monotonically increasing");
+//					return(false);
+//				}
+//				last = element;
+//			}
+//		}
+//		for(E element : ySortedElements) {
+//			if(isUncovered(element) && !uncoveredElements.contains(element)) {
+//				System.out.println("uncovered elements are missing memebers");
+//				return(false);
+//			}
+//		}
+//		return(true);
+//	}
 	
 	/***
 	 * An element, a, is said to be "covered" by and element, b, iff
@@ -208,11 +208,8 @@ public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
 		if(nextLower == null) {
 			return(true);
 		}
-		if(comparator.YCompare(nextLower, element) == -1) {
-			return(true);
-		}
-		return(false);
-	}
+        return comparator.YCompare(nextLower, element) == -1;
+    }
 	
 	public int size() {return(ySortedElements.size());}
 	public int uncoveredSize() {return(uncoveredElements.size());}

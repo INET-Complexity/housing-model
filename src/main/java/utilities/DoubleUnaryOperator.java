@@ -30,17 +30,18 @@ package utilities;
 	 * questions.
 	 */
 
-	/**
-	 * Represents an operation on a single {@code double}-valued operand that produces
-	 * a {@code double}-valued result.  This is the primitive type specialization of
-	 * {@link UnaryOperator} for {@code double}.
-	 *
-	 * <p>This is a <a href="package-summary.html">functional interface</a>
-	 * whose functional method is {@link #applyAsDouble(double)}.
-	 *
-	 * @see UnaryOperator
-	 * @since 1.8
-	 */
+//  Paragraph commented to avoid error in Javadoc references because of a lacking UnaryOperator
+//	/**
+//	 * Represents an operation on a single {@code double}-valued operand that produces
+//	 * a {@code double}-valued result.  This is the primitive type specialization of
+//	 * {@link UnaryOperator} for {@code double}.
+//	 *
+//	 * <p>This is a <a href="package-summary.html">functional interface</a>
+//	 * whose functional method is {@link #applyAsDouble(double)}.
+//	 *
+//	 * @see UnaryOperator
+//	 * @since 1.8
+//	 */
 	public interface DoubleUnaryOperator {
 
 	    /**
