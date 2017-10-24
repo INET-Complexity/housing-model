@@ -1,7 +1,5 @@
 package housing;
 
-import java.io.Serializable;
-
 public class MortgageAgreement extends PaymentAgreement {
 	private static final long serialVersionUID = -1610029355056926296L;
 	public double	downPayment;
@@ -13,11 +11,7 @@ public class MortgageAgreement extends PaymentAgreement {
 
 	public MortgageAgreement(Household borrower, boolean isBuyToLet) {
 		this.isBuyToLet = isBuyToLet;
-		if(!isBuyToLet && borrower.isFirstTimeBuyer()) {
-			this.isFirstTimeBuyer = true;
-		} else {
-			this.isFirstTimeBuyer = false;
-		}
+		this.isFirstTimeBuyer = !isBuyToLet && borrower.isFirstTimeBuyer();
 	}
 
 	/********************************************
@@ -30,7 +24,7 @@ public class MortgageAgreement extends PaymentAgreement {
 		double payment = super.makeMonthlyPayment();
 		principal = principal*(1.0 + monthlyInterestRate) - payment;
 		if(nPayments == 0) Model.bank.endMortgageContract(this);
-		return(payment);
+		return payment;
 	}
 
 	/*******************************************
@@ -50,11 +44,9 @@ public class MortgageAgreement extends PaymentAgreement {
 		}
 		monthlyPayment *= (principal-amount)/principal;
 		principal -= amount;
-		return(amount);
+		return amount;
 	}
 
-	public double payoff() {
-		return(payoff(principal));
-	}
+	public double payoff() { return payoff(principal); }
 
 }

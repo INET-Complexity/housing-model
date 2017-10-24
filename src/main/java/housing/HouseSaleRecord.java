@@ -2,95 +2,93 @@ package housing;
 
 import java.util.ArrayList;
 
-/*************************************************
- * This is the record containing information on a house that is for-sale.
- * Think of this as the record that an estate-agent keeps on a customer
- * that is selling a house.
- * 
- * @author daniel
+/**************************************************************************************************
+ * Class to encapsulate information on a house that is for sale. It can be though of as the record
+ * a estate agent would keep about each of the properties managed
  *
- *************************************************/
+ * @author daniel, Adrian Carro
+ *
+ *************************************************************************************************/
 public class HouseSaleRecord extends HousingMarketRecord {
 	private static final long serialVersionUID = 8626260055548234106L;
 
-	private Config	config = Model.config;	// Passes the Model's configuration parameters object to a private field
+	//------------------//
+	//----- Fields -----//
+	//------------------//
 
-	/***********************************************
-	 * Construct a new record.
+    public House                    house;
+    ArrayList<HouseBuyerRecord>     matchedBids;
+    public double                   initialListedPrice;
+    public int                      tInitialListing; // Time of initial listing
+    private double                  houseSpecificYield;
+
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
+
+	/**
+	 * Construct a new record
 	 * 
-	 * @param h The house that is for sale.
-	 * @param price The initial list price for the house.
-	 ***********************************************/
+	 * @param h The house that is for sale
+	 * @param price The initial list price for the house
+	 */
 	public HouseSaleRecord(House h, double price) {
 		super(price);
 		house = h;
-//		setPrice(p);
 		initialListedPrice = price;
-//		quality = house.quality;
 		tInitialListing = Model.getTime();
-		matchedBids = new ArrayList<>(8);		// TODO: Check if this initial size of 8 is good enough or can be improved
-		recalcYield();
+		matchedBids = new ArrayList<>(8); // TODO: Check if this initial size of 8 is good enough or can be improved
+        recalculateHouseSpecificYield(price);
 	}
-	
-//	/***********************************************
-//	 * Set the list price to a given value,
-//	 * rounded to the nearest penny.
-//	 *
-//	 * @param p The list-price.
-//	 **********************************************/
-//	public void setPrice(double p) {
-//		price = Math.round(p*100.0)/100.0; // round to nearest penny
-//	}
 
-//	public double doubleValue() {
-//		return(currentPrice);
-//	}
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
+
+    /**
+     * Expected gross rental yield for this particular property, obtained by multiplying the average flow gross rental
+     * yield for houses of this quality in this particular region by the average sale price for houses of this quality
+     * in this region and dividing by the actual listed price of this property
+     */
+    private void recalculateHouseSpecificYield(double price) {
+        int q = house.getQuality();
+        if (price > 0) {
+            houseSpecificYield = Model.rentalMarketStats.getAvFlowYieldForQuality(q)
+                    *Model.housingMarketStats.getExpAvSalePriceForQuality(q)
+                    /price;
+        }
+    }
+
+    /**
+     * Record the match of the offer of this property with a bid
+     *
+     * @param bid The bid being matched to the offer
+     */
+    void matchWith(HouseBuyerRecord bid) { matchedBids.add(bid); }
+
+    //----- Getter/setter methods -----//
+
+    /**
+     * Quality of this property
+     */
+    @Override
+	public int getQuality() { return house.getQuality(); }
 	
-	@Override
-	public int getQuality() {
-		return(house.getQuality());
-	}
-	
-	/***
-	 * expected gross yield of this house (including expected vacancy period)
+	/**
+	 * Expected gross yield for this particular house, based on the current average flow yield and the actual listed
+     * price for the house, and taking into account both the quality and the expected occupancy levels
 	 */
 	@Override
-	public double getYield() {
-		return yield;
-	}
-	
-	/*** returns gross yield */
-//	public double getGrossYield() {
-//		return(getExpectedAnnualRent()/getPrice());
-//	}
-	
-	public double getExpectedAnnualRent() {
-		return(Model.houseRentalMarkets.getAverageSalePrice(house.getQuality())*config.constants.MONTHS_IN_YEAR);
-	}
+	public double getYield() { return houseSpecificYield; }
 
+    /**
+     * Set the listed price for this property
+     *
+     * @param newPrice The new listed price for this property
+     * @param auth Authority to change the price
+     */
 	public void setPrice(double newPrice, HousingMarket.Authority auth) {
 		super.setPrice(newPrice, auth);
-		recalcYield();
+        recalculateHouseSpecificYield(newPrice);
 	}
-
-	/**
-	 * Record a match of an offer with a bid
-	 * @param bid the bid being matched to the offer
-     */
-	public void matchWith(HouseBuyerRecord bid) {
-//		if(house.owner != bid.buyer) {
-			matchedBids.add(bid);
-//		}
-	}
-	
-	protected void recalcYield() {
-		int q = house.getQuality();
-		yield = Model.houseRentalMarkets.getExpectedGrossYield(q)*Model.houseSaleMarkets.getAverageSalePrice(q)/getPrice();
-	}
-	
-	public House 	house;
-	public double 	initialListedPrice;
-	public int		tInitialListing; // time of initial listing
-	public ArrayList<HouseBuyerRecord> matchedBids;
-	private double	yield;
 }

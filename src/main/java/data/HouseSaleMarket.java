@@ -1,47 +1,62 @@
 package data;
 
 import housing.Config;
-import housing.House;
 
 import housing.Model;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
-/***
- * This class contains the reference values for HPI and HPI distributions, as well as reference
- * price for each house quality
+/**************************************************************************************************
+ * Class to encapsulate the reference values for the housing price index, its distribution, as well
+ * as reference prices for each house quality band
  *
- * @author daniel
- */
+ * @author daniel, Adrian Carro
+ *
+ *************************************************************************************************/
 public class HouseSaleMarket {
 
-	// TODO: The whole of this class content can be easily moved to the HousingMarket or the HouseSaleMarket class in the housing package
+    //------------------//
+    //----- Fields -----//
+    //------------------//
 
-	private static Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
+	private static Config                   config = Model.config; // Passes the Model's configuration parameters object to a private field
+    // TODO: Replace this theoretical distribution with an updated version or with the real frequencies
+	private static LogNormalDistribution    listPriceDistribution
+                                                    = new LogNormalDistribution(config.derivedParams.HPI_LOG_MEDIAN,
+                                                            config.HPI_SHAPE);
+	private static double []                refPrice = setupRefPrice();
 
-	public static LogNormalDistribution listPriceDistribution = new LogNormalDistribution(config.derivedParams.HPI_LOG_MEDIAN, config.HPI_SHAPE);
-//	public static LogNormalDistribution buyToLetDistribution  = new LogNormalDistribution(Math.log(3.44), 1.050); // No. of houses owned by buy-to-let investors Source: ARLA review and index Q2 2014
-//	public static double P_INVESTOR = 0.04; 		// Prior probability of being (wanting to be) a property investor (should be 4%, 3% for stability for now)
-//	public static double SEASONAL_VOL_ADJ = 0.2; // amplitude of seasonal oscillation of volume of sales on market (approximated from HM Revenue and Customs UK Property Transactions Count - July 2015)
-	public static double [] refPrice = setupRefPrice();
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
 
 	/***
-	 * @param quality Quality of a house for sale
-	 * @return Reference price for that quality
+	 * @return refPrice Array of doubles with the reference price for each quality band
 	 */
-	static public double referencePrice(int quality) {
-		return(refPrice[quality]);
-	}
+	public static double [] getReferencePricePerQuality() { return refPrice; }
+
+    /***
+     * @return rentalRefPrice Array of doubles with the reference rental price for each quality band
+     */
+    // TODO: Replace this by a proper reference rental prices!!!
+    public static double [] getReferenceRentalPricePerQuality() {
+        double [] rentalRefPrice = new double[config.N_QUALITY];
+        for (int i = 0; i < config.N_QUALITY; i++) {
+            rentalRefPrice[i] = refPrice[i]/(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
+        }
+        return rentalRefPrice;
+    }
 
 	/**
 	 * @return Set up initial reference prices for each house quality
      */
-	static public double [] setupRefPrice() {
+	private static double [] setupRefPrice() {
 		double [] result = new double[config.N_QUALITY];
-		for(int q=0; q<config.N_QUALITY; ++q) {
-		    // TODO: Why to discount these initial price distribution with INITIAL_HPI (which is < 1)?
-			result[q] = config.INITIAL_HPI*listPriceDistribution.inverseCumulativeProbability((q+0.5)/config.N_QUALITY);
+		for(int q = 0; q < config.N_QUALITY; ++q) {
+		    // TODO: Why to discount this initial price distribution with INITIAL_HPI (which is < 1)?
+			result[q] = config.INITIAL_HPI
+                    *listPriceDistribution.inverseCumulativeProbability((q + 0.5)/config.N_QUALITY);
 		}
-		return(result);
+		return result;
 	}
 	
 /*

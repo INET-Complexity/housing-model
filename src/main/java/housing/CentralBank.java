@@ -22,12 +22,12 @@ public class CentralBank implements Serializable {
 		interestCoverRatioLimit = config.CENTRAL_BANK_MAX_ICR;
 	}
 	
-	/***
+	/**
 	 * This method implements the policy strategy of the Central Bank.
 	 * @param coreIndicators The current value of the core indicators
 	 */
 	public void step(collectors.CoreIndicators coreIndicators) {
-		/** Use this method to express the policy strategy of the central bank by
+		/* Use this method to express the policy strategy of the central bank by
 		 * setting the value of the various limits in response to the current
 		 * value of the core indicators.
 		 *
