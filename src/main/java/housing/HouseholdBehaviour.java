@@ -147,9 +147,9 @@ public class HouseholdBehaviour implements Serializable {
         // TODO: This if implies BTL agents never sell their homes, need to explain in paper!
         return !isPropertyInvestor() && (rand.nextDouble() < config.derivedParams.MONTHLY_P_SELL*(1.0
                 + config.DECISION_TO_SELL_ALPHA*(config.DECISION_TO_SELL_HPC
-                - Model.houseSaleMarket.getnHousesOnMarket()/Model.households.size()))
+                - (double)Model.houseSaleMarket.getnHousesOnMarket()/Model.households.size())
                 + config.DECISION_TO_SELL_BETA*(config.DECISION_TO_SELL_INTEREST
-                - Model.bank.getMortgageInterestRate()));
+                - Model.bank.getMortgageInterestRate())));
     }
 
 	/**
