@@ -199,12 +199,11 @@ public abstract class HousingMarket implements Serializable {
                 bids.addAll(offer.matchedBids.subList(winningBid + 1, offer.matchedBids.size()));
                 // Remove this offer from the offers priority queue, offersPQ, underlying the record iterator
                 removeOfferFromQueues(record, offer);
-
             // If there is only one match...
             } else if (nBids == 1) {
                 // ...complete successful transaction and record it into the corresponding housingMarketStats
                 completeTransaction(offer.matchedBids.get(0), offer);
-                // ...remove this offer from the offers priority queue, offersPQ, underlying the record iterator
+                // ...remove this offer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
                 removeOfferFromQueues(record, offer);
             }
             // Note that we skip the whole process if there are no matches
