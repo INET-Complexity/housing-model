@@ -200,7 +200,7 @@ public class Bank implements Serializable {
 			approval.principal = Math.min(approval.principal, affordable_principal);
 
 			// --- lti constraint
-			lti_principal = h.annualEmploymentIncome() * loanToIncome(h.isFirstTimeBuyer());
+			lti_principal = h.annualEmploymentIncome()*loanToIncome(h.isFirstTimeBuyer());
 			approval.principal = Math.min(approval.principal, lti_principal);
 		} else {
 			// --- BTL ICR constraint
@@ -210,12 +210,10 @@ public class Bank implements Serializable {
 		}
 		
 		approval.downPayment = housePrice - approval.principal;
-		
-		if(liquidWealth < approval.downPayment) {
-			System.out.println("Failed down-payment constraint: bank balance = " + liquidWealth + " Downpayment = "
+
+        if(liquidWealth < approval.downPayment) {
+			System.out.println("Failed down-payment constraint: bank balance = " + liquidWealth + " downpayment = "
                     + approval.downPayment);
-			System.out.println("isHome = "+isHome+" isFirstTimeBuyer = "+h.isFirstTimeBuyer());
-			approval.downPayment = liquidWealth;
 		}
 		// --- allow larger downpayments
 		if(desiredDownPayment < 0.0) desiredDownPayment = 0.0;
@@ -261,7 +259,7 @@ public class Bank implements Serializable {
 			pdi_max = liquidWealth + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF*
                     h.getMonthlyPostTaxIncome())/monthlyPaymentFactor(isHome);
 			max = Math.min(max, pdi_max);
-			lti_max = h.annualEmploymentIncome()* loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
+			lti_max = h.annualEmploymentIncome()*loanToIncome(h.isFirstTimeBuyer()) + liquidWealth;
 			max = Math.min(max, lti_max);
 		} else {
 			icr_max = Model.rentalMarketStats.getExpAvFlowYield()
@@ -272,7 +270,9 @@ public class Bank implements Serializable {
 				max = Math.min(max,  icr_max);
             }
         }
-        max = Math.floor(max*100.0)/100.0; // round down to nearest penny
+        // Floor the maximum mortgage to the nearest penny in order to avoid precision errors potentially leading to
+        // downpayments larger than the liquid wealth of the household
+        max = Math.floor(max*100.0)/100.0;
 
         return max;
 	}

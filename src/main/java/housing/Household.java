@@ -358,15 +358,16 @@ public class Household implements IHouseOwner, Serializable {
      * owning. 
      ********************************************************/
     private void bidForAHome() {
-        double maxMortgage = Model.bank.getMaxMortgage(this, true);
+        // Find household's desired housing expenditure
         double price = behaviour.getDesiredPurchasePrice(monthlyEmploymentIncome);
+        // Cap this expenditure to the maximum mortgage available to the household
+        price = Math.min(price, Model.bank.getMaxMortgage(this, true));
+        // Compare costs to decide whether to buy or rent...
         if(behaviour.decideRentOrPurchase(this, price)) {
-            if(price > maxMortgage - 1.0) {
-                // TODO: Why the need for the -1.0?
-                price = maxMortgage -1.0;
-            }
+            // ... if buying, bid in the house sale market for the capped desired price
             Model.houseSaleMarket.bid(this, price);
         } else {
+            // ... if renting, bid in the house rental market for the desired rent price
             Model.houseRentalMarket.bid(this, behaviour.desiredRent(this, monthlyEmploymentIncome));
         }
     }

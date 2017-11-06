@@ -100,7 +100,7 @@ public class HouseholdBehaviour implements Serializable {
 	}
 
 	/**
-     * Desired purchase price after having decided to buy a house
+     * Desired purchase price used to decide whether to buy a house
      *
 	 * @param monthlyIncome Monthly income of the household
 	 */
@@ -214,8 +214,6 @@ public class HouseholdBehaviour implements Serializable {
         double purchasePrice = Math.min(desiredPurchasePrice, Model.bank.getMaxMortgage(me, true));
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
                 decideDownPayment(me,purchasePrice), true);
-        // TODO: Probably need to introduce a region within the household (jobRegion? birthRegion?), such that we can
-        // TODO: here query that particular region...
         int newHouseQuality = Model.housingMarketStats.getMaxQualityForPrice(purchasePrice);
         if (newHouseQuality < 0) return false; // can't afford a house anyway
         double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR
@@ -349,7 +347,6 @@ public class HouseholdBehaviour implements Serializable {
 	public double btlPurchaseBid(Household me) {
 	    // TODO: What is this 1.1 factor? Another fudge parameter???????????????????????????
         // TODO: It prevents wealthy investors from offering more than 10% above the average price of top quality houses
-        // TODO: But also, it's going to lead to many BTL investors wanting to spend the same and focused on top qualities
 		return(Math.min(Model.bank.getMaxMortgage(me, false),
                 1.1*Model.housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY-1)));
 	}
@@ -373,7 +370,7 @@ public class HouseholdBehaviour implements Serializable {
     }
 
 	/**
-     * @returns expectation value of HPI in one year's time divided by today's HPI
+     * @return expectation value of HPI in one year's time divided by today's HPI
      */
 	public double getLongTermHPAExpectation() {
 		// Dampening or multiplier factor, depending on its value being <1 or >1, for the current trend of HPA when
