@@ -117,12 +117,14 @@ public class Config {
     int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
     double BANK_INITIAL_BASE_RATE;          // Bank initial base-rate (currently remains unchanged)
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
+    double BANK_MAX_FTB_LTV;                // Maximum LTV ratio that the private bank would allow for first-time-buyers
+    double BANK_MAX_OO_LTV;                 // Maximum LTV ratio that the private bank would allow for owner-occupiers
+    double BANK_MAX_BTL_LTV;                // Maximum LTV ratio that the private bank would allow for BTL investors
+    double BANK_MAX_FTB_LTI;                // Maximum LTI ratio that the private bank would allow for first-time-buyers (private bank's hard limit)
+    double BANK_MAX_OO_LTI;                 // Maximum LTI ratio that the private bank would allow for owner-occupiers (private bank's hard limit)
+
 
     // Central bank parameters
-    double CENTRAL_BANK_MAX_FTB_LTV;		    // Maximum LTV ratio that the bank would allow for first-time-buyers when not regulated
-    double CENTRAL_BANK_MAX_OO_LTV;		        // Maximum LTV ratio that the bank would allow for owner-occupiers when not regulated
-    double CENTRAL_BANK_MAX_BTL_LTV;	        // Maximum LTV ratio that the bank would allow for BTL investors when not regulated
-    double CENTRAL_BANK_FRACTION_OVER_MAX_LTV;  // Maximum fraction of mortgages that the bank can give over the LTV ratio limit
     double CENTRAL_BANK_MAX_FTB_LTI;		    // Maximum LTI ratio that the bank would allow for first-time-buyers when not regulated
     double CENTRAL_BANK_MAX_OO_LTI;		        // Maximum LTI ratio that the bank would allow for owner-occupiers when not regulated
     double CENTRAL_BANK_FRACTION_OVER_MAX_LTI;  // Maximum fraction of mortgages that the bank can give over the LTI ratio limit
@@ -234,10 +236,6 @@ public class Config {
 
     public boolean isMortgageDiagnosticsActive() {
         return MORTGAGE_DIAGNOSTICS_ACTIVE;
-    }
-
-    public double getCentralBankBTLStressedInterest() {
-        return CENTRAL_BANK_BTL_STRESSED_INTEREST;
     }
 
     public double getUKHouseholds() {

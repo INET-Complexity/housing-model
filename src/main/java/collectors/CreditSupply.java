@@ -66,7 +66,7 @@ public class CreditSupply extends CollectorBase {
 				if(approval.isBuyToLet) {
 					btl_ltv.addValue(100.0*approval.principal/housePrice);
 					double icr = Model.rentalMarketStats.getExpAvFlowYield()*approval.purchasePrice/
-                            (approval.principal*config.getCentralBankBTLStressedInterest());
+                            (approval.principal*Model.centralBank.getInterestCoverRatioStressedRate(false));
 					btl_icr.addValue(icr);
 				} else {
 					oo_ltv.addValue(100.0*approval.principal/housePrice);
@@ -83,12 +83,6 @@ public class CreditSupply extends CollectorBase {
     //TODO: Check which of these functions should be kept and which removed!
 	// ---- Mason stuff
 	// ----------------
-	public double getBaseRate() {
-		return Model.bank.getBaseRate();
-	}
-	public void setBaseRate(double rate) {
-		Model.bank.setBaseRate(rate);
-	}
 	
     public double [] getOOLTVDistribution() {return(oo_ltv.getValues());}
     public double [] getOOLTIDistribution() {return(oo_lti.getValues());}

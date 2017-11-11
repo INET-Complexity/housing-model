@@ -70,7 +70,7 @@ public class HouseSaleMarket extends HousingMarket {
 			if(bestOffer != null) {
 					double minDownpayment = bestOffer.getPrice()*(1.0
                             - Model.rentalMarketStats.getExpAvFlowYield()/
-                            (Model.bank.interestCoverageRatio()*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+                            (Model.centralBank.getInterestCoverRatioLimit(false)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
 					if(bid.buyer.getBankBalance() >= minDownpayment) {
 						return(bestOffer);
 					}

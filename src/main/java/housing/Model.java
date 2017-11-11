@@ -169,6 +169,7 @@ public class Model {
 		houseSaleMarket.init();
 		houseRentalMarket.init();
 		bank.init();
+		centralBank.init();
         housingMarketStats.init();
         rentalMarketStats.init();
         householdStats.init();
