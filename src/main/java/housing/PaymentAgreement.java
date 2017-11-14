@@ -2,34 +2,54 @@ package housing;
 
 import java.io.Serializable;
 
-/****************************************************
- * This class is created by a mortgage-lender when it approves a mortgage.
- * It acts as a convenient container of information pertaining to a
- * mortgage, and doubles up as a contract that represents the mortgage
- * itself.
- * 
- * @author daniel, davidrpugh
+/**************************************************************************************************
+ * Class to represent a payment contract in general, so as to include both mortgage and rental
+ * contracts. It keeps track of the monthly payments associated to the contract and the number of
+ * payments left.
  *
- ***************************************************/
+ * @author daniel, davidrpugh, Adrian Carro
+ *
+ *************************************************************************************************/
 public class PaymentAgreement implements Serializable {
 	private static final long serialVersionUID = -2680643507296169409L;
-	/********************************************
-	 * Updates internal variables to simulate a payment
-	 * being made (Does not move any assets from payer to payee).
-	 * 
-	 * @return The amount of the payment
-	 ********************************************/
+
+    //------------------//
+    //----- Fields -----//
+    //------------------//
+
+    int 		    nPayments;
+    public double 	monthlyPayment;
+
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
+
+    /**
+     * This method updates the internal variables to simulate a monthly payment being made, though it does not move any
+     * assets from payer to payee!
+     *
+     * @return The amount of the monthly payment
+     */
 	public double makeMonthlyPayment() {
-		if(nPayments == 0) return(0.0);
-		nPayments -= 1;
-		return(monthlyPayment);
+		if (nPayments == 0) {
+		    return 0.0;
+        } else {
+            nPayments -= 1;
+            return monthlyPayment;
+        }
 	}
-	
-	public double nextPayment() {
-		if(nPayments == 0) return(0.0);
-		return(monthlyPayment);
+
+	/**
+	 * Use this method to return the next monthly payment without actually making any payment nor updating the
+     * corresponding internal variables
+	 *
+	 * @return The amount of the next monthly payment
+	 */
+	double nextPayment() {
+		if (nPayments == 0) {
+		    return 0.0;
+        } else {
+		    return monthlyPayment;
+        }
 	}
-	
-	public int 		nPayments;
-	public double 	monthlyPayment;
 }

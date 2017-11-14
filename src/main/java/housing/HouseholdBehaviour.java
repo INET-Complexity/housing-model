@@ -237,28 +237,28 @@ public class HouseholdBehaviour implements Serializable {
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	
 	/**
-	 * Decide whether to sell an investment property.
+	 * Decide whether to sell an investment property
 	 * 
 	 * @param h The house in question
 	 * @param me The investor
-	 * @return Does an investor decide to sell a buy-to-let property (per month)
+	 * @return True if investor me decides to sell investment property h
 	 */
-	public boolean decideToSellInvestmentProperty(House h, Household me) {
-		if(me.nInvestmentProperties() < 2) return(false); // Always keep at least one property
-		double effectiveYield;
-		if(!h.isOnRentalMarket()) return(false); // don't sell while occupied by tenant
-		MortgageAgreement mortgage = me.mortgageFor(h);
+	boolean decideToSellInvestmentProperty(House h, Household me) {
+		if(me.nInvestmentProperties() < 2) return false; // Always keep at least one property
+		if(!h.isOnRentalMarket()) return false; // Don't sell while occupied by tenant
 		if(h.owner!=me){
-			System.out.println("Strange: deciding to sell investment property that I don't own");
-			return(false);
-		}
-		double marketPrice = Model.housingMarketStats.getExpAvSalePriceForQuality(h.getQuality());
-		// TODO: Why to call this "equity"? It is called "downpayment" in the article!
+            System.out.println("Strange: deciding to sell investment property that I don't own");
+            return false;
+        }
+        double marketPrice = Model.housingMarketStats.getExpAvSalePriceForQuality(h.getQuality());
+        // TODO: Why to call this "equity"? It is called "downpayment" in the article!
+        MortgageAgreement mortgage = me.mortgageFor(h);
         double equity = Math.max(0.01, marketPrice - mortgage.principal); // Dummy security parameter to avoid dividing by zero
 		double leverage = marketPrice/equity;
 		// TODO: ATTENTION ---> This rental yield is not accounting for expected occupancy
 		double rentalYield = h.rentalRecord.getPrice()*config.constants.MONTHS_IN_YEAR/marketPrice;
 		double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
+		double effectiveYield;
 		if(config.BTL_YIELD_SCALING) {
 			effectiveYield = leverage*((1.0 - BTLCapGainCoefficient)*rentalYield
                     + BTLCapGainCoefficient*(Model.rentalMarketStats.getLongTermExpAvFlowYield()

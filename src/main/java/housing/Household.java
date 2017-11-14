@@ -101,10 +101,10 @@ public class Household implements IHouseOwner, Serializable {
         monthlyEmploymentIncome = annualIncome()/config.constants.MONTHS_IN_YEAR;
         disposableIncome = getMonthlyPostTaxIncome()
                 - config.ESSENTIAL_CONSUMPTION_FRACTION * config.GOVERNMENT_INCOME_SUPPORT; // necessary consumption
-        for(PaymentAgreement payment : housePayments.values()) {
+        for(PaymentAgreement payment: housePayments.values()) {
             disposableIncome -= payment.makeMonthlyPayment();
         }
-        
+
         // --- consume based on disposable income after house payments
         // TODO: What? Does this mean only FTB consume?
         bankBalance += disposableIncome;
@@ -112,7 +112,7 @@ public class Household implements IHouseOwner, Serializable {
         if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(this);
         if(bankBalance < 0.0) { // Behaviour if household is bankrupt
             bankBalance = 1.0;    // TODO: cash injection for now...
-            if (Model.getTime()>1000) {
+            if (Model.getTime() > 1000) {
                 if (!isBankrupt) bankruptcies += 1;
                 isBankrupt = true;
             }
@@ -263,6 +263,7 @@ public class Household implements IHouseOwner, Serializable {
         if(sale.house.isOnRentalMarket()) {
             Model.houseRentalMarket.removeOffer(sale);
         }
+        // TODO: Warning, if bankBalance is not enough to pay mortgage back, then the house stays in housePayments, consequences to be checked!
         if(mortgage.nPayments == 0) {
             housePayments.remove(sale.house);
         }
