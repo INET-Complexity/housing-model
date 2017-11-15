@@ -25,9 +25,11 @@ public class HouseholdStats extends CollectorBase {
 	private int     nActiveBTL; // Number of BTL households with, at least, one BTL property
 	private int     nBTLOwnerOccupier; // Number of BTL households owning their home but without any BTL property
 	private int     nBTLHomeless; // Number of homeless BTL households
+    private int     nBTLBankruptcies; // Number of BTL households going bankrupt in a given time step
 	private int     nNonBTLOwnerOccupier; // Number of non-BTL households owning their home
 	private int     nRenting; // Number of (by definition, non-BTL) households renting their home
 	private int     nNonBTLHomeless; // Number of homeless non-BTL households
+    private int     nNonBTLBankruptcies; // Number of non-BTL households going bankrupt in a given time step
 
 	// Fields for summing annualised total incomes
 	private double  activeBTLAnnualisedTotalIncome;
@@ -45,9 +47,7 @@ public class HouseholdStats extends CollectorBase {
     /**
      * Initialises the household statistics collector
      */
-    public HouseholdStats() {
-        setActive(true);
-    }
+    public HouseholdStats() { setActive(true); }
 
     //-------------------//
     //----- Methods -----//
@@ -61,9 +61,11 @@ public class HouseholdStats extends CollectorBase {
         nActiveBTL = 0;
         nBTLOwnerOccupier = 0;
         nBTLHomeless = 0;
+        nBTLBankruptcies = 0;
         nNonBTLOwnerOccupier = 0;
         nRenting = 0;
         nNonBTLHomeless = 0;
+        nNonBTLBankruptcies = 0;
         activeBTLAnnualisedTotalIncome = 0.0;
         ownerOccupierAnnualisedTotalIncome = 0.0;
         rentingAnnualisedTotalIncome = 0.0;
@@ -77,19 +79,21 @@ public class HouseholdStats extends CollectorBase {
         nActiveBTL = 0;
         nBTLOwnerOccupier = 0;
         nBTLHomeless = 0;
+        nBTLBankruptcies = 0;
         nNonBTLOwnerOccupier = 0;
         nRenting = 0;
         nNonBTLHomeless = 0;
+        nNonBTLBankruptcies = 0;
         activeBTLAnnualisedTotalIncome = 0.0;
         ownerOccupierAnnualisedTotalIncome = 0.0;
         rentingAnnualisedTotalIncome = 0.0;
         homelessAnnualisedTotalIncome = 0.0;
         sumStockYield = 0.0;
-        // TODO: Print to screen and check all these numbers!
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
             if (h.behaviour.isPropertyInvestor()) {
                 ++nBTL;
+                if (h.isBankrupt()) nBTLBankruptcies += 1;
                 // Active BTL investors
                 if (h.nInvestmentProperties() > 0) {
                     ++nActiveBTL;
@@ -104,6 +108,7 @@ public class HouseholdStats extends CollectorBase {
                     homelessAnnualisedTotalIncome += h.getMonthlyPreTaxIncome();
                 }
             } else {
+                if (h.isBankrupt()) nNonBTLBankruptcies += 1;
                 // Non-BTL investors who own their house
                 if (h.isHomeowner()) {
                     ++nNonBTLOwnerOccupier;
@@ -139,9 +144,11 @@ public class HouseholdStats extends CollectorBase {
     public int getnActiveBTL() { return nActiveBTL; }
     public int getnBTLOwnerOccupier() { return nBTLOwnerOccupier; }
     public int getnBTLHomeless() { return nBTLHomeless; }
+    public int getnBTLBankruptcies() { return nBTLBankruptcies; }
     public int getnNonBTLOwnerOccupier() { return nNonBTLOwnerOccupier; }
     public int getnRenting() { return nRenting; }
     public int getnNonBTLHomeless() { return nNonBTLHomeless; }
+    public int getnNonBTLBankruptcies() { return nNonBTLBankruptcies; }
     public int getnOwnerOccupier() { return nBTLOwnerOccupier + nNonBTLOwnerOccupier; }
     public int getnHomeless() { return nBTLHomeless + nNonBTLHomeless; }
     public int getnNonOwner() { return nRenting + getnHomeless(); }

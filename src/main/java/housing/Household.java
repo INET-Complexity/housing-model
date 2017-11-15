@@ -17,13 +17,12 @@ import org.apache.commons.math3.random.MersenneTwister;
  *************************************************************************************************/
 
 public class Household implements IHouseOwner, Serializable {
+    private static final long   serialVersionUID = -5042897399316333745L;
 
     //------------------//
     //----- Fields -----//
     //------------------//
 
-    private static final long   serialVersionUID = -5042897399316333745L;
-    private static int          bankruptcies = 0; // TODO: Unused variable... counts bankruptcies, but it's never used!
     private static int          id_pool;
 
     public int                  id; // Only used for identifying households within the class MicroDataRecorder
@@ -55,6 +54,7 @@ public class Household implements IHouseOwner, Serializable {
         rand = Model.rand;    // Passes the Model's random number generator to a private field of each instance
         home = null;
         isFirstTimeBuyer = true;
+        isBankrupt = false;
         id = ++id_pool;
         age = householdAgeAtBirth;
         incomePercentile = rand.nextDouble();
@@ -62,24 +62,11 @@ public class Household implements IHouseOwner, Serializable {
         monthlyEmploymentIncome = annualIncome()/config.constants.MONTHS_IN_YEAR;
         bankBalance = behaviour.getDesiredBankBalance(this); // Desired bank balance is used as initial value for actual bank balance
         monthlyPropertyIncome = 0.0;
-        isBankrupt =false;
     }
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
-
-    public double getBankBalance() {
-        return bankBalance;
-    }
-
-    public House getHome() {
-        return home;
-    }
-
-    public Map<House, PaymentAgreement> getHousePayments() {
-        return housePayments;
-    }
 
     /////////////////////////////////////////////////////////
     // House market behaviour
@@ -97,6 +84,7 @@ public class Household implements IHouseOwner, Serializable {
     public void step() {
         double disposableIncome;
 
+        isBankrupt = false; // Delete bankruptcies from previous time step
         age += 1.0/config.constants.MONTHS_IN_YEAR;
         monthlyEmploymentIncome = annualIncome()/config.constants.MONTHS_IN_YEAR;
         disposableIncome = getMonthlyPostTaxIncome()
@@ -110,12 +98,10 @@ public class Household implements IHouseOwner, Serializable {
         bankBalance += disposableIncome;
         // TODO: What is the purpose of this if condition?
         if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(this);
+        // TODO: Need to improve bankruptcy procedures further than current simple cash injection
         if(bankBalance < 0.0) { // Behaviour if household is bankrupt
-            bankBalance = 1.0;    // TODO: cash injection for now...
-            if (Model.getTime() > 1000) {
-                if (!isBankrupt) bankruptcies += 1;
-                isBankrupt = true;
-            }
+            bankBalance = 1.0;
+            isBankrupt = true;
         }
         for(House h : housePayments.keySet()) {
             if(h.owner == this) manageHouse(h); // Manage all owned properties
@@ -493,9 +479,7 @@ public class Household implements IHouseOwner, Serializable {
     // Helpers
     /////////////////////////////////////////////////////////
 
-    public double getAge() {
-        return age;
-    }
+    public double getAge() { return age; }
 
     public boolean isHomeowner() {
         if(home == null) return(false);
@@ -507,13 +491,17 @@ public class Household implements IHouseOwner, Serializable {
         return(home.owner != this);
     }
 
-    public boolean isInSocialHousing() {
-        return(home == null);
-    }
+    public boolean isInSocialHousing() { return home == null; }
 
-    boolean isFirstTimeBuyer() {
-        return isFirstTimeBuyer;
-    }
+    boolean isFirstTimeBuyer() { return isFirstTimeBuyer; }
+
+    public boolean isBankrupt() { return isBankrupt; }
+
+    public double getBankBalance() { return bankBalance; }
+
+    public House getHome() { return home; }
+
+    public Map<House, PaymentAgreement> getHousePayments() { return housePayments; }
     
     /***
      * @return Number of properties this household currently has on the sale market
@@ -544,13 +532,9 @@ public class Household implements IHouseOwner, Serializable {
                 bankBalance * config.RETURN_ON_FINANCIAL_WEALTH);
     }
     
-    public double annualEmploymentIncome() {
-        return monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR;
-    }
+    public double annualEmploymentIncome() { return monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR; }
     
-    public int nInvestmentProperties() {
-        return(housePayments.size()-1);
-    }
+    public int nInvestmentProperties() { return housePayments.size() - 1; }
     
     /***
      * @return Current mark-to-market (with exponentially averaged prices per quality) equity in this household's home.

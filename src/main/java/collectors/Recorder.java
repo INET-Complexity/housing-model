@@ -41,9 +41,7 @@ public class Recorder {
     //----- Constructors -----//
     //------------------------//
 
-    public Recorder(String outputFolder) {
-        this.outputFolder = outputFolder;
-    }
+    public Recorder(String outputFolder) { this.outputFolder = outputFolder; }
 
     //-------------------//
     //----- Methods -----//
@@ -95,15 +93,17 @@ public class Recorder {
             outfile.println("Model time, "
                     // Number of households of each type
                     + "nNonBTLHomeless, nBTLHomeless, nHomeless, nRenting, nNonOwner, "
-                    + "nNonBTLOwnerOccupier, nBTLOwnerOccupier, nOwnerOccupier, nActiveBTL, nBTL, TotalPopulation, "
+                    + "nNonBTLOwnerOccupier, nBTLOwnerOccupier, nOwnerOccupier, nActiveBTL, nBTL, nNonBTLBankrupt, "
+                    + "nBTLBankrupt, TotalPopulation, "
                     // Numbers of houses of each type
                     + "HousingStock, nNewBuild, nUnsoldNewBuild, nEmptyHouses, BTLStockFraction, "
                     // House sale market data
-                    + "Sale HPI, Sale AnnualHPA, Sale AvBidPrice, Sale AvOfferPrice, Sale AvSalePrice, Sale AvDaysOnMarket, "
-                    + "Sale nBuyers, Sale nSellers, Sale nSales, Sale BTLSalesProportion, Sale FTBSalesProportion, "
+                    + "Sale HPI, Sale AnnualHPA, Sale AvBidPrice, Sale AvOfferPrice, Sale AvSalePrice, "
+                    + "Sale AvDaysOnMarket, Sale nBuyers, Sale nSellers, Sale nSales, Sale BTLSalesProportion, "
+                    + "Sale FTBSalesProportion, "
                     // Rental market data
-                    + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, Rental AvDaysOnMarket, "
-                    + "Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
+                    + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
+                    + "Rental AvDaysOnMarket, Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
                     + "nRegisteredMortgages");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
@@ -161,6 +161,8 @@ public class Recorder {
                 Model.householdStats.getnOwnerOccupier() + ", " +
                 Model.householdStats.getnActiveBTL() + ", " +
                 Model.householdStats.getnBTL() + ", " +
+                Model.householdStats.getnNonBTLBankruptcies() + ", " +
+                Model.householdStats.getnBTLBankruptcies() + ", " +
                 Model.households.size() + ", " +
                 // Numbers of houses of each type
                 Model.construction.getHousingStock() + ", " +
