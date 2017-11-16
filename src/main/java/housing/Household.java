@@ -115,7 +115,7 @@ public class Household implements IHouseOwner, Serializable {
                 bidForAHome();
             }            
         } else if(behaviour.isPropertyInvestor()) {
-            if(behaviour.decideToBuyBuyToLet(this)) {
+            if(behaviour.decideToBuyInvestmentProperty(this)) {
                 Model.houseSaleMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
             }
         } else if (!isHomeowner()){
