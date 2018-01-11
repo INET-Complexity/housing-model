@@ -8,10 +8,12 @@ import java.util.TreeSet;
 /**************************************************************************************************
  * Class that implements a 2-dimensional priority queue: The items in the queue have two unrelated
  * orderings, X and Y. For a given p, we can extract the object with the Y-greatest entry that is
- * not X-greater than p
- *
- * Extraction has amortised complexity of O(sqrt(N))
- * Insertion has complexity O(log(N))
+ * not X-greater than p. The class basically consists of two TreeSets:
+ *     - xySortedElements: TreeSet containing all elements added to the priority queue ordered in
+ *     ascending X-dimension and, for equal X, in descending Y-dimension
+ *     - uncoveredElements: TreeSet containing a subset of the elements at xySortedElements such
+ *     that no other elements at xySortedElements are X-less while being also Y-greater or equal.
+ *     These elements are, at the same time, X-sorted and Y-sorted.
  *
  * Objects inserted into PriorityQueue2D must implement the interface PriorityQueue2D.XYComparator
  *
@@ -21,182 +23,193 @@ import java.util.TreeSet;
 public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
 	private static final long serialVersionUID = -2371013046862291303L;
 
-    //------------------//
-    //----- Fields -----//
-    //------------------//
+	//------------------//
+	//----- Fields -----//
+	//------------------//
 
-    private TreeSet<E>          uncoveredElements; // x-sorted (price). Elements such that one cannot find cheaper for the same or higher quality/yield
-    private TreeSet<E>          ySortedElements; // y-sorted (quality normal buyers, yield for BTL investors)
-    private XYComparator<E>     comparator;
+	private TreeSet<E>       	xySortedElements; // X-sorted set of elements with reverse Y-sorting for equal X
+	private TreeSet<E>          uncoveredElements; // X-sorted set of uncovered elements
+	private XYComparator<E>     comparator;
 
-    //------------------------//
-    //----- Constructors -----//
-    //------------------------//
+	//------------------------//
+	//----- Constructors -----//
+	//------------------------//
 
-    public PriorityQueue2D(XYComparator<E> iComparator) {
-        comparator = iComparator;
-        uncoveredElements = new TreeSet<>(this.new XComparator());
-        ySortedElements = new TreeSet<>(this.new YComparator());
-    }
+	public PriorityQueue2D(XYComparator<E> comparator) {
+		this.comparator = comparator;
+		xySortedElements = new TreeSet<>(new XYComparatorClass());
+		uncoveredElements = new TreeSet<>(new XYComparatorClass());
+	}
 
-    //----------------------//
-    //----- Subclasses -----//
-    //----------------------//
+	//----------------------//
+	//----- Subclasses -----//
+	//----------------------//
 
-    /**
-     * Interface for the XYComparator, to be implemented by the objects to be inserted in the PriorityQueue2D
-     */
+	/**
+	 * Interface for the XYComparator, to be implemented by the objects to be inserted in the PriorityQueue2D
+	 */
 	public interface XYComparator<T> extends Serializable {
 		/**
-		 * @return -1 or 1 if arg0 is, respectively, less than or greater than arg1 (arg0 == arg1 is solved by comparing
-         *         object Id's)
+		 * @return -1 or 1 if arg0 is, respectively, X-less than or X-greater than arg1 solving the arg0 == arg1 case by
+		 * reverse comparing along the Y dimension and comparing their Id's if they also have the same Y-measure
 		 */
-        int XCompare(T arg0, T arg1);
+		int XYCompare(T arg0, T arg1);
+		/**
+		 * @return -1, 0 or 1 if arg0 is, respectively, Y-less than, Y-equal to, or Y-greater than arg1
+		 */
 		int YCompare(T arg0, T arg1);
 	}
 
-	public class XComparator implements Comparator<E>, Serializable {
-		private static final long serialVersionUID = -264394909715934581L;
-		public int compare(E arg0, E arg1) { return comparator.XCompare(arg0, arg1); }
+	/**
+	 * Class to encapsulate the XYCompare method at XYComparator such that it can be passed as an argument to the
+	 * TreeSet constructor
+	 */
+	public class XYComparatorClass implements Comparator<E> {
+		public int compare(E arg0, E arg1) { return comparator.XYCompare(arg0, arg1); }
 	}
 
-	public class YComparator implements Comparator<E>, Serializable {
-		private static final long serialVersionUID = 175936399605372278L;
-		public int compare(E arg0, E arg1) { return comparator.YCompare(arg0, arg1); }
+	/**
+	 * Iterator through the XY-sorted elements of xySortedElements. This needs to be re-implemented here in order to
+	 * override the remove method so as to remove the given element also from uncoveredElements set
+	 */
+	public class Iter implements Iterator<E> {
+		// Fields
+		Iterator<E> it;
+		E last;
+		// Constructors
+		Iter() { it = xySortedElements.iterator(); }
+		// Methods
+		@Override
+		public boolean hasNext() { return it.hasNext(); }
+		@Override
+		public E next() {
+			last = it.next();
+			return last;
+		}
+		@Override
+		public void remove() {
+			it.remove();
+			if (last != null) removeFromUncovered(last);
+		}
 	}
 
-    /**
-     * Iterator through the y-sorted elements of the PriorityQueue2D (i.e., through the elements of ySortedElements)
-     */
-    public class Iter implements Iterator<E> {
-        // Fields
-        Iterator<E> it;
-        public E last;
-        // Constructors
-        Iter() { it = PriorityQueue2D.this.ySortedElements.iterator(); }
-        // Methods
-        @Override
-        public boolean hasNext() { return it.hasNext(); }
-        @Override
-        public E next() {
-            last = it.next();
-            return last;
-        }
-        @Override
-        public void remove() {
-            it.remove();
-            if(last != null) PriorityQueue2D.this.removeFromUncovered(last);
-        }
-    }
+	//-------------------//
+	//----- Methods -----//
+	//-------------------//
 
-    //-------------------//
-    //----- Methods -----//
-    //-------------------//
-	
-	public boolean add(E element) {
-		ySortedElements.add(element);
-		if(isUncovered(element)) {
+	/**
+	 * Adds the new element to the XY-sorted TreeSet, xySortedElements
+	 *
+	 * @param element Object to be added
+	 */
+
+	public void add(E element) {
+		// Add element to the XY-sorted TreeSet
+		xySortedElements.add(element);
+	}
+
+	/**
+	 * Fill uncoveredElements TreeSet from the xySortedElements TreeSet
+	 */
+	public void sortPriorities() {
+		E element;
+		E lastElementAdded = null; // Initialising with null here just to avoid warning of possible non-initialisation
+		// Iterate over the elements at xySortedElements
+		Iterator<E> iterator = new Iter();
+		// By definition, the first element at xySortedElements, X-least element which is also Y-greatest for equal X,
+		// is uncovered
+		if (iterator.hasNext()) {
+			element = iterator.next();
 			uncoveredElements.add(element);
-			// Remove any members of uncoveredElements that are covered by the new element
-			E nextHigher = uncoveredElements.higher(element);
-			while(nextHigher != null && comparator.YCompare(element, nextHigher) == 1) {
-				uncoveredElements.remove(nextHigher);
-				nextHigher = uncoveredElements.higher(element);
+			lastElementAdded = element;
+		}
+		// Continue iterating through the rest of elements at xySortedElements...
+		while (iterator.hasNext()) {
+			element = iterator.next();
+			// ...and adding them to the uncoveredElements set only if they are strictly Y-greater than the last element
+			// added
+			if (comparator.YCompare(element, lastElementAdded) == 1) {
+				uncoveredElements.add(element);
+				lastElementAdded = element;
 			}
 		}
-		return true;
-	}
-	
-	/**
-	 * Finds and removes the object that is the Y-greatest entry that is not X-greater than xGreatestBoundary.
-	 * 
-	 * @param xGreatestBoundary - object that defines the X value we can't go above
-	 * @return the Y-greatest entry that is not X-greater than xGreatestBoundary.
-	 */
-	public E poll(E xGreatestBoundary) {
-		E head = peek(xGreatestBoundary);
-		if(head == null) return(null);
-		ySortedElements.remove(head);
-		removeFromUncovered(head);
-		return(head);
 	}
 
 	/**
-	 * Finds the object that is the Y-greatest entry that is not  X-greater than xGreatestBoundary, leaving the object
-     * in the collection.
-	 * 
-	 * @param xGreatestBoundary - object that defines the X value we can't go above
-	 * @return the Y-greatest entry that is not X-greater than xGreatestBoundary.
+	 * Find the Y-greatest element that is not X-greater than xGreatestBoundary
+	 *
+	 * @param xGreatestBoundary Element that defines the X value we can't go above
 	 */
 	public E peek(E xGreatestBoundary) {
-		return(uncoveredElements.floor(xGreatestBoundary));
+		return uncoveredElements.floor(xGreatestBoundary);
 	}
-	
-	@SuppressWarnings("unchecked")
-	public boolean remove(E element) {
-		ySortedElements.remove(element);
-		removeFromUncovered(element);
-		return(true);
-	}
-	
+
 	/**
-	 * Removes element from the set of uncovered elements. Removing an uncovered element may uncover other elements,
-	 * which then need to be added to the uncoveredElements container. Potentially uncovered elements are the ones that
-     * were covered by the removed element but not covered by the element's x-neighbours in the set of uncovered
-     * elements
-	 * 
-	 * @param element Element to remove (must be an uncovered member of this set)
+	 * Removes element both from the xySortedElements and the uncoveredElements TreeSets
+	 *
+	 * @param element Element to remove
+	 */
+	public void remove(E element) {
+		xySortedElements.remove(element);
+		removeFromUncovered(element);
+	}
+
+	/**
+	 * Removes element from the uncoveredElements TreeSet. Removing an uncovered element may uncover other elements,
+	 * which then need to be added to the uncoveredElements container. Potentially new uncovered elements are those that
+	 * lie in the xySortedElements TreeSet strictly between the element to be removed and the next uncovered element.
+	 *
+	 * @param element Element to remove (must be an uncovered element)
 	 */
 	private void removeFromUncovered(E element) {
-		if(!uncoveredElements.remove(element)) return;
-		if(ySortedElements.size() == 0) return;
-		boolean inclusive = false;
-		E nextxLower = uncoveredElements.lower(element);
-		if(nextxLower == null) { // we're removing the x-lowest uncovered element
-			inclusive = true;
-			nextxLower = ySortedElements.first();
-			if(comparator.YCompare(element, nextxLower) == -1) { // element was the y-least element, which doesn't cover anything
-				return;
+		// If element is not uncovered, do nothing, otherwise, remove element from uncoveredElements and continue
+		if (!uncoveredElements.remove(element)) return;
+		// If it was the last element within the PriorityQueue2D, do nothing, otherwise, continue
+		if(xySortedElements.size() == 0) return;
+		// Find the next uncovered element, i.e., the least uncovered element strictly greater than the removed element
+		E nextHigher = uncoveredElements.higher(element);
+		// Find the previous uncovered element, i.e., the greatest uncovered element strictly less than the removed
+		// element and store it as initial lastElementAdded
+		E lastElementAdded = uncoveredElements.lower(element);
+		// If there is no previous uncovered element (nextLower is null), then add the new first element at
+		// xySortedElements as uncovered, as the X-least element which is also Y-greatest for equal X is always
+		// uncovered, and store it as initial lastElementAdded
+		if (lastElementAdded == null) {
+			lastElementAdded = xySortedElements.first();
+			uncoveredElements.add(lastElementAdded);
+		}
+		// If there is no next uncovered element (nextHigher is null)...
+		if (nextHigher == null) {
+			// ...then loop through all the elements of the xySortedElements set which are greater than the removed
+			// element...
+			for (E e: xySortedElements.tailSet(element, false)) {
+				// ...adding them to the uncoveredElements set only if they are strictly Y-greater than the last element
+				// added
+				if (comparator.YCompare(e, lastElementAdded) == 1) {
+					uncoveredElements.add(e);
+					lastElementAdded = e;
+				}
 			}
-		}
-		E nextxHigher = uncoveredElements.higher(element);
-		if(nextxHigher == null) { // removing the highest uncovered element (must be the last element of ySortedElements)
-			nextxHigher = ySortedElements.last();
-			uncoveredElements.add(nextxHigher);
-		}
-		if(comparator.YCompare(nextxLower, element) == 1) {
-			System.out.println("From = " + nextxLower + " to = " + element + " compare = "
-                    + comparator.YCompare(nextxLower, element));
-		}
-		for(E e : ySortedElements.subSet(nextxLower, inclusive, element, true).descendingSet()) {
-			if(comparator.XCompare(e, nextxHigher) == -1) {
-				uncoveredElements.add(e);
-				nextxHigher = e;
+			// Otherwise...
+		} else {
+			// ...loop through the elements of the xySortedElements set which are greater than the removed element and
+			// less than the next higher uncovered element...
+			for (E e: xySortedElements.subSet(element, false, nextHigher, false)) {
+				// ...adding them to the uncoveredElements set only if they are strictly Y-greater than the last element
+				// added
+				if (comparator.YCompare(e, lastElementAdded) == 1) {
+					uncoveredElements.add(e);
+					lastElementAdded = e;
+				}
 			}
 		}
 	}
-	
-	/**
-	 * An element, a, is said to be "covered" by and element, b, if and only if b is Y-greater than a and b is X-less
-     * than a
-	 *
-	 * By construction, if a is covered by an element it must also be covered by an uncovered element
-	 * 
-	 * @param element element to check if it is covered by existing uncovered elements
-	 * @return true if there doesn't exist an element in the queue that is both Y-greater and X-less than the given
-     *         element
-	 */
-	private boolean isUncovered(E element) {
-        E nextLower = uncoveredElements.lower(element);
-        return nextLower == null || comparator.YCompare(nextLower, element) == -1;
-    }
-	
-	public int size() { return ySortedElements.size(); }
-	public int uncoveredSize() { return uncoveredElements.size(); }
-	public boolean contains(E element) { return ySortedElements.contains(element); }
+
+	public int size() { return xySortedElements.size(); }
+
 	public void clear() {
 		uncoveredElements.clear();
-		ySortedElements.clear();
+		xySortedElements.clear();
 	}
 
 	@Override
