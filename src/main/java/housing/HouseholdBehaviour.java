@@ -23,7 +23,6 @@ public class HouseholdBehaviour implements Serializable {
     private boolean                 BTLInvestor;
     private double                  BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
     private double                  propensityToSave;
-    private double                  desiredBankBalance; // TODO: Do we even need this variable?
     private LogNormalDistribution   downpaymentDistFTB; // Size distribution for downpayments of first-time-buyers
     private LogNormalDistribution   downpaymentDistOO; // Size distribution for downpayments of owner-occupiers
 
@@ -60,55 +59,55 @@ public class HouseholdBehaviour implements Serializable {
         } else {
             BTLInvestor = false;
         }
-		desiredBankBalance = -1.0;
 	}
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
 
+    //----- General behaviour -----//
+
+	/**
+	 * Compute the monthly non-essential or optional consumption by a household. It is calibrated so that the output
+     * wealth distribution fits the ONS wealth data for Great Britain.
+	 *
+	 * @param bankBalance Household's liquid wealth
+     * @param annualGrossTotalIncome Household's annual gross total income
+	 */
+	double getDesiredConsumption(double bankBalance, double annualGrossTotalIncome) {
+		return config.CONSUMPTION_FRACTION*Math.max(bankBalance - getDesiredBankBalance(annualGrossTotalIncome), 0.0);
+	}
+
+	/**
+     * Minimum bank balance each household is willing to have at the end of the month for the whole population to match
+     * the wealth distribution obtained from the household survey (LCFS). In particular, in line with the Wealth and
+     * Assets Survey, we model the relationship between liquid wealth and gross annual income as log-normal. This
+     * desired bank balance will be then used to determine non-essential consumption.
+     * TODO: Relationship described as log-normal here but power-law implemented! Dan's version of article described the
+     * TODO: the distributions of gross income and of liquid wealth as log-normal, not their relationship. Change paper!
+     *
+	 * @param annualGrossTotalIncome Household
+     */
+	double getDesiredBankBalance(double annualGrossTotalIncome) {
+		return Math.exp(config.DESIRED_BANK_BALANCE_ALPHA
+                + config.DESIRED_BANK_BALANCE_BETA*Math.log(annualGrossTotalIncome) + propensityToSave);
+	}
+
     //----- Owner-Occupier behaviour -----//
 
 	/**
-	 * Monthly non-essential or optional consumption by a household. It is calibrated so that the output wealth
-     * distribution fits the ONS wealth data for Great Britain.
-	 *
-	 * @param me Household
-	 */
-	double getDesiredConsumption(Household me) {
-		return config.CONSUMPTION_FRACTION*Math.max(me.getBankBalance() - getDesiredBankBalance(me), 0.0);
-	}
-
-	/**
-     * Minimum bank balance a household would like to have at the end of the month. Used to determine non-essential
-     * consumption.
-     *
-	 * @param me Household
-     */
-	double getDesiredBankBalance(Household me) {
-        // TODO: why only if desired bank balance is set to -1? (does this get calculated only once? why?)
-		if(desiredBankBalance == -1.0) {
-			double lnDesiredBalance = config.DESIRED_BANK_BALANCE_ALPHA
-                    + config.DESIRED_BANK_BALANCE_BETA
-                        * Math.log(me.getMonthlyPreTaxIncome()*config.constants.MONTHS_IN_YEAR) + propensityToSave;
-			desiredBankBalance = Math.exp(lnDesiredBalance);
-			// TODO: What is this next rule? Not declared in the article! Check if 0.3 should be included as a parameter
-			if(me.incomePercentile < 0.3 && !isPropertyInvestor()) desiredBankBalance = 1.0;
-			// TODO: Note that this rule makes poor investors save more... could affect final wealth distributions!
-		}
-		return desiredBankBalance;
-	}
-
-	/**
-     * Desired purchase price used to decide whether to buy a house
+     * Desired purchase price used to decide whether to buy a house and how much to bid for it
      *
 	 * @param monthlyIncome Monthly income of the household
 	 */
 	double getDesiredPurchasePrice(double monthlyIncome) {
+	    // TODO: This product is generally so small that it barely has any impact on the results, need to rethink if
+        // TODO: it is necessary and if this small value makes any sense
         double HPAFactor = config.BUY_WEIGHT_HPA*getLongTermHPAExpectation();
         // TODO: The capping of this factor intends to avoid negative and too large desired prices, the 0.9 is a
         // TODO: purely artificial fudge parameter. This formula should be reviewed and changed!
         if (HPAFactor > 0.9) HPAFactor = 0.9;
+        // TODO: Note that wealth is not used here, but only employmentIncome (as monthlyIncome refers here to monthlyGrossEmploymentIncome)
 		return config.BUY_SCALE*config.constants.MONTHS_IN_YEAR*monthlyIncome
                 *Math.exp(config.BUY_EPSILON*rand.nextGaussian())
                 /(1.0 - HPAFactor);
@@ -172,7 +171,6 @@ public class HouseholdBehaviour implements Serializable {
 			downpayment = housePrice*(Math.max(0.0,
 					config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON*rand.nextGaussian()));
 		} else {
-		    // TODO: Downpayments for inactive BTL investors (who are actually OO) should behave as for OO...
 			downpayment = Model.housingMarketStats.getHPI()*downpaymentDistOO.inverseCumulativeProbability(Math.max(0.0,
                     (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		}
@@ -213,7 +211,7 @@ public class HouseholdBehaviour implements Serializable {
         if(isPropertyInvestor()) return(true);
         double purchasePrice = Math.min(desiredPurchasePrice, Model.bank.getMaxMortgage(me, true));
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
-                decideDownPayment(me,purchasePrice), true);
+                decideDownPayment(me, purchasePrice), true);
         int newHouseQuality = Model.housingMarketStats.getMaxQualityForPrice(purchasePrice);
         if (newHouseQuality < 0) return false; // can't afford a house anyway
         double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR
@@ -228,8 +226,8 @@ public class HouseholdBehaviour implements Serializable {
 	 * Decide how much to bid on the rental market
 	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
 	 ********************************************************/
-	public double desiredRent(Household me, double monthlyIncome) {
-		return(monthlyIncome * config.DESIRED_RENT_INCOME_FRACTION);
+	double desiredRent(Household me, double monthlyIncome) {
+	    return monthlyIncome*config.DESIRED_RENT_INCOME_FRACTION;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -303,11 +301,11 @@ public class HouseholdBehaviour implements Serializable {
         if (me.nInvestmentProperties() < 1) { return true ; }
         // ...never buy (keep on saving) if bank balance is below the household's desired bank balance
         // TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
-        if (me.getBankBalance() < getDesiredBankBalance(me)*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
+        if (me.getBankBalance() < getDesiredBankBalance(me.getAnnualGrossTotalIncome())*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
         // ...find maximum price (maximum mortgage) the household could pay
         double maxPrice = Model.bank.getMaxMortgage(me, false);
         // ...never buy if that maximum price is below the average price for the lowest quality
-        if (maxPrice < Model.housingMarketStats.getExpAvSalePriceForQuality(0)) return false;
+        if (maxPrice < Model.housingMarketStats.getExpAvSalePriceForQuality(0)) { return false; }
 
         // Find the expected equity yield rate for a hypothetical house maximising the leverage available to the
         // household and assuming an average rental yield (over all qualities). This is found as a weighted mix of both

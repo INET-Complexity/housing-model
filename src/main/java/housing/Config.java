@@ -136,8 +136,8 @@ public class Config {
     double CONSTRUCTION_HOUSES_PER_HOUSEHOLD;   // Target ratio of houses per household
 
     // Government parameters
-    double GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT; // Maximum personal allowance
-    double GOVERNMENT_INCOME_SUPPORT;           // Minimum monthly earnings for a married couple from income support
+    double GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT;         // Maximum personal allowance
+    public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;    // Minimum monthly earnings for a married couple from income support
 
     // Collectors parameters
     double UK_HOUSEHOLDS;                       // Approximate number of households in UK, used to scale up results for core indicators
@@ -149,7 +149,7 @@ public class Config {
     public String DATA_TAX_RATES;                   // Address for tax bands and rates data
     public String DATA_NATIONAL_INSURANCE_RATES;    // Address for national insurance bands and rates data
 
-    // Data addresses: Lifecycle
+    // Data addresses: EmploymentIncome
     public String DATA_INCOME_GIVEN_AGE;            // Address for conditional probability of income band given age band
 
     // Data addresses: Demographics
@@ -360,7 +360,7 @@ public class Config {
     private void setDerivedParams() {
         // Housing market parameters
         derivedParams.HPI_RECORD_LENGTH = HPA_YEARS_TO_CHECK*constants.MONTHS_IN_YEAR + 3;  // Plus three months in a quarter
-        derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/constants.DAYS_IN_MONTH;
+        derivedParams.MONTHS_UNDER_OFFER = (double)DAYS_UNDER_OFFER/constants.DAYS_IN_MONTH;
         derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from, and provide explanation for this formula
         derivedParams.E = Math.exp(-1.0/derivedParams.T);           // TODO: Provide explanation for this formula
         derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);     // TODO: Provide explanation for this formula
