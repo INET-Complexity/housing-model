@@ -99,13 +99,16 @@ public class Recorder {
                     + "HousingStock, nNewBuild, nUnsoldNewBuild, nEmptyHouses, BTLStockFraction, "
                     // House sale market data
                     + "Sale HPI, Sale AnnualHPA, Sale AvBidPrice, Sale AvOfferPrice, Sale AvSalePrice, "
-                    + "Sale AvDaysOnMarket, Sale nBuyers, Sale nSellers, Sale nSales, Sale BTLSalesProportion, "
+                    + "Sale AvDaysOnMarket, Sale ExpAvDaysOnMarket, Sale nBuyers, Sale nBTLBuyers, Sale nSellers, "
+                    + "Sale nNewSellers, Sale nBTLSellers, Sale nSales, Sale BTLSalesProportion, "
                     + "Sale FTBSalesProportion, "
                     // Rental market data
                     + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
                     + "Rental AvDaysOnMarket, Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
-                    + "nRegisteredMortgages");
+                    + "nRegisteredMortgages, "
+                    // Stuff to remove
+                    + "ExAvSalePrice");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -177,8 +180,12 @@ public class Recorder {
                 Model.housingMarketStats.getAvOfferPrice() + ", " +
                 Model.housingMarketStats.getAvSalePrice() + ", " +
                 Model.housingMarketStats.getAvDaysOnMarket() + ", " +
+                Model.housingMarketStats.getExpAvDaysOnMarket() + ", " +
                 Model.housingMarketStats.getnBuyers() + ", " +
+                Model.housingMarketStats.getnBTLBuyers() + ", " +
                 Model.housingMarketStats.getnSellers() + ", " +
+                Model.housingMarketStats.getnNewSellers() + ", " +
+                Model.housingMarketStats.getnBTLSellers() + ", " +
                 Model.housingMarketStats.getnSales() + ", " +
                 Model.housingMarketStats.getBTLSalesProportion() + ", " +
                 Model.housingMarketStats.getFTBSalesProportion() + ", " +
@@ -194,7 +201,9 @@ public class Recorder {
                 Model.rentalMarketStats.getnSales() + ", " +
                 Model.rentalMarketStats.getExpAvFlowYield() + ", " +
                 // Credit data
-                Model.creditSupply.getnRegisteredMortgages());
+                Model.creditSupply.getnRegisteredMortgages() + ", " +
+                // Stuff to remove
+                Model.housingMarketStats.getExpAvSalePrice());
     }
 
     public void finishRun(boolean recordCoreIndicators) {

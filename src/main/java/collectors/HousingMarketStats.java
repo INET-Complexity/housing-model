@@ -26,7 +26,10 @@ public class HousingMarketStats extends CollectorBase {
 
 	// Variables computed before market clearing
 	private int                     nBuyers;
+    private int                     nBTLBuyers;
 	private int                     nSellers;
+    private int                     nNewSellers;
+    private int                     nBTLSellers;
 	private double                  sumBidPrices;
 	private double                  sumOfferPrices;
 	private double []               offerPrices;
@@ -139,7 +142,27 @@ public class HousingMarketStats extends CollectorBase {
 
         // Re-initialise to zero variables computed before market clearing
         nBuyers = market.getBids().size();
+        nBTLBuyers = 0;
+        for (HouseBuyerRecord bid: market.getBids()) {
+            if (bid.buyer.behaviour.isPropertyInvestor() && bid.buyer.getHome() != null) {
+                nBTLBuyers++;
+            }
+        }
         nSellers = market.getOffersPQ().size();
+        nNewSellers = 0;
+        nBTLSellers = 0;
+        for (HousingMarketRecord element: market.getOffersPQ()) {
+            HouseSaleRecord offer = (HouseSaleRecord)element;
+            if (offer.tInitialListing == Model.getTime()) {
+                nNewSellers++;
+            }
+            if (offer.house.owner != Model.construction) {
+                Household h = (Household)offer.house.owner;
+                if (h.behaviour.isPropertyInvestor()) {
+                    nBTLSellers++;
+                }
+            }
+        }
         sumBidPrices = 0.0;
         sumOfferPrices = 0.0;
         offerPrices = new double[nSellers];
@@ -299,7 +322,10 @@ public class HousingMarketStats extends CollectorBase {
 
     // Getters for variables computed before market clearing
     int getnBuyers() { return nBuyers; }
+    int getnBTLBuyers() { return nBTLBuyers; }
     int getnSellers() { return nSellers; }
+    int getnNewSellers() { return nNewSellers; }
+    int getnBTLSellers() { return nBTLSellers; }
     int getnUnsoldNewBuild() { return nUnsoldNewBuild; }
     double getSumBidPrices() { return sumBidPrices; }
     double getSumOfferPrices() { return sumOfferPrices; }
@@ -322,6 +348,15 @@ public class HousingMarketStats extends CollectorBase {
     public double getExpAvDaysOnMarket() { return expAvDaysOnMarket; }
     public double [] getExpAvSalePricePerQuality() { return expAvSalePricePerQuality; }
     public double getExpAvSalePriceForQuality(int quality) { return expAvSalePricePerQuality[quality]; }
+    public double getExpAvSalePrice() {
+        double sum = 0.0;
+        int n = 0;
+        for (double element: expAvSalePricePerQuality) {
+            sum += element;
+            n++;
+        }
+        return sum/n;
+    }
     public double getHPI() { return housePriceIndex; }
     public DescriptiveStatistics getHPIRecord() { return HPIRecord; }
     public double getAnnualHPA() { return annualHousePriceAppreciation; }
