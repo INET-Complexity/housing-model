@@ -156,7 +156,7 @@ public class Bank implements Serializable {
 			Model.creditSupply.recordLoan(h, approval, house);
             if(isHome) {
                 ++nOOMortgages;
-                if(approval.principal/h.annualEmploymentIncome() >
+                if(approval.principal/h.getAnnualGrossEmploymentIncome() >
                         Model.centralBank.getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)) {
                     ++nOOMortgagesOverLTI;
 				}
@@ -188,12 +188,12 @@ public class Bank implements Serializable {
 
 		if(isHome) {
 			// --- affordability constraint TODO: affordability for BTL?
-			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyPostTaxIncome())
+			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyNetTotalIncome())
                     / getMonthlyPaymentFactor(isHome);
 			approval.principal = Math.min(approval.principal, affordable_principal);
 
 			// --- lti constraint
-			lti_principal = h.annualEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome);
+			lti_principal = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome);
 			approval.principal = Math.min(approval.principal, lti_principal);
 		} else {
 			// --- BTL ICR constraint
@@ -240,6 +240,7 @@ public class Bank implements Serializable {
 		double icr_max; // interest rate coverage
 		double liquidWealth = h.getBankBalance();
 
+		// TODO: HomeEquity is always zero here... by definition? Have households already sold their houses before moving?
 		if(isHome) {
 			liquidWealth += h.getHomeEquity(); // assume h will sell current home
 		}
@@ -248,9 +249,9 @@ public class Bank implements Serializable {
 
 		if(isHome) { // no LTI for BTL investors
 			pdi_max = liquidWealth + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF*
-                    h.getMonthlyPostTaxIncome())/ getMonthlyPaymentFactor(isHome);
+                    h.getMonthlyNetTotalIncome())/ getMonthlyPaymentFactor(isHome);
 			max = Math.min(max, pdi_max);
-			lti_max = h.annualEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome) + liquidWealth;
+			lti_max = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome) + liquidWealth;
 			max = Math.min(max, lti_max);
 		} else {
 			icr_max = Model.rentalMarketStats.getExpAvFlowYield()

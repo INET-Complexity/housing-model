@@ -26,7 +26,8 @@ public class Household implements IHouseOwner, Serializable {
     private static int          id_pool;
 
     public int                  id; // Only used for identifying households within the class MicroDataRecorder
-    public double               monthlyEmploymentIncome;
+    private double              annualGrossEmploymentIncome;
+    private double              monthlyGrossEmploymentIncome;
     public HouseholdBehaviour   behaviour; // Behavioural plugin
 
     double                      incomePercentile; // Fixed for the whole lifetime of the household
@@ -37,7 +38,7 @@ public class Household implements IHouseOwner, Serializable {
     private MersenneTwister                 rand; // Private field to contain the Model's random number generator
     private double                          age; // Age of the household representative person
     private double                          bankBalance;
-    private double                          monthlyPropertyIncome; // TODO: Check how this is computed and make sure it is OK
+    private double                          monthlyGrossRentalIncome; // Keeps track of monthly rental income, as only tenants keep a reference to the rental contract, not landlords
     private boolean                         isFirstTimeBuyer;
     private boolean                         isBankrupt;
 
@@ -45,13 +46,12 @@ public class Household implements IHouseOwner, Serializable {
     //----- Constructors -----//
     //------------------------//
 
-    /********************************************************
-     * Initialises behaviour (determine whether the household
-     * will be a BTL investor). Households start off in social
-     * housing and with their 'desired bank balance' in the bank.
-     ********************************************************/
+    /**
+     * Initialises behaviour (determine whether the household will be a BTL investor). Households start off in social
+     * housing and with their "desired bank balance" in the bank
+     */
     public Household(double householdAgeAtBirth) {
-        rand = Model.rand;    // Passes the Model's random number generator to a private field of each instance
+        rand = Model.rand; // Passes the Model's random number generator to a private field of each instance
         home = null;
         isFirstTimeBuyer = true;
         isBankrupt = false;
@@ -59,63 +59,57 @@ public class Household implements IHouseOwner, Serializable {
         age = householdAgeAtBirth;
         incomePercentile = rand.nextDouble();
         behaviour = new HouseholdBehaviour(incomePercentile);
-        monthlyEmploymentIncome = annualIncome()/config.constants.MONTHS_IN_YEAR;
-        bankBalance = behaviour.getDesiredBankBalance(this); // Desired bank balance is used as initial value for actual bank balance
-        monthlyPropertyIncome = 0.0;
+        // Find initial values for the annual and monthly gross employment income
+        annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
+        monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
+        bankBalance = behaviour.getDesiredBankBalance(getAnnualGrossTotalIncome()); // Desired bank balance is used as initial value for actual bank balance
+        monthlyGrossRentalIncome = 0.0;
     }
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
 
-    /////////////////////////////////////////////////////////
-    // House market behaviour
-    /////////////////////////////////////////////////////////
+    //----- General methods -----//
 
-    /********************************************************
-     * Main simulation step for each household.
-     *
-     * Receive income, pay rent/mortgage, make consumption decision
-     * and make decision to:
-     * - buy or rent if in social housing
-     * - sell house if owner-occupier
-     * - buy/sell/rent out properties if BTL investor
-     ********************************************************/
+    /**
+     * Main simulation step for each household. They age, receive employment and other forms of income, make their rent
+     * or mortgage payments, perform an essential consumption, make non-essential consumption decisions, manage their
+     * owned properties, and make their housing decisions depending on their current housing state:
+     * - Buy or rent if in social housing
+     * - Sell house if owner-occupier
+     * - Buy/sell/rent out properties if BTL investor
+     */
     public void step() {
-        double disposableIncome;
-
         isBankrupt = false; // Delete bankruptcies from previous time step
         age += 1.0/config.constants.MONTHS_IN_YEAR;
-        monthlyEmploymentIncome = annualIncome()/config.constants.MONTHS_IN_YEAR;
-        disposableIncome = getMonthlyPostTaxIncome()
-                - config.ESSENTIAL_CONSUMPTION_FRACTION * config.GOVERNMENT_INCOME_SUPPORT; // necessary consumption
-        for(PaymentAgreement payment: housePayments.values()) {
-            disposableIncome -= payment.makeMonthlyPayment();
-        }
-
-        // --- consume based on disposable income after house payments
-        // TODO: What? Does this mean only FTB consume?
-        bankBalance += disposableIncome;
-        // TODO: What is the purpose of this if condition?
-        if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(this);
-        // TODO: Need to improve bankruptcy procedures further than current simple cash injection
-        if(bankBalance < 0.0) { // Behaviour if household is bankrupt
+        // Update annual and monthly gross employment income
+        annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
+        monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
+        // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
+        bankBalance += getMonthlyDisposableIncome();
+        // Consume based on monthly disposable income (after essential consumption and house payments have been subtracted)
+        bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
+        // Deal with bankruptcies
+        // TODO: Improve bankruptcy procedures (currently, simple cash injection), such as terminating contracts!
+        if (bankBalance < 0.0) {
             bankBalance = 1.0;
             isBankrupt = true;
         }
-        for(House h : housePayments.keySet()) {
-            if(h.owner == this) manageHouse(h); // Manage all owned properties
+        // Manage all owned properties
+        for (House h: housePayments.keySet()) {
+            if (h.owner == this) manageHouse(h);
         }
-        
-        if(isInSocialHousing()) {
+        // Make housing decisions depending on current housing state
+        if (isInSocialHousing()) {
             bidForAHome(); // When BTL households are born, they enter here the first time!
-        } else if(isRenting()) {
-            if(housePayments.get(home).nPayments == 0) { // end of rental period for renter
+        } else if (isRenting()) {
+            if (housePayments.get(home).nPayments == 0) { // End of rental period for this tenant
                 endTenancy();
                 bidForAHome();
             }            
-        } else if(behaviour.isPropertyInvestor()) {
-            if(behaviour.decideToBuyInvestmentProperty(this)) {
+        } else if (behaviour.isPropertyInvestor()) {
+            if (behaviour.decideToBuyInvestmentProperty(this)) {
                 Model.houseSaleMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
             }
         } else if (!isHomeowner()){
@@ -123,53 +117,77 @@ public class Household implements IHouseOwner, Serializable {
         }
     }
 
-    /***
-     * @return Household income given age and percentile of population
+    /**
+     * Subtracts the essential, necessary consumption and housing expenses (mortgage and rental payments) from the net
+     * total income (employment income, property income, financial returns minus taxes)
      */
-    private double annualIncome() {
-        double boundAge = age;
-        if(boundAge < data.Lifecycle.lnIncomeGivenAge.getSupportLowerBound()) {
-            boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportLowerBound();
+    private double getMonthlyDisposableIncome() {
+        // Start with net monthly income
+        double monthlyDisposableIncome = getMonthlyNetTotalIncome();
+        // Subtract essential, necessary consumption
+        // TODO: ESSENTIAL_CONSUMPTION_FRACTION is not explained in the paper, all support is said to be consumed
+        monthlyDisposableIncome -= config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT;
+        // Subtract housing consumption
+        for(PaymentAgreement payment: housePayments.values()) {
+            monthlyDisposableIncome -= payment.makeMonthlyPayment();
         }
-        else if(boundAge > data.Lifecycle.lnIncomeGivenAge.getSupportUpperBound()) {
-            boundAge = data.Lifecycle.lnIncomeGivenAge.getSupportUpperBound() - 1e-7;
-        }
-        double income = data.Lifecycle.lnIncomeGivenAge.getBinAt(boundAge).inverseCumulativeProbability(incomePercentile);
-        income = Math.exp(income);
-        if(income < config.GOVERNMENT_INCOME_SUPPORT) income = config.GOVERNMENT_INCOME_SUPPORT; // minimum income is govt. support
-        return(income);
+        return monthlyDisposableIncome;
     }
 
-    /******************************
+    /**
+     * Subtracts the monthly aliquot part of all due taxes from the monthly gross total income. Note that only income
+     * tax on employment income and national insurance contributions are implemented!
+     */
+    double getMonthlyNetTotalIncome() {
+        return getMonthlyGrossTotalIncome()
+                - (Model.government.incomeTaxDue(annualGrossEmploymentIncome)   // Employment income tax
+                + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions
+                /config.constants.MONTHS_IN_YEAR;
+    }
+
+    /**
+     * Adds up all sources of (gross) income on a monthly basis: employment, property, returns on financial wealth
+     */
+    public double getMonthlyGrossTotalIncome() {
+        return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome + bankBalance*config.RETURN_ON_FINANCIAL_WEALTH;
+    }
+
+    double getAnnualGrossTotalIncome() {
+        return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR;
+    }
+
+    //----- Methods for house owners -----//
+
+    /**
      * Decide what to do with a house h owned by the household:
-     *  - if the household lives in h, decide whether to sell it
-     *  - if h is up for sale, rethink its offer price, and possibly put it up for rent instead (only BTL investors)
-     *  - if h is up for rent, rethink the rent demanded
+     * - if the household lives in the house, decide whether to sell it or not
+     * - if the house is up for sale, rethink its offer price, and possibly put it up for rent instead (only BTL investors)
+     * - if the house is up for rent, rethink the rent demanded
      *
-     * @param h a house owned by the household
-     *****************************/
-    private void manageHouse(House h) {
+     * @param house A house owned by the household
+     */
+    private void manageHouse(House house) {
         HouseSaleRecord forSale, forRent;
         double newPrice;
         
-        forSale = h.getSaleRecord();
+        forSale = house.getSaleRecord();
         if(forSale != null) { // reprice house for sale
             newPrice = behaviour.rethinkHouseSalePrice(forSale);
-            if(newPrice > mortgageFor(h).principal) {
+            if(newPrice > mortgageFor(house).principal) {
                 Model.houseSaleMarket.updateOffer(forSale, newPrice);
             } else {
                 Model.houseSaleMarket.removeOffer(forSale);
                 // TODO: First condition is redundant!
-                if(h != home && h.resident == null) {
-                    Model.houseRentalMarket.offer(h, buyToLetRent(h));
+                if(house  != home && house.resident == null) {
+                    Model.houseRentalMarket.offer(house, buyToLetRent(house));
                 }
             }
-        } else if(decideToSellHouse(h)) { // put house on market?
-            if(h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
-            putHouseForSale(h);
+        } else if(decideToSellHouse(house)) { // put house on market?
+            if(house.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(house.getRentalRecord());
+            putHouseForSale(house);
         }
         
-        forRent = h.getRentalRecord();
+        forRent = house.getRentalRecord();
         if(forRent != null) { // reprice house for rent
             newPrice = behaviour.rethinkBuyToLetRent(forRent);
             Model.houseRentalMarket.updateOffer(forRent, newPrice);
@@ -218,7 +236,7 @@ public class Household implements IHouseOwner, Serializable {
             // TODO: need to either provide a way for house sales to fall through or to ensure that pre-approvals are always satisfiable
             System.out.println("Can't afford to buy house: strange");
             System.out.println("Bank balance is "+bankBalance);
-            System.out.println("Annual income is "+ monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR);
+            System.out.println("Annual income is "+ monthlyGrossEmploymentIncome *config.constants.MONTHS_IN_YEAR);
             if(isRenting()) System.out.println("Is renting");
             if(isHomeowner()) System.out.println("Is homeowner");
             if(isInSocialHousing()) System.out.println("Is homeless");
@@ -258,7 +276,7 @@ public class Household implements IHouseOwner, Serializable {
             home = null;
 //            bidOnHousingMarket(1.0);
         } else if(sale.house.resident != null) { // evict current renter
-            monthlyPropertyIncome -= sale.house.resident.housePayments.get(sale.house).monthlyPayment;
+            monthlyGrossRentalIncome -= sale.house.resident.housePayments.get(sale.house).monthlyPayment;
             sale.house.resident.getEvicted();
         }
     }
@@ -272,7 +290,7 @@ public class Household implements IHouseOwner, Serializable {
      ********************************************************/
     @Override
     public void endOfLettingAgreement(House h, PaymentAgreement contract) {
-        monthlyPropertyIncome -= contract.monthlyPayment;
+        monthlyGrossRentalIncome -= contract.monthlyPayment;
 
         // put house back on rental market
         if(!housePayments.containsKey(h)) {
@@ -346,7 +364,7 @@ public class Household implements IHouseOwner, Serializable {
      ********************************************************/
     private void bidForAHome() {
         // Find household's desired housing expenditure
-        double price = behaviour.getDesiredPurchasePrice(monthlyEmploymentIncome);
+        double price = behaviour.getDesiredPurchasePrice(monthlyGrossEmploymentIncome);
         // Cap this expenditure to the maximum mortgage available to the household
         price = Math.min(price, Model.bank.getMaxMortgage(this, true));
         // Compare costs to decide whether to buy or rent...
@@ -355,7 +373,7 @@ public class Household implements IHouseOwner, Serializable {
             Model.houseSaleMarket.bid(this, price);
         } else {
             // ... if renting, bid in the house rental market for the desired rent price
-            Model.houseRentalMarket.bid(this, behaviour.desiredRent(this, monthlyEmploymentIncome));
+            Model.houseRentalMarket.bid(this, behaviour.desiredRent(this, monthlyGrossEmploymentIncome));
         }
     }
     
@@ -382,7 +400,7 @@ public class Household implements IHouseOwner, Serializable {
         if(sale.house.isOnMarket()) {
             Model.houseSaleMarket.removeOffer(sale.house.getSaleRecord());
         }
-        monthlyPropertyIncome += sale.getPrice();
+        monthlyGrossRentalIncome += sale.getPrice();
     }
 
     private double buyToLetRent(House h) {
@@ -474,10 +492,8 @@ public class Household implements IHouseOwner, Serializable {
             putHouseForSale(h);
         }
     }
-    
-    /////////////////////////////////////////////////////////
-    // Helpers
-    /////////////////////////////////////////////////////////
+
+    //----- Helpers -----//
 
     public double getAge() { return age; }
 
@@ -502,6 +518,10 @@ public class Household implements IHouseOwner, Serializable {
     public House getHome() { return home; }
 
     public Map<House, PaymentAgreement> getHousePayments() { return housePayments; }
+
+    public double getAnnualGrossEmploymentIncome() { return annualGrossEmploymentIncome; }
+
+    public double getMonthlyGrossEmploymentIncome() { return monthlyGrossEmploymentIncome; }
     
     /***
      * @return Number of properties this household currently has on the sale market
@@ -513,26 +533,6 @@ public class Household implements IHouseOwner, Serializable {
         }
         return(n);
     }
-    
-    /**
-     * @return monthly disposable (i.e., after tax) income
-     */
-    double getMonthlyPostTaxIncome() {
-        return getMonthlyPreTaxIncome()
-                - (Model.government.incomeTaxDue(monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR)
-                + Model.government.class1NICsDue(monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR))
-                / config.constants.MONTHS_IN_YEAR;
-    }
-    
-    /**
-     * @return gross monthly total income
-     */
-    public double getMonthlyPreTaxIncome() {
-        return (monthlyEmploymentIncome + monthlyPropertyIncome +
-                bankBalance * config.RETURN_ON_FINANCIAL_WEALTH);
-    }
-    
-    public double annualEmploymentIncome() { return monthlyEmploymentIncome*config.constants.MONTHS_IN_YEAR; }
     
     public int nInvestmentProperties() { return housePayments.size() - 1; }
     

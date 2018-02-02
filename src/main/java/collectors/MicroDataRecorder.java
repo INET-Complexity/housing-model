@@ -50,8 +50,8 @@ public class MicroDataRecorder {
     			purchase.buyer.id+", "+
     			purchase.buyer.getAge()+", "+
     			purchase.buyer.behaviour.isPropertyInvestor()+", "+
-    			purchase.buyer.getMonthlyPreTaxIncome()+", "+
-    			purchase.buyer.monthlyEmploymentIncome+", "+
+    			purchase.buyer.getMonthlyGrossTotalIncome()+", "+
+    			purchase.buyer.getMonthlyGrossEmploymentIncome() +", "+
     			purchase.buyer.getBankBalance()+", "+
     			purchase.buyer.behaviour.getBTLCapGainCoefficient() +", "
 				);
@@ -70,8 +70,8 @@ public class MicroDataRecorder {
 					seller.id+", "+
 					seller.getAge()+", "+
 					seller.behaviour.isPropertyInvestor()+", "+
-					seller.getMonthlyPreTaxIncome()+", "+
-					seller.monthlyEmploymentIncome+", "+
+					seller.getMonthlyGrossTotalIncome()+", "+
+					seller.getMonthlyGrossEmploymentIncome() +", "+
 					seller.getBankBalance()+", "+
 					seller.behaviour.getBTLCapGainCoefficient()
 					);			
