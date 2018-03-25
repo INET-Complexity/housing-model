@@ -117,7 +117,7 @@ public class Bank implements Serializable {
 	/**
 	 * Get the interest rate on mortgages.
 	 */
-	double getMortgageInterestRate() { return baseRate + interestSpread; }
+	public double getMortgageInterestRate() { return baseRate + interestSpread; }
 	
 
 	/**

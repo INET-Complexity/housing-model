@@ -106,7 +106,7 @@ public class Recorder {
                     + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
                     + "Rental AvDaysOnMarket, Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
-                    + "nRegisteredMortgages, "
+                    + "nRegisteredMortgages, TotalInterestRate, "
                     // Stuff to remove
                     + "ExAvSalePrice");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
@@ -202,6 +202,7 @@ public class Recorder {
                 Model.rentalMarketStats.getExpAvFlowYield() + ", " +
                 // Credit data
                 Model.creditSupply.getnRegisteredMortgages() + ", " +
+                Model.bank.getMortgageInterestRate() + ", " +
                 // Stuff to remove
                 Model.housingMarketStats.getExpAvSalePrice());
     }
