@@ -79,7 +79,19 @@ public class Bank implements Serializable {
 	public void step(int totalPopulation) {
 		supplyTarget = config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation;
 		setMortgageInterestRate(recalculateInterestRate());
+		udpateMortgageAgreement();
 		resetMonthlyCounters();
+	}
+	
+	/**
+	 * Update the monthlyInterestRate and monthlyPayment every step, 
+	 * so as to consider variable rate mortgages
+	 */
+	public void udpateMortgageAgreement(){
+		for(MortgageAgreement approval: mortgages){
+			approval.monthlyInterestRate=getMortgageInterestRate()/config.constants.MONTHS_IN_YEAR;
+			approval.monthlyPayment= approval.principal* getMonthlyPaymentFactor(!approval.isBuyToLet);
+		}		
 	}
 	
 	/**
@@ -105,7 +117,7 @@ public class Bank implements Serializable {
 	/**
 	 * Get the interest rate on mortgages.
 	 */
-	double getMortgageInterestRate() { return baseRate + interestSpread; }
+	public double getMortgageInterestRate() { return baseRate + interestSpread; }
 	
 
 	/**
