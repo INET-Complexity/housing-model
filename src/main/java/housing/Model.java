@@ -28,6 +28,14 @@ import org.apache.commons.io.FileUtils;
  *                      (if the folder already exists).
  * -help                Print input arguments usage information.
  *
+ * NEW AD-HOC PARAMETER ENTRIES
+ *
+ * -MARKET_AVERAGE_PRICE_DECAY <arg> (double)
+ * -SALE_EPSILON <arg> (double)
+ * -TARGET_POPULATION <arg> (int)
+ * -P_INVESTOR <arg> (double)
+ * -MIN_INVESTOR_PERCENTILE <arg> (double)
+ *
  * Note that the seed for random number generation is set from the config file.
  *
  * @author daniel, Adrian Carro
@@ -41,6 +49,13 @@ public class Model {
     //------------------//
     //----- Fields -----//
     //------------------//
+
+    // Ad-hoc variables for command line entry of parameters
+    public static String MARKET_AVERAGE_PRICE_DECAY;
+    public static String SALE_EPSILON;
+    public static String TARGET_POPULATION;
+    public static String P_INVESTOR;
+    public static String MIN_INVESTOR_PERCENTILE;
 
     public static Config                config;
     public static Construction		    construction;
@@ -227,6 +242,15 @@ public class Model {
                 "inside output folder (if the folder already exists).");
         options.addOption("help", false, "Print input arguments usage information.");
 
+        // Ad-hoc options for parameter value entry on command line
+        options.addOption("MARKET_AVERAGE_PRICE_DECAY", true, "MARKET_AVERAGE_PRICE_DECAY," +
+                "default value is 0.25");
+        options.addOption("SALE_EPSILON", true, "SALE_EPSILON, default value is 0.05");
+        options.addOption("TARGET_POPULATION", true, "TARGET_POPULATION, default value is 10000");
+        options.addOption("P_INVESTOR", true, "P_INVESTOR, default value is 0.16");
+        options.addOption("MIN_INVESTOR_PERCENTILE", true, "MIN_INVESTOR_PERCENTILE, default" +
+                "value is 0.5");
+
         // Create help formatter in case it will be needed
         HelpFormatter formatter = new HelpFormatter();
 
@@ -265,6 +289,42 @@ public class Model {
             } else {
                 // If not, use the default value to initialise the respective member variable
                 outputFolder = "Results/" + Instant.now().toString().replace(":", "-") + "/";
+            }
+            // Ad-hoc parameter
+            if(cmd.hasOption("MARKET_AVERAGE_PRICE_DECAY")) {
+                // If it has, then store its value in a variable
+                MARKET_AVERAGE_PRICE_DECAY = cmd.getOptionValue("MARKET_AVERAGE_PRICE_DECAY");
+            } else {
+                // If not, store the default value in a variable
+                MARKET_AVERAGE_PRICE_DECAY = "0.25";
+            }
+            if(cmd.hasOption("SALE_EPSILON")) {
+                // If it has, then store its value in a variable
+                SALE_EPSILON = cmd.getOptionValue("SALE_EPSILON");
+            } else {
+                // If not, store the default value in a variable
+                SALE_EPSILON = "0.05";
+            }
+            if(cmd.hasOption("TARGET_POPULATION")) {
+                // If it has, then store its value in a variable
+                TARGET_POPULATION = cmd.getOptionValue("TARGET_POPULATION");
+            } else {
+                // If not, store the default value in a variable
+                TARGET_POPULATION = "10000";
+            }
+            if(cmd.hasOption("P_INVESTOR")) {
+                // If it has, then store its value in a variable
+                P_INVESTOR = cmd.getOptionValue("P_INVESTOR");
+            } else {
+                // If not, store the default value in a variable
+                P_INVESTOR = "0.16";
+            }
+            if(cmd.hasOption("MIN_INVESTOR_PERCENTILE")) {
+                // If it has, then store its value in a variable
+                MIN_INVESTOR_PERCENTILE = cmd.getOptionValue("MIN_INVESTOR_PERCENTILE");
+            } else {
+                // If not, store the default value in a variable
+                MIN_INVESTOR_PERCENTILE = "0.5";
             }
         }
         catch(ParseException pex) {

@@ -255,6 +255,13 @@ public class Config {
         try (FileReader fileReader = new FileReader(configFileName)) {
             Properties prop = new Properties();
             prop.load(fileReader);
+            // Add runtime properties as prop.setProperty("newKey", "newValue");
+            prop.setProperty("MARKET_AVERAGE_PRICE_DECAY", Model.MARKET_AVERAGE_PRICE_DECAY);
+            prop.setProperty("SALE_EPSILON", Model.SALE_EPSILON);
+            prop.setProperty("TARGET_POPULATION", Model.TARGET_POPULATION);
+            prop.setProperty("P_INVESTOR", Model.P_INVESTOR);
+            prop.setProperty("MIN_INVESTOR_PERCENTILE", Model.MIN_INVESTOR_PERCENTILE);
+
             // Check that all parameters declared in the configuration (.properties) file are also declared in this class
             try {
                 Set<String> setOfFields = new HashSet<>();
