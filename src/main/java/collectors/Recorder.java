@@ -3,6 +3,7 @@ package collectors;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 
 import housing.Model;
 
@@ -19,6 +20,8 @@ public class Recorder {
     //------------------//
 
     private String outputFolder;
+
+    private ArrayList<String> tempOutLines;
 
     private PrintWriter outfile;
 
@@ -112,6 +115,7 @@ public class Recorder {
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        tempOutLines = new ArrayList<>();
     }
 
     public void writeTimeStampResults(boolean recordCoreIndicators, int time) {
@@ -152,7 +156,7 @@ public class Recorder {
         }
 
         // Write general output results to output file
-        outfile.println(time + ", " +
+        tempOutLines.add(time + ", " +
                 // Number of households of each type
                 Model.householdStats.getnNonBTLHomeless() + ", " +
                 Model.householdStats.getnBTLHomeless() + ", " +
@@ -222,6 +226,9 @@ public class Recorder {
             rentalYield.println("");
             housePriceGrowth.println("");
             interestRateSpread.println("");
+        }
+        for (String line: tempOutLines) {
+            outfile.println(line);
         }
         outfile.close();
     }
