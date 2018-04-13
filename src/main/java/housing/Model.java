@@ -30,11 +30,11 @@ import org.apache.commons.io.FileUtils;
  *
  * NEW AD-HOC PARAMETER ENTRIES
  *
- * -MARKET_AVERAGE_PRICE_DECAY <arg> (double)
- * -SALE_EPSILON <arg> (double)
- * -TARGET_POPULATION <arg> (int)
- * -P_INVESTOR <arg> (double)
- * -MIN_INVESTOR_PERCENTILE <arg> (double)
+ * -MARKET_AVERAGE_PRICE_DECAY <arg> (double) [default value 0.25]
+ * -SALE_EPSILON <arg> (double) [default value 0.05]
+ * -TARGET_POPULATION <arg> (int) [default value 10000]
+ * -P_INVESTOR <arg> (double) [default value 0.16]
+ * -MIN_INVESTOR_PERCENTILE <arg> (double) [default value 0.5]
  *
  * Note that the seed for random number generation is set from the config file.
  *
