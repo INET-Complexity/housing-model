@@ -50,13 +50,13 @@ public class Household implements IHouseOwner, Serializable {
      * Initialises behaviour (determine whether the household will be a BTL investor). Households start off in social
      * housing and with their "desired bank balance" in the bank
      */
-    public Household(MersenneTwister prng, double householdAgeAtBirth) {
+    public Household(MersenneTwister prng) {
         this.prng = prng; // Passes the Model's random number generator to a private field of each instance
         home = null;
         isFirstTimeBuyer = true;
         isBankrupt = false;
         id = ++id_pool;
-        age = householdAgeAtBirth;
+        age = data.Demographics.pdfHouseholdAgeAtBirth.nextDouble(this.prng);
         incomePercentile = this.prng.nextDouble();
         behaviour = new HouseholdBehaviour(this.prng, incomePercentile);
         // Find initial values for the annual and monthly gross employment income

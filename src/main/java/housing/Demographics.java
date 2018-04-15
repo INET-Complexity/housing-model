@@ -30,7 +30,7 @@ public class Demographics {
         int nBirths = (int)(config.TARGET_POPULATION*config.FUTURE_BIRTH_RATE/config.constants.MONTHS_IN_YEAR
                 + 0.5);
         while(nBirths-- > 0) {
-            Model.households.add(new Household(prng, data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
+            Model.households.add(new Household(prng));
         }
         // Death: Kill households with a probability dependent on their age and organise inheritance
         double pDeath;
