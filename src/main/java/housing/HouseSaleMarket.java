@@ -2,6 +2,7 @@ package housing;
 
 import java.util.Iterator;
 
+import org.apache.commons.math3.random.MersenneTwister;
 import utilities.PriorityQueue2D;
 
 /*******************************************************
@@ -16,7 +17,8 @@ public class HouseSaleMarket extends HousingMarket {
 	private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
     private PriorityQueue2D<HousingMarketRecord>    offersPY;
 
-	public HouseSaleMarket() {
+	public HouseSaleMarket(MersenneTwister prng) {
+		super(prng);  // previously I think you were missing this call to HousingMarket constructor!
 		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
 	}
 	

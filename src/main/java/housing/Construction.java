@@ -17,16 +17,17 @@ public class Construction implements IHouseOwner, Serializable {
     private int                         nNewBuild; // Number of houses built this month
 
     private Config	                    config = Model.config; // Passes the Model's configuration parameters object to a private field
-    private MersenneTwister             rand = Model.rand; // Passes the Model's random number generator to a private field
+    private MersenneTwister             prng;
     private HashSet<House>              onMarket;
 
     //------------------------//
     //----- Constructors -----//
     //------------------------//
 
-	public Construction() {
+	public Construction(MersenneTwister prng) {
 		housingStock = 0;
 		onMarket = new HashSet<>();
+		this.prng = prng;
 	}
 
     //-------------------//
@@ -63,7 +64,7 @@ public class Construction implements IHouseOwner, Serializable {
         House newHouse;
         while(shortFall > 0) {
             // ...create a new house with a random quality and with the construction sector as the owner
-            newHouse = new House((int)(rand.nextDouble()*config.N_QUALITY));
+            newHouse = new House((int)(prng.nextDouble()*config.N_QUALITY));
             newHouse.owner = this;
             // ...put the house for sale in the house sale market at the reference price for that quality
             Model.houseSaleMarket.offer(newHouse,

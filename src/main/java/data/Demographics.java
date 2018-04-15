@@ -2,6 +2,7 @@ package data;
 
 import housing.Model;
 
+import org.apache.commons.math3.random.MersenneTwister;
 import utilities.Pdf;
 
 import java.io.BufferedReader;
@@ -29,7 +30,7 @@ public class Demographics {
 	 * Calibrated against (LCFS 2012)
 	 */
 	// TODO: Clarify if this is needed. Remove parameter and data file if not.
-	public static Pdf pdfAge = new Pdf(Model.config.DATA_AGE_MARGINAL_PDF);
+	public static Pdf pdfAge = new Pdf(prng, Model.config.DATA_AGE_MARGINAL_PDF);
 
 	/**
 	 * Probability density by age of the representative householder given that
@@ -46,7 +47,7 @@ public class Demographics {
 //		}	
 //	});
 	// --- version to make correct age distribution at equilibrium demographics
-    public static Pdf pdfHouseholdAgeAtBirth = new Pdf(Model.config.DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF, 800);
+    public static Pdf pdfHouseholdAgeAtBirth = new Pdf(prng, Model.config.DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF, 800);
 
 	/**
 	 * Probability that a household 'dies' per year given age of the representative householder
