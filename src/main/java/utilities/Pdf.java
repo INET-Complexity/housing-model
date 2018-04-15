@@ -26,8 +26,7 @@ public class Pdf implements Serializable {
 	 * @param filename
 	 * @throws IOException 
 	 */
-	public Pdf(MersenneTwister prng, String filename) {
-		this.prng = prng;
+	public Pdf(String filename) {
 		try {
 			BinnedDataDouble data = new BinnedDataDouble(filename);
 			setPdf(data);
@@ -38,8 +37,7 @@ public class Pdf implements Serializable {
 		}
 	}
 
-    public Pdf(MersenneTwister prng, String filename, int NSamples) {
-		this.prng = prng;
+    public Pdf(String filename, int NSamples) {
         try {
             BinnedDataDouble data = new BinnedDataDouble(filename);
             setPdf(data, NSamples);
@@ -167,7 +165,7 @@ public class Pdf implements Serializable {
 	 * Sample from the PDF
 	 * @return A random sample from the PDF
 	 */
-	public double nextDouble() {
+	public double nextDouble(MersenneTwister prng) {
 		return(inverseCumulativeProbability(prng.nextDouble()));
 //		double uniform = rand.nextDouble(); // uniform random sample on [0:1)
 //		int i = (int)(uniform*(nSamples-1));
