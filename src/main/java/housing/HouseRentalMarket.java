@@ -1,5 +1,7 @@
 package housing;
 
+import org.apache.commons.math3.random.MersenneTwister;
+
 /**************************************************************************************************
  * Class to represent the rental market
  *
@@ -12,6 +14,10 @@ public class HouseRentalMarket extends HousingMarket {
     //-------------------//
     //----- Methods -----//
     //-------------------//
+
+	public HouseRentalMarket(MersenneTwister prng) {
+	    super(prng);
+    }
 
     @Override
 	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {

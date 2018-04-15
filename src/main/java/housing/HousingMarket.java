@@ -25,7 +25,7 @@ public abstract class HousingMarket implements Serializable {
     private static Authority                        authority = new Authority();
 
     private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
-    private MersenneTwister                         rand = Model.rand; // Passes the Model's random number generator to a private field
+    private MersenneTwister                         prng;
     private PriorityQueue2D<HousingMarketRecord>    offersPQ;
 
     ArrayList<HouseBuyerRecord>                     bids;
@@ -34,13 +34,14 @@ public abstract class HousingMarket implements Serializable {
     //----- Constructors -----//
     //------------------------//
 
-    HousingMarket() {
+    HousingMarket(MersenneTwister prng) {
         offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator()); //Priority Queue of (Price, Quality)
         // The integer passed to the ArrayList constructor is an initially declared capacity (for initial memory
         // allocation purposes), it will actually have size zero and only grow by adding elements
         // TODO: Check if this integer is too large or small, check speed penalty for using ArrayList as opposed to
         // TODO: normal arrays
         bids = new ArrayList<>(config.TARGET_POPULATION/16);
+        this.prng = prng;
     }
 
     //----------------------//
@@ -175,7 +176,7 @@ public abstract class HousingMarket implements Serializable {
                     enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/config.TARGET_POPULATION));
                     // TODO: Also, the role of MONTHS_UNDER_OFFER is not explained or declared!
                     pSuccessfulBid = Math.exp(-enoughBids*config.derivedParams.MONTHS_UNDER_OFFER);
-                    geomDist = new GeometricDistribution(rand, pSuccessfulBid);
+                    geomDist = new GeometricDistribution(prng, pSuccessfulBid);
                     salePrice = offer.getPrice()*Math.pow(config.BIDUP, geomDist.sample());
                 } else {
                     salePrice = offer.getPrice();                    
@@ -186,7 +187,7 @@ public abstract class HousingMarket implements Serializable {
                     --nBids; // This counts the number of bids above the new price
                 }
                 if (offer.matchedBids.size() - nBids > 1) {
-                    winningBid = nBids + rand.nextInt(offer.matchedBids.size()- nBids); // This chooses a random one if they are multiple
+                    winningBid = nBids + prng.nextInt(offer.matchedBids.size()- nBids); // This chooses a random one if they are multiple
                 } else if (offer.matchedBids.size() - nBids == 1) {
                     winningBid = nBids; // This chooses the only one if there is only one
                 } else {

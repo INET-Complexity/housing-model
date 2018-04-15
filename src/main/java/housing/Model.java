@@ -64,7 +64,6 @@ public class Model {
     public static HouseSaleMarket houseSaleMarket;
     public static HouseRentalMarket houseRentalMarket;
     public static ArrayList<Household>  households;
-    public static MersenneTwister	    rand;
     public static CreditSupply          creditSupply;
     public static CoreIndicators        coreIndicators;
     public static HouseholdStats        householdStats;
@@ -76,6 +75,7 @@ public class Model {
 
     static Government		            government;
 
+    private static MersenneTwister prng;
     private static Demographics		    demographics;
     private static Recorder             recorder;
     private static String               configFileName;
@@ -92,16 +92,16 @@ public class Model {
     public Model(String configFileName, String outputFolder) {
         // TODO: Check that random numbers are working properly!
         config = new Config(configFileName);
-        rand = new MersenneTwister(config.SEED);
+        prng = new MersenneTwister(config.SEED);
 
         government = new Government();
-        demographics = new Demographics();
-        construction = new Construction();
+        demographics = new Demographics(prng);
+        construction = new Construction(prng);
         centralBank = new CentralBank();
         bank = new Bank();
         households = new ArrayList<>(config.TARGET_POPULATION*2);
-        houseSaleMarket = new HouseSaleMarket();
-        houseRentalMarket = new HouseRentalMarket();
+        houseSaleMarket = new HouseSaleMarket(prng);
+        houseRentalMarket = new HouseRentalMarket(prng);
 
         recorder = new collectors.Recorder(outputFolder);
         transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
@@ -380,6 +380,10 @@ public class Model {
 	static public int getMonth() {
 		return t%12 + 1;
 	}
+
+    public MersenneTwister getPrng() {
+        return prng;
+    }
 
     private static void setRecordGeneral() {
         creditSupply.setActive(true);

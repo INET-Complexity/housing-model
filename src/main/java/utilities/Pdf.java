@@ -26,7 +26,8 @@ public class Pdf implements Serializable {
 	 * @param filename
 	 * @throws IOException 
 	 */
-	public Pdf(String filename) {
+	public Pdf(MersenneTwister prng, String filename) {
+		this.prng = prng;
 		try {
 			BinnedDataDouble data = new BinnedDataDouble(filename);
 			setPdf(data);
@@ -37,7 +38,8 @@ public class Pdf implements Serializable {
 		}
 	}
 
-    public Pdf(String filename, int NSamples) {
+    public Pdf(MersenneTwister prng, String filename, int NSamples) {
+		this.prng = prng;
         try {
             BinnedDataDouble data = new BinnedDataDouble(filename);
             setPdf(data, NSamples);
@@ -166,14 +168,14 @@ public class Pdf implements Serializable {
 	 * @return A random sample from the PDF
 	 */
 	public double nextDouble() {
-		return(inverseCumulativeProbability(rand.nextDouble()));
+		return(inverseCumulativeProbability(prng.nextDouble()));
 //		double uniform = rand.nextDouble(); // uniform random sample on [0:1)
 //		int i = (int)(uniform*(nSamples-1));
 //		double remainder = uniform*(nSamples-1.0) - i;
 //		return((1.0-remainder)*inverseCDF[i] + remainder*inverseCDF[i+1]);
 	}
 
-	private MersenneTwister	rand = Model.rand;	// Passes the Model's random number generator to a private field
+	private MersenneTwister	        prng;
 	DoubleUnaryOperator				pdf;				// function that gives the pdf
 	public double					start;				// lowest value of x that has a non-zero probability
 	public double					end;				// highest value of x that has a non-zero probability
