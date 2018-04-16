@@ -2,6 +2,7 @@ package data;
 
 import housing.Model;
 
+import org.apache.commons.math3.random.MersenneTwister;
 import utilities.Pdf;
 
 import java.io.BufferedReader;

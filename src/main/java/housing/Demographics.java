@@ -11,7 +11,11 @@ public class Demographics {
 	//------------------//
 
 	private Config	            config = Model.config; // Passes the Model's configuration parameters object to a private field
-	private MersenneTwister     rand = Model.rand; // Passes the Model's random number generator to a private field
+	private MersenneTwister     prng;
+
+	public Demographics(MersenneTwister prng) {
+	    this.prng = prng;
+    }
 
     //-------------------//
     //----- Methods -----//
@@ -26,7 +30,7 @@ public class Demographics {
         int nBirths = (int)(config.TARGET_POPULATION*config.FUTURE_BIRTH_RATE/config.constants.MONTHS_IN_YEAR
                 + 0.5);
         while(nBirths-- > 0) {
-            Model.households.add(new Household(data.Demographics.pdfHouseholdAgeAtBirth.nextDouble()));
+            Model.households.add(new Household(prng));
         }
         // Death: Kill households with a probability dependent on their age and organise inheritance
         double pDeath;
@@ -37,10 +41,10 @@ public class Demographics {
         while(iterator.hasNext()) {
             Household h = iterator.next();
             pDeath = data.Demographics.probDeathGivenAge(h.getAge())/config.constants.MONTHS_IN_YEAR;
-            if(rand.nextDouble() < pDeath*multFactor) {
+            if(prng.nextDouble() < pDeath*multFactor) {
                 iterator.remove();
                 // Inheritance
-                h.transferAllWealthTo(Model.households.get(rand.nextInt(Model.households.size())));
+                h.transferAllWealthTo(Model.households.get(prng.nextInt(Model.households.size())));
             }
         }
 	}

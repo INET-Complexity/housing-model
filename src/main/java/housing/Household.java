@@ -35,7 +35,7 @@ public class Household implements IHouseOwner, Serializable {
     private House                           home;
     private Map<House, PaymentAgreement>    housePayments = new TreeMap<>(); // Houses owned and their payment agreements
     private Config                          config = Model.config; // Passes the Model's configuration parameters object to a private field
-    private MersenneTwister                 rand; // Private field to contain the Model's random number generator
+    private MersenneTwister                 prng;
     private double                          age; // Age of the household representative person
     private double                          bankBalance;
     private double                          monthlyGrossRentalIncome; // Keeps track of monthly rental income, as only tenants keep a reference to the rental contract, not landlords
@@ -50,15 +50,15 @@ public class Household implements IHouseOwner, Serializable {
      * Initialises behaviour (determine whether the household will be a BTL investor). Households start off in social
      * housing and with their "desired bank balance" in the bank
      */
-    public Household(double householdAgeAtBirth) {
-        rand = Model.rand; // Passes the Model's random number generator to a private field of each instance
+    public Household(MersenneTwister prng) {
+        this.prng = prng; // Passes the Model's random number generator to a private field of each instance
         home = null;
         isFirstTimeBuyer = true;
         isBankrupt = false;
         id = ++id_pool;
-        age = householdAgeAtBirth;
-        incomePercentile = rand.nextDouble();
-        behaviour = new HouseholdBehaviour(incomePercentile);
+        age = data.Demographics.pdfHouseholdAgeAtBirth.nextDouble(this.prng);
+        incomePercentile = this.prng.nextDouble();
+        behaviour = new HouseholdBehaviour(this.prng, incomePercentile);
         // Find initial values for the annual and monthly gross employment income
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
@@ -339,7 +339,7 @@ public class Household implements IHouseOwner, Serializable {
             RentalAgreement rent = new RentalAgreement();
             rent.monthlyPayment = sale.getPrice();
             rent.nPayments = config.TENANCY_LENGTH_AVERAGE
-                    + rand.nextInt(2*config.TENANCY_LENGTH_EPSILON + 1) - config.TENANCY_LENGTH_EPSILON;
+                    + prng.nextInt(2*config.TENANCY_LENGTH_EPSILON + 1) - config.TENANCY_LENGTH_EPSILON;
 //            rent.principal = rent.monthlyPayment*rent.nPayments;
             housePayments.put(sale.house, rent);
         }

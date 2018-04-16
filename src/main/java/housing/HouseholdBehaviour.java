@@ -19,7 +19,7 @@ public class HouseholdBehaviour implements Serializable {
     //------------------//
 
     private Config                  config = Model.config; // Passes the Model's configuration parameters object to a private field
-    private MersenneTwister	        rand = Model.rand; // Passes the Model's random number generator to a private field
+    private MersenneTwister	        prng;
     private boolean                 BTLInvestor;
     private double                  BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
     private double                  propensityToSave;
@@ -37,21 +37,21 @@ public class HouseholdBehaviour implements Serializable {
 	 *
 	 * @param incomePercentile Fixed income percentile for the household (assumed constant over a lifetime)
      */
-	HouseholdBehaviour(double incomePercentile) {
+	HouseholdBehaviour(MersenneTwister prng, double incomePercentile) {
+		this.prng = prng;  // initialize the random number generator
+
         // Set downpayment distributions for both first-time-buyers and owner-occupiers
-        downpaymentDistFTB = new LogNormalDistribution(rand, config.DOWNPAYMENT_FTB_SCALE,
-                config.DOWNPAYMENT_FTB_SHAPE);
-        downpaymentDistOO = new LogNormalDistribution(rand, config.DOWNPAYMENT_OO_SCALE,
-                config.DOWNPAYMENT_OO_SHAPE);
+        downpaymentDistFTB = new LogNormalDistribution(this.prng, config.DOWNPAYMENT_FTB_SCALE, config.DOWNPAYMENT_FTB_SHAPE);
+        downpaymentDistOO = new LogNormalDistribution(this.prng, config.DOWNPAYMENT_OO_SCALE, config.DOWNPAYMENT_OO_SHAPE);
 	    // Compute propensity to save, so that it is constant for a given household
-        propensityToSave = config.DESIRED_BANK_BALANCE_EPSILON*rand.nextGaussian();
+        propensityToSave = config.DESIRED_BANK_BALANCE_EPSILON * prng.nextGaussian();
         // Decide if household is a BTL investor and, if so, its tendency to seek capital gains or rental yields
 		BTLCapGainCoefficient = 0.0;
         // TODO: Check this if condition... why to divide by config.MIN_INVESTOR_PERCENTILE?
         if(incomePercentile > config.MIN_INVESTOR_PERCENTILE &&
-                rand.nextDouble() < config.getPInvestor()/config.MIN_INVESTOR_PERCENTILE) {
+                prng.nextDouble() < config.getPInvestor()/config.MIN_INVESTOR_PERCENTILE) {
             BTLInvestor = true;
-            if(rand.nextDouble() < config.P_FUNDAMENTALIST) {
+            if(prng.nextDouble() < config.P_FUNDAMENTALIST) {
                 BTLCapGainCoefficient = config.FUNDAMENTALIST_CAP_GAIN_COEFF;
             } else {
                 BTLCapGainCoefficient = config.TREND_CAP_GAIN_COEFF;
@@ -109,7 +109,7 @@ public class HouseholdBehaviour implements Serializable {
         if (HPAFactor > 0.9) HPAFactor = 0.9;
         // TODO: Note that wealth is not used here, but only employmentIncome (as monthlyIncome refers here to monthlyGrossEmploymentIncome)
 		return config.BUY_SCALE*config.constants.MONTHS_IN_YEAR*monthlyIncome
-                *Math.exp(config.BUY_EPSILON*rand.nextGaussian())
+                *Math.exp(config.BUY_EPSILON * prng.nextGaussian())
                 /(1.0 - HPAFactor);
 	}
 
@@ -124,7 +124,7 @@ public class HouseholdBehaviour implements Serializable {
                 + Math.log(Model.housingMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
                 - config.SALE_WEIGHT_DAYS_ON_MARKET*Math.log((Model.housingMarketStats.getExpAvDaysOnMarket()
                 + 1.0)/(config.constants.DAYS_IN_MONTH + 1.0))
-                + config.SALE_EPSILON*rand.nextGaussian();
+                + config.SALE_EPSILON * prng.nextGaussian();
         // TODO: ExpAv days on market should probably be computed for each quality band so as to use here only the correct one
         return Math.max(Math.exp(exponent), principal);
 	}
@@ -144,7 +144,7 @@ public class HouseholdBehaviour implements Serializable {
 	 */
 	boolean decideToSellHome() {
         // TODO: This if implies BTL agents never sell their homes, need to explain in paper!
-        return !isPropertyInvestor() && (rand.nextDouble() < config.derivedParams.MONTHLY_P_SELL*(1.0
+        return !isPropertyInvestor() && (prng.nextDouble() < config.derivedParams.MONTHLY_P_SELL*(1.0
                 + config.DECISION_TO_SELL_ALPHA*(config.DECISION_TO_SELL_HPC
                 - (double)Model.houseSaleMarket.getnHousesOnMarket()/Model.households.size())
                 + config.DECISION_TO_SELL_BETA*(config.DECISION_TO_SELL_INTEREST
@@ -169,7 +169,7 @@ public class HouseholdBehaviour implements Serializable {
                     (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		} else if (isPropertyInvestor()) {
 			downpayment = housePrice*(Math.max(0.0,
-					config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON*rand.nextGaussian()));
+					config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON * prng.nextGaussian()));
 		} else {
 			downpayment = Model.housingMarketStats.getHPI()*downpaymentDistOO.inverseCumulativeProbability(Math.max(0.0,
                     (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
@@ -190,8 +190,8 @@ public class HouseholdBehaviour implements Serializable {
 	 * @param sale The HouseSaleRecord of the house that is on the market.
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
-		if(rand.nextDouble() < config.P_SALE_PRICE_REDUCE) {
-			double logReduction = config.REDUCTION_MU+(rand.nextGaussian()*config.REDUCTION_SIGMA);
+		if(prng.nextDouble() < config.P_SALE_PRICE_REDUCE) {
+			double logReduction = config.REDUCTION_MU + (prng.nextGaussian()*config.REDUCTION_SIGMA);
 			return(sale.getPrice()*(1.0 - Math.exp(logReduction)/100.0));
 		}
 		return(sale.getPrice());
@@ -218,7 +218,7 @@ public class HouseholdBehaviour implements Serializable {
 				- purchasePrice*getLongTermHPAExpectation();
         double costOfRent = Model.rentalMarketStats.getExpAvSalePriceForQuality(newHouseQuality)
                 *config.constants.MONTHS_IN_YEAR;
-        return rand.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
+        return prng.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
                 + config.PSYCHOLOGICAL_COST_OF_RENTING) - costOfHouse));
     }
 
@@ -281,7 +281,7 @@ public class HouseholdBehaviour implements Serializable {
 		double pKeep = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
                 1.0/config.constants.MONTHS_IN_YEAR);
 		// Return true or false as a random draw from the computed probability
-		return rand.nextDouble() < (1.0 - pKeep);
+		return prng.nextDouble() < (1.0 - pKeep);
 	}
 
     /**
@@ -335,7 +335,7 @@ public class HouseholdBehaviour implements Serializable {
         double pBuy = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
                 1.0/config.constants.MONTHS_IN_YEAR);
         // Return true or false as a random draw from the computed probability
-        return rand.nextDouble() < pBuy;
+        return prng.nextDouble() < pBuy;
     }
 
     double btlPurchaseBid(Household me) {
@@ -357,7 +357,7 @@ public class HouseholdBehaviour implements Serializable {
 
 		double exponent = config.RENT_MARKUP + Math.log(rbar + 1.0)
                 - beta*Math.log((d + 1.0)/(config.constants.DAYS_IN_MONTH + 1))
-                + config.RENT_EPSILON*rand.nextGaussian();
+                + config.RENT_EPSILON * prng.nextGaussian();
 		double result = Math.exp(exponent);
         // TODO: The following contains a fudge (config.RENT_MAX_AMORTIZATION_PERIOD) to keep rental yield up
 		double minAcceptable = Model.housingMarketStats.getExpAvSalePriceForQuality(h.getQuality())
