@@ -1,6 +1,10 @@
 package collectors;
 
 import housing.*;
+import markets.HouseBuyerRecord;
+import markets.HouseSaleMarket;
+import markets.HouseSaleRecord;
+import markets.HousingMarket;
 
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;

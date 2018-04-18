@@ -1,5 +1,7 @@
 package housing;
 
+import markets.HouseSaleRecord;
+
 import java.io.Serializable;
 
 /**************************************************************************************************
@@ -21,7 +23,7 @@ public class House implements Comparable<House>, Serializable {
     public Household    resident;
     public int          id;
 
-    HouseSaleRecord     saleRecord;
+    HouseSaleRecord saleRecord;
     HouseSaleRecord     rentalRecord;
 
     private int         quality;

@@ -2,6 +2,10 @@ package collectors;
 
 import housing.*;
 
+import markets.HouseBuyerRecord;
+import markets.HouseSaleRecord;
+import markets.HousingMarket;
+import markets.HousingMarketRecord;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 /**************************************************************************************************
@@ -18,7 +22,7 @@ public class HousingMarketStats extends CollectorBase {
 	//------------------//
 
 	// General fields
-	private HousingMarket           market; // Declared HousingMarket so that it can accommodate both sale and rental markets
+	private HousingMarket market; // Declared HousingMarket so that it can accommodate both sale and rental markets
 	private Config                  config = Model.config; // Passes the Model's configuration parameters object to a private field
 
 	// Variables computed at initialisation

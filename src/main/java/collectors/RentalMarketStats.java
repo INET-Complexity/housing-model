@@ -1,6 +1,8 @@
 package collectors;
 
 import housing.*;
+import markets.HouseRentalMarket;
+import markets.HouseSaleRecord;
 
 import java.util.Arrays;
 

@@ -1,4 +1,7 @@
-package housing;
+package markets;
+
+import housing.House;
+import housing.Model;
 
 import java.util.ArrayList;
 
@@ -16,7 +19,7 @@ public class HouseSaleRecord extends HousingMarketRecord {
 	//----- Fields -----//
 	//------------------//
 
-    public House                    house;
+    public House house;
     ArrayList<HouseBuyerRecord>     matchedBids;
     public double                   initialListedPrice;
     public int                      tInitialListing; // Time of initial listing

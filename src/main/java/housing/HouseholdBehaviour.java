@@ -2,6 +2,7 @@ package housing;
 
 import java.io.Serializable;
 
+import markets.HouseSaleRecord;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.random.MersenneTwister;
 

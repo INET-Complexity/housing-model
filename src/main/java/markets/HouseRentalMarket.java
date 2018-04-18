@@ -1,4 +1,7 @@
-package housing;
+package markets;
+
+import housing.House;
+import housing.Model;
 
 /**************************************************************************************************
  * Class to represent the rental market

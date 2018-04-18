@@ -1,5 +1,7 @@
 package housing;
 
+import markets.HouseSaleRecord;
+
 /***************************************************
  * Common interface for agents who enter the sale
  * market as sellers and, thus, house owners. This

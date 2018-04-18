@@ -1,7 +1,8 @@
-package housing;
+package markets;
 
 import java.util.Iterator;
 
+import housing.*;
 import utilities.PriorityQueue2D;
 
 /*******************************************************
@@ -13,7 +14,7 @@ import utilities.PriorityQueue2D;
 public class HouseSaleMarket extends HousingMarket {
 	private static final long serialVersionUID = -2878118108039744432L;
 
-	private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
+	private Config config = Model.config; // Passes the Model's configuration parameters object to a private field
     private PriorityQueue2D<HousingMarketRecord>    offersPY;
 
 	public HouseSaleMarket() {
@@ -67,7 +68,7 @@ public class HouseSaleMarket extends HousingMarket {
      * This method overrides the main simulation step in order to sort the price-yield priorities.
      */
     @Override
-    void clearMarket() {
+    public void clearMarket() {
         // Before any use, priorities must be sorted by filling in the uncoveredElements TreeSet at the corresponding
         // PriorityQueue2D. In particular, we sort here the price-yield priorities
         offersPY.sortPriorities();
@@ -114,4 +115,5 @@ public class HouseSaleMarket extends HousingMarket {
 	 * @param maxPrice The maximum price that the household is willing to pay.
 	 ******************************************/
 	void BTLbid(Household buyer, double maxPrice) { bids.add(new BTLBuyerRecord(buyer, maxPrice)); }
+
 }

@@ -1,4 +1,6 @@
-package housing;
+package markets;
+
+import housing.Household;
 
 import java.util.Comparator;
 

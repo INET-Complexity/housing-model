@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import markets.HouseSaleRecord;
 import org.apache.commons.math3.random.MersenneTwister;
 
 /**************************************************************************************************

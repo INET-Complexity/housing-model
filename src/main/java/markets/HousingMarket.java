@@ -1,9 +1,10 @@
-package housing;
+package markets;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import housing.*;
 import org.apache.commons.math3.distribution.GeometricDistribution;
 import org.apache.commons.math3.random.MersenneTwister;
 
@@ -24,7 +25,7 @@ public abstract class HousingMarket implements Serializable {
 
     private static Authority                        authority = new Authority();
 
-    private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
+    private Config config = Model.config; // Passes the Model's configuration parameters object to a private field
     private MersenneTwister                         rand = Model.rand; // Passes the Model's random number generator to a private field
     private PriorityQueue2D<HousingMarketRecord>    offersPQ;
 
@@ -108,7 +109,7 @@ public abstract class HousingMarket implements Serializable {
     /**
      * Main simulation step. For a number of rounds, matches bids with offers and clears the matches.
      */
-    void clearMarket() {
+    public void clearMarket() {
         // Before any use, priorities must be sorted by filling in the uncoveredElements TreeSet at the corresponding
         // PriorityQueue2D
         offersPQ.sortPriorities();

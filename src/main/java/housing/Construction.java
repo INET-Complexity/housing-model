@@ -1,5 +1,6 @@
 package housing;
 
+import markets.HouseSaleRecord;
 import org.apache.commons.math3.random.MersenneTwister;
 
 import java.io.Serializable;

@@ -8,6 +8,8 @@ import java.time.Instant;
 
 import collectors.*;
 
+import markets.HouseRentalMarket;
+import markets.HouseSaleMarket;
 import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
