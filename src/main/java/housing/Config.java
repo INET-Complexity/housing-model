@@ -261,6 +261,8 @@ public class Config {
             prop.setProperty("TARGET_POPULATION", Model.TARGET_POPULATION);
             prop.setProperty("P_INVESTOR", Model.P_INVESTOR);
             prop.setProperty("MIN_INVESTOR_PERCENTILE", Model.MIN_INVESTOR_PERCENTILE);
+            prop.setProperty("SEED", Model.SEED);
+            prop.setProperty("N_STEPS", Model.N_STEPS);
 
             // Check that all parameters declared in the configuration (.properties) file are also declared in this class
             try {

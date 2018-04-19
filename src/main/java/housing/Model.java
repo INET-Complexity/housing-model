@@ -56,6 +56,8 @@ public class Model {
     public static String TARGET_POPULATION;
     public static String P_INVESTOR;
     public static String MIN_INVESTOR_PERCENTILE;
+    public static String SEED;
+    public static String N_STEPS;
 
     public static Config                config;
     public static Construction		    construction;
@@ -250,6 +252,8 @@ public class Model {
         options.addOption("P_INVESTOR", true, "P_INVESTOR, default value is 0.16");
         options.addOption("MIN_INVESTOR_PERCENTILE", true, "MIN_INVESTOR_PERCENTILE, default" +
                 "value is 0.5");
+        options.addOption("SEED", true, "SEED, default value is 1");
+        options.addOption("N_STEPS", true, "N_STEPS, default value is 3000");
 
         // Create help formatter in case it will be needed
         HelpFormatter formatter = new HelpFormatter();
@@ -325,6 +329,20 @@ public class Model {
             } else {
                 // If not, store the default value in a variable
                 MIN_INVESTOR_PERCENTILE = "0.5";
+            }
+            if(cmd.hasOption("SEED")) {
+                // If it has, then store its value in a variable
+                SEED = cmd.getOptionValue("SEED");
+            } else {
+                // If not, store the default value in a variable
+                SEED = "1";
+            }
+            if(cmd.hasOption("N_STEPS")) {
+                // If it has, then store its value in a variable
+                N_STEPS = cmd.getOptionValue("N_STEPS");
+            } else {
+                // If not, store the default value in a variable
+                N_STEPS = "3000";
             }
         }
         catch(ParseException pex) {
