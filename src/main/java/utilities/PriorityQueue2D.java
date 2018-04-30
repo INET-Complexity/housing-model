@@ -114,6 +114,8 @@ public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
 	public void sortPriorities() {
 		E element;
 		E lastElementAdded = null; // Initialising with null here just to avoid warning of possible non-initialisation
+        // First, clear uncovered elements remaining from previous time steps
+        uncoveredElements.clear();
 		// Iterate over the elements at xySortedElements
 		Iterator<E> iterator = new Iter();
 		// By definition, the first element at xySortedElements, X-least element which is also Y-greatest for equal X,
