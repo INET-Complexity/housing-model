@@ -42,8 +42,6 @@ public class Config {
     public double INITIAL_HPI;                  // Initial housing price index
     double HPI_MEDIAN;                          // Median house price
     public double HPI_SHAPE;                    // Shape parameter for the log-normal distribution of housing prices
-    public double AVERAGE_TENANCY_LENGTH;       // Average number of months a tenant will stay in a rented house
-    // TODO: Only used to initiate some exponential averaging. Remove it!
     public double RENT_GROSS_YIELD;             // Profit margin for buy-to-let investors
 
     // Demographic parameters
@@ -52,7 +50,7 @@ public class Config {
 
     // Household parameters
     double RETURN_ON_FINANCIAL_WEALTH;      // Monthly percentage growth of financial investments
-    int TENANCY_LENGTH_AVERAGE;             // Average number of months a tenant will stay in a rented house
+    public int TENANCY_LENGTH_AVERAGE;      // Average number of months a tenant will stay in a rented house
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
 
     // Household behaviour parameters: buy-to-let
