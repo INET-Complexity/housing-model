@@ -22,7 +22,7 @@ public abstract class HousingMarketRecord implements Serializable {
 
     private double price;
     private int id;    // in order to get a unique, repeatable ordering
-    static int id_pool = 0;
+    private static int id_pool = 0;
 
     //------------------------//
     //----- Constructors -----//
@@ -61,6 +61,14 @@ public abstract class HousingMarketRecord implements Serializable {
         }
 
         /**
+         * @return -1, 0 or 1 if arg0 is, respectively, cheaper than, as expensive as, or more expensive than arg1
+         */
+        @Override
+        public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
+            return (int) Math.signum(arg0.price - arg1.price);
+        }
+
+        /**
          * @return -1, 0 or 1 if arg0 has, respectively, less quality than, equal quality as, or greater quality than
          * arg1
          */
@@ -91,6 +99,14 @@ public abstract class HousingMarketRecord implements Serializable {
                 }
             }
             return (int) Math.signum(diff);
+        }
+
+        /**
+         * @return -1, 0 or 1 if arg0 is, respectively, cheaper than, as expensive as, or more expensive than arg1
+         */
+        @Override
+        public int XCompare(HousingMarketRecord arg0, HousingMarketRecord arg1) {
+            return (int) Math.signum(arg0.price - arg1.price);
         }
 
         /**
