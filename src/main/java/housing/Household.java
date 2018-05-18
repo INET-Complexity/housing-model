@@ -367,6 +367,8 @@ public class Household implements IHouseOwner, Serializable {
         double price = behaviour.getDesiredPurchasePrice(monthlyGrossEmploymentIncome);
         // Cap this expenditure to the maximum mortgage available to the household
         price = Math.min(price, Model.bank.getMaxMortgage(this, true));
+        // Record the bid on householdStats for counting the number of bidders above exponential moving average sale price
+        Model.householdStats.countBiddersAboveExpAvSalePrice(price);
         // Compare costs to decide whether to buy or rent...
         if(behaviour.decideRentOrPurchase(this, price)) {
             // ... if buying, bid in the house sale market for the capped desired price
@@ -522,7 +524,7 @@ public class Household implements IHouseOwner, Serializable {
     public double getAnnualGrossEmploymentIncome() { return annualGrossEmploymentIncome; }
 
     public double getMonthlyGrossEmploymentIncome() { return monthlyGrossEmploymentIncome; }
-    
+
     /***
      * @return Number of properties this household currently has on the sale market
      */
@@ -533,7 +535,7 @@ public class Household implements IHouseOwner, Serializable {
         }
         return(n);
     }
-    
+
     public int nInvestmentProperties() { return housePayments.size() - 1; }
     
     /***

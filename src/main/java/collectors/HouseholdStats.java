@@ -39,6 +39,8 @@ public class HouseholdStats extends CollectorBase {
 
 	// Other fields
 	private double  sumStockYield; // Sum of stock gross rental yields of all currently occupied rental properties
+    private int     nBiddersAboveExpAvSalePrice; // Number of bidders with desired housing expenditure above the exponential moving average sale price
+    private int     nBiddersAboveExpAvSalePriceCounter; // Counter for the number of bidders with desired housing expenditure above the exp. moving average sale price
 
 	//------------------------//
 	//----- Constructors -----//
@@ -71,6 +73,8 @@ public class HouseholdStats extends CollectorBase {
         rentingAnnualisedTotalIncome = 0.0;
         homelessAnnualisedTotalIncome = 0.0;
         sumStockYield = 0.0;
+        nBiddersAboveExpAvSalePrice = 0;
+        nBiddersAboveExpAvSalePriceCounter = 0;
     }
 
     public void record() {
@@ -135,6 +139,20 @@ public class HouseholdStats extends CollectorBase {
         ownerOccupierAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
         rentingAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
         homelessAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
+        // Pass number of bidders above the exponential moving average sale price to persistent variable and
+        // re-initialise to zero the counter
+        nBiddersAboveExpAvSalePrice = nBiddersAboveExpAvSalePriceCounter;
+        nBiddersAboveExpAvSalePriceCounter = 0;
+    }
+
+    /**
+     * Count number of bidders with desired expenditures above the (minimum quality, q=0) exponential moving average
+     * sale price
+     */
+    public void countBiddersAboveExpAvSalePrice(double price) {
+        if (price >= Model.housingMarketStats.getExpAvSalePriceForQuality(0)) {
+            nBiddersAboveExpAvSalePriceCounter++;
+        }
     }
 
     //----- Getter/setter methods -----//
@@ -173,7 +191,7 @@ public class HouseholdStats extends CollectorBase {
     }
 
     // Getters for other variables...
-    // ... number of empty houses
+    // ... number of empty houses (total number of houses minus number of non-homeless households)
     public int getnEmptyHouses() {
         return Model.construction.getHousingStock() + nBTLHomeless + nNonBTLHomeless - Model.households.size();
     }
@@ -182,6 +200,10 @@ public class HouseholdStats extends CollectorBase {
     public double getBTLStockFraction() {
         return ((double)(getnEmptyHouses() - Model.housingMarketStats.getnUnsoldNewBuild()
                 + nRenting))/Model.construction.getHousingStock();
+    }
+    // ... number of bidders with desired housing expenditure above the exponential moving average sale price
+    public int getnBiddersAboveExpAvSalePrice() {
+        return nBiddersAboveExpAvSalePrice;
     }
 
 //    // Array with ages of all households

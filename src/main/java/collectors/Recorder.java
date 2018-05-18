@@ -108,7 +108,7 @@ public class Recorder {
                     // Credit data
                     + "nRegisteredMortgages, "
                     // Stuff to remove
-                    + "ExAvSalePrice");
+                    + "nBiddersAboveExpAvSalePrice, ExAvSalePrice");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -203,6 +203,7 @@ public class Recorder {
                 // Credit data
                 Model.creditSupply.getnRegisteredMortgages() + ", " +
                 // Stuff to remove
+                Model.householdStats.getnBiddersAboveExpAvSalePrice() + ", " +
                 Model.housingMarketStats.getExpAvSalePrice());
     }
 
