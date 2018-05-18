@@ -40,8 +40,8 @@ public class Bank implements Serializable {
     private double                      buyToLetLTVLimit; // Loan-To-Value upper limit for buy-to-let mortgages
 
     // LTI internal policy thresholds
-    private double                      firstTimeBuyerLTILimit; // Loan-To-Income internal upper limit for first-time buyer mortgages
-    private double                      ownerOccupierLTILimit; // Loan-To-Income internal upper limit for owner-occupying mortgages
+    private double                      firstTimeBuyerLTILimit; // Loan-To-EmploymentIncome internal upper limit for first-time buyer mortgages
+    private double                      ownerOccupierLTILimit; // Loan-To-EmploymentIncome internal upper limit for owner-occupying mortgages
 
     //------------------------//
     //----- Constructors -----//
@@ -298,14 +298,14 @@ public class Bank implements Serializable {
     }
 
 	/**
-	 * Get the Loan-To-Income ratio limit applicable by this private bank to a given household. Note that Loan-To-Income
+	 * Get the Loan-To-EmploymentIncome ratio limit applicable by this private bank to a given household. Note that Loan-To-EmploymentIncome
      * constraints apply only to non-BTL applicants. The private bank always imposes its own (hard) limit. Apart from
      * this, it also imposes the Central Bank regulated limit, which allows for a certain fraction of residential loans
      * (mortgages for owner-occupying) to go over it (and thus it is considered here a soft limit).
 	 *
 	 * @param isFirstTimeBuyer true if the household is a first-time buyer
      * @param isHome True if the mortgage is to buy a home for the household (non-BTL mortgage)
-	 * @return The Loan-To-Income ratio limit applicable to the given household
+	 * @return The Loan-To-EmploymentIncome ratio limit applicable to the given household
 	 */
 	private double getLoanToIncomeLimit(boolean isFirstTimeBuyer, boolean isHome) {
 	    double limit;
@@ -317,7 +317,7 @@ public class Bank implements Serializable {
                 limit = ownerOccupierLTILimit;
             }
         } else {
-            System.out.println("Strange: The bank is trying to impose a Loan-To-Income limit on a Buy-To-Let" +
+            System.out.println("Strange: The bank is trying to impose a Loan-To-EmploymentIncome limit on a Buy-To-Let" +
                     "investor!");
             limit = 0.0; // Dummy limit value
         }

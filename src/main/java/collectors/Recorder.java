@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import housing.Household;
 import housing.Model;
 
 /**************************************************************************************************
@@ -108,7 +109,7 @@ public class Recorder {
                     // Credit data
                     + "nRegisteredMortgages, "
                     // Stuff to remove
-                    + "ExAvSalePrice");
+                    + "aveBidPrice, nBiddersAboveExpAvSalePrice, ExAvSalePrice");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -203,6 +204,8 @@ public class Recorder {
                 // Credit data
                 Model.creditSupply.getnRegisteredMortgages() + ", " +
                 // Stuff to remove
+                Household.avePrice/Household.avePriceCounter + ", " +
+                Model.householdStats.getnBiddersAboveExpAvSalePrice() + ", " +
                 Model.housingMarketStats.getExpAvSalePrice());
     }
 

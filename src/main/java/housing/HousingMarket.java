@@ -110,6 +110,17 @@ public abstract class HousingMarket implements Serializable {
      * Main simulation step. For a number of rounds, matches bids with offers and clears the matches.
      */
     void clearMarket() {
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        // To return to previous recording of offers, comment here and uncomment at line 263 in HouseholdBehaviour
+        if (this instanceof HouseSaleMarket) {
+            Iterator<HousingMarketRecord> record = getOffersIterator();
+            while (record.hasNext()) {
+                HouseSaleRecord offer = (HouseSaleRecord)record.next();
+                Model.offersMicroData.println(Model.getTime() + ", " + offer.house.id
+                        + ", " + String.format("%.2f", offer.getPrice()));
+            }
+        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         // Before any use, priorities must be sorted by filling in the uncoveredElements TreeSet at the corresponding
         // PriorityQueue2D
         offersPQ.sortPriorities();
@@ -119,6 +130,7 @@ public abstract class HousingMarket implements Serializable {
         // TODO: This number of rounds needs more thinking... this is just a cheap fix for the moment
         // TODO: This needs to be correctly described in the paper!!!
         int rounds = Math.max(10, Model.households.size()/50); // Previously, int rounds = Math.min(config.TARGET_POPULATION/1000, 1 + (offersPQ.size() + bids.size())/500);
+        rounds = 10000;
         int i = 0;
         while (i < rounds && bids.size() > 0 && offersPQ.size() > 0) { // Previously, for(int i=0, i<rounds, i++) {
             matchBidsWithOffers(); // Step 1: iterate through bids

@@ -42,6 +42,12 @@ public class Household implements IHouseOwner, Serializable {
     private boolean                         isFirstTimeBuyer;
     private boolean                         isBankrupt;
 
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    static boolean flag = true;
+    public static double avePrice;
+    public static int avePriceCounter;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
     //------------------------//
     //----- Constructors -----//
     //------------------------//
@@ -58,9 +64,17 @@ public class Household implements IHouseOwner, Serializable {
         id = ++id_pool;
         age = data.Demographics.pdfHouseholdAgeAtBirth.nextDouble(this.prng);
         incomePercentile = this.prng.nextDouble();
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//        if (this.prng.nextDouble() < 0.5) {
+//            incomePercentile = 0.499;
+//        } else {
+//            incomePercentile = 0.501;
+//        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         behaviour = new HouseholdBehaviour(this.prng, incomePercentile);
         // Find initial values for the annual and monthly gross employment income
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
+//        annualGrossEmploymentIncome = 20000;
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         bankBalance = behaviour.getDesiredBankBalance(getAnnualGrossTotalIncome()); // Desired bank balance is used as initial value for actual bank balance
         monthlyGrossRentalIncome = 0.0;
@@ -85,6 +99,7 @@ public class Household implements IHouseOwner, Serializable {
         age += 1.0/config.constants.MONTHS_IN_YEAR;
         // Update annual and monthly gross employment income
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
+//        annualGrossEmploymentIncome = 24000;
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
         bankBalance += getMonthlyDisposableIncome();
@@ -110,7 +125,13 @@ public class Household implements IHouseOwner, Serializable {
             }            
         } else if (behaviour.isPropertyInvestor()) {
             if (behaviour.decideToBuyInvestmentProperty(this)) {
-                Model.houseSaleMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                double price = behaviour.btlPurchaseBid(this);
+                Model.bidsMicroData.println(Model.getTime()+ ", " + String.format("%.2f", price)
+                        + ", " + 1.0);
+//                Model.houseSaleMarket.BTLbid(this, behaviour.btlPurchaseBid(this)); //TODO-ATTENTION: Line to keep
+                Model.houseSaleMarket.BTLbid(this, price);
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
             }
         } else if (!isHomeowner()){
             System.out.println("Strange: this household is not a type I recognize");
@@ -366,14 +387,61 @@ public class Household implements IHouseOwner, Serializable {
         // Find household's desired housing expenditure
         double price = behaviour.getDesiredPurchasePrice(monthlyGrossEmploymentIncome);
         // Cap this expenditure to the maximum mortgage available to the household
-        price = Math.min(price, Model.bank.getMaxMortgage(this, true));
+//        price = Math.min(price, Model.bank.getMaxMortgage(this, true));
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//        Compute bid price here instead of at bank so as to have the same LTV rule (and only this one) for all households
+        double liquidWealth = getBankBalance();
+        // TODO: HomeEquity is always zero here... by definition? Have households already sold their houses before moving?
+        liquidWealth += getHomeEquity(); // This is not problematic as BTL investors only come here as FTB and thus adding 0 here
+        double maxPrice = liquidWealth/(1.0 - 0.875);
+        maxPrice = Math.floor(maxPrice*100.0)/100.0;
+        price = Math.min(price, maxPrice);
+
+//        Compute averages over the population of bidders
+        if (flag) {
+            avePrice = 0.0;
+            avePriceCounter = 0;
+            avePrice = avePrice + price;
+            avePriceCounter++;
+            flag = false;
+        } else {
+            avePrice = avePrice + price;
+            avePriceCounter++;
+        }
+
+//        Print to file micro-data about all bidders
+        int isFTB = 0;
+        int isBTL = 0;
+        if (isFirstTimeBuyer()) isFTB = 1;
+        if (behaviour.isPropertyInvestor()) isBTL = 1;
+//        Model.biddersMicroData.println(Model.getTime() + ", " + id + ", " + String.format("%.2f", price)
+//                + ", " + isFTB + ", " + isBTL);
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+        Model.householdStats.countBiddersAboveExpAvSalePrice(price);
         // Compare costs to decide whether to buy or rent...
         if(behaviour.decideRentOrPurchase(this, price)) {
             // ... if buying, bid in the house sale market for the capped desired price
             Model.houseSaleMarket.bid(this, price);
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            int buyerBTL;
+            if (behaviour.isPropertyInvestor()) {
+                buyerBTL = 1;
+            } else {
+                buyerBTL = 0;
+            }
+            Model.bidsMicroData.println(Model.getTime() + ", " + String.format("%.2f", price)
+                    + ", " + buyerBTL);
+            Model.biddersMicroData.println(Model.getTime() + ", " + id + ", " + String.format("%.2f", price)
+                    + ", " + isFTB + ", " + isBTL + ", 1");
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         } else {
             // ... if renting, bid in the house rental market for the desired rent price
             Model.houseRentalMarket.bid(this, behaviour.desiredRent(this, monthlyGrossEmploymentIncome));
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            Model.biddersMicroData.println(Model.getTime() + ", " + id + ", " + String.format("%.2f", price)
+                    + ", " + isFTB + ", " + isBTL + ", 0");
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         }
     }
     
@@ -522,7 +590,7 @@ public class Household implements IHouseOwner, Serializable {
     public double getAnnualGrossEmploymentIncome() { return annualGrossEmploymentIncome; }
 
     public double getMonthlyGrossEmploymentIncome() { return monthlyGrossEmploymentIncome; }
-    
+
     /***
      * @return Number of properties this household currently has on the sale market
      */
@@ -533,7 +601,7 @@ public class Household implements IHouseOwner, Serializable {
         }
         return(n);
     }
-    
+
     public int nInvestmentProperties() { return housePayments.size() - 1; }
     
     /***

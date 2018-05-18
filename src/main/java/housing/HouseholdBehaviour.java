@@ -14,6 +14,17 @@ import org.apache.commons.math3.random.MersenneTwister;
 public class HouseholdBehaviour implements Serializable {
 	private static final long serialVersionUID = -7785886649432814279L;
 
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+	static boolean flag = true;
+    static boolean flag2 = true;
+    static boolean flag3 = false;
+	static int counter = 0;
+	static double avCostHouse = 0.0;
+	static double avCostRent = 0.0;
+    static int counter2 = 0;
+    static int upDown = 0;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
     //------------------//
     //----- Fields -----//
     //------------------//
@@ -107,10 +118,14 @@ public class HouseholdBehaviour implements Serializable {
         // TODO: The capping of this factor intends to avoid negative and too large desired prices, the 0.9 is a
         // TODO: purely artificial fudge parameter. This formula should be reviewed and changed!
         if (HPAFactor > 0.9) HPAFactor = 0.9;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        HPAFactor = 0.0;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         // TODO: Note that wealth is not used here, but only employmentIncome (as monthlyIncome refers here to monthlyGrossEmploymentIncome)
-		return config.BUY_SCALE*config.constants.MONTHS_IN_YEAR*monthlyIncome
-                *Math.exp(config.BUY_EPSILON * prng.nextGaussian())
-                /(1.0 - HPAFactor);
+//		return config.BUY_SCALE*config.constants.MONTHS_IN_YEAR*monthlyIncome
+//                *Math.exp(config.BUY_EPSILON*prng.nextGaussian())
+//                /(1.0 - HPAFactor);
+        return config.BUY_SCALE*config.constants.MONTHS_IN_YEAR*monthlyIncome;
 	}
 
 	/**
@@ -120,12 +135,25 @@ public class HouseholdBehaviour implements Serializable {
 	 * @param principal Amount of principal left on any mortgage on this house
 	 */
 	double getInitialSalePrice(int quality, double principal) {
-        double exponent = config.SALE_MARKUP
-                + Math.log(Model.housingMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
-                - config.SALE_WEIGHT_DAYS_ON_MARKET*Math.log((Model.housingMarketStats.getExpAvDaysOnMarket()
-                + 1.0)/(config.constants.DAYS_IN_MONTH + 1.0))
-                + config.SALE_EPSILON * prng.nextGaussian();
+        double exponent = config.SALE_MARKUP - 0.02 - 0.02
+                + Math.log(Model.housingMarketStats.getExpAvSalePriceForQuality(quality))
+//                + Math.log(Model.housingMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
+//                - config.SALE_WEIGHT_DAYS_ON_MARKET*Math.log((Model.housingMarketStats.getExpAvDaysOnMarket()
+//                + 1.0)/(config.constants.DAYS_IN_MONTH + 1.0))
+                + config.SALE_EPSILON*prng.nextGaussian();
         // TODO: ExpAv days on market should probably be computed for each quality band so as to use here only the correct one
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//        if (flag2) {
+//            System.out.println(upDown);
+//            upDown = 0;
+//            flag2 = false;
+//        }
+//        if (Math.exp(exponent) > Model.housingMarketStats.getExpAvSalePriceForQuality(quality)) {
+//            upDown++;
+//        } else {
+//            upDown--;
+//        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         return Math.max(Math.exp(exponent), principal);
 	}
 
@@ -191,9 +219,14 @@ public class HouseholdBehaviour implements Serializable {
 	 ********************************************************/
 	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
 		if(prng.nextDouble() < config.P_SALE_PRICE_REDUCE) {
-			double logReduction = config.REDUCTION_MU + (prng.nextGaussian()*config.REDUCTION_SIGMA);
-			return(sale.getPrice()*(1.0 - Math.exp(logReduction)/100.0));
-		}
+			double logReduction = config.REDUCTION_MU+(prng.nextGaussian()*config.REDUCTION_SIGMA);
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//			return sale.getPrice();
+//            logReduction = 2.5;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//            return(sale.getPrice()*(1.0 - Math.exp(logReduction)/100.0));
+            return(sale.getPrice());
+        }
 		return(sale.getPrice());
 	}
 
@@ -214,10 +247,26 @@ public class HouseholdBehaviour implements Serializable {
                 decideDownPayment(me, purchasePrice), true);
         int newHouseQuality = Model.housingMarketStats.getMaxQualityForPrice(purchasePrice);
         if (newHouseQuality < 0) return false; // can't afford a house anyway
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//        if (newHouseQuality < 0) newHouseQuality = 0;
+//        purchasePrice = 200000;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR
 				- purchasePrice*getLongTermHPAExpectation();
         double costOfRent = Model.rentalMarketStats.getExpAvSalePriceForQuality(newHouseQuality)
                 *config.constants.MONTHS_IN_YEAR;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//        return prng.nextDouble() < 0.5;
+//        costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR
+//                - purchasePrice*0.005;
+//        costOfRent = Model.rentalMarketStats.getReferencePriceForQuality(newHouseQuality)
+//                *config.constants.MONTHS_IN_YEAR;
+//        Model.offersMicroData.println(Model.getTime() + ", " + String.format("%.2f", costOfHouse)
+//                + ", " + String.format("%.2f", costOfRent*(1.0 + config.PSYCHOLOGICAL_COST_OF_RENTING))
+//                + ", " + String.format("%.2f", mortgageApproval.monthlyPayment)
+//                + ", " + String.format("%.2f", purchasePrice)
+//                + ", " + String.format("%.6f", getLongTermHPAExpectation()));
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         return prng.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
                 + config.PSYCHOLOGICAL_COST_OF_RENTING) - costOfHouse));
     }
@@ -245,11 +294,36 @@ public class HouseholdBehaviour implements Serializable {
 	 * @return True if investor me decides to sell investment property h
 	 */
 	boolean decideToSellInvestmentProperty(House h, Household me) {
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//        if (Model.getTime() >= 1000) { return false; }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		// Fast decisions...
         // ...always keep at least one investment property
-		if(me.nInvestmentProperties() < 2) return false;
+		if(me.nInvestmentProperties() < 2) {
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//            if (flag) {
+//                Model.salesMicroData.println("");
+//                Model.salesMicroData.print(Model.getTime() + ", p");
+//                flag = false;
+//            } else {
+//                Model.salesMicroData.print(", p");
+//			}
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		    return false;
+        }
         // ...don't sell while occupied by tenant
-		if(!h.isOnRentalMarket()) return false;
+		if(!h.isOnRentalMarket()) {
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//            if (flag) {
+//                Model.salesMicroData.println("");
+//                Model.salesMicroData.print(Model.getTime() + ", r");
+//                flag = false;
+//            } else {
+//                Model.salesMicroData.print(", r");
+//            }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		    return false;
+        }
 
         // Find the expected equity yield rate of this property as a weighted mix of both rental yield and capital gain
         // times the leverage
@@ -280,6 +354,13 @@ public class HouseholdBehaviour implements Serializable {
 		// Compute a probability to keep the property as a function of the effective yield
 		double pKeep = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
                 1.0/config.constants.MONTHS_IN_YEAR);
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        if (Model.getTime() < 1000) {
+            pKeep = 0.985;
+        } else {
+            pKeep = 1.0;
+        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		// Return true or false as a random draw from the computed probability
 		return prng.nextDouble() < (1.0 - pKeep);
 	}
@@ -296,6 +377,16 @@ public class HouseholdBehaviour implements Serializable {
      * @return True if investor me decides to try to buy a new investment property
      */
     boolean decideToBuyInvestmentProperty(Household me) {
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        if (Model.getTime() >= 1000) {
+            if (me.nInvestmentProperties() < 1) { return true ; }
+            if (me.getBankBalance() < getDesiredBankBalance(me.getAnnualGrossTotalIncome())*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
+            double maxPrice = Model.bank.getMaxMortgage(me, false);
+            if (maxPrice < Model.housingMarketStats.getExpAvSalePriceForQuality(0)) { return false; }
+            double pBuy = 0.0;
+            return prng.nextDouble() < pBuy;
+        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         // Fast decisions...
         // ...always decide to buy if owning no investment property yet
         if (me.nInvestmentProperties() < 1) { return true ; }
@@ -334,7 +425,14 @@ public class HouseholdBehaviour implements Serializable {
         // Compute the probability to decide to buy an investment property as a function of the expected equity yield
         double pBuy = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
                 1.0/config.constants.MONTHS_IN_YEAR);
-        // Return true or false as a random draw from the computed probability
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        if (Model.getTime() < 1000) {
+            pBuy = 0.966;
+        } else {
+            pBuy = 0.0;
+        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+		// Return true or false as a random draw from the computed probability
         return prng.nextDouble() < pBuy;
     }
 
@@ -342,7 +440,10 @@ public class HouseholdBehaviour implements Serializable {
         // TODO: What is this 1.1 factor? Another fudge parameter???????????????????????????
         // TODO: It prevents wealthy investors from offering more than 10% above the average price of top quality houses
         return(Math.min(Model.bank.getMaxMortgage(me, false),
-                1.1*Model.housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY-1)));
+//                1.1*Model.housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY-1)));
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+                1.0*Model.housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY-1)));
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     }
 
 	/**
