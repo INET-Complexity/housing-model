@@ -1,6 +1,7 @@
 package markets;
 
 import housing.House;
+import housing.Household;
 import housing.Model;
 
 import java.util.ArrayList;
@@ -31,11 +32,11 @@ public class HouseSaleRecord extends HousingMarketRecord {
 
 	/**
 	 * Construct a new record
-	 * 
-	 * @param h The house that is for sale
+	 * @param household
+	 * @param house The house that is for sale
 	 * @param price The initial list price for the house
 	 */
-	public HouseSaleRecord(House h, double price) {
+	private HouseSaleRecord(Household household, House house, double price) {
 		super(price);
 		house = h;
 		initialListedPrice = price;
@@ -43,6 +44,10 @@ public class HouseSaleRecord extends HousingMarketRecord {
 		matchedBids = new ArrayList<>(8); // TODO: Check if this initial size of 8 is good enough or can be improved
         recalculateHouseSpecificYield(price);
 	}
+
+	public static HouseSaleRecord from(Offer offer) {
+        return new HouseSaleRecord(offer.getHousehold(), offer.getHouse(), offer.getPrice());
+    }
 
     //-------------------//
     //----- Methods -----//
@@ -63,9 +68,9 @@ public class HouseSaleRecord extends HousingMarketRecord {
     }
 
     /**
-     * Record the match of the offer of this property with a bid
+     * Record the match of the submitOffer of this property with a submitBid
      *
-     * @param bid The bid being matched to the offer
+     * @param bid The submitBid being matched to the submitOffer
      */
     void matchWith(HouseBuyerRecord bid) { matchedBids.add(bid); }
 

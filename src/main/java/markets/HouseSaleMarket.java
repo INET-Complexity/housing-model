@@ -42,19 +42,28 @@ public class HouseSaleMarket extends HousingMarket {
 		sale.house.owner = buyer;
 	}
 
-	@Override
-	public HouseSaleRecord offer(House house, double price) {
-		HouseSaleRecord hsr = super.offer(house, price);
-		offersPY.add(hsr);
-		house.putForSale(hsr);
-		return(hsr);
-	}
-	
-	@Override
-	public void removeOffer(HouseSaleRecord hsr) {
-		super.removeOffer(hsr);
-		offersPY.remove(hsr);
-		hsr.house.resetSaleRecord();
+    @Override
+    public void cancelOffer(HouseSaleRecord hsr) {
+        super.cancelOffer(hsr);
+        offersPY.remove(hsr);
+        hsr.house.resetSaleRecord();
+    }
+
+    /*******************************************
+     * Make a submitBid on the market as a Buy-to-let investor
+     *  (i.e. make an submitOffer on a (yet to be decided) house).
+     *
+     * @param buyer The household that is making the submitBid.
+     * @param maxPrice The maximum price that the household is willing to pay.
+     ******************************************/
+    void BTLbid(Household buyer, double maxPrice) { bids.add(new BTLBuyerRecord(buyer, maxPrice)); }
+
+    @Override
+	public HouseSaleRecord submitOffer(House house, double price) {
+		HouseSaleRecord record = super.submitOffer(house, price);
+		offersPY.add(record);
+		house.putForSale(record);
+		return record;
 	}
 	
 	@Override
@@ -106,14 +115,5 @@ public class HouseSaleMarket extends HousingMarket {
         record.remove();
         offersPY.remove(offer);
     }
-
-	/*******************************************
-	 * Make a bid on the market as a Buy-to-let investor
-	 *  (i.e. make an offer on a (yet to be decided) house).
-	 * 
-	 * @param buyer The household that is making the bid.
-	 * @param maxPrice The maximum price that the household is willing to pay.
-	 ******************************************/
-	void BTLbid(Household buyer, double maxPrice) { bids.add(new BTLBuyerRecord(buyer, maxPrice)); }
 
 }

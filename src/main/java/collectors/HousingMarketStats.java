@@ -173,7 +173,7 @@ public class HousingMarketStats extends CollectorBase {
         bidPrices = new double[nBuyers];
 
 
-        // Record bid prices and their average
+        // Record submitBid prices and their average
         int i = 0;
         for(HouseBuyerRecord bid : market.getBids()) {
             sumBidPrices += bid.getPrice();
@@ -181,7 +181,7 @@ public class HousingMarketStats extends CollectorBase {
             ++i;
         }
 
-        // Record offer prices, their average, and the number of empty and new houses
+        // Record submitOffer prices, their average, and the number of empty and new houses
         i = 0;
         for(HousingMarketRecord sale : market.getOffersPQ()) {
             sumOfferPrices += sale.getPrice();

@@ -55,6 +55,7 @@ public class House implements Comparable<House>, Serializable {
 	HouseSaleRecord getRentalRecord() { return rentalRecord; }
 
 	boolean isOnRentalMarket() { return rentalRecord != null; }
+
     void putForSale(HouseSaleRecord saleRecord) { this.saleRecord = saleRecord; }
 
 	void resetSaleRecord() { saleRecord = null; }

@@ -13,12 +13,19 @@ import java.util.Comparator;
  *
  **********************************************/
 public class HouseBuyerRecord extends HousingMarketRecord {
-	private static final long serialVersionUID = -4092951887680947486L;
 
-	public HouseBuyerRecord(Household h, double price) {
+	private static final long serialVersionUID = -4092951887680947486L;
+	private Household buyer;
+	private double price;
+
+	private HouseBuyerRecord(Household h, double price) {
 		super(price);
 		buyer = h;
 	}
+
+	public static HouseBuyerRecord from(Bid bid) {
+	    return new HouseBuyerRecord(bid.getHousehold(), bid.getPrice());
+    }
 	
 	public static class PComparator implements Comparator<HouseBuyerRecord> {
 		@Override
@@ -34,8 +41,6 @@ public class HouseBuyerRecord extends HousingMarketRecord {
 	
 
 	/////////////////////////////////////////////////////////////////
-	
-	public Household buyer; // Who wants to buy the house
 
 	@Override
 	public int getQuality() {

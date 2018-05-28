@@ -131,7 +131,7 @@ public class Model {
             // For each simulation, run config.N_STEPS time steps
 			for (t = 0; t <= config.N_STEPS; t += 1) {
 
-                // Steps model and stores sale and rental markets bid and offer prices, and their averages, into their
+                // Steps model and stores sale and rental markets submitBid and submitOffer prices, and their averages, into their
                 // respective variables
                 modelStep();
 
@@ -185,13 +185,13 @@ public class Model {
         construction.step();
         // Updates regional households consumption, housing decisions, and corresponding regional bids and offers
 		for(Household h : households) h.step();
-        // Stores sale market bid and offer prices and averages before bids are matched by clearing the market
+        // Stores sale market submitBid and submitOffer prices and averages before bids are matched by clearing the market
         housingMarketStats.preClearingRecord();
         // Clears sale market and updates the HPI
         houseSaleMarket.clearMarket();
         // Computes and stores several housing market statistics after bids are matched by clearing the market (such as HPI, HPA)
         housingMarketStats.postClearingRecord();
-        // Stores rental market bid and offer prices and averages before bids are matched by clearing the market
+        // Stores rental market submitBid and submitOffer prices and averages before bids are matched by clearing the market
         rentalMarketStats.preClearingRecord();
         // Clears rental market
         houseRentalMarket.clearMarket();

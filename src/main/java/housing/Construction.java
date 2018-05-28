@@ -42,6 +42,7 @@ public class Construction implements IHouseOwner, Serializable {
 	public void step() {
         // Initialise to zero the number of houses built this month
         nNewBuild = 0;
+
         // First update prices of properties put on the market on previous time steps and still unsold
         for(House h : onMarket) {
             Model.houseSaleMarket.updateOffer(h.getSaleRecord(), h.getSaleRecord().getPrice()*0.95);
@@ -67,7 +68,7 @@ public class Construction implements IHouseOwner, Serializable {
             newHouse = new House((int)(rand.nextDouble()*config.N_QUALITY));
             newHouse.owner = this;
             // ...put the house for sale in the house sale market at the reference price for that quality
-            Model.houseSaleMarket.offer(newHouse,
+            Model.houseSaleMarket.submitOffer(newHouse,
                     Model.housingMarketStats.getReferencePriceForQuality(newHouse.getQuality()));
             // ...add the house to the portfolio of construction sector properties
             onMarket.add(newHouse);

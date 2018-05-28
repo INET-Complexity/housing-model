@@ -26,18 +26,18 @@ public class HouseRentalMarket extends HousingMarket {
 	}
 
 	@Override
-	public HouseSaleRecord offer(House house, double price) {
+	public HouseSaleRecord submitOffer(House house, double price) {
 		if(house.isOnMarket()) {
-			System.out.println("Got offer on rental market of house already on sale market");			
+			System.out.println("Got submitOffer on rental market of house already on sale market");
 		}
-		HouseSaleRecord hsr = super.offer(house, price);
+		HouseSaleRecord hsr = super.submitOffer(house, price);
 		house.putForRent(hsr);
 		return(hsr);
 	}
 	
 	@Override
-	public void removeOffer(HouseSaleRecord hsr) {
-		super.removeOffer(hsr);
+	public void cancelOffer(HouseSaleRecord hsr) {
+		super.cancelOffer(hsr);
 		hsr.house.resetRentalRecord();
 	}
 }

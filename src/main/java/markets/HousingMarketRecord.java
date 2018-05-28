@@ -6,14 +6,15 @@ import utilities.PriorityQueue2D;
 
 /**************************************************************************************************
  * Root class to encapsulate information on housing market transactions, both offers and bids. Both
- * HouseSaleRecord, with information on the offer/seller, and HouseBuyerRecord, with information on
- * the bid/buyer, will extend this class. Notably, the comparators for the ordering of both
+ * HouseSaleRecord, with information on the submitOffer/seller, and HouseBuyerRecord, with information on
+ * the submitBid/buyer, will extend this class. Notably, the comparators for the ordering of both
  * priority queues (price-quality, price-yield) are implemented here.
  *
  * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
-public abstract class HousingMarketRecord implements Serializable {
+abstract class HousingMarketRecord implements Serializable {
+
     private static final long serialVersionUID = 942379254469390885L;
 
     //------------------//
@@ -130,4 +131,5 @@ public abstract class HousingMarketRecord implements Serializable {
     public void setPrice(double newPrice, HousingMarket.Authority auth) {
         price = newPrice;
     }
+
 }

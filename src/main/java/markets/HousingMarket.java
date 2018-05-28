@@ -17,6 +17,7 @@ import utilities.PriorityQueue2D;
  *
  *************************************************************************************************/
 public abstract class HousingMarket implements Serializable {
+
     private static final long serialVersionUID = -7249221876467520088L;
 
     //------------------//
@@ -25,17 +26,19 @@ public abstract class HousingMarket implements Serializable {
 
     private static Authority                        authority = new Authority();
 
-    private Config config = Model.config; // Passes the Model's configuration parameters object to a private field
-    private MersenneTwister                         rand = Model.rand; // Passes the Model's random number generator to a private field
-    private PriorityQueue2D<HousingMarketRecord>    offersPQ;
-
-    ArrayList<HouseBuyerRecord>                     bids;
+    private Config config;
+    private MersenneTwister prng;
+    private PriorityQueue2D<HouseSaleRecord> offersPQ;
+    private ArrayList<HouseBuyerRecord> bids;
 
     //------------------------//
     //----- Constructors -----//
     //------------------------//
 
-    HousingMarket() {
+    HousingMarket(Config config, MersenneTwister prng) {
+        this.config = config;
+        this.prng = prng;
+
         offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator()); //Priority Queue of (Price, Quality)
         // The integer passed to the ArrayList constructor is an initially declared capacity (for initial memory
         // allocation purposes), it will actually have size zero and only grow by adding elements
@@ -62,20 +65,42 @@ public abstract class HousingMarket implements Serializable {
     public void init() { offersPQ.clear(); }
 
     //----- Methods to add, update, remove offers and bids -----//
-    
+
+    // TODO: I guess that bids are never cancelled?
+
     /**
-     * Put a new offer on the market
+     * Take a house off the market
      *
-     * @param house House to put on the market
-     * @param price List price for the house
+     * @param hsr The HouseSaleRecord of the house to take off the market
+     */
+    public void cancelOffer(HouseSaleRecord hsr) { offersPQ.remove(hsr); }
+
+    /**
+     * Submit a bid to buy a (yet to be decided) house).
+     *
+     * @param bid an offer by a particular household to purchase a yet to be determined house.
+     * @return
+     */
+    public HouseBuyerRecord submitBid(Bid bid) {
+        HouseBuyerRecord record = HouseBuyerRecord.from(bid);
+        bids.add(record);  // SIDE EFFECT!!
+        return record;
+    }
+
+    /**
+     * Submit an offer to sell a house.
+     *
+     * @param offer
      * @return HouseSaleRecord for the house
      */
-    public HouseSaleRecord offer(House house, double price) {
-        HouseSaleRecord hsr = new HouseSaleRecord(house, price);
-        offersPQ.add(hsr);
-        return hsr;
+    public HouseSaleRecord submitOffer(Offer offer) {
+        HouseSaleRecord record = HouseSaleRecord.from(offer);
+        offersPQ.add(record);  // SIDE EFFECT!!
+        return record;
     }
-    
+
+    // TODO: I guess that Bids are never updated?
+
     /**
      * Change the list-price on a house that is already on the market
      * 
@@ -87,22 +112,6 @@ public abstract class HousingMarket implements Serializable {
         hsr.setPrice(newPrice, authority);
         offersPQ.add(hsr);
     }
-    
-    /**
-     * Take a house off the market
-     * 
-     * @param hsr The HouseSaleRecord of the house to take off the market
-     */
-    public void removeOffer(HouseSaleRecord hsr) { offersPQ.remove(hsr); }
-
-    /**
-     * Make a bid on the market (i.e. make an offer on a (yet to be decided) house
-     * 
-     * @param buyer The household that is making the bid
-     * @param price The price that the household is willing to pay
-     */
-    public void bid(Household buyer, double price) {
-        bids.add(new HouseBuyerRecord(buyer, price)); }
 
     //----- Market clearing methods -----//
 
@@ -137,9 +146,9 @@ public abstract class HousingMarket implements Serializable {
         HouseSaleRecord offer;
         for(HouseBuyerRecord bid : bids) {
             offer = getBestOffer(bid);
-            // If buyer and seller is the same household, then the bid falls through and the household will need to
-            // reissue it next month. Also, if the bid price is not enough to buy anything in this market and at this
-            // time, the bid also falls through
+            // If buyer and seller is the same household, then the submitBid falls through and the household will need to
+            // reissue it next month. Also, if the submitBid price is not enough to buy anything in this market and at this
+            // time, the submitBid also falls through
             if(offer != null && (offer.house.owner != bid.buyer)) {
                 offer.matchWith(bid);
             }
@@ -150,8 +159,8 @@ public abstract class HousingMarket implements Serializable {
     }
 
     /**
-     * Second step to clear the market. Iterate through all offers and, for each offer, loop through its matched bids.
-     * If BIDUP is activated, the offer price is bid up according to a geometric distribution with mean dependent on the
+     * Second step to clear the market. Iterate through all offers and, for each submitOffer, loop through its matched bids.
+     * If BIDUP is activated, the submitOffer price is submitBid up according to a geometric distribution with mean dependent on the
      * number of matched bids.
      */
     private void clearMatches() {
@@ -167,9 +176,9 @@ public abstract class HousingMarket implements Serializable {
         while(record.hasNext()) {
             offer = (HouseSaleRecord)record.next();
             nBids = offer.matchedBids.size();
-            // If matches for this offer are multiple...
+            // If matches for this submitOffer are multiple...
             if(nBids > 1) {
-                // ...first bid up the price
+                // ...first submitBid up the price
                 if(config.BIDUP > 1.0) {
                     // TODO: All this enough bids mechanism is not explained! The 10000/N factor, the 0.5 added, and the
                     // TODO: topping of the function at 4 are not declared in the paper. Remove or explain!
@@ -181,23 +190,23 @@ public abstract class HousingMarket implements Serializable {
                 } else {
                     salePrice = offer.getPrice();                    
                 }
-                // ...then choose a bid above the new price
+                // ...then choose a submitBid above the new price
                 offer.matchedBids.sort(new HouseBuyerRecord.PComparator()); // This orders the list with the highest price last
                 while(nBids > 0 && offer.matchedBids.get(nBids - 1).getPrice() >= salePrice) {
                     --nBids; // This counts the number of bids above the new price
                 }
                 if (offer.matchedBids.size() - nBids > 1) {
-                    winningBid = nBids + rand.nextInt(offer.matchedBids.size()- nBids); // This chooses a random one if they are multiple
+                    winningBid = nBids + prng.nextInt(offer.matchedBids.size()- nBids); // This chooses a random one if they are multiple
                 } else if (offer.matchedBids.size() - nBids == 1) {
                     winningBid = nBids; // This chooses the only one if there is only one
                 } else {
                     winningBid = nBids - 1;
-                    salePrice = offer.matchedBids.get(winningBid).getPrice(); // This chooses the highest bid if all of them are below the new price
+                    salePrice = offer.matchedBids.get(winningBid).getPrice(); // This chooses the highest submitBid if all of them are below the new price
                 }
-                // Remove this offer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
-                // Note that this needs to be done before modifying offer, so that it can be also found in the PY queue for the HouseSaleMarket case
+                // Remove this submitOffer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
+                // Note that this needs to be done before modifying submitOffer, so that it can be also found in the PY queue for the HouseSaleMarket case
                 removeOfferFromQueues(record, offer);
-                // ...update price for the offer
+                // ...update price for the submitOffer
                 offer.setPrice(salePrice, authority);
                 // ...complete successful transaction and record it into the corresponding housingMarketStats
                 completeTransaction(offer.matchedBids.get(winningBid), offer);
@@ -208,7 +217,7 @@ public abstract class HousingMarket implements Serializable {
             } else if (nBids == 1) {
                 // ...complete successful transaction and record it into the corresponding housingMarketStats
                 completeTransaction(offer.matchedBids.get(0), offer);
-                // ...remove this offer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
+                // ...remove this submitOffer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
                 removeOfferFromQueues(record, offer);
             }
             // Note that we skip the whole process if there are no matches
@@ -230,8 +239,8 @@ public abstract class HousingMarket implements Serializable {
      * This abstract method allows for the different implementations at HouseSaleMarket and HouseRentalMarket to be
      * called as appropriate
      *
-     * @param purchase HouseBuyerRecord with information on the offer
-     * @param sale HouseSaleRecord with information on the bid
+     * @param purchase HouseBuyerRecord with information on the submitOffer
+     * @param sale HouseSaleRecord with information on the submitBid
      */
     public abstract void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale);
 
@@ -244,7 +253,7 @@ public abstract class HousingMarket implements Serializable {
     Iterator<HousingMarketRecord> getOffersIterator() { return(offersPQ.iterator()); }
 
     /**
-     * Get the highest quality house being offered for a price up to that of the bid (OfferPrice <= bidPrice)
+     * Get the highest quality house being offered for a price up to that of the submitBid (OfferPrice <= bidPrice)
      *
      * @param bid The highest possible price the buyer is ready to pay
      */

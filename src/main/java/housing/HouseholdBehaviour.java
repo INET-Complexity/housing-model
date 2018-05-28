@@ -97,7 +97,7 @@ public class HouseholdBehaviour implements Serializable {
     //----- Owner-Occupier behaviour -----//
 
 	/**
-     * Desired purchase price used to decide whether to buy a house and how much to bid for it
+     * Desired purchase price used to decide whether to buy a house and how much to submitBid for it
      *
 	 * @param monthlyIncome Monthly income of the household
 	 */
@@ -224,7 +224,7 @@ public class HouseholdBehaviour implements Serializable {
     }
 
 	/********************************************************
-	 * Decide how much to bid on the rental market
+	 * Decide how much to submitBid on the rental market
 	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
 	 ********************************************************/
 	double desiredRent(Household me, double monthlyIncome) {

@@ -162,7 +162,7 @@ public class Household implements IHouseOwner, Serializable {
     /**
      * Decide what to do with a house h owned by the household:
      * - if the household lives in the house, decide whether to sell it or not
-     * - if the house is up for sale, rethink its offer price, and possibly put it up for rent instead (only BTL investors)
+     * - if the house is up for sale, rethink its submitOffer price, and possibly put it up for rent instead (only BTL investors)
      * - if the house is up for rent, rethink the rent demanded
      *
      * @param house A house owned by the household
@@ -177,14 +177,14 @@ public class Household implements IHouseOwner, Serializable {
             if(newPrice > mortgageFor(house).principal) {
                 Model.houseSaleMarket.updateOffer(forSale, newPrice);
             } else {
-                Model.houseSaleMarket.removeOffer(forSale);
+                Model.houseSaleMarket.cancelOffer(forSale);
                 // TODO: First condition is redundant!
                 if(house  != home && house.resident == null) {
-                    Model.houseRentalMarket.offer(house, buyToLetRent(house));
+                    Model.houseRentalMarket.submitOffer(house, buyToLetRent(house));
                 }
             }
         } else if(decideToSellHouse(house)) { // put house on market?
-            if(house.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(house.getRentalRecord());
+            if(house.isOnRentalMarket()) Model.houseRentalMarket.cancelOffer(house.getRentalRecord());
             putHouseForSale(house);
         }
         
@@ -208,7 +208,7 @@ public class Household implements IHouseOwner, Serializable {
         } else {
             principal = 0.0;
         }
-        Model.houseSaleMarket.offer(h, behaviour.getInitialSalePrice(h.getQuality(), principal));
+        Model.houseSaleMarket.submitOffer(h, behaviour.getInitialSalePrice(h.getQuality(), principal));
     }
 
     /////////////////////////////////////////////////////////
@@ -252,7 +252,7 @@ public class Household implements IHouseOwner, Serializable {
                 home = sale.house;
                 sale.house.resident = this;
             } else if (sale.house.resident == null) { // put empty buy-to-let house on rental market
-                Model.houseRentalMarket.offer(sale.house, buyToLetRent(sale.house));
+                Model.houseRentalMarket.submitOffer(sale.house, buyToLetRent(sale.house));
             }
             isFirstTimeBuyer = false;
         }
@@ -266,7 +266,7 @@ public class Household implements IHouseOwner, Serializable {
         bankBalance += sale.getPrice();
         bankBalance -= mortgage.payoff(bankBalance);
         if(sale.house.isOnRentalMarket()) {
-            Model.houseRentalMarket.removeOffer(sale);
+            Model.houseRentalMarket.cancelOffer(sale);
         }
         // TODO: Warning, if bankBalance is not enough to pay mortgage back, then the house stays in housePayments, consequences to be checked!
         if(mortgage.nPayments == 0) {
@@ -300,7 +300,7 @@ public class Household implements IHouseOwner, Serializable {
 //        if(h.resident != null) System.out.println("Strange: renting out a house that has a resident");        
 //        if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");        
         if(h.isOnRentalMarket()) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
-        if(!h.isOnMarket()) Model.houseRentalMarket.offer(h, buyToLetRent(h));
+        if(!h.isOnMarket()) Model.houseRentalMarket.submitOffer(h, buyToLetRent(h));
     }
 
     /**********************************************************
@@ -357,7 +357,7 @@ public class Household implements IHouseOwner, Serializable {
 
 
     /********************************************************
-     * Make the decision whether to bid on the housing market or rental market.
+     * Make the decision whether to submitBid on the housing market or rental market.
      * This is an "intensity of choice" decision (sigma function)
      * on the cost of renting compared to the cost of owning, with
      * COST_OF_RENTING being an intrinsic psychological cost of not
@@ -370,11 +370,11 @@ public class Household implements IHouseOwner, Serializable {
         price = Math.min(price, Model.bank.getMaxMortgage(this, true));
         // Compare costs to decide whether to buy or rent...
         if(behaviour.decideRentOrPurchase(this, price)) {
-            // ... if buying, bid in the house sale market for the capped desired price
-            Model.houseSaleMarket.bid(this, price);
+            // ... if buying, submitBid in the house sale market for the capped desired price
+            Model.houseSaleMarket.submitBid(this, price);
         } else {
-            // ... if renting, bid in the house rental market for the desired rent price
-            Model.houseRentalMarket.bid(this, behaviour.desiredRent(this, monthlyGrossEmploymentIncome));
+            // ... if renting, submitBid in the house rental market for the desired rent price
+            Model.houseRentalMarket.submitBid(this, behaviour.desiredRent(this, monthlyGrossEmploymentIncome));
         }
     }
     
@@ -399,7 +399,7 @@ public class Household implements IHouseOwner, Serializable {
     @Override
     public void completeHouseLet(HouseSaleRecord sale) {
         if(sale.house.isOnMarket()) {
-            Model.houseSaleMarket.removeOffer(sale.house.getSaleRecord());
+            Model.houseSaleMarket.cancelOffer(sale.house.getSaleRecord());
         }
         monthlyGrossRentalIncome += sale.getPrice();
     }
@@ -440,8 +440,8 @@ public class Household implements IHouseOwner, Serializable {
                 isHome = false;
             }
             if(h.owner == this) {
-                if(h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
-                if(h.isOnMarket()) Model.houseSaleMarket.removeOffer(h.getSaleRecord());
+                if(h.isOnRentalMarket()) Model.houseRentalMarket.cancelOffer(h.getRentalRecord());
+                if(h.isOnMarket()) Model.houseSaleMarket.cancelOffer(h.getSaleRecord());
                 if(h.resident != null) h.resident.getEvicted();
                 beneficiary.inheritHouse(h, isHome);
             } else {
@@ -486,7 +486,7 @@ public class Household implements IHouseOwner, Serializable {
             if(decideToSellHouse(h)) {
                 putHouseForSale(h);
             } else if(h.resident == null) {
-                Model.houseRentalMarket.offer(h, buyToLetRent(h));
+                Model.houseRentalMarket.submitOffer(h, buyToLetRent(h));
             }
         } else {
             // I'm an owner-occupier

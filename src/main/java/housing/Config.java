@@ -36,7 +36,7 @@ public class Config {
     public int N_QUALITY;                   // Number of quality bands for houses
 
     // Housing market parameters
-    int DAYS_UNDER_OFFER;                       // Time (in days) that a house remains under offer
+    int DAYS_UNDER_OFFER;                       // Time (in days) that a house remains under submitOffer
     double BIDUP;                               // Smallest proportional increase in price that can cause a gazump
     public double MARKET_AVERAGE_PRICE_DECAY;   // Decay constant for the exponential moving average of sale prices
     public double INITIAL_HPI;                  // Initial housing price index
@@ -172,7 +172,7 @@ public class Config {
     public class DerivedParams {
         // Housing market parameters
         public int HPI_RECORD_LENGTH;   // Number of months to record HPI (to compute price growth at different time scales)
-        double MONTHS_UNDER_OFFER;      // Time (in months) that a house remains under offer
+        double MONTHS_UNDER_OFFER;      // Time (in months) that a house remains under submitOffer
         double T;                       // Characteristic number of data-points over which to average market statistics
         public double E;                // Decay constant for averaging days on market (in transactions)
         public double G;                // Decay constant for averageListPrice averaging (in transactions)
