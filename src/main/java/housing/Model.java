@@ -58,13 +58,28 @@ public class Model {
     public static String MIN_INVESTOR_PERCENTILE;
     public static String SEED;
     public static String N_STEPS;
+    public static String HPA_EXPECTATION_FACTOR;
+    public static String HPA_YEARS_TO_CHECK;
+    public static String derivedParams_G;
+    public static String derivedParams_K;
+    public static String derivedParams_KL;
+    public static String TENANCY_LENGTH_AVERAGE;
+    public static String HOLD_PERIOD;
+    public static String DECISION_TO_SELL_ALPHA;
+    public static String DECISION_TO_SELL_BETA;
+    public static String DECISION_TO_SELL_HPC;
+    public static String DECISION_TO_SELL_INTEREST;
+    public static String BTL_CHOICE_INTENSITY;
+    public static String DESIRED_RENT_INCOME_FRACTION;
+    public static String PSYCHOLOGICAL_COST_OF_RENTING;
+    public static String SENSITIVITY_RENT_OR_PURCHASE;
 
     public static Config                config;
     public static Construction		    construction;
     public static CentralBank		    centralBank;
     public static Bank 				    bank;
-    public static HouseSaleMarket houseSaleMarket;
-    public static HouseRentalMarket houseRentalMarket;
+    public static HouseSaleMarket       houseSaleMarket;
+    public static HouseRentalMarket     houseRentalMarket;
     public static ArrayList<Household>  households;
     public static CreditSupply          creditSupply;
     public static CoreIndicators        coreIndicators;
@@ -157,6 +172,32 @@ public class Model {
 
                 // Print time information to screen
                 if (t % 100 == 0) {
+
+                    System.out.println("MARKET_AVERAGE_PRICE_DECAY " + MARKET_AVERAGE_PRICE_DECAY);
+                    System.out.println("SALE_EPSILON " + SALE_EPSILON);
+                    System.out.println("TARGET_POPULATION " + TARGET_POPULATION);
+                    System.out.println("P_INVESTOR " + P_INVESTOR);
+                    System.out.println("MIN_INVESTOR_PERCENTILE " + MIN_INVESTOR_PERCENTILE);
+                    System.out.println("SEED " + SEED);
+                    System.out.println("N_STEPS " + N_STEPS);
+                    System.out.println("HPA_EXPECTATION_FACTOR " + HPA_EXPECTATION_FACTOR);
+                    System.out.println("HPA_YEARS_TO_CHECK " + HPA_YEARS_TO_CHECK);
+                    System.out.println("derivedParams_G " + derivedParams_G);
+                    System.out.println("derivedParams_K " + derivedParams_K);
+                    System.out.println("derivedParams_KL " + derivedParams_KL);
+                    System.out.println("TENANCY_LENGTH_AVERAGE " + TENANCY_LENGTH_AVERAGE);
+                    System.out.println("HOLD_PERIOD " + HOLD_PERIOD);
+                    System.out.println("DECISION_TO_SELL_ALPHA " + DECISION_TO_SELL_ALPHA);
+                    System.out.println("DECISION_TO_SELL_BETA " + DECISION_TO_SELL_BETA);
+                    System.out.println("DECISION_TO_SELL_HPC " + DECISION_TO_SELL_HPC);
+                    System.out.println("DECISION_TO_SELL_INTEREST " + DECISION_TO_SELL_INTEREST);
+                    System.out.println("BTL_CHOICE_INTENSITY " + BTL_CHOICE_INTENSITY);
+                    System.out.println("DESIRED_RENT_INCOME_FRACTION " + DESIRED_RENT_INCOME_FRACTION);
+                    System.out.println("PSYCHOLOGICAL_COST_OF_RENTING " + PSYCHOLOGICAL_COST_OF_RENTING);
+                    System.out.println("SENSITIVITY_RENT_OR_PURCHASE " + SENSITIVITY_RENT_OR_PURCHASE);
+
+                    System.exit(0);
+
                     System.out.println("Simulation: " + nSimulation + ", time: " + t);
                 }
             }
@@ -254,6 +295,31 @@ public class Model {
                 "value is 0.5");
         options.addOption("SEED", true, "SEED, default value is 1");
         options.addOption("N_STEPS", true, "N_STEPS, default value is 3000");
+        options.addOption("HPA_EXPECTATION_FACTOR", true, "HPA_EXPECTATION_FACTOR, default value" +
+                " is 0.5");
+        options.addOption("HPA_YEARS_TO_CHECK", true, "HPA_YEARS_TO_CHECK, default value is 1");
+        options.addOption("derivedParams_G", true, "derivedParams_G, default value is 0.24");
+        options.addOption("derivedParams_K", true, "derivedParams_K, default value is 0.9802");
+        options.addOption("derivedParams_KL", true, "derivedParams_KL, default value is 0.9999");
+        options.addOption("TENANCY_LENGTH_AVERAGE", true, "TENANCY_LENGTH_AVERAGE, default value" +
+                " is 18");
+        options.addOption("HOLD_PERIOD", true, "HOLD_PERIOD, default value is 11.0");
+        options.addOption("DECISION_TO_SELL_ALPHA", true, "DECISION_TO_SELL_ALPHA, default value" +
+                " is 4.0");
+        options.addOption("DECISION_TO_SELL_BETA", true, "DECISION_TO_SELL_BETA, default value" +
+                " is 5.0");
+        options.addOption("DECISION_TO_SELL_HPC", true, "DECISION_TO_SELL_HPC, default value" +
+                " is 0.05");
+        options.addOption("DECISION_TO_SELL_INTEREST", true, "DECISION_TO_SELL_INTEREST, default" +
+                " value is 0.03");
+        options.addOption("BTL_CHOICE_INTENSITY", true, "BTL_CHOICE_INTENSITY, default" +
+                " value is 50.0");
+        options.addOption("DESIRED_RENT_INCOME_FRACTION", true, "DESIRED_RENT_INCOME_FRACTION," +
+                " default value is 0.33");
+        options.addOption("PSYCHOLOGICAL_COST_OF_RENTING", true, "PSYCHOLOGICAL_COST_OF_RENTING," +
+                " default value is 0.0916666666667");
+        options.addOption("SENSITIVITY_RENT_OR_PURCHASE", true, "SENSITIVITY_RENT_OR_PURCHASE," +
+                " default value is 0.000285714285714");
 
         // Create help formatter in case it will be needed
         HelpFormatter formatter = new HelpFormatter();
@@ -343,6 +409,111 @@ public class Model {
             } else {
                 // If not, store the default value in a variable
                 N_STEPS = "3000";
+            }
+            if(cmd.hasOption("HPA_EXPECTATION_FACTOR")) {
+                // If it has, then store its value in a variable
+                HPA_EXPECTATION_FACTOR = cmd.getOptionValue("HPA_EXPECTATION_FACTOR");
+            } else {
+                // If not, store the default value in a variable
+                HPA_EXPECTATION_FACTOR = "0.5";
+            }
+            if(cmd.hasOption("HPA_YEARS_TO_CHECK")) {
+                // If it has, then store its value in a variable
+                HPA_YEARS_TO_CHECK = cmd.getOptionValue("HPA_YEARS_TO_CHECK");
+            } else {
+                // If not, store the default value in a variable
+                HPA_YEARS_TO_CHECK = "1";
+            }
+            if(cmd.hasOption("derivedParams_G")) {
+                // If it has, then store its value in a variable
+                derivedParams_G = cmd.getOptionValue("derivedParams_G");
+            } else {
+                // If not, store the default value in a variable
+                derivedParams_G = "0.24";
+            }
+            if(cmd.hasOption("derivedParams_K")) {
+                // If it has, then store its value in a variable
+                derivedParams_K = cmd.getOptionValue("derivedParams_K");
+            } else {
+                // If not, store the default value in a variable
+                derivedParams_K = "0.9802";
+            }
+            if(cmd.hasOption("derivedParams_KL")) {
+                // If it has, then store its value in a variable
+                derivedParams_KL = cmd.getOptionValue("derivedParams_KL");
+            } else {
+                // If not, store the default value in a variable
+                derivedParams_KL = "0.9999";
+            }
+            if(cmd.hasOption("TENANCY_LENGTH_AVERAGE")) {
+                // If it has, then store its value in a variable
+                TENANCY_LENGTH_AVERAGE = cmd.getOptionValue("TENANCY_LENGTH_AVERAGE");
+            } else {
+                // If not, store the default value in a variable
+                TENANCY_LENGTH_AVERAGE = "18";
+            }
+            if(cmd.hasOption("HOLD_PERIOD")) {
+                // If it has, then store its value in a variable
+                HOLD_PERIOD = cmd.getOptionValue("HOLD_PERIOD");
+            } else {
+                // If not, store the default value in a variable
+                HOLD_PERIOD = "11.0";
+            }
+            if(cmd.hasOption("DECISION_TO_SELL_ALPHA")) {
+                // If it has, then store its value in a variable
+                DECISION_TO_SELL_ALPHA = cmd.getOptionValue("DECISION_TO_SELL_ALPHA");
+            } else {
+                // If not, store the default value in a variable
+                DECISION_TO_SELL_ALPHA = "4.0";
+            }
+            if(cmd.hasOption("DECISION_TO_SELL_BETA")) {
+                // If it has, then store its value in a variable
+                DECISION_TO_SELL_BETA = cmd.getOptionValue("DECISION_TO_SELL_BETA");
+            } else {
+                // If not, store the default value in a variable
+                DECISION_TO_SELL_BETA = "5.0";
+            }
+            if(cmd.hasOption("DECISION_TO_SELL_HPC")) {
+                // If it has, then store its value in a variable
+                DECISION_TO_SELL_HPC = cmd.getOptionValue("DECISION_TO_SELL_HPC");
+            } else {
+                // If not, store the default value in a variable
+                DECISION_TO_SELL_HPC = "0.05";
+            }
+            if(cmd.hasOption("DECISION_TO_SELL_INTEREST")) {
+                // If it has, then store its value in a variable
+                DECISION_TO_SELL_INTEREST = cmd.getOptionValue("DECISION_TO_SELL_INTEREST");
+            } else {
+                // If not, store the default value in a variable
+                DECISION_TO_SELL_INTEREST = "0.03";
+            }
+            if(cmd.hasOption("BTL_CHOICE_INTENSITY")) {
+                // If it has, then store its value in a variable
+                BTL_CHOICE_INTENSITY = cmd.getOptionValue("BTL_CHOICE_INTENSITY");
+            } else {
+                // If not, store the default value in a variable
+                BTL_CHOICE_INTENSITY = "50.0";
+            }
+            if(cmd.hasOption("DESIRED_RENT_INCOME_FRACTION")) {
+                // If it has, then store its value in a variable
+                DESIRED_RENT_INCOME_FRACTION = cmd.getOptionValue("DESIRED_RENT_INCOME_FRACTION");
+            } else {
+                // If not, store the default value in a variable
+                DESIRED_RENT_INCOME_FRACTION = "0.33";
+            }
+            if(cmd.hasOption("PSYCHOLOGICAL_COST_OF_RENTING")) {
+                // If it has, then store its value in a variable
+                PSYCHOLOGICAL_COST_OF_RENTING = cmd.getOptionValue("PSYCHOLOGICAL_COST_OF_RENTING");
+            } else {
+                // If not, store the default value in a variable
+                PSYCHOLOGICAL_COST_OF_RENTING = "0.0916666666667";
+            }
+            if(cmd.hasOption("SENSITIVITY_RENT_OR_PURCHASE")) {
+                // If it has, then store its value in a variable
+                SENSITIVITY_RENT_OR_PURCHASE = cmd.getOptionValue("SENSITIVITY_RENT_OR_PURCHASE");
+            } else {
+                // If not, store the default value in a variable
+                SENSITIVITY_RENT_OR_PURCHASE = "0.000285714285714";
             }
         }
         catch(ParseException pex) {

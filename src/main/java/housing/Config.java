@@ -42,7 +42,6 @@ public class Config {
     public double INITIAL_HPI;                  // Initial housing price index
     double HPI_MEDIAN;                          // Median house price
     public double HPI_SHAPE;                    // Shape parameter for the log-normal distribution of housing prices
-    public double AVERAGE_TENANCY_LENGTH;       // Average number of months a tenant will stay in a rented house
     // TODO: Only used to initiate some exponential averaging. Remove it!
     public double RENT_GROSS_YIELD;             // Profit margin for buy-to-let investors
 
@@ -52,7 +51,7 @@ public class Config {
 
     // Household parameters
     double RETURN_ON_FINANCIAL_WEALTH;      // Monthly percentage growth of financial investments
-    int TENANCY_LENGTH_AVERAGE;             // Average number of months a tenant will stay in a rented house
+    public int TENANCY_LENGTH_AVERAGE;             // Average number of months a tenant will stay in a rented house
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
 
     // Household behaviour parameters: buy-to-let
@@ -263,6 +262,36 @@ public class Config {
             prop.setProperty("MIN_INVESTOR_PERCENTILE", Model.MIN_INVESTOR_PERCENTILE);
             prop.setProperty("SEED", Model.SEED);
             prop.setProperty("N_STEPS", Model.N_STEPS);
+            prop.setProperty("HPA_EXPECTATION_FACTOR", Model.HPA_EXPECTATION_FACTOR);
+            prop.setProperty("HPA_YEARS_TO_CHECK", Model.HPA_YEARS_TO_CHECK);
+            try {
+                derivedParams.G = Double.parseDouble(Model.derivedParams_G);
+            } catch (NumberFormatException nfe) {
+                System.out.println("Exception " + nfe + " while trying to parse derivedParams_G for an double");
+                nfe.printStackTrace();
+            }
+            try {
+                derivedParams.K = Double.parseDouble(Model.derivedParams_K);
+            } catch (NumberFormatException nfe) {
+                System.out.println("Exception " + nfe + " while trying to parse derivedParams_K for an double");
+                nfe.printStackTrace();
+            }
+            try {
+                derivedParams.KL = Double.parseDouble(Model.derivedParams_KL);
+            } catch (NumberFormatException nfe) {
+                System.out.println("Exception " + nfe + " while trying to parse derivedParams_KL for an double");
+                nfe.printStackTrace();
+            }
+            prop.setProperty("TENANCY_LENGTH_AVERAGE", Model.TENANCY_LENGTH_AVERAGE);
+            prop.setProperty("HOLD_PERIOD", Model.HOLD_PERIOD);
+            prop.setProperty("DECISION_TO_SELL_ALPHA", Model.DECISION_TO_SELL_ALPHA);
+            prop.setProperty("DECISION_TO_SELL_BETA", Model.DECISION_TO_SELL_BETA);
+            prop.setProperty("DECISION_TO_SELL_HPC", Model.DECISION_TO_SELL_HPC);
+            prop.setProperty("DECISION_TO_SELL_INTEREST", Model.DECISION_TO_SELL_INTEREST);
+            prop.setProperty("BTL_CHOICE_INTENSITY", Model.BTL_CHOICE_INTENSITY);
+            prop.setProperty("DESIRED_RENT_INCOME_FRACTION", Model.DESIRED_RENT_INCOME_FRACTION);
+            prop.setProperty("PSYCHOLOGICAL_COST_OF_RENTING", Model.PSYCHOLOGICAL_COST_OF_RENTING);
+            prop.setProperty("SENSITIVITY_RENT_OR_PURCHASE", Model.SENSITIVITY_RENT_OR_PURCHASE);
 
             // Check that all parameters declared in the configuration (.properties) file are also declared in this class
             try {
@@ -372,7 +401,7 @@ public class Config {
         derivedParams.MONTHS_UNDER_OFFER = (double)DAYS_UNDER_OFFER/constants.DAYS_IN_MONTH;
         derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from, and provide explanation for this formula
         derivedParams.E = Math.exp(-1.0/derivedParams.T);           // TODO: Provide explanation for this formula
-        derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);     // TODO: Provide explanation for this formula
+//        derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);     // TODO: Provide explanation for this formula
         derivedParams.HPI_LOG_MEDIAN = Math.log(HPI_MEDIAN);
         derivedParams.HPI_REFERENCE = Math.exp(derivedParams.HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
         // Household behaviour parameters: general
@@ -380,8 +409,8 @@ public class Config {
         // Bank parameters
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
         // House rental market parameters
-        derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen?
-        derivedParams.KL = Math.exp(-10000.0/(TARGET_POPULATION*50.0*200.0));   // TODO: Also, they are not reported in the paper!
+//        derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen?
+//        derivedParams.KL = Math.exp(-10000.0/(TARGET_POPULATION*50.0*200.0));   // TODO: Also, they are not reported in the paper!
         // Collectors parameters
         derivedParams.AFFORDABILITY_DECAY = Math.exp(-1.0/100.0);
     }
