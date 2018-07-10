@@ -39,8 +39,10 @@ public class HouseholdStats extends CollectorBase {
 
 	// Other fields
 	private double  sumStockYield; // Sum of stock gross rental yields of all currently occupied rental properties
-    private int     nBiddersAboveExpAvSalePrice; // Number of bidders with desired housing expenditure above the exponential moving average sale price
-    private int     nBiddersAboveExpAvSalePriceCounter; // Counter for the number of bidders with desired housing expenditure above the exp. moving average sale price
+    private int     nNonBTLBiddersAboveExpAvSalePrice; // Number of normal (non-BTL) bidders with desired housing expenditure above the exponential moving average sale price
+    private int     nBTLBiddersAboveExpAvSalePrice; // Number of BTL bidders with desired housing expenditure above the exponential moving average sale price
+    private int     nNonBTLBiddersAboveExpAvSalePriceCounter; // Counter for the number of normal (non-BTL) bidders with desired housing expenditure above the exp. moving average sale price
+    private int     nBTLBiddersAboveExpAvSalePriceCounter; // Counter for the number of BTL bidders with desired housing expenditure above the exp. moving average sale price
 
 	//------------------------//
 	//----- Constructors -----//
@@ -73,8 +75,10 @@ public class HouseholdStats extends CollectorBase {
         rentingAnnualisedTotalIncome = 0.0;
         homelessAnnualisedTotalIncome = 0.0;
         sumStockYield = 0.0;
-        nBiddersAboveExpAvSalePrice = 0;
-        nBiddersAboveExpAvSalePriceCounter = 0;
+        nNonBTLBiddersAboveExpAvSalePrice = 0;
+        nBTLBiddersAboveExpAvSalePrice = 0;
+        nNonBTLBiddersAboveExpAvSalePriceCounter = 0;
+        nBTLBiddersAboveExpAvSalePriceCounter = 0;
     }
 
     public void record() {
@@ -141,17 +145,29 @@ public class HouseholdStats extends CollectorBase {
         homelessAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
         // Pass number of bidders above the exponential moving average sale price to persistent variable and
         // re-initialise to zero the counter
-        nBiddersAboveExpAvSalePrice = nBiddersAboveExpAvSalePriceCounter;
-        nBiddersAboveExpAvSalePriceCounter = 0;
+        nNonBTLBiddersAboveExpAvSalePrice = nNonBTLBiddersAboveExpAvSalePriceCounter;
+        nBTLBiddersAboveExpAvSalePrice = nBTLBiddersAboveExpAvSalePriceCounter;
+        nNonBTLBiddersAboveExpAvSalePriceCounter = 0;
+        nBTLBiddersAboveExpAvSalePriceCounter = 0;
     }
 
     /**
-     * Count number of bidders with desired expenditures above the (minimum quality, q=0) exponential moving average
+     * Count number of normal (non-BTL) bidders with desired expenditures above the (minimum quality, q=0) exponential
+     * moving average sale price
+     */
+    public void countNonBTLBiddersAboveExpAvSalePrice(double price) {
+        if (price >= Model.housingMarketStats.getExpAvSalePriceForQuality(0)) {
+            nNonBTLBiddersAboveExpAvSalePriceCounter++;
+        }
+    }
+
+    /**
+     * Count number of BTL bidders with desired expenditures above the (minimum quality, q=0) exponential moving average
      * sale price
      */
-    public void countBiddersAboveExpAvSalePrice(double price) {
+    public void countBTLBiddersAboveExpAvSalePrice(double price) {
         if (price >= Model.housingMarketStats.getExpAvSalePriceForQuality(0)) {
-            nBiddersAboveExpAvSalePriceCounter++;
+            nBTLBiddersAboveExpAvSalePriceCounter++;
         }
     }
 
@@ -201,9 +217,13 @@ public class HouseholdStats extends CollectorBase {
         return ((double)(getnEmptyHouses() - Model.housingMarketStats.getnUnsoldNewBuild()
                 + nRenting))/Model.construction.getHousingStock();
     }
-    // ... number of bidders with desired housing expenditure above the exponential moving average sale price
-    public int getnBiddersAboveExpAvSalePrice() {
-        return nBiddersAboveExpAvSalePrice;
+    // ... number of normal (non-BTL) bidders with desired housing expenditure above the exponential moving average sale price
+    public int getnNonBTLBiddersAboveExpAvSalePrice() {
+        return nNonBTLBiddersAboveExpAvSalePrice;
+    }
+    // ... number of BTL bidders with desired housing expenditure above the exponential moving average sale price
+    public int getnBTLBiddersAboveExpAvSalePrice() {
+        return nBTLBiddersAboveExpAvSalePrice;
     }
 
 //    // Array with ages of all households

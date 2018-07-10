@@ -208,6 +208,31 @@ public class HousingMarketStats extends CollectorBase {
         }
         // TODO: Attention, call to model from regional class: need to build regional recorders!
         Model.transactionRecorder.recordSale(purchase, sale, mortgage, market);
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        if (sale.house.owner instanceof Household && !(this instanceof RentalMarketStats)) {
+            int buyerBTL;
+            int ownerBTL;
+            Household owner = (Household) sale.house.owner;
+            if (purchase.buyer.behaviour.isPropertyInvestor()) {
+                buyerBTL = 1;
+            } else {
+                buyerBTL = 0;
+            }
+            if (owner.behaviour.isPropertyInvestor()) {
+                ownerBTL = 1;
+            } else {
+                ownerBTL = 0;
+            }
+            Model.salesMicroData.println(Model.getTime()+ ", " + String.format("%.2f", purchase.buyer.getMonthlyGrossTotalIncome())
+                    + ", " + buyerBTL
+                    + ", " + String.format("%.6f", owner.getMonthlyGrossTotalIncome())
+                    + ", " + ownerBTL
+                    + ", " + String.format("%.6f", sale.getPrice())
+                    + ", " + String.format("%.6f", purchase.getPrice())
+                    + ", " + String.format("%.6f", sale.initialListedPrice)
+                    + ", " + sale.tInitialListing);
+        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     }
 
     /**

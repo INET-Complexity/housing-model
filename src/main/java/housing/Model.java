@@ -1,7 +1,6 @@
 package housing;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
 import java.time.Instant;
@@ -42,6 +41,13 @@ public class Model {
     //----- Fields -----//
     //------------------//
 
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    public static PrintWriter bidsMicroData;
+    public static PrintWriter offersMicroData;
+    public static PrintWriter salesMicroData;
+    public static PrintWriter biddersMicroData;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
     public static Config                config;
     public static Construction		    construction;
     public static CentralBank		    centralBank;
@@ -64,7 +70,7 @@ public class Model {
     private static Demographics		    demographics;
     private static Recorder             recorder;
     private static String               configFileName;
-    private static String               outputFolder;
+    public static String               outputFolder;
 
     //------------------------//
     //----- Constructors -----//
@@ -75,6 +81,29 @@ public class Model {
      * @param outputFolder String with the address of the folder for storing results
      */
     public Model(String configFileName, String outputFolder) {
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        try {
+            bidsMicroData = new PrintWriter(outputFolder + "bidsMicroData.csv", "UTF-8");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        try {
+            offersMicroData = new PrintWriter(outputFolder + "offersMicroData.csv", "UTF-8");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        try {
+            salesMicroData = new PrintWriter(outputFolder + "salesMicroData.csv", "UTF-8");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        try {
+            biddersMicroData = new PrintWriter(outputFolder + "biddersMicroData.csv", "UTF-8");
+        } catch (FileNotFoundException | UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
         // TODO: Check that random numbers are working properly!
         config = new Config(configFileName);
         prng = new MersenneTwister(config.SEED);
@@ -148,6 +177,15 @@ public class Model {
             recorder.finishRun(config.recordCoreIndicators);
             // TODO: Check what this is actually doing and if it is necessary
             if(config.recordMicroData) transactionRecorder.endOfSim();
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+            bidsMicroData.close();
+            offersMicroData.close();
+            salesMicroData.close();
+            biddersMicroData.close();
+//            for (Household h: households) {
+//                System.out.println(h.getBankBalance() + ", " + h.getAnnualGrossEmploymentIncome());
+//            }
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 		}
 
         // After the last simulation, clean up
@@ -203,6 +241,12 @@ public class Model {
 		bank.step(Model.households.size());
         // Update central bank policies (currently empty!)
 		centralBank.step(coreIndicators);
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        Household.flag = true;
+		HouseholdBehaviour.flag = true;
+        HouseholdBehaviour.flag2 = true;
+        HouseholdBehaviour.flag3 = true;
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 	}
 
     /**
