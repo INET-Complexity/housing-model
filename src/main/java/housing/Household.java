@@ -102,15 +102,17 @@ public class Household implements IHouseOwner, Serializable {
         }
         // Make housing decisions depending on current housing state
         if (isInSocialHousing()) {
-            bidForAHome(); // When BTL households are born, they enter here the first time!
+            bidForAHome(); // When BTL households are born, they enter here the first time and until they manage to buy a home!
         } else if (isRenting()) {
             if (housePayments.get(home).nPayments == 0) { // End of rental period for this tenant
                 endTenancy();
                 bidForAHome();
             }            
-        } else if (behaviour.isPropertyInvestor()) {
+        } else if (behaviour.isPropertyInvestor()) { // Only BTL investors who already own a home enter here
+            double price = behaviour.btlPurchaseBid(this);
+            Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
             if (behaviour.decideToBuyInvestmentProperty(this)) {
-                Model.houseSaleMarket.BTLbid(this, behaviour.btlPurchaseBid(this));
+                Model.houseSaleMarket.BTLbid(this, price);
             }
         } else if (!isHomeowner()){
             System.out.println("Strange: this household is not a type I recognize");
@@ -152,9 +154,7 @@ public class Household implements IHouseOwner, Serializable {
         return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome + bankBalance*config.RETURN_ON_FINANCIAL_WEALTH;
     }
 
-    double getAnnualGrossTotalIncome() {
-        return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR;
-    }
+    double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
 
     //----- Methods for house owners -----//
 
@@ -177,7 +177,7 @@ public class Household implements IHouseOwner, Serializable {
                 Model.houseSaleMarket.updateOffer(forSale, newPrice);
             } else {
                 Model.houseSaleMarket.removeOffer(forSale);
-                // TODO: First condition is redundant!
+                // TODO: Is first condition redundant?
                 if(house  != home && house.resident == null) {
                     Model.houseRentalMarket.offer(house, buyToLetRent(house));
                 }
@@ -274,7 +274,6 @@ public class Household implements IHouseOwner, Serializable {
         if(sale.house == home) { // move out of home and become (temporarily) homeless
             home.resident = null;
             home = null;
-//            bidOnHousingMarket(1.0);
         } else if(sale.house.resident != null) { // evict current renter
             monthlyGrossRentalIncome -= sale.house.resident.housePayments.get(sale.house).monthlyPayment;
             sale.house.resident.getEvicted();
@@ -367,15 +366,15 @@ public class Household implements IHouseOwner, Serializable {
         double price = behaviour.getDesiredPurchasePrice(monthlyGrossEmploymentIncome);
         // Cap this expenditure to the maximum mortgage available to the household
         price = Math.min(price, Model.bank.getMaxMortgage(this, true));
-        // Record the bid on householdStats for counting the number of bidders above exponential moving average sale price
-        Model.householdStats.countBiddersAboveExpAvSalePrice(price);
+        // Record the bid on householdStats for counting the number of bids above exponential moving average sale price
+        Model.householdStats.countNonBTLBidsAboveExpAvSalePrice(price);
         // Compare costs to decide whether to buy or rent...
-        if(behaviour.decideRentOrPurchase(this, price)) {
+        if (behaviour.decideRentOrPurchase(this, price)) {
             // ... if buying, bid in the house sale market for the capped desired price
             Model.houseSaleMarket.bid(this, price);
         } else {
             // ... if renting, bid in the house rental market for the desired rent price
-            Model.houseRentalMarket.bid(this, behaviour.desiredRent(this, monthlyGrossEmploymentIncome));
+            Model.houseRentalMarket.bid(this, behaviour.desiredRent(monthlyGrossEmploymentIncome));
         }
     }
     
@@ -443,8 +442,8 @@ public class Household implements IHouseOwner, Serializable {
             if(h.owner == this) {
                 if(h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
                 if(h.isOnMarket()) Model.houseSaleMarket.removeOffer(h.getSaleRecord());
-                if(h.resident != null) h.resident.getEvicted();
-                beneficiary.inheritHouse(h, isHome);
+                if(h.resident != null) h.resident.getEvicted(); // TODO: Explain in paper that renters always get evicted, not just if heir needs the house
+                beneficiary.inheritHouse(h);
             } else {
                 h.owner.endOfLettingAgreement(h, housePayments.get(h));
             }
@@ -463,7 +462,7 @@ public class Household implements IHouseOwner, Serializable {
      * 
      * @param h House to inherit
      */
-    private void inheritHouse(House h, boolean wasHome) {
+    private void inheritHouse(House h) {
         MortgageAgreement nullMortgage = new MortgageAgreement(this,false);
         nullMortgage.nPayments = 0;
         nullMortgage.downPayment = 0.0;

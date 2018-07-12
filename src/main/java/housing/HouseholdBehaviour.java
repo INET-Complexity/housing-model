@@ -47,7 +47,6 @@ public class HouseholdBehaviour implements Serializable {
         propensityToSave = config.DESIRED_BANK_BALANCE_EPSILON * prng.nextGaussian();
         // Decide if household is a BTL investor and, if so, its tendency to seek capital gains or rental yields
 		BTLCapGainCoefficient = 0.0;
-        // TODO: Check this if condition... why to divide by config.MIN_INVESTOR_PERCENTILE?
         if(incomePercentile > config.MIN_INVESTOR_PERCENTILE &&
                 prng.nextDouble() < config.getPInvestor()/config.MIN_INVESTOR_PERCENTILE) {
             BTLInvestor = true;
@@ -98,18 +97,18 @@ public class HouseholdBehaviour implements Serializable {
 	/**
      * Desired purchase price used to decide whether to buy a house and how much to bid for it
      *
-	 * @param monthlyIncome Monthly income of the household
+	 * @param monthlyGrossEmploymentIncome Monthly gross employment income of the household
 	 */
-	double getDesiredPurchasePrice(double monthlyIncome) {
+	double getDesiredPurchasePrice(double monthlyGrossEmploymentIncome) {
 	    // TODO: This product is generally so small that it barely has any impact on the results, need to rethink if
         // TODO: it is necessary and if this small value makes any sense
         double HPAFactor = config.BUY_WEIGHT_HPA*getLongTermHPAExpectation();
         // TODO: The capping of this factor intends to avoid negative and too large desired prices, the 0.9 is a
         // TODO: purely artificial fudge parameter. This formula should be reviewed and changed!
         if (HPAFactor > 0.9) HPAFactor = 0.9;
-        // TODO: Note that wealth is not used here, but only employmentIncome (as monthlyIncome refers here to monthlyGrossEmploymentIncome)
-		return config.BUY_SCALE*config.constants.MONTHS_IN_YEAR*monthlyIncome
-                *Math.exp(config.BUY_EPSILON * prng.nextGaussian())
+        // TODO: Note that wealth is not used here, but only monthlyGrossEmploymentIncome
+		return config.BUY_SCALE*config.constants.MONTHS_IN_YEAR*monthlyGrossEmploymentIncome
+				*Math.exp(config.BUY_EPSILON*prng.nextGaussian())
                 /(1.0 - HPAFactor);
 	}
 
@@ -124,8 +123,8 @@ public class HouseholdBehaviour implements Serializable {
                 + Math.log(Model.housingMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
                 - config.SALE_WEIGHT_DAYS_ON_MARKET*Math.log((Model.housingMarketStats.getExpAvDaysOnMarket()
                 + 1.0)/(config.constants.DAYS_IN_MONTH + 1.0))
-                + config.SALE_EPSILON * prng.nextGaussian();
-        // TODO: ExpAv days on market should probably be computed for each quality band so as to use here only the correct one
+                + config.SALE_EPSILON*prng.nextGaussian();
+        // TODO: ExpAv days on market could be computed for each quality band so as to use here only the correct one
         return Math.max(Math.exp(exponent), principal);
 	}
 
@@ -189,7 +188,7 @@ public class HouseholdBehaviour implements Serializable {
 	 * 
 	 * @param sale The HouseSaleRecord of the house that is on the market.
 	 ********************************************************/
-	public double rethinkHouseSalePrice(HouseSaleRecord sale) {
+	double rethinkHouseSalePrice(HouseSaleRecord sale) {
 		if(prng.nextDouble() < config.P_SALE_PRICE_REDUCE) {
 			double logReduction = config.REDUCTION_MU + (prng.nextGaussian()*config.REDUCTION_SIGMA);
 			return(sale.getPrice()*(1.0 - Math.exp(logReduction)/100.0));
@@ -207,7 +206,7 @@ public class HouseholdBehaviour implements Serializable {
 	 *  is assumed to be the difference in rental price between the two qualities.
 	 *  @return true if we should buy a house, false if we should rent
 	 */
-    public boolean decideRentOrPurchase(Household me, double desiredPurchasePrice) {
+    boolean decideRentOrPurchase(Household me, double desiredPurchasePrice) {
         if(isPropertyInvestor()) return(true);
         double purchasePrice = Math.min(desiredPurchasePrice, Model.bank.getMaxMortgage(me, true));
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
@@ -226,8 +225,8 @@ public class HouseholdBehaviour implements Serializable {
 	 * Decide how much to bid on the rental market
 	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
 	 ********************************************************/
-	double desiredRent(Household me, double monthlyIncome) {
-	    return monthlyIncome*config.DESIRED_RENT_INCOME_FRACTION;
+	double desiredRent(double monthlyGrossEmploymentIncome) {
+	    return monthlyGrossEmploymentIncome*config.DESIRED_RENT_INCOME_FRACTION;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -332,15 +331,21 @@ public class HouseholdBehaviour implements Serializable {
                     - mortgageRate;
         }
         // Compute the probability to decide to buy an investment property as a function of the expected equity yield
-        double pBuy = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
+        // TODO: This probability has been changed to correctly reflect the conversion from annual to monthly
+        // TODO: probability. This needs to be explained in the article
+//        double pBuy = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
+//                1.0/config.constants.MONTHS_IN_YEAR);
+        double pBuy = 1.0 - Math.pow((1.0 - sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield)),
                 1.0/config.constants.MONTHS_IN_YEAR);
         // Return true or false as a random draw from the computed probability
         return prng.nextDouble() < pBuy;
     }
 
     double btlPurchaseBid(Household me) {
-        // TODO: What is this 1.1 factor? Another fudge parameter???????????????????????????
-        // TODO: It prevents wealthy investors from offering more than 10% above the average price of top quality houses
+        // TODO: What is this 1.1 factor? Another fudge parameter? It prevents wealthy investors from offering more than
+        // TODO: 10% above the average price of top quality houses. The effect of this is to prevent fast increases of
+        // TODO: price as BTL investors buy all supply till prices are too high for everybody. Fairly unclear mechanism,
+        // TODO: check for removal!
         return(Math.min(Model.bank.getMaxMortgage(me, false),
                 1.1*Model.housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY-1)));
     }

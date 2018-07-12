@@ -46,8 +46,8 @@ public class Model {
     public static Construction		    construction;
     public static CentralBank		    centralBank;
     public static Bank 				    bank;
-    public static HouseSaleMarket houseSaleMarket;
-    public static HouseRentalMarket houseRentalMarket;
+    public static HouseSaleMarket       houseSaleMarket;
+    public static HouseRentalMarket     houseRentalMarket;
     public static ArrayList<Household>  households;
     public static CreditSupply          creditSupply;
     public static CoreIndicators        coreIndicators;
@@ -60,7 +60,7 @@ public class Model {
 
     static Government		            government;
 
-    private static MersenneTwister prng;
+    private static MersenneTwister      prng;
     private static Demographics		    demographics;
     private static Recorder             recorder;
     private static String               configFileName;
@@ -75,7 +75,6 @@ public class Model {
      * @param outputFolder String with the address of the folder for storing results
      */
     public Model(String configFileName, String outputFolder) {
-        // TODO: Check that random numbers are working properly!
         config = new Config(configFileName);
         prng = new MersenneTwister(config.SEED);
 
@@ -310,20 +309,14 @@ public class Model {
 	/**
 	 * @return Simulated time in months
 	 */
-	static public int getTime() {
-		return t;
-	}
+	static public int getTime() { return t; }
 
     /**
      * @return Current month of the simulation
      */
-	static public int getMonth() {
-		return t%12 + 1;
-	}
+	static public int getMonth() { return t%12 + 1; }
 
-    public MersenneTwister getPrng() {
-        return prng;
-    }
+    public MersenneTwister getPrng() { return prng; }
 
     private static void setRecordGeneral() {
         creditSupply.setActive(true);
