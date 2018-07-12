@@ -17,7 +17,6 @@ import org.apache.commons.math3.random.MersenneTwister;
  *************************************************************************************************/
 
 public class Household implements IHouseOwner, Serializable {
-    private static final long   serialVersionUID = -5042897399316333745L;
 
     //------------------//
     //----- Fields -----//

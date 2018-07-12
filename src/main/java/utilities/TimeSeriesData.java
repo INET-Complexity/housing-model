@@ -10,7 +10,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
 public class TimeSeriesData extends ArrayList<Double> {
-	private static final long serialVersionUID = 3375301779145102517L;
 
 	// TODO: Given that this whole class is not used, check if we can simply remove it
 

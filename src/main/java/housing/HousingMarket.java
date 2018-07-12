@@ -16,7 +16,6 @@ import utilities.PriorityQueue2D;
  *
  *************************************************************************************************/
 public abstract class HousingMarket implements Serializable {
-    private static final long serialVersionUID = -7249221876467520088L;
 
     //------------------//
     //----- Fields -----//

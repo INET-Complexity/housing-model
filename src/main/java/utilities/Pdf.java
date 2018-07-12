@@ -18,7 +18,6 @@ import housing.Model;
  *
  */
 public class Pdf implements Serializable {
-	private static final long serialVersionUID = 1558047422758004631L;
 
 	/***
 	 * Read the pdf from a binned .csv file. The format should be as specified in

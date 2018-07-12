@@ -9,7 +9,6 @@ import java.io.Serializable;
  *
  *************************************************************************************************/
 public class House implements Comparable<House>, Serializable {
-    private static final long serialVersionUID = 4538336934216907799L;
 
     //------------------//
     //----- Fields -----//

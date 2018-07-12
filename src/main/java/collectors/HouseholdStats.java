@@ -11,7 +11,6 @@ import housing.Model;
  *
  *************************************************************************************************/
 public class HouseholdStats extends CollectorBase {
-	private static final long serialVersionUID = -402486195880710795L;
 
 	//------------------//
 	//----- Fields -----//

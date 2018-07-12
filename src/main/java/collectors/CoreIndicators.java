@@ -14,7 +14,6 @@ import utilities.MeanAboveMedian;
  *
  *************************************************************************************************/
 public class CoreIndicators extends CollectorBase {
-	private static final long serialVersionUID = -7295853109870791276L;
 
     //------------------//
     //----- Fields -----//

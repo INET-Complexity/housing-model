@@ -21,7 +21,6 @@ import java.util.TreeSet;
  *
  *************************************************************************************************/
 public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
-	private static final long serialVersionUID = -2371013046862291303L;
 
 	//------------------//
 	//----- Fields -----//

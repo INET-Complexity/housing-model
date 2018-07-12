@@ -8,7 +8,6 @@ import housing.*;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 public class CreditSupply extends CollectorBase {
-	private static final long serialVersionUID = 1630707025974306844L;
 
 	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 

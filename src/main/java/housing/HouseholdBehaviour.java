@@ -12,7 +12,6 @@ import org.apache.commons.math3.random.MersenneTwister;
  *
  *************************************************************************************************/
 public class HouseholdBehaviour implements Serializable {
-	private static final long serialVersionUID = -7785886649432814279L;
 
     //------------------//
     //----- Fields -----//

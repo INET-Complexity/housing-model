@@ -11,7 +11,6 @@ import java.util.HashSet;
  *
  *************************************************************************************************/
 public class Bank implements Serializable {
-	private static final long serialVersionUID = -8301089924358306706L;
 
     //------------------//
     //----- Fields -----//

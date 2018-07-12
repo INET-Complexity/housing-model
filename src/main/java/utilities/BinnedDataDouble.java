@@ -9,7 +9,6 @@ import org.apache.commons.csv.CSVRecord;
 
 
 public class BinnedDataDouble extends BinnedData<Double> {
-	private static final long serialVersionUID = -2940041481582439332L;
 
 	/***
 	 * Loads data from a .csv file. The file should be in the format

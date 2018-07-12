@@ -8,7 +8,6 @@ package housing;
  *
  *************************************************************************************************/
 public class MortgageAgreement extends PaymentAgreement {
-	private static final long serialVersionUID = -1610029355056926296L;
 
     //------------------//
     //----- Fields -----//

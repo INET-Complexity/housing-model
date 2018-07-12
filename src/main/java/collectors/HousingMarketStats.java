@@ -11,7 +11,6 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
  *
  *************************************************************************************************/
 public class HousingMarketStats extends CollectorBase {
-	private static final long serialVersionUID = -535310555732796139L;
 
 	//------------------//
 	//----- Fields -----//
