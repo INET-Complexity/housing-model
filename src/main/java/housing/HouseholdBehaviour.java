@@ -205,9 +205,8 @@ public class HouseholdBehaviour implements Serializable {
 	 *  is assumed to be the difference in rental price between the two qualities.
 	 *  @return true if we should buy a house, false if we should rent
 	 */
-    boolean decideRentOrPurchase(Household me, double desiredPurchasePrice) {
+    boolean decideRentOrPurchase(Household me, double purchasePrice) {
         if(isPropertyInvestor()) return(true);
-        double purchasePrice = Math.min(desiredPurchasePrice, Model.bank.getMaxMortgage(me, true));
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
                 decideDownPayment(me, purchasePrice), true);
         int newHouseQuality = Model.housingMarketStats.getMaxQualityForPrice(purchasePrice);
