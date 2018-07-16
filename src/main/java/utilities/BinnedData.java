@@ -3,7 +3,6 @@ package utilities;
 import java.util.ArrayList;
 
 public class BinnedData<DATA> extends ArrayList<DATA> {
-	private static final long serialVersionUID = 3838884637048415546L;
 	
 	public BinnedData(double firstBinMin, double binWidth) {
 		this.firstBinMin = firstBinMin;

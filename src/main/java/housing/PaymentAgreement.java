@@ -11,7 +11,6 @@ import java.io.Serializable;
  *
  *************************************************************************************************/
 public class PaymentAgreement implements Serializable {
-	private static final long serialVersionUID = -2680643507296169409L;
 
     //------------------//
     //----- Fields -----//

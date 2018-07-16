@@ -10,7 +10,6 @@ import java.util.ArrayList;
  *
  *************************************************************************************************/
 public class HouseSaleRecord extends HousingMarketRecord {
-	private static final long serialVersionUID = 8626260055548234106L;
 
 	//------------------//
 	//----- Fields -----//

@@ -11,7 +11,6 @@ import housing.Model;
  *
  *************************************************************************************************/
 public class HouseholdStats extends CollectorBase {
-	private static final long serialVersionUID = -402486195880710795L;
 
 	//------------------//
 	//----- Fields -----//
@@ -39,6 +38,10 @@ public class HouseholdStats extends CollectorBase {
 
 	// Other fields
 	private double  sumStockYield; // Sum of stock gross rental yields of all currently occupied rental properties
+    private int     nNonBTLBidsAboveExpAvSalePrice; // Number of normal (non-BTL) bids with desired housing expenditure above the exponential moving average sale price
+    private int     nBTLBidsAboveExpAvSalePrice; // Number of BTL bids with desired housing expenditure above the exponential moving average sale price
+    private int     nNonBTLBidsAboveExpAvSalePriceCounter; // Counter for the number of normal (non-BTL) bids with desired housing expenditure above the exp. mov. av. sale price
+    private int     nBTLBidsAboveExpAvSalePriceCounter; // Counter for the number of BTL bids with desired housing expenditure above the exp. mov. av. sale price
 
 	//------------------------//
 	//----- Constructors -----//
@@ -71,6 +74,10 @@ public class HouseholdStats extends CollectorBase {
         rentingAnnualisedTotalIncome = 0.0;
         homelessAnnualisedTotalIncome = 0.0;
         sumStockYield = 0.0;
+        nNonBTLBidsAboveExpAvSalePrice = 0;
+        nBTLBidsAboveExpAvSalePrice = 0;
+        nNonBTLBidsAboveExpAvSalePriceCounter = 0;
+        nBTLBidsAboveExpAvSalePriceCounter = 0;
     }
 
     public void record() {
@@ -124,7 +131,6 @@ public class HouseholdStats extends CollectorBase {
                     }
                     // Non-BTL investors in social housing
                 } else if (h.isInSocialHousing()) {
-                    // TODO: Once numbers are checked, this "else if" can be replaced by an "else"
                     ++nNonBTLHomeless;
                     homelessAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
                 }
@@ -135,36 +141,62 @@ public class HouseholdStats extends CollectorBase {
         ownerOccupierAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
         rentingAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
         homelessAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
+        // Pass number of bidders above the exponential moving average sale price to persistent variable and
+        // re-initialise to zero the counter
+        nNonBTLBidsAboveExpAvSalePrice = nNonBTLBidsAboveExpAvSalePriceCounter;
+        nBTLBidsAboveExpAvSalePrice = nBTLBidsAboveExpAvSalePriceCounter;
+        nNonBTLBidsAboveExpAvSalePriceCounter = 0;
+        nBTLBidsAboveExpAvSalePriceCounter = 0;
+    }
+
+    /**
+     * Count number of normal (non-BTL) bidders with desired expenditures above the (minimum quality, q=0) exponential
+     * moving average sale price
+     */
+    public void countNonBTLBidsAboveExpAvSalePrice(double price) {
+        if (price >= Model.housingMarketStats.getExpAvSalePriceForQuality(0)) {
+            nNonBTLBidsAboveExpAvSalePriceCounter++;
+        }
+    }
+
+    /**
+     * Count number of BTL bidders with desired expenditures above the (minimum quality, q=0) exponential moving average
+     * sale price
+     */
+    public void countBTLBidsAboveExpAvSalePrice(double price) {
+        if (price >= Model.housingMarketStats.getExpAvSalePriceForQuality(0)) {
+            nBTLBidsAboveExpAvSalePriceCounter++;
+        }
     }
 
     //----- Getter/setter methods -----//
 
     // Getters for numbers of households variables
-    public int getnBTL() { return nBTL; }
-    public int getnActiveBTL() { return nActiveBTL; }
-    public int getnBTLOwnerOccupier() { return nBTLOwnerOccupier; }
-    public int getnBTLHomeless() { return nBTLHomeless; }
-    public int getnBTLBankruptcies() { return nBTLBankruptcies; }
-    public int getnNonBTLOwnerOccupier() { return nNonBTLOwnerOccupier; }
-    public int getnRenting() { return nRenting; }
-    public int getnNonBTLHomeless() { return nNonBTLHomeless; }
-    public int getnNonBTLBankruptcies() { return nNonBTLBankruptcies; }
-    public int getnOwnerOccupier() { return nBTLOwnerOccupier + nNonBTLOwnerOccupier; }
-    public int getnHomeless() { return nBTLHomeless + nNonBTLHomeless; }
-    public int getnNonOwner() { return nRenting + getnHomeless(); }
+    int getnBTL() { return nBTL; }
+    int getnActiveBTL() { return nActiveBTL; }
+    int getnBTLOwnerOccupier() { return nBTLOwnerOccupier; }
+    int getnBTLHomeless() { return nBTLHomeless; }
+    int getnBTLBankruptcies() { return nBTLBankruptcies; }
+    int getnNonBTLOwnerOccupier() { return nNonBTLOwnerOccupier; }
+    int getnRenting() { return nRenting; }
+    int getnNonBTLHomeless() { return nNonBTLHomeless; }
+    int getnNonBTLBankruptcies() { return nNonBTLBankruptcies; }
+    int getnOwnerOccupier() { return nBTLOwnerOccupier + nNonBTLOwnerOccupier; }
+    int getnHomeless() { return nBTLHomeless + nNonBTLHomeless; }
+    int getnNonOwner() { return nRenting + getnHomeless(); }
 
     // Getters for annualised income variables
-    public double getActiveBTLAnnualisedTotalIncome() { return activeBTLAnnualisedTotalIncome; }
-    public double getOwnerOccupierAnnualisedTotalIncome() { return ownerOccupierAnnualisedTotalIncome; }
-    public double getRentingAnnualisedTotalIncome() { return rentingAnnualisedTotalIncome; }
-    public double getHomelessAnnualisedTotalIncome() { return homelessAnnualisedTotalIncome; }
-    public double getNonOwnerAnnualisedTotalIncome() {
+    double getActiveBTLAnnualisedTotalIncome() { return activeBTLAnnualisedTotalIncome; }
+    double getOwnerOccupierAnnualisedTotalIncome() { return ownerOccupierAnnualisedTotalIncome; }
+    double getRentingAnnualisedTotalIncome() { return rentingAnnualisedTotalIncome; }
+    double getHomelessAnnualisedTotalIncome() { return homelessAnnualisedTotalIncome; }
+    double getNonOwnerAnnualisedTotalIncome() {
         return rentingAnnualisedTotalIncome + homelessAnnualisedTotalIncome;
     }
 
     // Getters for yield variables
-    public double getSumStockYield() { return sumStockYield; }
-    public double getAvStockYield() {
+    double getSumStockYield() { return sumStockYield; }
+    double getAvStockYield() {
         if(nRenting > 0) {
             return sumStockYield/nRenting;
         } else {
@@ -173,90 +205,19 @@ public class HouseholdStats extends CollectorBase {
     }
 
     // Getters for other variables...
-    // ... number of empty houses
-    public int getnEmptyHouses() {
+    // ... number of empty houses (total number of houses minus number of non-homeless households)
+    int getnEmptyHouses() {
         return Model.construction.getHousingStock() + nBTLHomeless + nNonBTLHomeless - Model.households.size();
     }
     // ... proportion of housing stock owned by buy-to-let investors (all rental properties, plus all empty houses not
     // owned by the construction sector)
-    public double getBTLStockFraction() {
+    double getBTLStockFraction() {
         return ((double)(getnEmptyHouses() - Model.housingMarketStats.getnUnsoldNewBuild()
                 + nRenting))/Model.construction.getHousingStock();
     }
+    // ... number of normal (non-BTL) bidders with desired housing expenditure above the exponential moving average sale price
+    int getnNonBTLBidsAboveExpAvSalePrice() { return nNonBTLBidsAboveExpAvSalePrice; }
+    // ... number of BTL bidders with desired housing expenditure above the exponential moving average sale price
+    int getnBTLBidsAboveExpAvSalePrice() { return nBTLBidsAboveExpAvSalePrice; }
 
-//    // Array with ages of all households
-//    public double [] getAgeDistribution() {
-//        double [] result = new double[region.households.size()];
-//        int i = 0;
-//        for(Household h : region.households) {
-//            result[i] = h.getAge();
-//            ++i;
-//        }
-//        return(result);
-//    }
-//
-//    // Array with ages of renters and households in social housing
-//    public double [] getNonOwnerAges() {
-//        double [] result = new double[getnNonOwner()];
-//        int i = 0;
-//        for(Household h : region.households) {
-//            if(!h.isHomeowner() && i < getnNonOwner()) {
-//                result[i++] = h.getAge();
-//            }
-//        }
-//        while(i < getnNonOwner()) {
-//            result[i++] = 0.0;
-//        }
-//        return(result);
-//    }
-//
-//    // Array with ages of owner-occupiers
-//    public double [] getOwnerOccupierAges() {
-//        double [] result = new double[getnNonOwner()];
-//        int i = 0;
-//        for(Household h : region.households) {
-//            if(!h.isHomeowner() && i < getnNonOwner()) {
-//                result[i] = h.getAge();
-//                ++i;
-//            }
-//        }
-//        while(i < getnNonOwner()) {
-//            result[i++] = 0.0;
-//        }
-//        return(result);
-//    }
-//
-//    // Distribution of the number of properties owned by BTL investors
-//    public double [] getBTLNProperties() {
-//        if(isActive() && nBTL > 0) {
-//            double [] result = new double[(int)nBTL];
-//            int i = 0;
-//            for(Household h : region.households) {
-//                if(h.behaviour.isPropertyInvestor() && i<nBTL) {
-//                    result[i] = h.nInvestmentProperties();
-//                    ++i;
-//                }
-//            }
-//            return(result);
-//        }
-//        return null;
-//    }
-//
-//    public double [] getLogIncomes() {
-//        double [] result = new double[region.households.size()];
-//        int i = 0;
-//        for(Household h : region.households) {
-//            result[i++] = Math.log(h.getAnnualGrossEmploymentIncome());
-//        }
-//        return(result);
-//    }
-//
-//    public double [] getLogBankBalances() {
-//        double [] result = new double[region.households.size()];
-//        int i = 0;
-//        for(Household h : region.households) {
-//            result[i++] = Math.log(Math.max(0.0, h.getBankBalance()));
-//        }
-//        return(result);
-//    }
 }

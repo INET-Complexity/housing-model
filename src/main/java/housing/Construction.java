@@ -7,7 +7,6 @@ import java.util.HashSet;
 
 
 public class Construction implements IHouseOwner, Serializable {
-    private static final long serialVersionUID = -6288390048595500248L;
 
     //------------------//
     //----- Fields -----//

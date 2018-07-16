@@ -9,7 +9,6 @@ import org.apache.commons.math3.random.MersenneTwister;
  *
  *************************************************************************************************/
 public class HouseRentalMarket extends HousingMarket {
-	private static final long serialVersionUID = -3039057421808432696L;
 
     //-------------------//
     //----- Methods -----//
