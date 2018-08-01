@@ -172,32 +172,6 @@ public class Model {
 
                 // Print time information to screen
                 if (t % 100 == 0) {
-
-                    System.out.println("MARKET_AVERAGE_PRICE_DECAY " + MARKET_AVERAGE_PRICE_DECAY);
-                    System.out.println("SALE_EPSILON " + SALE_EPSILON);
-                    System.out.println("TARGET_POPULATION " + TARGET_POPULATION);
-                    System.out.println("P_INVESTOR " + P_INVESTOR);
-                    System.out.println("MIN_INVESTOR_PERCENTILE " + MIN_INVESTOR_PERCENTILE);
-                    System.out.println("SEED " + SEED);
-                    System.out.println("N_STEPS " + N_STEPS);
-                    System.out.println("HPA_EXPECTATION_FACTOR " + HPA_EXPECTATION_FACTOR);
-                    System.out.println("HPA_YEARS_TO_CHECK " + HPA_YEARS_TO_CHECK);
-                    System.out.println("derivedParams_G " + derivedParams_G);
-                    System.out.println("derivedParams_K " + derivedParams_K);
-                    System.out.println("derivedParams_KL " + derivedParams_KL);
-                    System.out.println("TENANCY_LENGTH_AVERAGE " + TENANCY_LENGTH_AVERAGE);
-                    System.out.println("HOLD_PERIOD " + HOLD_PERIOD);
-                    System.out.println("DECISION_TO_SELL_ALPHA " + DECISION_TO_SELL_ALPHA);
-                    System.out.println("DECISION_TO_SELL_BETA " + DECISION_TO_SELL_BETA);
-                    System.out.println("DECISION_TO_SELL_HPC " + DECISION_TO_SELL_HPC);
-                    System.out.println("DECISION_TO_SELL_INTEREST " + DECISION_TO_SELL_INTEREST);
-                    System.out.println("BTL_CHOICE_INTENSITY " + BTL_CHOICE_INTENSITY);
-                    System.out.println("DESIRED_RENT_INCOME_FRACTION " + DESIRED_RENT_INCOME_FRACTION);
-                    System.out.println("PSYCHOLOGICAL_COST_OF_RENTING " + PSYCHOLOGICAL_COST_OF_RENTING);
-                    System.out.println("SENSITIVITY_RENT_OR_PURCHASE " + SENSITIVITY_RENT_OR_PURCHASE);
-
-                    System.exit(0);
-
                     System.out.println("Simulation: " + nSimulation + ", time: " + t);
                 }
             }
