@@ -134,8 +134,9 @@ public class Config {
     double CONSTRUCTION_HOUSES_PER_HOUSEHOLD;   // Target ratio of houses per household
 
     // Government parameters
-    double GOVERNMENT_PERSONAL_ALLOWANCE_LIMIT;         // Maximum personal allowance
-    public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;    // Minimum monthly earnings for a married couple from income support
+    double GOVERNMENT_GENERAL_PERSONAL_ALLOWANCE;           // General personal allowance to be deducted when computing taxable income
+    double GOVERNMENT_INCOME_LIMIT_FOR_PERSONAL_ALLOWANCE;  // Limit of income above which personal allowance starts to decrease £1 for every £2 of income above this limit
+    public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;        // Minimum monthly earnings for a married couple from income support
 
     // Collectors parameters
     double UK_HOUSEHOLDS;                       // Approximate number of households in UK, used to scale up results for core indicators

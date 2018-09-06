@@ -1,4 +1,4 @@
-# Tax bands, Tax rates
-9440, 0.20
-41450, 0.40
-159440, 0.45
+# Tax bands after personal allowance, Tax rates
+0, 0.20
+32010, 0.40
+150000, 0.45
