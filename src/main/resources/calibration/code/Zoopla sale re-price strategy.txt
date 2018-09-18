@@ -1,0 +1,12 @@
+Zoopla sale re-price strategy
+
+1. Take D matched listings (collation) file
+2. Save all listing IDs for which price updates>0
+3. Take C matched listings (daily) file
+4. Keep all entrys for the listings that have been saved in 2. Variables: day, postcode (?), price, market, status
+5. Sort first by listing, then by date
+6. Calculate price changes between all two subsequent dates for each listing (as a % of the base price) (ATTENTION: we need to figure out how the status variable works (For sale, sale under offer, sold))
+7. Calculate "time on the market" by taking the difference between the date of each listing of a given property and the original/first listing (in days[?])
+(8. Drop all initial listings for each property)
+9. Create scatter plot / heat map with 6. on y-axis and 7. on x-axis, if market == sale (ATTENTION: we need to figure out how the status variable works (For sale, sale under offer, sold))
+(10. Versions: can plot one re-pricing, two re-pricings etc separately - need to calculate number of re-pricings per ID)

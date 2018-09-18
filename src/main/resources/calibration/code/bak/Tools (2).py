@@ -71,28 +71,30 @@ def ZooplaPriceChanges():
     data = ds.ZooplaMatchedDaily()
     #    store = pd.HDFStore('rawDaily.hd5',mode='w')
     #    for chunk in data.parser:
-    chunk = data.read(100000)
+    chunk = data.read(1000)
     chunk.rename(columns={'\xef\xbb\xbfLISTING ID':'LISTING ID'},inplace=True)
     filteredchunk = chunk[chunk["MARKET"]=="SALE"][['LISTING ID','DAY','PRICE']][chunk['PRICE']>0]
     for row in filteredchunk.values:
-        if row[0] in priceMap:
-            startDay, endDay, percent = priceMap[row[0]].add(row[1],row[2])
-            distribution.add(startDay, endDay, percent)
-        else:
+        currentState = priceMap.get(row[0])
+        if currentState == None:
             priceMap[row[0]] = PriceCalc(row[1],row[2])
+        else:
+            startDay, endDay, percent = currentState.add(row[1],row[2])
+            distribution.add(startDay, endDay, percent)
                
     # now get deletion dates
     delData = ds.ZooplaMatchedCollated()
 #    for chunk in delData.parser:
-    chunk = delData.read(100000)
+    chunk = delData.read(1000)
     chunk.rename(columns={'\xef\xbb\xbfLISTING ID':'LISTING ID'},inplace=True)
     filteredchunk = chunk[chunk["MARKET"]=="SALE"][['LISTING ID','DELETED']]
     for row in filteredchunk.values:
-       if row[0] in priceMap:
-           if(priceMap[row[0]].currentprice == priceMap[row[0]].initialmarketprice):
+        currentState = priceMap.get(row[0])
+        if currentState != None:
+           if(currentState.currentprice == currentState.initialmarketprice):
                pSame += 1
            total += 1
-           startDay, endDay, percent = priceMap[row[0]].add(row[1],0)
+           startDay, endDay, percent = currentState.add(row[1],0)
            distribution.add(startDay, endDay, percent)
            priceMap.pop(row[0])
     print len(priceMap)

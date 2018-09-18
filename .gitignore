@@ -15,3 +15,6 @@
 
 # ignore some documents
 /docs/ChangeLog
+
+# ignore python pyc files
+*.pyc

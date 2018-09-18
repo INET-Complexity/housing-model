@@ -15,13 +15,18 @@ import Zoopla as zp
 class SaleRepriceDecision:
     'Decision on how much to reduce the price of a house if unsold for one month'
     priceChange = pd.DataFrame()
+    zoopla = zp.Zoopla()
 
     def __init__(self):
-        self.priceChange = zp.Zoopla.matchedAggregated.get_chunk(100)
-        #self.priceChange.rename(columns={'\xef\xbb\xbfLISTING ID':'LISTING ID'},inplace=True)
+    #self.priceChange = self.zoopla.matchedDaily.get_chunk(10000000) #[["CREATED","DELETED","PRICE","PRICE CHANGE"]]
+      
+     self.priceChange = self.zoopla.matchedCollated.get_chunk(200000000)
 
 pd.set_option('display.max_columns',1000)
 pd.set_option('display.max_rows',1000)
 decision = SaleRepriceDecision()
-#print decision.priceChange.columns
-print decision.priceChange[[zp.Zoopla.IDField,'CREATED','DELETED']]
+#print decision.priceChange[decision.priceChange["ADDRESS 1"]=="Broadcarr House"]
+
+print decision.priceChange[decision.priceChange[decision.priceChange.columns[0]]==402]
+
+#print decision.priceChange
