@@ -25,7 +25,9 @@ public class HouseholdStats extends CollectorBase {
 	private int     nBTLOwnerOccupier; // Number of BTL households owning their home but without any BTL property
 	private int     nBTLHomeless; // Number of homeless BTL households
     private int     nBTLBankruptcies; // Number of BTL households going bankrupt in a given time step
-	private int     nNonBTLOwnerOccupier; // Number of non-BTL households owning their home
+    
+    //RUBEN - back to private
+	public int     nNonBTLOwnerOccupier; // Number of non-BTL households owning their home
 	private int     nRenting; // Number of (by definition, non-BTL) households renting their home
 	private int     nNonBTLHomeless; // Number of homeless non-BTL households
     private int     nNonBTLBankruptcies; // Number of non-BTL households going bankrupt in a given time step
@@ -43,6 +45,12 @@ public class HouseholdStats extends CollectorBase {
     private int     nNonBTLBidsAboveExpAvSalePriceCounter; // Counter for the number of normal (non-BTL) bids with desired housing expenditure above the exp. mov. av. sale price
     private int     nBTLBidsAboveExpAvSalePriceCounter; // Counter for the number of BTL bids with desired housing expenditure above the exp. mov. av. sale price
 
+    //RUBEN additional variable totalConsumption and Savings
+    private double totalConsumption;
+    private double totalSavings;
+    //RUBEN number of households that have a total negative equity position
+    private int nNegativeEquity;
+    
 	//------------------------//
 	//----- Constructors -----//
 	//------------------------//
@@ -78,6 +86,10 @@ public class HouseholdStats extends CollectorBase {
         nBTLBidsAboveExpAvSalePrice = 0;
         nNonBTLBidsAboveExpAvSalePriceCounter = 0;
         nBTLBidsAboveExpAvSalePriceCounter = 0;
+        //RUBEN initialise totalConsumption and Savings, etc
+        totalConsumption = 0.0;
+        totalSavings = 0.0;
+        nNegativeEquity = 0;
     }
 
     public void record() {
@@ -96,9 +108,23 @@ public class HouseholdStats extends CollectorBase {
         rentingAnnualisedTotalIncome = 0.0;
         homelessAnnualisedTotalIncome = 0.0;
         sumStockYield = 0.0;
+        //RUBEN initialise totalConsumption and totalSavings, etc
+        totalConsumption = 0.0;
+        totalSavings = 0.0;
+        nNegativeEquity = 0;
+        
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
-            if (h.behaviour.isPropertyInvestor()) {
+        	//RUBEN sum up the consumption and calculate the savings, count hh with negative euqity
+        	// For alternative consumption function, I added the input "getEquityPosition()" and "getMonthlyDisposableIncome()"
+        	double householdConsumption = h.behaviour.getDesiredConsumption(h.getBankBalance(), h.getAnnualGrossTotalIncome());
+        	totalConsumption += householdConsumption;
+            totalSavings += (h.getMonthlyDisposableIncome()*Model.config.constants.MONTHS_IN_YEAR)-householdConsumption;
+            if (h.getEquityPosition() < 0) {
+            	nNegativeEquity++;
+            }
+            
+        	if (h.behaviour.isPropertyInvestor()) {
                 ++nBTL;
                 if (h.isBankrupt()) nBTLBankruptcies += 1;
                 // Active BTL investors
@@ -158,7 +184,7 @@ public class HouseholdStats extends CollectorBase {
             nNonBTLBidsAboveExpAvSalePriceCounter++;
         }
     }
-
+    
     /**
      * Count number of BTL bidders with desired expenditures above the (minimum quality, q=0) exponential moving average
      * sale price
@@ -177,7 +203,8 @@ public class HouseholdStats extends CollectorBase {
     int getnBTLOwnerOccupier() { return nBTLOwnerOccupier; }
     int getnBTLHomeless() { return nBTLHomeless; }
     int getnBTLBankruptcies() { return nBTLBankruptcies; }
-    int getnNonBTLOwnerOccupier() { return nNonBTLOwnerOccupier; }
+    //RUBEN changed to public
+    public int getnNonBTLOwnerOccupier() { return nNonBTLOwnerOccupier; }
     int getnRenting() { return nRenting; }
     int getnNonBTLHomeless() { return nNonBTLHomeless; }
     int getnNonBTLBankruptcies() { return nNonBTLBankruptcies; }
@@ -219,5 +246,10 @@ public class HouseholdStats extends CollectorBase {
     int getnNonBTLBidsAboveExpAvSalePrice() { return nNonBTLBidsAboveExpAvSalePrice; }
     // ... number of BTL bidders with desired housing expenditure above the exponential moving average sale price
     int getnBTLBidsAboveExpAvSalePrice() { return nBTLBidsAboveExpAvSalePrice; }
+    
+    //RUBEN getters for totalConsumption and Savings
+    double getTotalConsumption() { return totalConsumption; }
+    double getTotalSavings() {return totalSavings;}
+    int getNNegativeEquity() {return nNegativeEquity;}
 
 }

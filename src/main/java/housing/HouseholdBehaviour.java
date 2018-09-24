@@ -72,7 +72,7 @@ public class HouseholdBehaviour implements Serializable {
 	 * @param bankBalance Household's liquid wealth
      * @param annualGrossTotalIncome Household's annual gross total income
 	 */
-	double getDesiredConsumption(double bankBalance, double annualGrossTotalIncome) {
+	public double getDesiredConsumption(double bankBalance, double annualGrossTotalIncome) {
 		return config.CONSUMPTION_FRACTION*Math.max(bankBalance - getDesiredBankBalance(annualGrossTotalIncome), 0.0);
 	}
 
@@ -86,7 +86,7 @@ public class HouseholdBehaviour implements Serializable {
      *
 	 * @param annualGrossTotalIncome Household
      */
-	double getDesiredBankBalance(double annualGrossTotalIncome) {
+	public double getDesiredBankBalance(double annualGrossTotalIncome) {
 		return Math.exp(config.DESIRED_BANK_BALANCE_ALPHA
                 + config.DESIRED_BANK_BALANCE_BETA*Math.log(annualGrossTotalIncome) + propensityToSave);
 	}

@@ -55,6 +55,7 @@ public class Model {
     public static HousingMarketStats    housingMarketStats;
     public static RentalMarketStats     rentalMarketStats;
     public static MicroDataRecorder     transactionRecorder;
+    public static AgentDataRecorder		agentRecorder;
     public static int	                nSimulation; // To keep track of the simulation number
     public static int	                t; // To keep track of time (in months)
 
@@ -94,7 +95,8 @@ public class Model {
         householdStats = new collectors.HouseholdStats();
         housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket);
         rentalMarketStats = new collectors.RentalMarketStats(housingMarketStats, houseRentalMarket);
-
+        agentRecorder = new collectors.AgentDataRecorder(outputFolder);
+        
         nSimulation = 0;
     }
 
@@ -121,6 +123,9 @@ public class Model {
 
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation);
+            
+            // For each simulation, open the AgentData files
+            agentRecorder.openNewFiles(nSimulation);
 
 		    // For each simulation, initialise both houseSaleMarket and houseRentalMarket variables (including HPI)
             init();
@@ -132,10 +137,14 @@ public class Model {
                 // respective variables
                 modelStep();
 
-//                if (t >= config.TIME_TO_START_RECORDING) {
+                if (t >= config.TIME_TO_START_RECORDING) {
+                    //RUBEN write results of every agent's variable x into the file 
+                    //(this is only provisional, as it only writes one type of data)
+                    agentRecorder.recordAgentData();
                     // Write results of this time step and run to both multi- and single-run files
                     recorder.writeTimeStampResults(config.recordCoreIndicators, t);
-//                }
+
+                }
 
                 // Print time information to screen
                 if (t % 100 == 0) {
@@ -152,6 +161,8 @@ public class Model {
         // After the last simulation, clean up
         recorder.finish(config.recordCoreIndicators);
         if(config.recordMicroData) transactionRecorder.finish();
+        //clean up agentRecorder
+        agentRecorder.finish();
 
         //Stop the program when finished
 		System.exit(0);
@@ -161,6 +172,7 @@ public class Model {
         setRecordGeneral();
 		setRecordCoreIndicators(config.recordCoreIndicators);
 		setRecordMicroData(config.recordMicroData);
+		setRecordAgentData(config.recordAgentData); 
 	}
 
 	private static void init() {
@@ -330,5 +342,11 @@ public class Model {
 	}
 
 	private static void setRecordMicroData(boolean record) { transactionRecorder.setActive(record); }
-
+	
+	// method to set AgentDataRecorder active
+	private static void setRecordAgentData(boolean recordAgent) {
+		agentRecorder.setActive(recordAgent);
+		
+	}
+	
 }

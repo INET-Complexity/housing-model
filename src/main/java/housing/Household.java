@@ -22,7 +22,7 @@ public class Household implements IHouseOwner, Serializable {
     //----- Fields -----//
     //------------------//
 
-    private static int          id_pool;
+    public static int          id_pool;
 
     public int                  id; // Only used for identifying households within the class MicroDataRecorder
     private double              annualGrossEmploymentIncome;
@@ -122,7 +122,7 @@ public class Household implements IHouseOwner, Serializable {
      * Subtracts the essential, necessary consumption and housing expenses (mortgage and rental payments) from the net
      * total income (employment income, property income, financial returns minus taxes)
      */
-    private double getMonthlyDisposableIncome() {
+    public double getMonthlyDisposableIncome() {
         // Start with net monthly income
         double monthlyDisposableIncome = getMonthlyNetTotalIncome();
         // Subtract essential, necessary consumption
@@ -153,7 +153,7 @@ public class Household implements IHouseOwner, Serializable {
         return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome + bankBalance*config.RETURN_ON_FINANCIAL_WEALTH;
     }
 
-    double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
+    public double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
 
     //----- Methods for house owners -----//
 
@@ -543,6 +543,27 @@ public class Household implements IHouseOwner, Serializable {
         if(!isHomeowner()) return(0.0);
         return Model.housingMarketStats.getExpAvSalePriceForQuality(home.getQuality())
                 - mortgageFor(home).principal;
+    }
+    
+    // get investment property equity for BTL investors
+    double getInvestmentEquity() {
+    	if(nInvestmentProperties() > 0) {
+    		// if house is owned by investor AND it is not the home then
+    		double investmentEquity = 0.0;
+    		for (House h: housePayments.keySet()) {
+                if (h.owner == this && h.resident !=this) {
+                	investmentEquity += Model.housingMarketStats.getExpAvSalePriceForQuality(h.getQuality())
+                			- mortgageFor(h).principal;
+                }
+    		}
+    		return investmentEquity;
+    	} 
+    	else { return 0.0;}
+    }
+    
+    // getter for the total equity position
+    public double getEquityPosition() {
+    	return getBankBalance() + getInvestmentEquity() + getHomeEquity();
     }
     
     public MortgageAgreement mortgageFor(House h) {

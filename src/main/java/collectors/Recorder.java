@@ -36,7 +36,7 @@ public class Recorder {
     private PrintWriter rentalYield;
     private PrintWriter housePriceGrowth;
     private PrintWriter interestRateSpread;
-
+    
     //------------------------//
     //----- Constructors -----//
     //------------------------//
@@ -107,7 +107,9 @@ public class Recorder {
                     + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
                     + "Rental AvDaysOnMarket, Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
-                    + "nRegisteredMortgages");
+                    + "nRegisteredMortgages, "
+            		//RUBEN additional variables
+            		+ "totalConsumption, totalSavings, totalCredit, nNegativeEquity");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -203,7 +205,12 @@ public class Recorder {
                 Model.rentalMarketStats.getnSales() + ", " +
                 Model.rentalMarketStats.getExpAvFlowYield() + ", " +
                 // Credit data
-                Model.creditSupply.getnRegisteredMortgages());
+                Model.creditSupply.getnRegisteredMortgages() + ", " +
+        		//RUBEN additional variables
+        		Model.householdStats.getTotalConsumption()  + ", " +
+        		Model.householdStats.getTotalSavings() + ", " +
+        		(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
+        		Model.householdStats.getNNegativeEquity());
     }
 
     public void finishRun(boolean recordCoreIndicators) {
