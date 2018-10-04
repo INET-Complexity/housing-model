@@ -109,7 +109,7 @@ public class Recorder {
                     // Credit data
                     + "nRegisteredMortgages, "
             		//RUBEN additional variables
-            		+ "totalConsumption, totalSavings, totalCredit, creditSupplyTarget, nNegativeEquity");
+            		+ "totalConsumption, totalSavings, totalCredit, creditSupplyTarget, newlyIssuedCredit, newlyPaidDownPayments, nNegativeEquity");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -210,7 +210,9 @@ public class Recorder {
         		Model.householdStats.getTotalConsumption()  + ", " +
         		Model.householdStats.getTotalSavings() + ", " +
         		(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
-        		(Model.bank.creditSupplyTarget(Model.households.size())) + ", " +
+        		Model.bank.creditSupplyTarget(Model.households.size()) + ", " +
+        		Model.creditSupply.getNewlyIssuedCredit() + ", " +
+        		Model.creditSupply.getNewlyPaidDownPayments() + ", " +
         		Model.householdStats.getNNegativeEquity());
     }
 

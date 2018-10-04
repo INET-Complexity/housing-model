@@ -93,8 +93,9 @@ public class AgentDataRecorder extends CollectorBase{
                 	
         	        // set the array size big enough to hold all future HHs (about 100000 for 10,000 HH and 6,000 periods);
         	        // 0.0015 is a fudge parameter to adjust the influence of more periods and target population.
-        	        //TODO check if this fudge parameter results in realistic outcomes for different TP and P
-        	        int maxLivedHHs = (int)((config.N_STEPS - config.TIME_TO_START_RECORDING)*config.TARGET_POPULATION*0.0035);
+        			// Generally, for small intervalls, the array becomes too small
+        	        //TODO This equation does not really provide a good initialisation size for changing varibles.
+        	        int maxLivedHHs =  25000;//(int)((config.N_STEPS - config.TIME_TO_START_RECORDING)*config.TARGET_POPULATION*0.0035);
         	        
         	        // build the arrays for the variables to be extracted
         	        double[] arrayBankBalance = new double[maxLivedHHs];

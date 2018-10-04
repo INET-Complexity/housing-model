@@ -172,7 +172,12 @@ public class HouseholdBehaviour implements Serializable {
 			downpayment = Model.housingMarketStats.getHPI()*downpaymentDistOO.inverseCumulativeProbability(Math.max(0.0,
                     (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		}
-		if (downpayment > me.getBankBalance()) downpayment = me.getBankBalance();
+		if (downpayment > me.getBankBalance()) {
+			//System.out.println("bankBalance restricts downpayment, desired downpayment " + downpayment/me.getBankBalance()+ "% bigger");
+			downpayment = me.getBankBalance();
+			}
+		
+		//System.out.println("the desired downpayment is "+ downpayment + ", Bank balance: " + me.getBankBalance() + ", monthly disposable income: " + me.getMonthlyDisposableIncome() );
 		return downpayment;
 	}
 
