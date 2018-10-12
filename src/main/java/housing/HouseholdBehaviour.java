@@ -211,17 +211,66 @@ public class HouseholdBehaviour implements Serializable {
 	 *  @return true if we should buy a house, false if we should rent
 	 */
     boolean decideRentOrPurchase(Household me, double purchasePrice) {
-        if(isPropertyInvestor()) return(true);
+        if(isPropertyInvestor()) {
+        	if (config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) { 
+            	Model.agentDecisionRecorder.rentOrBuy.println("true");
+        	}
+        	return(true);
+        }
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
-                decideDownPayment(me, purchasePrice), true);
+                decideDownPayment(me, purchasePrice), true, false);
         int newHouseQuality = Model.housingMarketStats.getMaxQualityForPrice(purchasePrice);
-        if (newHouseQuality < 0) return false; // can't afford a house anyway
+        if (newHouseQuality < 0) {
+            // if house household can't afford a house, record some basic facts DECISION DATA SH
+            if (config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {        	
+            	Model.agentDecisionRecorder.rentOrBuy.println(String.format("%.2f", me.getBankBalance())
+            			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+            			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+            			+ ", " + String.format("%.2f", me.getEquityPosition())
+            			+ ", "
+            			+ ", " 
+            			+ ", " + String.format("%.2f", mortgageApproval.monthlyPayment)
+            			+ ", " + String.format("%.2f", purchasePrice)
+            			+ ", " + String.format("%.2f", decideDownPayment(me, purchasePrice))
+            			+ ", " + String.format("%.2f", mortgageApproval.downPayment)
+            			+ ", " + String.format("%.6f", mortgageApproval.monthlyInterestRate)
+            			+ ", " + String.format("%.6f", getLongTermHPAExpectation())
+            			+ ", " + newHouseQuality
+            			+ ", " + "0"
+            			+ ", " + "false"
+            			+ ", " );
+            }
+        	return false; // can't afford a house anyway   
+        }
         double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR
 				- purchasePrice*getLongTermHPAExpectation();
         double costOfRent = Model.rentalMarketStats.getExpAvSalePriceForQuality(newHouseQuality)
                 *config.constants.MONTHS_IN_YEAR;
-        return prng.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
+        double probabilityPlaceBidOnHousingMarket = sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
                 + config.PSYCHOLOGICAL_COST_OF_RENTING) - costOfHouse));
+        boolean placeBidOnHousingMarket = prng.nextDouble() < probabilityPlaceBidOnHousingMarket;
+        //continue to record AgentDecision data here. DECISION DATA SH The first part (bank data) is written in the
+        // bank.requestApproval method
+        if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+        	Model.agentDecisionRecorder.rentOrBuy.println(String.format("%.2f", me.getBankBalance())
+        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+        			+ ", " + String.format("%.2f", me.getEquityPosition())
+        			+ ", " + String.format("%.2f", costOfHouse)
+        			+ ", " + String.format("%.2f", costOfRent*(1.0 + config.PSYCHOLOGICAL_COST_OF_RENTING))
+        			+ ", " + String.format("%.2f", mortgageApproval.monthlyPayment)
+        			+ ", " + String.format("%.2f", purchasePrice)
+        			+ ", " + String.format("%.2f", decideDownPayment(me, purchasePrice))
+        			+ ", " + String.format("%.2f", mortgageApproval.downPayment)
+        			+ ", " + String.format("%.6f", mortgageApproval.monthlyInterestRate)
+        			+ ", " + String.format("%.6f", getLongTermHPAExpectation())
+        			+ ", " + newHouseQuality
+        			+ ", " + probabilityPlaceBidOnHousingMarket
+        			+ ", " + placeBidOnHousingMarket
+        			+ ", " );
+        }
+        
+        return placeBidOnHousingMarket;
     }
 
 	/********************************************************
@@ -300,20 +349,84 @@ public class HouseholdBehaviour implements Serializable {
     boolean decideToBuyInvestmentProperty(Household me) {
         // Fast decisions...
         // ...always decide to buy if owning no investment property yet
-        if (me.nInvestmentProperties() < 1) { return true ; }
+        if (me.nInvestmentProperties() < 1) { 
+ 			
+        	// record some DECISION DATA BTL
+        	if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+ 				Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 
+ 						+ ", " + me.id + ", " + ", " + ", " + ", " + ", " + ", " + ", " + ", " 
+ 						+ ", " + String.format("%.2f", me.getBankBalance())
+ 	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+ 	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+ 	        			+ ", " + String.format("%.2f", me.getEquityPosition())
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	     	        	+ ", " + "true"
+ 	     	        	+ ", " + "0 investment properties owned"
+ 	        			+ ", "); 
+ 			}
+        	
+        	return true ; }
         // ...never buy (keep on saving) if bank balance is below the household's desired bank balance
         // TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
-        if (me.getBankBalance() < getDesiredBankBalance(me.getAnnualGrossTotalIncome())*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
+        if (me.getBankBalance() < getDesiredBankBalance(me.getAnnualGrossTotalIncome())*config.BTL_CHOICE_MIN_BANK_BALANCE) { 
+ 			// record DECISION DATA BTL
+        	if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+ 				Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 
+ 						+ ", " + me.id + ", " + ", " + ", " + ", " + ", " + ", " + ", " + ", " 
+ 						+ ", " + String.format("%.2f", me.getBankBalance())
+ 	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+ 	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+ 	        			+ ", " + String.format("%.2f", me.getEquityPosition())
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	     	        	+ ", " + "false" 
+ 	     	        	+ ", " + "bb too far apart from desired bb"
+ 	     	        	+ ", "); 
+ 			}
+        	
+        	return false; }
         // ...find maximum price (maximum mortgage) the household could pay
-        double maxPrice = Model.bank.getMaxMortgage(me, false);
+        double maxPrice = Model.bank.getMaxMortgage(me, false, true);
         // ...never buy if that maximum price is below the average price for the lowest quality
-        if (maxPrice < Model.housingMarketStats.getExpAvSalePriceForQuality(0)) { return false; }
+        if (maxPrice < Model.housingMarketStats.getExpAvSalePriceForQuality(0)) { 
+ 			// write DECISION DATA BTL
+        	if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+ 				Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 
+ 						+ ", " + me.id  + ", " + ", " + ", " + ", " 
+ 						+ ", " + String.format("%.2f", me.getBankBalance())
+ 	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+ 	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+ 	        			+ ", " + String.format("%.2f", me.getEquityPosition())
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	        			+ ", " 
+ 	     	        	+ ", " + "false"
+ 	        			+ ", " + "max price too small for houses on market"
+ 	        			+ ", "); 
+ 			}
+        	
+        	return false; }
 
         // Find the expected equity yield rate for a hypothetical house maximising the leverage available to the
         // household and assuming an average rental yield (over all qualities). This is found as a weighted mix of both
         // rental yield and capital gain times the leverage
         // ...find mortgage with maximum leverage by requesting maximum mortgage with minimum downpayment
-        MortgageAgreement mortgage = Model.bank.requestApproval(me, maxPrice, 0.0, false);
+        MortgageAgreement mortgage = Model.bank.requestApproval(me, maxPrice, 0.0, false, false);
         // ...find equity, or assets minus liabilities (which, initially, is simply the downpayment)
         double equity = Math.max(0.01, mortgage.downPayment); // The 0.01 prevents possible divisions by zero later on
         // ...find the leverage on that mortgage (Assets divided by equity, or return on equity)
@@ -341,7 +454,27 @@ public class HouseholdBehaviour implements Serializable {
         double pBuy = 1.0 - Math.pow((1.0 - sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield)),
                 1.0/config.constants.MONTHS_IN_YEAR);
         // Return true or false as a random draw from the computed probability
-        return prng.nextDouble() < pBuy;
+        boolean bidOnTheHousingMarket = prng.nextDouble() < pBuy;
+     
+        // last part of the DECISION DATA BTL output
+     			if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+     				Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 
+     						+ ", " + me.id
+     						+ ", " + String.format("%.2f", me.getBankBalance())
+     	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+     	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+     	        			+ ", " + String.format("%.2f", me.getEquityPosition())
+     	        			+ ", " + String.format("%.2f", equity)
+     	        			+ ", " + String.format("%.2f", leverage)
+     	        			+ ", " + String.format("%.6f", rentalYield)
+     	        			+ ", " + String.format("%.6f", mortgageRate)
+     	        			+ ", " + String.format("%.6f", expectedEquityYield)
+     	        			+ ", " + String.format("%.6f", getLongTermHPAExpectation())
+     	        			+ ", " + String.format("%.4f", pBuy)
+     	     	        	+ ", " + bidOnTheHousingMarket
+     	        			+ ", "); 
+     			}
+        return bidOnTheHousingMarket;
     }
 
     double btlPurchaseBid(Household me) {
@@ -349,7 +482,7 @@ public class HouseholdBehaviour implements Serializable {
         // TODO: 10% above the average price of top quality houses. The effect of this is to prevent fast increases of
         // TODO: price as BTL investors buy all supply till prices are too high for everybody. Fairly unclear mechanism,
         // TODO: check for removal!
-        return(Math.min(Model.bank.getMaxMortgage(me, false),
+        return(Math.min(Model.bank.getMaxMortgage(me, false, false),
                 1.1*Model.housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY-1)));
     }
 
@@ -393,7 +526,7 @@ public class HouseholdBehaviour implements Serializable {
 	/**
      * @return expectation value of HPI in one year's time divided by today's HPI
      */
-	private double getLongTermHPAExpectation() {
+	public double getLongTermHPAExpectation() {
 		// Dampening or multiplier factor, depending on its value being <1 or >1, for the current trend of HPA when
 		// computing expectations as in HPI(t+DT) = HPI(t) + FACTOR*DT*dHPI/dt (double)
 		return(Model.housingMarketStats.getLongTermHPA()*config.HPA_EXPECTATION_FACTOR);

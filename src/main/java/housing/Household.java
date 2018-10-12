@@ -362,9 +362,15 @@ public class Household implements IHouseOwner, Serializable {
      ********************************************************/
     private void bidForAHome() {
         // Find household's desired housing expenditure
-        double price = behaviour.getDesiredPurchasePrice(monthlyGrossEmploymentIncome);
+        double desiredPurchasePrice = behaviour.getDesiredPurchasePrice(monthlyGrossEmploymentIncome);
         // Cap this expenditure to the maximum mortgage available to the household
-        price = Math.min(price, Model.bank.getMaxMortgage(this, true));
+        double price = Math.min(desiredPurchasePrice, Model.bank.getMaxMortgage(this, true, false));
+		
+        // write purchase Price in DECISION DATA SH output
+		if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+			Model.agentDecisionRecorder.rentOrBuy.print(String.format("%.2f", desiredPurchasePrice) + ", ");
+		}
+        
         // Record the bid on householdStats for counting the number of bids above exponential moving average sale price
         Model.householdStats.countNonBTLBidsAboveExpAvSalePrice(price);
         // Compare costs to decide whether to buy or rent...

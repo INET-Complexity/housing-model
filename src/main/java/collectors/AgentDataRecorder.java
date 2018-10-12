@@ -202,6 +202,11 @@ public class AgentDataRecorder extends CollectorBase{
 	        bankBalance.close();
 	        age.close();
 	        totalWealth.close();
+	        housingNetWealth.close();
+	        consumption.close();
+	        annualGrossTotalIncome.close();
+	        monthlyDisposableIncome.close();
+	        desiredBankBalance.close();
     	}
     }
 

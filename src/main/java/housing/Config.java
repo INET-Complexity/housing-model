@@ -32,6 +32,7 @@ public class Config {
     boolean recordCoreIndicators;		    // True to write time series for each core indicator
     boolean recordMicroData;			    // True to write micro data for each transaction made
     boolean recordAgentData;				// True to write agent based data - very storage intensive
+    boolean recordAgentDecisions; 			// True to write data from agent decision methods
     
     // House parameters
     public int N_QUALITY;                   // Number of quality bands for houses

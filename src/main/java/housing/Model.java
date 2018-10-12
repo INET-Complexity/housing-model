@@ -56,6 +56,7 @@ public class Model {
     public static RentalMarketStats     rentalMarketStats;
     public static MicroDataRecorder     transactionRecorder;
     public static AgentDataRecorder		agentRecorder;
+    public static AgentDecisionRecorder	agentDecisionRecorder;
     public static int	                nSimulation; // To keep track of the simulation number
     public static int	                t; // To keep track of time (in months)
 
@@ -96,6 +97,7 @@ public class Model {
         housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket);
         rentalMarketStats = new collectors.RentalMarketStats(housingMarketStats, houseRentalMarket);
         agentRecorder = new collectors.AgentDataRecorder(outputFolder);
+        agentDecisionRecorder = new collectors.AgentDecisionRecorder(outputFolder);
         
         nSimulation = 0;
     }
@@ -126,6 +128,9 @@ public class Model {
             
             // For each simulation, open the AgentData files
             agentRecorder.openNewFiles(nSimulation);
+            
+            // For each simulation, open the agentDecisionRecorder files
+            agentDecisionRecorder.openNewFiles(nSimulation);
 
 		    // For each simulation, initialise both houseSaleMarket and houseRentalMarket variables (including HPI)
             init();
@@ -143,6 +148,7 @@ public class Model {
                     agentRecorder.recordAgentData();
                     // Write results of this time step and run to both multi- and single-run files
                     recorder.writeTimeStampResults(config.recordCoreIndicators, t);
+
 
                 }
 
@@ -163,6 +169,7 @@ public class Model {
         if(config.recordMicroData) transactionRecorder.finish();
         //clean up agentRecorder
         agentRecorder.finish();
+        if(config.recordAgentDecisions) agentDecisionRecorder.finish();
 
         //Stop the program when finished
 		System.exit(0);
@@ -172,7 +179,8 @@ public class Model {
         setRecordGeneral();
 		setRecordCoreIndicators(config.recordCoreIndicators);
 		setRecordMicroData(config.recordMicroData);
-		setRecordAgentData(config.recordAgentData); 
+		setRecordAgentData(config.recordAgentData);
+		setRecordAgentDecisionData(config.recordAgentDecisions);
 	}
 
 	private static void init() {
@@ -346,7 +354,10 @@ public class Model {
 	// method to set AgentDataRecorder active
 	private static void setRecordAgentData(boolean recordAgent) {
 		agentRecorder.setActive(recordAgent);
-		
+	}
+	
+	private static void setRecordAgentDecisionData(boolean record) {
+		agentDecisionRecorder.setActive(record);
 	}
 	
 }
