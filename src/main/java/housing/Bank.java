@@ -85,7 +85,7 @@ public class Bank implements Serializable {
 	//(1+Model.housingMarketStats.getLongTermHPA()*config.HPA_EXPECTATION_FACTOR*100)*
 	//(1+Model.housingMarketStats.getLongTermHPA()*config.HPA_EXPECTATION_FACTOR*2)*
 	public double creditSupplyTarget(int totalPopulation) {
-		return (1+Model.housingMarketStats.getLongTermHPA()*config.HPA_EXPECTATION_FACTOR*2)*(config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation);
+		return (1+Model.housingMarketStats.getLongTermHPA()*config.HPA_EXPECTATION_FACTOR*100)*(config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation);
 	}
 	
 	/**
