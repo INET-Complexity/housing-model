@@ -95,9 +95,29 @@ public class Household implements IHouseOwner, Serializable {
             bankBalance = 1.0;
             isBankrupt = true;
         }
-        // Manage all owned properties
-        for (House h: housePayments.keySet()) {
-            if (h.owner == this) manageHouse(h);
+        // Manage owned properties and close debts on previously owned properties. To this end, first, create an
+        // iterator over the house-paymentAgreement pairs at the household's housePayments object
+        Iterator<Entry<House, PaymentAgreement>> paymentIt = housePayments.entrySet().iterator();
+        Entry<House, PaymentAgreement> entry;
+        House h;
+        PaymentAgreement payment;
+        // Iterate over these house-paymentAgreement pairs...
+        while (paymentIt.hasNext()) {
+            entry = paymentIt.next();
+            h = entry.getKey();
+            payment = entry.getValue();
+            // ...if the household is the owner of the house, then manage it
+            if (h.owner == this) {
+                manageHouse(h);
+            // ...otherwise, if the household is not the owner nor the resident, then it is an old debt due to
+            // the household's inability to pay the remaining principal off after selling a property...
+            } else if (h.resident != this) {
+                MortgageAgreement mortgage = (MortgageAgreement) payment;
+                // ...remove this type of houses from payments as soon as the household pays the debt off
+                if ((payment.nPayments == 0) & (mortgage.principal == 0.0)) {
+                    paymentIt.remove();
+                }
+            }
         }
         // Make housing decisions depending on current housing state
         if (isInSocialHousing()) {
@@ -150,7 +170,12 @@ public class Household implements IHouseOwner, Serializable {
      * Adds up all sources of (gross) income on a monthly basis: employment, property, returns on financial wealth
      */
     public double getMonthlyGrossTotalIncome() {
-        return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome + bankBalance*config.RETURN_ON_FINANCIAL_WEALTH;
+        if (bankBalance > 0.0) {
+            return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome
+                    + bankBalance*config.RETURN_ON_FINANCIAL_WEALTH;
+        } else {
+            return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome;
+        }
     }
 
     double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
@@ -260,20 +285,28 @@ public class Household implements IHouseOwner, Serializable {
      * Do all stuff necessary when this household sells a house
      ********************************************************/
     public void completeHouseSale(HouseSaleRecord sale) {
-        MortgageAgreement mortgage = mortgageFor(sale.house);
+        // First, receive money from sale
         bankBalance += sale.getPrice();
+        // Second, find mortgage object and pay off as much outstanding debt as possible given bank balance
+        MortgageAgreement mortgage = mortgageFor(sale.house);
         bankBalance -= mortgage.payoff(bankBalance);
-        if(sale.house.isOnRentalMarket()) {
+        // Third, if there is no more outstanding debt, remove the house from the household's housePayments object
+        if (mortgage.nPayments == 0) {
+            housePayments.remove(sale.house);
+            // TODO: Warning, if bankBalance is not enough to pay mortgage back, then the house stays in housePayments,
+            // TODO: consequences to be checked. Looking forward, properties and payment agreements should be kept apart
+        }
+        // Fourth, if the house is still being offered on the rental market, withdraw the offer
+        if (sale.house.isOnRentalMarket()) {
             Model.houseRentalMarket.removeOffer(sale);
         }
-        // TODO: Warning, if bankBalance is not enough to pay mortgage back, then the house stays in housePayments, consequences to be checked!
-        if(mortgage.nPayments == 0) {
-            housePayments.remove(sale.house);
-        }
-        if(sale.house == home) { // move out of home and become (temporarily) homeless
+        // Fifth, if the house is the household's home, then the household moves out and becomes temporarily homeless...
+        if (sale.house == home) {
             home.resident = null;
             home = null;
-        } else if(sale.house.resident != null) { // evict current renter
+        // ...otherwise, if the house has a resident, it must be a renter, who must get evicted, also the rental income
+        // corresponding to this tenancy must be subtracted from the owner's monthly rental income
+        } else if (sale.house.resident != null) {
             monthlyGrossRentalIncome -= sale.house.resident.housePayments.get(sale.house).monthlyPayment;
             sale.house.resident.getEvicted();
         }
@@ -310,7 +343,6 @@ public class Household implements IHouseOwner, Serializable {
         housePayments.remove(home);
         home.resident = null;
         home = null;
-    //    endOfTenancyAgreement(home, housePayments.remove(home));
     }
     
     /*** Landlord has told this household to get out: leave without informing landlord */
@@ -421,36 +453,53 @@ public class Household implements IHouseOwner, Serializable {
      * @param beneficiary The household that will inherit the wealth
      */
     void transferAllWealthTo(Household beneficiary) {
-        if(beneficiary == this) System.out.println("Strange: I'm transferring all my wealth to myself");
-        boolean isHome;
+        // Check if beneficiary is the same as the deceased household
+        if (beneficiary == this) { // TODO: I don't think this check is really necessary
+            System.out.println("Strange: I'm transferring all my wealth to myself");
+            System.exit(0);
+        }
+        // Create an iterator over the house-paymentAgreement pairs at the deceased household's housePayments object
         Iterator<Entry<House, PaymentAgreement>> paymentIt = housePayments.entrySet().iterator();
         Entry<House, PaymentAgreement> entry;
         House h;
         PaymentAgreement payment;
-        while(paymentIt.hasNext()) {
+        // Iterate over these house-paymentAgreement pairs
+        while (paymentIt.hasNext()) {
             entry = paymentIt.next();
             h = entry.getKey();
             payment = entry.getValue();
-            if(h == home) {
-                isHome = true;
-                h.resident = null;
-                home = null;
-            } else {
-                isHome = false;
-            }
-            if(h.owner == this) {
-                if(h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
-                if(h.isOnMarket()) Model.houseSaleMarket.removeOffer(h.getSaleRecord());
-                if(h.resident != null) h.resident.getEvicted(); // TODO: Explain in paper that renters always get evicted, not just if heir needs the house
+            // If the deceased household owns the house, then...
+            if (h.owner == this) {
+                // ...first, withdraw the house from any market where it is currently being offered
+                if (h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
+                if (h.isOnMarket()) Model.houseSaleMarket.removeOffer(h.getSaleRecord());
+                // ...then, if there is a resident in the house...
+                if (h.resident != null) {
+                    // ...and this resident is different from the deceased household, then this resident must be a
+                    // tenant, who must get evicted
+                    if (h.resident != this) {
+                        h.resident.getEvicted(); // TODO: Explain in paper that renters always get evicted, not just if heir needs the house
+                    // ...otherwise, if the resident is the deceased household, remove it from the house
+                    } else {
+                        h.resident = null;
+                    }
+                }
+                // ...finally, transfer the property to the beneficiary household
                 beneficiary.inheritHouse(h);
-            } else {
+            // Otherwise, if the deceased household does not own the house but it is living in it, then it must have
+            // been renting it: end the letting agreement
+            } else if (h == home) {
                 h.owner.endOfLettingAgreement(h, housePayments.get(h));
+                h.resident = null;
             }
-            if(payment instanceof MortgageAgreement) {
+            // If payment agreement is a mortgage, then try to pay off as much as possible from the deceased household's bank balance
+            if (payment instanceof MortgageAgreement) {
                 bankBalance -= ((MortgageAgreement) payment).payoff();
             }
-            paymentIt.remove();
+            // Remove the house-paymentAgreement entry from the deceased household's housePayments object
+            paymentIt.remove(); // TODO: Not sure this is necessary. Note, though, that this implies erasing all outstanding debt
         }
+        // Finally, transfer all remaining liquid wealth to the beneficiary household
         beneficiary.bankBalance += Math.max(0.0, bankBalance);
     }
     
@@ -462,6 +511,7 @@ public class Household implements IHouseOwner, Serializable {
      * @param h House to inherit
      */
     private void inheritHouse(House h) {
+        // Create a null (zero payments) mortgage
         MortgageAgreement nullMortgage = new MortgageAgreement(this,false);
         nullMortgage.nPayments = 0;
         nullMortgage.downPayment = 0.0;
@@ -469,26 +519,34 @@ public class Household implements IHouseOwner, Serializable {
         nullMortgage.monthlyPayment = 0.0;
         nullMortgage.principal = 0.0;
         nullMortgage.purchasePrice = 0.0;
+        // Become the owner of the inherited house and include it in my housePayments list (with a null mortgage)
+        // TODO: Make sure the paper correctly explains that no debt is inherited
         housePayments.put(h, nullMortgage);
         h.owner = this;
+        // Check for residents in the inherited house
         if(h.resident != null) {
             System.out.println("Strange: inheriting a house with a resident");
+            System.exit(0);
         }
+        // If renting or homeless, move into the inherited house
         if(!isHomeowner()) {
-            // move into house if renting or homeless
+            // If renting, first cancel my current tenancy
             if(isRenting()) {
                 endTenancy();                
             }
             home = h;
             h.resident = this;
+        // If owning a home and having the BTL gene...
         } else if(behaviour.isPropertyInvestor()) {
+            // ...decide whether to sell the inherited house
             if(decideToSellHouse(h)) {
                 putHouseForSale(h);
+            // ...or rent it out
             } else if(h.resident == null) {
                 Model.houseRentalMarket.offer(h, buyToLetRent(h));
             }
+        // If being an owner-occupier, put inherited house for sale
         } else {
-            // I'm an owner-occupier
             putHouseForSale(h);
         }
     }
