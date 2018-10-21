@@ -47,9 +47,20 @@ public class HouseholdStats extends CollectorBase {
 
     //RUBEN additional variable totalConsumption and Savings
     private double totalConsumption;
-    private double totalSavings;
+    private double totalConsumptionCounter;
+    private double totalSaving;
+    private double totalSavingCounter;
     //RUBEN number of households that have a total negative equity position
     private int nNegativeEquity;
+    
+    private double totalIncomeConsumption; // sum all consumption out of income
+    private double totalFinancialWealthConsumption; // sum all consumption out of wealth
+    private double totalIncomeConsumptionCounter; // counter for the sum of all consumption out of income
+    private double totalFinancialWealthConsumptionCounter; // counter for the sum of all consumption out of wealth
+    private double totalHousingWealthConsumption;
+    private double totalHousingWealthConsumptionCounter;
+    private double totalDebtConsumption;
+    private double totalDebtConsumptionCounter;
     
 	//------------------------//
 	//----- Constructors -----//
@@ -88,8 +99,12 @@ public class HouseholdStats extends CollectorBase {
         nBTLBidsAboveExpAvSalePriceCounter = 0;
         //RUBEN initialise totalConsumption and Savings, etc
         totalConsumption = 0.0;
-        totalSavings = 0.0;
+        totalSaving = 0.0;
         nNegativeEquity = 0;
+        totalIncomeConsumption = 0.0;
+        totalFinancialWealthConsumption = 0.0;
+        totalHousingWealthConsumption = 0.0;
+        totalDebtConsumption = 0.0;
     }
 
     public void record() {
@@ -108,18 +123,12 @@ public class HouseholdStats extends CollectorBase {
         rentingAnnualisedTotalIncome = 0.0;
         homelessAnnualisedTotalIncome = 0.0;
         sumStockYield = 0.0;
-        //RUBEN initialise totalConsumption and totalSavings, etc
-        totalConsumption = 0.0;
-        totalSavings = 0.0;
+        //RUBEN initialise nNegativeEquity
         nNegativeEquity = 0;
         
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
-        	//RUBEN sum up the consumption and calculate the savings, count hh with negative euqity
-        	// For alternative consumption function, I added the input "getEquityPosition()" and "getMonthlyDisposableIncome()"
-        	double householdConsumption = h.behaviour.getDesiredConsumption(h.getBankBalance(), h.getAnnualGrossTotalIncome());
-        	totalConsumption += householdConsumption;
-            totalSavings += (h.getMonthlyDisposableIncome()*Model.config.constants.MONTHS_IN_YEAR)-householdConsumption;
+
             if (h.getEquityPosition() < 0) {
             	nNegativeEquity++;
             }
@@ -173,6 +182,19 @@ public class HouseholdStats extends CollectorBase {
         nBTLBidsAboveExpAvSalePrice = nBTLBidsAboveExpAvSalePriceCounter;
         nNonBTLBidsAboveExpAvSalePriceCounter = 0;
         nBTLBidsAboveExpAvSalePriceCounter = 0;
+        totalConsumption = totalConsumptionCounter;
+        totalSaving = totalSavingCounter;
+        totalConsumptionCounter = 0.0;
+        totalSavingCounter = 0.0;
+        totalIncomeConsumption = totalIncomeConsumptionCounter;
+        totalFinancialWealthConsumption = totalFinancialWealthConsumptionCounter;
+        totalHousingWealthConsumption = totalHousingWealthConsumptionCounter;
+        totalDebtConsumption = totalDebtConsumptionCounter;
+        totalIncomeConsumptionCounter = 0.0;
+        totalFinancialWealthConsumptionCounter = 0.0;
+        totalHousingWealthConsumptionCounter = 0.0;
+        totalDebtConsumptionCounter = 0.0;
+        
     }
 
     /**
@@ -193,6 +215,17 @@ public class HouseholdStats extends CollectorBase {
         if (price >= Model.housingMarketStats.getExpAvSalePriceForQuality(0)) {
             nBTLBidsAboveExpAvSalePriceCounter++;
         }
+    }
+    
+    // count consumption out of wealth and consumption out of income
+    public void countIncomeAndWealthConsumption(double saving, double consumption, double incomeConsumption, double financialWealthConsumption, 
+    											double housingWealthConsumption, double debtConsumption) {
+    	totalSavingCounter += saving;
+    	totalConsumptionCounter += consumption;
+    	totalIncomeConsumptionCounter += incomeConsumption;
+    	totalFinancialWealthConsumptionCounter += financialWealthConsumption;
+    	totalHousingWealthConsumptionCounter += housingWealthConsumption;
+    	totalDebtConsumptionCounter += debtConsumption;
     }
 
     //----- Getter/setter methods -----//
@@ -249,7 +282,11 @@ public class HouseholdStats extends CollectorBase {
     
     //RUBEN getters for totalConsumption and Savings
     double getTotalConsumption() { return totalConsumption; }
-    double getTotalSavings() {return totalSavings;}
+    double getTotalSaving() {return totalSaving;}
+    double getIncomeConsumption() {return totalIncomeConsumption;}
+    double getFinancialWealthConsumption() { return totalFinancialWealthConsumption;}
+    double getHousingWealthConsumption() {return totalHousingWealthConsumption;}
+    double getDebtConsumption() { return totalDebtConsumption; }
     int getNNegativeEquity() {return nNegativeEquity;}
 
 }

@@ -10,7 +10,7 @@ import utilities.MeanAboveMedian;
  * committee's power over housing tools" (Feb 2015). See Table A for a list of these indicators and
  * notes on their definition.
  *
- * @author danial, Adrian Carro
+ * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
 public class CoreIndicators extends CollectorBase {
@@ -38,7 +38,21 @@ public class CoreIndicators extends CollectorBase {
 		Model.householdStats.setActive(active);
     }
 
-    // Owner-occupier mortgage LTI ratio (mean above the median)
+    // Additional measures to read for the Monte Carlo Simulations
+	// simple HPI
+	double getHPI() {
+		return Model.housingMarketStats.getHPI();
+	}
+	
+	//consumption
+	double getConsumptionOverIncome() {
+		return Model.householdStats.getTotalConsumption()/((Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()
+                + Model.householdStats.getActiveBTLAnnualisedTotalIncome()
+                + Model.householdStats.getNonOwnerAnnualisedTotalIncome())/config.constants.MONTHS_IN_YEAR);
+	}
+	
+	
+	// Owner-occupier mortgage LTI ratio (mean above the median)
 	double getOwnerOccupierLTIMeanAboveMedian() {
         if (Model.creditSupply.oo_lti.getN() > 0) {
             return Model.creditSupply.oo_lti.apply(new MeanAboveMedian());

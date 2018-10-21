@@ -69,7 +69,7 @@ public class AgentDecisionRecorder extends CollectorBase{
 	            		+ "LTVPrincipal, " + "ICRPrincipal, "
 	            		// data from the decideToBuyInvestmentProperty
 	            		+ "ModelTestTime2, " + "AgentIDTest2, " + "BankBalance, " + "MonthlyDisposableIncome, "      
-	            		+ "MonthlyGrossEmploymentIncome, " + "EquityPosition, " + "EquityOfHouse, " + "LeverageOnMortgage, "
+	            		+ "MonthlyGrossEmploymentIncome, " + "EquityPosition, " + "bidPrice, " + "EquityOfHouse, " + "LeverageOnMortgage, "
 	            		+ "expectedRentalYield, " + "MortgageRate, " +  "expectedEquityYield, " + "HPAExpectation, "
 	            		+ "probToInvest, " + "BidOnHousingMarket, " + "Reason, "
 	            		);

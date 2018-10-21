@@ -47,6 +47,8 @@ public class AgentDataRecorder extends CollectorBase{
 	PrintWriter							annualGrossTotalIncome;
 	PrintWriter							monthlyDisposableIncome;
 	PrintWriter							desiredBankBalance;
+	PrintWriter							BTL;
+	PrintWriter							SH;
 	
 
 
@@ -79,6 +81,8 @@ public class AgentDataRecorder extends CollectorBase{
             	annualGrossTotalIncome = new PrintWriter(outputFolderCopy + "agentData-annualGrossTotalIncome" + run + ".csv", "UTF-8");
             	monthlyDisposableIncome = new PrintWriter(outputFolderCopy + "agentData-monthlyDisposableIncome" + run + ".csv", "UTF-8");
             	desiredBankBalance = new PrintWriter(outputFolderCopy + "agentData-desiredBankBalance" + run + ".csv", "UTF-8");
+            	BTL = new PrintWriter(outputFolderCopy + "agentData-BTL" + run + ".csv", "UTF-8");
+            	SH = new PrintWriter(outputFolderCopy + "agentData-SH" + run + ".csv", "UTF-8");
 	        }
 	        catch (FileNotFoundException | UnsupportedEncodingException e){
 	            e.printStackTrace();
@@ -95,7 +99,7 @@ public class AgentDataRecorder extends CollectorBase{
         	        // 0.0015 is a fudge parameter to adjust the influence of more periods and target population.
         			// Generally, for small intervalls, the array becomes too small
         	        //TODO This equation does not really provide a good initialisation size for changing varibles.
-        	        int maxLivedHHs =  25000;//(int)((config.N_STEPS - config.TIME_TO_START_RECORDING)*config.TARGET_POPULATION*0.0035);
+        	        int maxLivedHHs =  35000;//(int)((config.N_STEPS - config.TIME_TO_START_RECORDING)*config.TARGET_POPULATION*0.0035);
         	        
         	        // build the arrays for the variables to be extracted
         	        double[] arrayBankBalance = new double[maxLivedHHs];
@@ -106,7 +110,9 @@ public class AgentDataRecorder extends CollectorBase{
         	        double[] arrayAnnualGrossTotalIncome = new double[maxLivedHHs];
         	        double[] arrayMonthlyDisposableIncome = new double[maxLivedHHs];
         	        double[] arrayDesiredBankBalance = new double[maxLivedHHs];
-        	
+        	        double[] arrayBTL = new double[maxLivedHHs];
+        	        double[] arraySH = new double[maxLivedHHs];
+        	        		
         	        // fill arrays with NULL
         	        Arrays.fill(arrayBankBalance, NaN);
         	        Arrays.fill(arrayAge, NaN);
@@ -116,6 +122,8 @@ public class AgentDataRecorder extends CollectorBase{
         	        Arrays.fill(arrayAnnualGrossTotalIncome, NaN);
         	        Arrays.fill(arrayMonthlyDisposableIncome, NaN);
         	        Arrays.fill(arrayDesiredBankBalance, NaN);
+        	        Arrays.fill(arrayBTL, NaN);
+        	        Arrays.fill(arraySH, NaN);
         	        
         	        // fill a 2-dimensional Array with the household data
         	        double[][] dataArray = dataToArray(arrayBankBalance, 
@@ -125,7 +133,9 @@ public class AgentDataRecorder extends CollectorBase{
         	        									arrayConsumption,
         	        									arrayAnnualGrossTotalIncome,
         	        									arrayMonthlyDisposableIncome,
-        	        									arrayDesiredBankBalance);
+        	        									arrayDesiredBankBalance,
+        	        									arrayBTL,
+        	        									arraySH);
         	
         	        // convert the Array to a string and clean from brackets so it can easily 
         	        // be written into a csv-file
@@ -137,6 +147,8 @@ public class AgentDataRecorder extends CollectorBase{
         	    	String stringAnnualGrossTotalIncome = cleanString(dataArray[5]);
         	    	String stringMonthlyDisposableIncome = cleanString(dataArray[6]);
         	    	String stringDesiredBankBalance = cleanString(dataArray[7]);
+        	    	String stringBTL = cleanString(dataArray[8]);
+        	    	String stringSH = cleanString(dataArray[9]);
         	
         	        //write the clean string into the csv file
         	        bankBalance.println(Model.getTime() + ", " + stringBankBalance);
@@ -147,6 +159,8 @@ public class AgentDataRecorder extends CollectorBase{
         	        annualGrossTotalIncome.println(Model.getTime() + ", " + stringAnnualGrossTotalIncome);
         	        monthlyDisposableIncome.println(Model.getTime() + ", " + stringMonthlyDisposableIncome);
         	        desiredBankBalance.println(Model.getTime() + ", " + stringDesiredBankBalance);
+        	        BTL.println(Model.getTime() + ", " + stringBTL);
+        	        SH.println(Model.getTime() + ", " + stringSH);
         	        }         	
         	}
     }
@@ -155,10 +169,11 @@ public class AgentDataRecorder extends CollectorBase{
     private double[][] dataToArray(double[] input1, double[] input2, 
     								double[] input3, double[] input4, 
     								double[] input5, double[] input6,
-    								double[] input7, double[] input8) {
+    								double[] input7, double[] input8,
+    								double[] input9, double[] input10) {
     	
     	// load the data into the 2-dimensional Array. 
-    	double[][] dataArray = new double[][] {input1, input2, input3, input4, input5, input6, input7, input8}; 
+    	double[][] dataArray = new double[][] {input1, input2, input3, input4, input5, input6, input7, input8, input9, input10}; 
 
     	// put households into an array (from arrayList to array) at their "id-place" so that IDs not used 
         // appear as "NaN" 
@@ -181,11 +196,19 @@ public class AgentDataRecorder extends CollectorBase{
             dataArray[1][h.id-oldestID] = h.getAge();
             double equityPositionHH = dataArray[2][h.id-oldestID] = h.getEquityPosition();
             dataArray[3][h.id-oldestID] = equityPositionHH - bankBalanceHH;
-            dataArray[4][h.id-oldestID] = h.behaviour.getDesiredConsumption(h.getBankBalance(), h.getAnnualGrossTotalIncome());
+            dataArray[4][h.id-oldestID] = h.behaviour.getDesiredConsumption(h.getBankBalance(), h.getAnnualGrossTotalIncome(), 
+					h.getIncomePercentile(), h.getMonthlyDisposableIncome(), h.getPropertyValue(),
+					h.getTotalDebt(), h.getEquityPosition());
             dataArray[5][h.id-oldestID] = h.getAnnualGrossTotalIncome();
             dataArray[6][h.id-oldestID] = h.getMonthlyDisposableIncome();
             dataArray[7][h.id-oldestID] = h.behaviour.getDesiredBankBalance(h.getAnnualGrossTotalIncome());
-            }
+            if(h.behaviour.isPropertyInvestor()) {
+            	dataArray[8][h.id-oldestID] = 1;
+            }else {dataArray[8][h.id-oldestID] = 0;}
+            if(h.isInSocialHousing()) {
+            	dataArray[9][h.id-oldestID] = 1;
+            }else { dataArray[9][h.id-oldestID] = 0;}
+        	}            
         	return dataArray;
     }
     

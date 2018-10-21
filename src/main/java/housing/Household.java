@@ -40,6 +40,8 @@ public class Household implements IHouseOwner, Serializable {
     private double                          monthlyGrossRentalIncome; // Keeps track of monthly rental income, as only tenants keep a reference to the rental contract, not landlords
     private boolean                         isFirstTimeBuyer;
     private boolean                         isBankrupt;
+    
+
 
     //------------------------//
     //----- Constructors -----//
@@ -63,6 +65,7 @@ public class Household implements IHouseOwner, Serializable {
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         bankBalance = behaviour.getDesiredBankBalance(getAnnualGrossTotalIncome()); // Desired bank balance is used as initial value for actual bank balance
         monthlyGrossRentalIncome = 0.0;
+        
     }
 
     //-------------------//
@@ -80,15 +83,25 @@ public class Household implements IHouseOwner, Serializable {
      * - Buy/sell/rent out properties if BTL investor
      */
     public void step() {
-        isBankrupt = false; // Delete bankruptcies from previous time step
+        //TEST
+    	if(id==4756 && Model.getTime()==1044) {
+    		System.out.println(id + " is id, time is: " + Model.getTime());
+    	}
+    	isBankrupt = false; // Delete bankruptcies from previous time step
         age += 1.0/config.constants.MONTHS_IN_YEAR;
         // Update annual and monthly gross employment income
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
         bankBalance += getMonthlyDisposableIncome();
+        //TEST
+//        if(bankBalance < 0.0) {
+//        	System.out.println("weird, bank balance negative, agent-id: " + id + " and Model time: " + Model.getTime() + ". Bank Balance is: " + bankBalance);
+//        }
         // Consume based on monthly disposable income (after essential consumption and house payments have been subtracted)
-        bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
+        bankBalance -= behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(), incomePercentile,
+        												getMonthlyDisposableIncome(), getPropertyValue(),
+        												getTotalDebt(), getEquityPosition()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
         // Deal with bankruptcies
         // TODO: Improve bankruptcy procedures (currently, simple cash injection), such as terminating contracts!
         if (bankBalance < 0.0) {
@@ -130,11 +143,21 @@ public class Household implements IHouseOwner, Serializable {
         monthlyDisposableIncome -= config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT;
         // Subtract housing consumption
         for(PaymentAgreement payment: housePayments.values()) {
-            monthlyDisposableIncome -= payment.makeMonthlyPayment();
+        	monthlyDisposableIncome -= payment.makeMonthlyPayment();
         }
         return monthlyDisposableIncome;
     }
 
+    // calculate the monthly payments of this agent
+    public double getMonthlyPayments() {
+    	double sumMonthlyPayments = 0.0;
+    	for(PaymentAgreement payment: housePayments.values()) {
+    		sumMonthlyPayments += payment.makeMonthlyPayment();
+    	}
+    	return sumMonthlyPayments;
+    }
+
+    
     /**
      * Subtracts the monthly aliquot part of all due taxes from the monthly gross total income. Note that only income
      * tax on employment income and national insurance contributions are implemented!
@@ -363,6 +386,7 @@ public class Household implements IHouseOwner, Serializable {
     private void bidForAHome() {
         // Find household's desired housing expenditure
         double desiredPurchasePrice = behaviour.getDesiredPurchasePrice(monthlyGrossEmploymentIncome);
+
         // Cap this expenditure to the maximum mortgage available to the household
         double price = Math.min(desiredPurchasePrice, Model.bank.getMaxMortgage(this, true, false));
 		
@@ -551,6 +575,23 @@ public class Household implements IHouseOwner, Serializable {
                 - mortgageFor(home).principal;
     }
     
+    // method for the consumption function in householdBehaviour to get house and investment mark-to-market value
+    public double getPropertyValue() {
+    	double totalValue = 0.0;
+    	if(!isHomeowner())return(totalValue); //BTL investors are always homeowners as well
+    	// add value of home
+    	totalValue += Model.housingMarketStats.getExpAvSalePriceForQuality(home.getQuality());
+    	// add value of all investment properties
+    	if(nInvestmentProperties() > 1) {
+    		for (House h: housePayments.keySet()) {
+                if (h.owner == this && h.resident !=this) {
+                	totalValue += Model.housingMarketStats.getExpAvSalePriceForQuality(h.getQuality());	
+                }
+    		}
+    	}
+    	return totalValue;
+}
+    
     // get investment property equity for BTL investors
     double getInvestmentEquity() {
     	if(nInvestmentProperties() > 0) {
@@ -565,6 +606,27 @@ public class Household implements IHouseOwner, Serializable {
     		return investmentEquity;
     	} 
     	else { return 0.0;}
+    }
+    
+    // method for the consumption function in householdBehaviour to get total debt of the household.
+    // returns a negative value
+    public double getTotalDebt() {
+    	double totalDebt = 0.0;
+    	// TODO check if households without a home can have outstanding loans under any circumstances
+    	if(!isHomeowner())return(totalDebt);
+    	// add principal outstanding on home
+    	totalDebt -= mortgageFor(home).principal;
+    	if(nInvestmentProperties() > 0) {
+    		// if house is owned by investor AND it is not the home then..
+    		for (House h: housePayments.keySet()) {
+                if (h.owner == this && h.resident !=this) {
+                	totalDebt -= mortgageFor(h).principal;
+                }
+    		}
+    		return totalDebt;
+    	} 
+    	
+    	return totalDebt;
     }
     
     // getter for the total equity position
@@ -587,4 +649,7 @@ public class Household implements IHouseOwner, Serializable {
         }
         return(0.0);        
     }
+    
+    public double getIncomePercentile() {return incomePercentile;}
+
 }
