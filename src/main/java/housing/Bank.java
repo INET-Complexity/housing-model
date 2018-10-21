@@ -206,6 +206,7 @@ public class Bank implements Serializable {
         if(liquidWealth < approval.downPayment) {
 			System.out.println("Failed down-payment constraint: bank balance = " + liquidWealth + " downpayment = "
                     + approval.downPayment);
+			System.exit(0);
 		}
 		// --- allow larger downpayments
 		if(desiredDownPayment < 0.0) desiredDownPayment = 0.0;

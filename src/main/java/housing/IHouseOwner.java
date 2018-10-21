@@ -13,12 +13,12 @@ package housing;
  **************************************************/
 public interface IHouseOwner {
 	/** Called when an agent sells a house **/
-	void completeHouseSale(HouseSaleRecord saleRecord);
+	void completeHouseSale(HouseOfferRecord saleRecord);
 	
 	/** Called when a tenant moves out of a house that the agent owns **/
 	void endOfLettingAgreement(House house, PaymentAgreement contract);
 
     /** Called when an agent lets a house **/
-	void completeHouseLet(HouseSaleRecord saleRecord);
+	void completeHouseLet(HouseOfferRecord saleRecord);
 	
 }

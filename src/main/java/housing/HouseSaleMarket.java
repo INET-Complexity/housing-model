@@ -16,8 +16,8 @@ public class HouseSaleMarket extends HousingMarket {
 	private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
     private PriorityQueue2D<HousingMarketRecord>    offersPY;
 
-	public HouseSaleMarket(MersenneTwister prng) {
-		super(prng);  // previously I think you were missing this call to HousingMarket constructor!
+	HouseSaleMarket(MersenneTwister prng) {
+		super(prng);
 		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
 	}
 	
@@ -30,35 +30,35 @@ public class HouseSaleMarket extends HousingMarket {
 	/**
 	 * This method deals with doing all the stuff necessary whenever a house gets sold.
 	 */
-	public void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale) {
+	public void completeTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
         // TODO: Revise if it makes sense to have recordTransaction as a separate method from recordSale
 		Model.housingMarketStats.recordTransaction(sale);
-		sale.house.saleRecord = null;
-		Household buyer = purchase.buyer;
-		if(buyer == sale.house.owner) return; // TODO: Shouldn't this if be the first line in this method?
-		sale.house.owner.completeHouseSale(sale);
+		sale.getHouse().saleRecord = null;
+		Household buyer = purchase.getBidder();
+		if(buyer == sale.getHouse().owner) return; // TODO: Shouldn't this if be the first line in this method?
+		sale.getHouse().owner.completeHouseSale(sale);
 		buyer.completeHousePurchase(sale);
         Model.housingMarketStats.recordSale(purchase, sale);
-		sale.house.owner = buyer;
+		sale.getHouse().owner = buyer;
 	}
 
 	@Override
-	public HouseSaleRecord offer(House house, double price) {
-		HouseSaleRecord hsr = super.offer(house, price);
-		offersPY.add(hsr);
-		house.putForSale(hsr);
-		return(hsr);
+	public HouseOfferRecord offer(House house, double price, boolean BTLOffer) {
+        HouseOfferRecord hsr = super.offer(house, price, BTLOffer);
+        offersPY.add(hsr);
+        house.putForSale(hsr);
+        return(hsr);
 	}
 	
 	@Override
-	public void removeOffer(HouseSaleRecord hsr) {
+	public void removeOffer(HouseOfferRecord hsr) {
 		super.removeOffer(hsr);
 		offersPY.remove(hsr);
-		hsr.house.resetSaleRecord();
+		hsr.getHouse().resetSaleRecord();
 	}
 	
 	@Override
-	public void updateOffer(HouseSaleRecord hsr, double newPrice) {
+	public void updateOffer(HouseOfferRecord hsr, double newPrice) {
 		offersPY.remove(hsr);
 		super.updateOffer(hsr, newPrice);
 		offersPY.add(hsr);
@@ -77,18 +77,19 @@ public class HouseSaleMarket extends HousingMarket {
     }
 	
 	@Override
-	protected HouseSaleRecord getBestOffer(HouseBuyerRecord bid) {
-		if(bid.getClass() == BTLBuyerRecord.class) { // BTL buyer (yield driven)
-			HouseSaleRecord bestOffer = (HouseSaleRecord)offersPY.peek(bid);
-			if(bestOffer != null) {
+	protected HouseOfferRecord getBestOffer(HouseBidderRecord bid) {
+        if (bid.isBTLBid()) { // BTL bidder (yield driven)
+			HouseOfferRecord bestOffer = (HouseOfferRecord)offersPY.peek(bid);
+			if (bestOffer != null) {
 					double minDownpayment = bestOffer.getPrice()*(1.0
-                            - Model.rentalMarketStats.getExpAvFlowYield()/
-                            (Model.centralBank.getInterestCoverRatioLimit(false)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
-					if(bid.buyer.getBankBalance() >= minDownpayment) {
-						return(bestOffer);
+                            - Model.rentalMarketStats.getExpAvFlowYield()
+                            /(Model.centralBank.getInterestCoverRatioLimit(false)
+                            *config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+					if (bid.getBidder().getBankBalance() >= minDownpayment) {
+						return bestOffer;
 					}
 			}
-			return(null);
+			return null;
 		} else { // must be OO buyer (quality driven)
 			return super.getBestOffer(bid);
 		}
@@ -102,7 +103,7 @@ public class HouseSaleMarket extends HousingMarket {
      * @param offer Offer to remove from queues
      */
 	@Override
-    void removeOfferFromQueues(Iterator<HousingMarketRecord> record, HouseSaleRecord offer) {
+    void removeOfferFromQueues(Iterator<HousingMarketRecord> record, HouseOfferRecord offer) {
         record.remove();
         offersPY.remove(offer);
     }
@@ -114,5 +115,5 @@ public class HouseSaleMarket extends HousingMarket {
 	 * @param buyer The household that is making the bid.
 	 * @param maxPrice The maximum price that the household is willing to pay.
 	 ******************************************/
-	void BTLbid(Household buyer, double maxPrice) { bids.add(new BTLBuyerRecord(buyer, maxPrice)); }
+    void BTLbid(Household buyer, double maxPrice) { bids.add(new HouseBidderRecord(buyer, maxPrice, true)); }
 }

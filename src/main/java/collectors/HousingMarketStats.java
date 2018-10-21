@@ -142,8 +142,8 @@ public class HousingMarketStats extends CollectorBase {
         // Re-initialise to zero variables computed before market clearing
         nBuyers = market.getBids().size();
         nBTLBuyers = 0;
-        for (HouseBuyerRecord bid: market.getBids()) {
-            if (bid.buyer.behaviour.isPropertyInvestor() && bid.buyer.getHome() != null) {
+        for (HouseBidderRecord bid: market.getBids()) {
+            if (bid.getBidder().behaviour.isPropertyInvestor() && bid.getBidder().getHome() != null) {
                 nBTLBuyers++;
             }
         }
@@ -151,12 +151,12 @@ public class HousingMarketStats extends CollectorBase {
         nNewSellers = 0;
         nBTLSellers = 0;
         for (HousingMarketRecord element: market.getOffersPQ()) {
-            HouseSaleRecord offer = (HouseSaleRecord)element;
-            if (offer.tInitialListing == Model.getTime()) {
+            HouseOfferRecord offer = (HouseOfferRecord)element;
+            if (offer.gettInitialListing() == Model.getTime()) {
                 nNewSellers++;
             }
-            if (offer.house.owner != Model.construction) {
-                Household h = (Household)offer.house.owner;
+            if (offer.getHouse().owner != Model.construction) {
+                Household h = (Household) offer.getHouse().owner;
                 if (h.behaviour.isPropertyInvestor()) {
                     nBTLSellers++;
                 }
@@ -170,7 +170,7 @@ public class HousingMarketStats extends CollectorBase {
 
         // Record bid prices and their average
         int i = 0;
-        for(HouseBuyerRecord bid : market.getBids()) {
+        for(HouseBidderRecord bid : market.getBids()) {
             sumBidPrices += bid.getPrice();
             bidPrices[i] = bid.getPrice();
             ++i;
@@ -191,13 +191,13 @@ public class HousingMarketStats extends CollectorBase {
      * This method updates the values of several counters every time a buyer and a seller are matched and the
      * transaction is completed. Note that only counter variables can be modified within this method
      *
-     * @param purchase The HouseBuyerRecord of the buyer
-     * @param sale The HouseSaleRecord of the house being sold
+     * @param purchase The HouseBidderRecord of the buyer
+     * @param sale The HouseOfferRecord of the house being sold
      */
     // TODO: Need to think if this method and recordTransaction can be joined in a single method!
-    public void recordSale(HouseBuyerRecord purchase, HouseSaleRecord sale) {
+    public void recordSale(HouseBidderRecord purchase, HouseOfferRecord sale) {
         salesCount += 1;
-        MortgageAgreement mortgage = purchase.buyer.mortgageFor(sale.house);
+        MortgageAgreement mortgage = purchase.getBidder().mortgageFor(sale.getHouse());
         if(mortgage != null) {
             if(mortgage.isFirstTimeBuyer) {
                 ftbSalesCount += 1;
@@ -213,10 +213,10 @@ public class HousingMarketStats extends CollectorBase {
      * This method updates the values of several counters every time a buyer and a seller are matched and the
      * transaction is completed. Note that only counter variables can be modified within this method
      *
-     * @param sale The HouseSaleRecord of the house being sold
+     * @param sale The HouseOfferRecord of the house being sold
      */
-    public void recordTransaction(HouseSaleRecord sale) {
-        sumDaysOnMarketCount += config.constants.DAYS_IN_MONTH*(Model.getTime() - sale.tInitialListing);
+    public void recordTransaction(HouseOfferRecord sale) {
+        sumDaysOnMarketCount += config.constants.DAYS_IN_MONTH*(Model.getTime() - sale.gettInitialListing());
         sumSalePricePerQualityCount[sale.getQuality()] += sale.getPrice();
         nSalesPerQualityCount[sale.getQuality()]++;
         sumSoldReferencePriceCount += referencePricePerQuality[sale.getQuality()];
@@ -269,7 +269,7 @@ public class HousingMarketStats extends CollectorBase {
         // ...record number of unsold new build houses
         nUnsoldNewBuild = 0;
         for(HousingMarketRecord sale : market.getOffersPQ()) {
-            if(((HouseSaleRecord)sale).house.owner == Model.construction) nUnsoldNewBuild++;
+            if(((HouseOfferRecord) sale).getHouse().owner == Model.construction) nUnsoldNewBuild++;
         }
     }
 

@@ -67,7 +67,7 @@ public class Construction implements IHouseOwner, Serializable {
             newHouse.owner = this;
             // ...put the house for sale in the house sale market at the reference price for that quality
             Model.houseSaleMarket.offer(newHouse,
-                    Model.housingMarketStats.getReferencePriceForQuality(newHouse.getQuality()));
+                    Model.housingMarketStats.getReferencePriceForQuality(newHouse.getQuality()), false);
             // ...add the house to the portfolio of construction sector properties
             onMarket.add(newHouse);
             // ...and finally increase housing stocks, and decrease shortfall
@@ -77,7 +77,7 @@ public class Construction implements IHouseOwner, Serializable {
 	}
 
 	@Override
-	public void completeHouseSale(HouseSaleRecord sale) { onMarket.remove(sale.house); }
+	public void completeHouseSale(HouseOfferRecord sale) { onMarket.remove(sale.getHouse()); }
 
 	@Override
 	public void endOfLettingAgreement(House h, PaymentAgreement p) {
@@ -85,7 +85,7 @@ public class Construction implements IHouseOwner, Serializable {
 	}
 
 	@Override
-	public void completeHouseLet(HouseSaleRecord sale) {
+	public void completeHouseLet(HouseOfferRecord sale) {
         System.out.println("Strange: the construction sector is trying to let a house!");
 	}
 
