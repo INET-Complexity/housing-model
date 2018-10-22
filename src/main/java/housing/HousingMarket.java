@@ -1,6 +1,5 @@
 package housing;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -15,7 +14,7 @@ import utilities.PriorityQueue2D;
  * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
-public abstract class HousingMarket implements Serializable {
+public abstract class HousingMarket {
 
     //------------------//
     //----- Fields -----//

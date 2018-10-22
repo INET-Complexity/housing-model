@@ -1,6 +1,5 @@
 package utilities;
 
-import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -20,7 +19,7 @@ import java.util.TreeSet;
  * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
-public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
+public class PriorityQueue2D<E> implements Iterable<E> {
 
 	//------------------//
 	//----- Fields -----//
@@ -47,7 +46,7 @@ public class PriorityQueue2D<E> implements Iterable<E>, Serializable {
 	/**
 	 * Interface for the XYComparator, to be implemented by the objects to be inserted in the PriorityQueue2D
 	 */
-	public interface XYComparator<T> extends Serializable {
+	public interface XYComparator<T> {
 		/**
 		 * @return -1 or 1 if arg0 is, respectively, X-less than or X-greater than arg1 solving the arg0 == arg1 case by
 		 * reverse comparing along the Y dimension and comparing their Id's if they also have the same Y-measure

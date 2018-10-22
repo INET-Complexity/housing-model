@@ -1,14 +1,12 @@
 package housing;
 
-import java.io.Serializable;
-
 /**************************************************************************************************
  * Class to represent a house with all its intrinsic characteristics.
  *
  * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
-public class House implements Comparable<House>, Serializable {
+public class House implements Comparable<House> {
 
     //------------------//
     //----- Fields -----//

@@ -1,6 +1,5 @@
 package housing;
 
-import java.io.Serializable;
 import java.util.HashSet;
 
 /**************************************************************************************************
@@ -10,7 +9,7 @@ import java.util.HashSet;
  * @author daniel, davidrpugh, Adrian Carro
  *
  *************************************************************************************************/
-public class Bank implements Serializable {
+public class Bank {
 
     //------------------//
     //----- Fields -----//
@@ -117,7 +116,7 @@ public class Bank implements Serializable {
 
     /**
      * Compute the monthly payment factor, i.e., the monthly payment on a mortgage as a fraction of the mortgage
-     * principle for both BTL (interest-only) and non-BTL mortgages.
+     * principal for both BTL (interest-only) and non-BTL mortgages.
      */
 	private void recalculateMonthlyPaymentFactor() {
 		double r = getMortgageInterestRate()/config.constants.MONTHS_IN_YEAR;
@@ -126,7 +125,7 @@ public class Bank implements Serializable {
 	}
 
 	/**
-	 * Get the monthly payment factor, i.e., the monthly payment on a mortgage as a fraction of the mortgage principle.
+	 * Get the monthly payment factor, i.e., the monthly payment on a mortgage as a fraction of the mortgage principal.
 	 */
 	private double getMonthlyPaymentFactor(boolean isHome) {
 		if (isHome) {
@@ -178,7 +177,7 @@ public class Bank implements Serializable {
 		MortgageAgreement approval = new MortgageAgreement(h, !isHome);
 		double r = getMortgageInterestRate()/config.constants.MONTHS_IN_YEAR; // monthly interest rate
 		double lti_principal, affordable_principal, icr_principal;
-		double liquidWealth = h.getBankBalance();
+        double liquidWealth = h.getBankBalance(); // No home equity needs to be added here: home-movers always sell their homes before trying to buy new ones
 		
 		if(isHome) liquidWealth += h.getHomeEquity();
 

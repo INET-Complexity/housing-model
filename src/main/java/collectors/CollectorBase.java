@@ -1,8 +1,6 @@
 package collectors;
 
-import java.io.Serializable;
-
-public class CollectorBase implements Serializable {
+public class CollectorBase {
 
 	private boolean active = false;
 

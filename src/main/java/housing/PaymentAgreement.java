@@ -1,7 +1,5 @@
 package housing;
 
-import java.io.Serializable;
-
 /**************************************************************************************************
  * Class to represent a payment contract in general, so as to include both mortgage and rental
  * contracts. It keeps track of the monthly payments associated to the contract and the number of
@@ -10,7 +8,7 @@ import java.io.Serializable;
  * @author daniel, davidrpugh, Adrian Carro
  *
  *************************************************************************************************/
-public class PaymentAgreement implements Serializable {
+public class PaymentAgreement {
 
     //------------------//
     //----- Fields -----//
