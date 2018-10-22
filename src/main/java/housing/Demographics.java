@@ -13,35 +13,34 @@ public class Demographics {
 	private Config	            config = Model.config; // Passes the Model's configuration parameters object to a private field
 	private MersenneTwister     prng;
 
-	public Demographics(MersenneTwister prng) {
-	    this.prng = prng;
-    }
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
+
+	public Demographics(MersenneTwister prng) { this.prng = prng; }
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
 
     /**
-	 * Add newly 'born' households to the model and remove households that 'die'
-	 */
+     * Adds newly "born" households to the model and removes households that "die".
+     */
 	public void step() {
-        // Birth: Add households in proportion to target population and monthly birth rate of first-time-buyers
-        // TODO: Shouldn't this include also new renters? Review the whole method...
-        int nBirths = (int)(config.TARGET_POPULATION*config.FUTURE_BIRTH_RATE/config.constants.MONTHS_IN_YEAR
-                + 0.5);
-        while(nBirths-- > 0) {
+        // Birth: Add new households at a rate compatible with the age at birth distribution, the probability of
+        // death dependent on age, and the target population
+        int nBirths = (int) (config.TARGET_POPULATION * data.Demographics.getBirthRate() + prng.nextDouble());
+        // Finally, add the households, with random ages drawn from the corresponding distribution
+        while (nBirths-- > 0) {
             Model.households.add(new Household(prng));
         }
         // Death: Kill households with a probability dependent on their age and organise inheritance
         double pDeath;
-        // TODO: ATTENTION ---> fudge parameter so that population approaches the target value
-        //double multFactor = (double)region.households.size()/region.getTargetPopulation();
-        double multFactor = 0.05;
         Iterator<Household> iterator = Model.households.iterator();
-        while(iterator.hasNext()) {
+        while (iterator.hasNext()) {
             Household h = iterator.next();
             pDeath = data.Demographics.probDeathGivenAge(h.getAge())/config.constants.MONTHS_IN_YEAR;
-            if(prng.nextDouble() < pDeath*multFactor) {
+            if (prng.nextDouble() < pDeath) {
                 iterator.remove();
                 // Inheritance
                 h.transferAllWealthTo(Model.households.get(prng.nextInt(Model.households.size())));
