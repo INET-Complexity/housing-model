@@ -99,19 +99,11 @@ public abstract class HousingMarket {
      */
     void clearMarket() {
         // Before any use, priorities must be sorted by filling in the uncoveredElements TreeSet at the corresponding
-        // PriorityQueue2D
+        // PriorityQueue2D, in this case, the offersPQ object contains a Price-Quality 2D-priority queue of offers
         offersPQ.sortPriorities();
-        // offersPQ contains Price-Quality 2D-priority queue of offers
-        // offersPY contains Price-Yield 2D-priority queue of offers
-        // bids contains bids (HouseBuyerRecords) in an array
-        // TODO: This number of rounds needs more thinking... this is just a cheap fix for the moment
-        // TODO: This needs to be correctly described in the paper!!!
-        int rounds = Math.max(10, Model.households.size()/50); // Previously, int rounds = Math.min(config.TARGET_POPULATION/1000, 1 + (offersPQ.size() + bids.size())/500);
-        int i = 0;
-        while (i < rounds && bids.size() > 0 && offersPQ.size() > 0) { // Previously, for(int i=0, i<rounds, i++) {
+        while (bids.size() > 0 && offersPQ.size() > 0) {
             matchBidsWithOffers(); // Step 1: iterate through bids
             clearMatches(); // Step 2: iterate through offers
-            i++; // Previously absent
         }
         bids.clear();
     }
