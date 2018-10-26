@@ -319,15 +319,6 @@ public class HouseholdBehaviour {
         return prng.nextDouble() < pBuy;
     }
 
-    double btlPurchaseBid(Household me) {
-        // TODO: What is this 1.1 factor? Another fudge parameter? It prevents wealthy investors from offering more than
-        // TODO: 10% above the average price of top quality houses. The effect of this is to prevent fast increases of
-        // TODO: price as BTL investors buy all supply till prices are too high for everybody. Fairly unclear mechanism,
-        // TODO: check for removal!
-        return(Math.min(Model.bank.getMaxMortgage(me, false),
-                1.1*Model.housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY-1)));
-    }
-
 	/**
 	 * How much rent does an investor decide to charge on a buy-to-let house? 
 	 * @param rbar exponential average rent for house of this quality

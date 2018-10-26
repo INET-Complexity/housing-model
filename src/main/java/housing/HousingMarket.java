@@ -88,8 +88,8 @@ public abstract class HousingMarket {
      * @param buyer The household that is making the bid
      * @param price The price that the household is willing to pay
      */
-    public void bid(Household buyer, double price) {
-        bids.add(new HouseBidderRecord(buyer, price, false));
+    public void bid(Household buyer, double price, boolean BTLBid) {
+        bids.add(new HouseBidderRecord(buyer, price, BTLBid));
     }
 
     //----- Market clearing methods -----//

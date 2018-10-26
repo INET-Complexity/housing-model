@@ -127,10 +127,11 @@ public class Household implements IHouseOwner {
                 bidForAHome();
             }            
         } else if (behaviour.isPropertyInvestor()) { // Only BTL investors who already own a home enter here
-            double price = behaviour.btlPurchaseBid(this);
+            // BTL investors always bid the price corresponding to the maximum mortgage they could get
+            double price = Model.bank.getMaxMortgage(this, false);
             Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
             if (behaviour.decideToBuyInvestmentProperty(this)) {
-                Model.houseSaleMarket.BTLbid(this, price);
+                Model.houseSaleMarket.bid(this, price, true);
             }
         } else if (!isHomeowner()){
             System.out.println("Strange: this household is not a type I recognize");
@@ -406,10 +407,10 @@ public class Household implements IHouseOwner {
         // Compare costs to decide whether to buy or rent...
         if (behaviour.decideRentOrPurchase(this, price)) {
             // ... if buying, bid in the house sale market for the capped desired price
-            Model.houseSaleMarket.bid(this, price);
+            Model.houseSaleMarket.bid(this, price, false);
         } else {
             // ... if renting, bid in the house rental market for the desired rent price
-            Model.houseRentalMarket.bid(this, behaviour.desiredRent(monthlyGrossEmploymentIncome));
+            Model.houseRentalMarket.bid(this, behaviour.desiredRent(monthlyGrossEmploymentIncome), false);
         }
     }
     

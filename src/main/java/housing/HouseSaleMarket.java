@@ -107,13 +107,4 @@ public class HouseSaleMarket extends HousingMarket {
         record.remove();
         offersPY.remove(offer);
     }
-
-	/*******************************************
-	 * Make a bid on the market as a Buy-to-let investor
-	 *  (i.e. make an offer on a (yet to be decided) house).
-	 * 
-	 * @param buyer The household that is making the bid.
-	 * @param maxPrice The maximum price that the household is willing to pay.
-	 ******************************************/
-    void BTLbid(Household buyer, double maxPrice) { bids.add(new HouseBidderRecord(buyer, maxPrice, true)); }
 }
