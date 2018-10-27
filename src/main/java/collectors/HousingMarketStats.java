@@ -58,6 +58,7 @@ public class HousingMarketStats extends CollectorBase {
 
 	// Other variables computed after market clearing
 	private double                  expAvDaysOnMarket; // Exponential moving average of the number of days on the market
+    private double                  expAvSalePrice; // Exponential moving average of sale prices
 	private double []               expAvSalePricePerQuality; // Exponential moving average of the price for each quality band
 	private double                  housePriceIndex;
 	private DescriptiveStatistics   HPIRecord;
@@ -114,6 +115,7 @@ public class HousingMarketStats extends CollectorBase {
 
         // Set initial values for other variables computed after market clearing
         expAvDaysOnMarket = config.constants.DAYS_IN_MONTH; // TODO: Make this initialisation explicit in the paper! Is 30 days similar to the final simulated value?
+        expAvSalePrice = getAvReferencePrice(); // TODO: Make this initialisation explicit in the paper!
         expAvSalePricePerQuality = new double[config.N_QUALITY];
         System.arraycopy(referencePricePerQuality, 0, expAvSalePricePerQuality, 0,
                 config.N_QUALITY); // Exponential averaging of prices is initialised from reference prices
@@ -245,6 +247,8 @@ public class HousingMarketStats extends CollectorBase {
         if (nSales > 0) {
             expAvDaysOnMarket = config.derivedParams.E*expAvDaysOnMarket
                     + (1.0 - config.derivedParams.E)*sumDaysOnMarket/nSales;
+            expAvSalePrice = config.derivedParams.G*expAvSalePrice
+                    + (1.0 - config.derivedParams.G)*sumSoldPrice/nSales;
         }
         for (int q = 0; q < config.N_QUALITY; q++) {
             if (nSalesPerQuality[q] > 0) {
@@ -347,15 +351,7 @@ public class HousingMarketStats extends CollectorBase {
     public double getExpAvDaysOnMarket() { return expAvDaysOnMarket; }
     public double [] getExpAvSalePricePerQuality() { return expAvSalePricePerQuality; }
     public double getExpAvSalePriceForQuality(int quality) { return expAvSalePricePerQuality[quality]; }
-    double getExpAvSalePrice() {
-        double sum = 0.0;
-        int n = 0;
-        for (double element: expAvSalePricePerQuality) {
-            sum += element;
-            n++;
-        }
-        return sum/n;
-    }
+    double getExpAvSalePrice() { return expAvSalePrice; }
     public double getHPI() { return housePriceIndex; }
     public DescriptiveStatistics getHPIRecord() { return HPIRecord; }
     double getAnnualHPA() { return annualHousePriceAppreciation; }
@@ -423,5 +419,12 @@ public class HousingMarketStats extends CollectorBase {
         int q = config.N_QUALITY - 1;
         while(q >= 0 && getExpAvSalePriceForQuality(q) > price) --q;
         return q;
+    }
+    private double getAvReferencePrice() {
+        double avReferencePrice = 0.0;
+        for (double price: referencePricePerQuality) {
+            avReferencePrice += price;
+        }
+        return avReferencePrice/referencePricePerQuality.length;
     }
 }
