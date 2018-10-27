@@ -99,13 +99,13 @@ public class Recorder {
                     + "HousingStock, nNewBuild, nUnsoldNewBuild, nEmptyHouses, BTLStockFraction, "
                     // House sale market data
                     + "Sale HPI, Sale AnnualHPA, Sale AvBidPrice, Sale AvOfferPrice, Sale AvSalePrice, "
-                    + "Sale ExAvSalePrice, Sale AvDaysOnMarket, Sale ExpAvDaysOnMarket, Sale nBuyers, Sale nBTLBuyers, "
-                    + "Sale nSellers, Sale nNewSellers, Sale nBTLSellers, Sale nSales, "
+                    + "Sale ExAvSalePrice, Sale AvMonthsOnMarket, Sale ExpAvMonthsOnMarket, Sale nBuyers, "
+                    + "Sale nBTLBuyers, Sale nSellers, Sale nNewSellers, Sale nBTLSellers, Sale nSales, "
                     + "Sale nNonBTLBidsAboveExpAvSalePrice, Sale nBTLBidsAboveExpAvSalePrice, Sale nSalesToBTL, "
                     + "Sale nSalesToFTB, "
                     // Rental market data
                     + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
-                    + "Rental AvDaysOnMarket, Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
+                    + "Rental AvMonthsOnMarket, Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
                     + "nRegisteredMortgages");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
@@ -179,8 +179,8 @@ public class Recorder {
                 Model.housingMarketStats.getAvOfferPrice() + ", " +
                 Model.housingMarketStats.getAvSalePrice() + ", " +
                 Model.housingMarketStats.getExpAvSalePrice() + ", " +
-                Model.housingMarketStats.getAvDaysOnMarket() + ", " +
-                Model.housingMarketStats.getExpAvDaysOnMarket() + ", " +
+                Model.housingMarketStats.getAvMonthsOnMarket() + ", " +
+                Model.housingMarketStats.getExpAvMonthsOnMarket() + ", " +
                 Model.housingMarketStats.getnBuyers() + ", " +
                 Model.housingMarketStats.getnBTLBuyers() + ", " +
                 Model.housingMarketStats.getnSellers() + ", " +
@@ -197,7 +197,7 @@ public class Recorder {
                 Model.rentalMarketStats.getAvBidPrice() + ", " +
                 Model.rentalMarketStats.getAvOfferPrice() + ", " +
                 Model.rentalMarketStats.getAvSalePrice() + ", " +
-                Model.rentalMarketStats.getAvDaysOnMarket() + ", " +
+                Model.rentalMarketStats.getAvMonthsOnMarket() + ", " +
                 Model.rentalMarketStats.getnBuyers() + ", " +
                 Model.rentalMarketStats.getnSellers() + ", " +
                 Model.rentalMarketStats.getnSales() + ", " +
