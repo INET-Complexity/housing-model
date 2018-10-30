@@ -87,7 +87,7 @@ public class Recorder {
     }
 
     public void openSingleRunFiles(int nRun) {
-        // Try opening output files (national and for each region) and write first row header with column names
+        // Try opening output files and write first row header with column names
         try {
             outfile = new PrintWriter(outputFolder + "Output-run" + nRun + ".csv", "UTF-8");
             outfile.println("Model time, "

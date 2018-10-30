@@ -13,7 +13,7 @@ import utilities.MeanAboveMedian;
  * @author danial, Adrian Carro
  *
  *************************************************************************************************/
-public class CoreIndicators extends CollectorBase {
+public class CoreIndicators {
 
     //------------------//
     //----- Fields -----//
@@ -29,14 +29,6 @@ public class CoreIndicators extends CollectorBase {
 
     // Note that some of these methods are just wrappers around methods contained in other classes with the purpose of
     // storing here a coherent set of core indicators getters
-	
-	@Override
-	public void setActive(boolean active) {
-		super.setActive(active);
-		Model.creditSupply.setActive(active);
-		Model.housingMarketStats.setActive(active);
-		Model.householdStats.setActive(active);
-    }
 
     // Owner-occupier mortgage LTI ratio (mean above the median)
 	double getOwnerOccupierLTIMeanAboveMedian() {

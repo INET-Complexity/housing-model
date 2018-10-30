@@ -10,7 +10,7 @@ import housing.Model;
  * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
-public class HouseholdStats extends CollectorBase {
+public class HouseholdStats {
 
 	//------------------//
 	//----- Fields -----//
@@ -42,15 +42,6 @@ public class HouseholdStats extends CollectorBase {
     private int     nBTLBidsAboveExpAvSalePrice; // Number of BTL bids with desired housing expenditure above the exponential moving average sale price
     private int     nNonBTLBidsAboveExpAvSalePriceCounter; // Counter for the number of normal (non-BTL) bids with desired housing expenditure above the exp. mov. av. sale price
     private int     nBTLBidsAboveExpAvSalePriceCounter; // Counter for the number of BTL bids with desired housing expenditure above the exp. mov. av. sale price
-
-	//------------------------//
-	//----- Constructors -----//
-	//------------------------//
-
-    /**
-     * Initialises the household statistics collector
-     */
-    public HouseholdStats() { setActive(true); }
 
     //-------------------//
     //----- Methods -----//

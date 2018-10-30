@@ -7,7 +7,7 @@ import java.io.UnsupportedEncodingException;
 import housing.*;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
-public class CreditSupply extends CollectorBase {
+public class CreditSupply {
 
 	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
 
