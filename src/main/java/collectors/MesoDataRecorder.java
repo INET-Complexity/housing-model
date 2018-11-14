@@ -1,7 +1,5 @@
 package collectors;
 
-import housing.*;
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -36,13 +34,21 @@ public class MesoDataRecorder {
         }
     }
 
-    void timeStampBankBalance(int time) {
-        if (time != 0) { outfileBankBalance.println(""); }
-        outfileBankBalance.print(time);
+    void timeStampSingleRunSingleVariableFiles(int time, boolean recordBankBalance) {
+        if (time % 100 == 0) {
+            if (recordBankBalance) {
+                if (time != 0) {
+                    outfileBankBalance.println("");
+                }
+                outfileBankBalance.print(time);
+            }
+        }
     }
 	
-	void recordBankBalance(double bankBalance) {
-		outfileBankBalance.print(", " + bankBalance);
+	void recordBankBalance(int time, double bankBalance) {
+        if (time % 100 == 0) {
+            outfileBankBalance.print(", " + bankBalance);
+        }
 	}
 
 	public void finishRun(boolean recordBankBalance) {

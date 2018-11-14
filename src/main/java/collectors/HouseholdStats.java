@@ -88,9 +88,7 @@ public class HouseholdStats {
         homelessAnnualisedTotalIncome = 0.0;
         sumStockYield = 0.0;
         // Time stamp householdStats mesoRecorders
-        if (config.recordBankBalance) {
-            Model.mesoDataRecorder.timeStampBankBalance(Model.getTime());
-        }
+        Model.mesoDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
             if (h.behaviour.isPropertyInvestor()) {
@@ -130,7 +128,10 @@ public class HouseholdStats {
                     homelessAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
                 }
             }
-            Model.mesoDataRecorder.recordBankBalance(h.getBankBalance());
+            // Record household's bankBalance to householdStats mesoRecorders
+            if (config.recordBankBalance) {
+                Model.mesoDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
+            }
         }
         // Annualise monthly income data
         activeBTLAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
