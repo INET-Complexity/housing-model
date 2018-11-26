@@ -25,13 +25,14 @@ public class Config {
     /** Declaration of parameters **/
 
     // General model control parameters
-    int SEED;                               // Seed for the random number generator
-    int N_STEPS;				            // Simulation duration in time steps
-    int TIME_TO_START_RECORDING;	        // Time steps before recording statistics (initialisation time)
-    int N_SIMS; 					        // Number of simulations to run (monte-carlo)
-    boolean recordCoreIndicators;		    // True to write time series for each core indicator
-    public boolean recordMicroData;			// True to write micro data for each transaction made
-    public boolean recordBankBalance;       // True to write individual household bank balance data
+    int SEED;                                   // Seed for the random number generator
+    int N_STEPS;				                // Simulation duration in time steps
+    int TIME_TO_START_RECORDING;	            // Time steps before recording statistics (initialisation time)
+    int N_SIMS; 					            // Number of simulations to run (monte-carlo)
+    boolean recordCoreIndicators;		        // True to write time series for each core indicator
+    public boolean recordMicroData;			    // True to write micro data for each transaction made
+    public boolean recordBankBalance;           // True to write individual household bank balance data
+    public boolean recordNInvestmentProperties; // True to write individual household number of investment properties data
 
     // House parameters
     public int N_QUALITY;                   // Number of quality bands for houses
