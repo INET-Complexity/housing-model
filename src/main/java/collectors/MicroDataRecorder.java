@@ -31,11 +31,12 @@ public class MicroDataRecorder {
         try {
             outfile = new PrintWriter(outputFolder + "Transactions-run" + nRun + ".csv", "UTF-8");
             outfile.println("Model time, "
-                    + "transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, "
-                    + "buyerId, buyerAge, buyerHasBTLGene, buyerMonthlyPreTaxIncome, buyerMonthlyEmploymentIncome, "
-                    + "buyerBankBalance, buyerCapGainCoeff, mortgageDownpayment, firstTimeBuyerMortgage, "
-                    + "buyToLetMortgage, sellerId, sellerAge, sellerHasBTLGene, sellerMonthlyPreTaxIncome, "
-                    + "sellerMonthlyEmploymentIncome, sellerBankBalance, sellerCapGainCoeff");
+                    + "transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, "
+                    + "transactionPrice, buyerId, buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, "
+                    + "buyerMonthlyGrossEmploymentIncome, buyerPostPurchaseBankBalance, buyerCapGainCoeff, "
+                    + "mortgageDownpayment, firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, "
+                    + "sellerHasBTLGene, sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
+                    + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
