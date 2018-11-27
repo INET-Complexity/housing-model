@@ -89,7 +89,7 @@ public class HouseholdStats {
         sumStockYield = 0.0;
         // Time stamp householdStats microDataRecorders
         Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance,
-                config.recordNInvestmentProperties);
+                config.recordNHousesOwned);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
             if (h.behaviour.isPropertyInvestor()) {
@@ -129,12 +129,12 @@ public class HouseholdStats {
                     homelessAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
                 }
             }
-            // Record household's bankBalance to householdStats microDataRecorders
+            // Record household micro-data
             if (config.recordBankBalance) {
                 Model.microDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
             }
-            if (config.recordNInvestmentProperties) {
-                Model.microDataRecorder.recordNInvestmentProperties(Model.getTime(), h.nInvestmentProperties());
+            if (config.recordNHousesOwned) {
+                Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.nInvestmentProperties() + 1);
             }
         }
         // Annualise monthly income data

@@ -32,7 +32,7 @@ public class Config {
     boolean recordCoreIndicators;		        // True to write time series for each core indicator
     public boolean recordTransactions;			// True to write data for each transaction
     public boolean recordBankBalance;           // True to write individual household bank balance data
-    public boolean recordNInvestmentProperties; // True to write individual household number of investment properties data
+    public boolean recordNHousesOwned;          // True to write individual household number of houses owned data
 
     // House parameters
     public int N_QUALITY;                   // Number of quality bands for houses
