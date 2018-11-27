@@ -23,7 +23,7 @@ public class Household implements IHouseOwner {
 
     private static int          id_pool;
 
-    public int                  id; // Only used for identifying households within the class MicroDataRecorder
+    public int                  id; // Only used for identifying households within the class TransactionRecorder
     private double              annualGrossEmploymentIncome;
     private double              monthlyGrossEmploymentIncome;
     public HouseholdBehaviour   behaviour; // Behavioural plugin

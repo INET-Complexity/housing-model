@@ -1,7 +1,5 @@
 package collectors;
 
-import housing.*;
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -14,7 +12,8 @@ public class MicroDataRecorder {
 
     private String outputFolder;
 
-    private PrintWriter outfile;
+    private PrintWriter outfileBankBalance;
+    private PrintWriter outfileNInvestmentProperties;
 
     //------------------------//
     //----- Constructors -----//
@@ -26,68 +25,61 @@ public class MicroDataRecorder {
     //----- Methods -----//
     //-------------------//
 
-    public void openSingleRunFiles(int nRun) {
-        // Try opening output files and write first row header with column names
-        try {
-            outfile = new PrintWriter(outputFolder + "Transactions-run" + nRun + ".csv", "UTF-8");
-            outfile.println("Model time, "
-                    + "transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, "
-                    + "transactionPrice, buyerId, buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, "
-                    + "buyerMonthlyGrossEmploymentIncome, buyerPostPurchaseBankBalance, buyerCapGainCoeff, "
-                    + "mortgageDownpayment, firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, "
-                    + "sellerHasBTLGene, sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
-                    + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
-        } catch (FileNotFoundException | UnsupportedEncodingException e) {
-            e.printStackTrace();
+    public void openSingleRunSingleVariableFiles(int nRun, boolean recordBankBalance,
+                                                 boolean recordNInvestmentProperties) {
+        if (recordBankBalance) {
+            try {
+                outfileBankBalance = new PrintWriter(outputFolder + "BankBalance-run" + nRun + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordNInvestmentProperties) {
+            try {
+                outfileNInvestmentProperties = new PrintWriter(outputFolder + "NInvestmentProperties-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    void timeStampSingleRunSingleVariableFiles(int time, boolean recordBankBalance,
+                                               boolean recordNInvestmentProperties) {
+        if (time % 100 == 0) {
+            if (recordBankBalance) {
+                if (time != 0) {
+                    outfileBankBalance.println("");
+                }
+                outfileBankBalance.print(time);
+            }
+            if (recordNInvestmentProperties) {
+                if (time != 0) {
+                    outfileNInvestmentProperties.println("");
+                }
+                outfileNInvestmentProperties.print(time);
+            }
         }
     }
 	
-	void recordSale(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage,
-                    HousingMarket market) {
-		outfile.print(Model.getTime() + ", ");
-		if (market instanceof HouseSaleMarket) {
-			outfile.print("sale, ");
-		} else {
-			outfile.print("rental, ");
-		}
-		outfile.print(
-    			sale.getHouse().id + ", " +
-    			sale.getHouse().getQuality() + ", " +
-				sale.getInitialListedPrice() + ", " +
-				sale.gettInitialListing() + ", " +
-    			sale.getPrice() + ", " +
-    			purchase.getBidder().id + ", " +
-    			purchase.getBidder().getAge() + ", " +
-    			purchase.getBidder().behaviour.isPropertyInvestor() + ", " +
-    			purchase.getBidder().getMonthlyGrossTotalIncome() + ", " +
-    			purchase.getBidder().getMonthlyGrossEmploymentIncome() + ", " +
-    			purchase.getBidder().getBankBalance() + ", "+
-    			purchase.getBidder().behaviour.getBTLCapGainCoefficient() + ", ");
-		if (mortgage != null) {
-			outfile.print(
-					mortgage.downPayment + ", " +
-					mortgage.isFirstTimeBuyer + ", " +
-					mortgage.isBuyToLet + ", ");
-		} else {
-			outfile.print("-1, false, false, ");
-		}
-		if (sale.getHouse().owner instanceof Household) {
-			Household seller = (Household) sale.getHouse().owner;
-			outfile.println(
-					seller.id + ", " +
-					seller.getAge() + ", " +
-					seller.behaviour.isPropertyInvestor() + ", " +
-					seller.getMonthlyGrossTotalIncome() + ", " +
-					seller.getMonthlyGrossEmploymentIncome() + ", " +
-					seller.getBankBalance() + ", " +
-					seller.behaviour.getBTLCapGainCoefficient());
-		} else {
-			// must be construction sector
-			outfile.println("-1, 0, false, 0, 0, 0, 0");
-		}
+	void recordBankBalance(int time, double bankBalance) {
+        if (time % 100 == 0) {
+            outfileBankBalance.print(", " + bankBalance);
+        }
 	}
 
-	public void finishRun() {
-		outfile.close();
+    void recordNInvestmentProperties(int time, int nInvestmentProperties) {
+        if (time % 100 == 0 && nInvestmentProperties > 0) {
+            outfileNInvestmentProperties.print(", " + nInvestmentProperties);
+        }
+    }
+
+	public void finishRun(boolean recordBankBalance, boolean recordNInvestmentProperties) {
+        if (recordBankBalance) {
+            outfileBankBalance.close();
+        }
+        if (recordNInvestmentProperties) {
+            outfileNInvestmentProperties.close();
+        }
 	}
 }

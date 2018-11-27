@@ -215,7 +215,7 @@ public class HousingMarketStats {
             }
         }
         // TODO: Attention, calls to Model class should be avoided: need to pass transactionRecorder as constructor arg
-        if (config.recordMicroData) { Model.transactionRecorder.recordSale(purchase, sale, mortgage, market); }
+        if (config.recordTransactions && Model.getTime() > 2000 && Model.getTime() < 2500) { Model.transactionRecorder.recordSale(purchase, sale, mortgage, market); }
     }
 
     /**
