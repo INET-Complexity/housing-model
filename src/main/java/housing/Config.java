@@ -51,7 +51,6 @@ public class Config {
     public double FUTURE_BIRTH_RATE;        // Future birth rate (births per year per capita), calibrated with flux of FTBs
 
     // Household parameters
-    double RETURN_ON_FINANCIAL_WEALTH;      // Monthly percentage growth of financial investments
     public int TENANCY_LENGTH_AVERAGE;      // Average number of months a tenant will stay in a rented house
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
 
