@@ -88,6 +88,7 @@ public class Household implements IHouseOwner {
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         // Compute initial financial wealth
         initialFinancialWealth = bankBalance + getMonthlyNetTotalIncome();
+//        initialFinancialWealth = bankBalance; @@##@@ Alternative savings rate definition TODO: To remove one or the other implementation
         // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
         bankBalance += getMonthlyDisposableIncome();
         // Consume based on monthly disposable income (after essential consumption and house payments have been subtracted)

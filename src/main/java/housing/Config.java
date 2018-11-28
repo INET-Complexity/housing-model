@@ -34,6 +34,7 @@ public class Config {
     public boolean recordBankBalance;           // True to write individual household bank balance data
     public boolean recordNHousesOwned;          // True to write individual household number of houses owned data
     public boolean recordSavingRate;            // True to write individual household saving rate data
+    public boolean recordInitTotalWealth;       // True to write individual household initial total wealth data
 
     // House parameters
     public int N_QUALITY;                   // Number of quality bands for houses
