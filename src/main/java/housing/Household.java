@@ -37,6 +37,8 @@ public class Household implements IHouseOwner {
     private double                          age; // Age of the household representative person
     private double                          bankBalance;
     private double                          monthlyGrossRentalIncome; // Keeps track of monthly rental income, as only tenants keep a reference to the rental contract, not landlords
+    private double                          initialFinancialWealth; // Bank balance at the beginning of the time step (previous bank balance + net total income)
+    private double                          initialHousingWealth; // Housing wealth at the beginning of the time step (sum of fractions owned in all purchased properties)
     private boolean                         isFirstTimeBuyer;
     private boolean                         isBankrupt;
 
@@ -84,6 +86,8 @@ public class Household implements IHouseOwner {
         // Update annual and monthly gross employment income
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
+        // Compute initial financial wealth
+        initialFinancialWealth = bankBalance + getMonthlyNetTotalIncome();
         // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
         bankBalance += getMonthlyDisposableIncome();
         // Consume based on monthly disposable income (after essential consumption and house payments have been subtracted)
@@ -100,6 +104,7 @@ public class Household implements IHouseOwner {
         Entry<House, PaymentAgreement> entry;
         House h;
         PaymentAgreement payment;
+        initialHousingWealth = 0.0;
         // Iterate over these house-paymentAgreement pairs...
         while (paymentIt.hasNext()) {
             entry = paymentIt.next();
@@ -108,6 +113,9 @@ public class Household implements IHouseOwner {
             // ...if the household is the owner of the house, then manage it
             if (h.owner == this) {
                 manageHouse(h);
+                // ...compute also initial housing wealth
+                initialHousingWealth += ((MortgageAgreement) payment).purchasePrice
+                        - ((MortgageAgreement) payment).principal;
             // ...otherwise, if the household is not the owner nor the resident, then it is an old debt due to
             // the household's inability to pay the remaining principal off after selling a property...
             } else if (h.resident != this) {
@@ -140,7 +148,7 @@ public class Household implements IHouseOwner {
 
     /**
      * Subtracts the essential, necessary consumption and housing expenses (mortgage and rental payments) from the net
-     * total income (employment income, property income, financial returns minus taxes)
+     * total income (employment income plus property income minus taxes)
      */
     private double getMonthlyDisposableIncome() {
         // Start with net monthly income
@@ -160,7 +168,7 @@ public class Household implements IHouseOwner {
      * tax on employment income and national insurance contributions are implemented!
      */
     double getMonthlyNetTotalIncome() {
-        // TODO: Note that this implies there is no tax on rental income nor on bank balance returns
+        // TODO: Note that this implies there is no tax on rental income
         return getMonthlyGrossTotalIncome()
                 - (Model.government.incomeTaxDue(annualGrossEmploymentIncome)   // Employment income tax
                 + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions
@@ -168,11 +176,9 @@ public class Household implements IHouseOwner {
     }
 
     /**
-     * Adds up all sources of (gross) income on a monthly basis: employment, property, returns on financial wealth
+     * Adds up all sources of (gross) income on a monthly basis: employment and property income
      */
-    public double getMonthlyGrossTotalIncome() {
-        return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome;
-    }
+    public double getMonthlyGrossTotalIncome() { return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome; }
 
     double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
 
@@ -475,7 +481,7 @@ public class Household implements IHouseOwner {
                     }
                 }
                 // ...finally, transfer the property to the beneficiary household
-                beneficiary.inheritHouse(h);
+                beneficiary.inheritHouse(h, ((MortgageAgreement) payment).purchasePrice);
             // Otherwise, if the deceased household does not own the house but it is living in it, then it must have
             // been renting it: end the letting agreement
             } else if (h == home) {
@@ -500,7 +506,7 @@ public class Household implements IHouseOwner {
      * 
      * @param h House to inherit
      */
-    private void inheritHouse(House h) {
+    private void inheritHouse(House h, double oldPurchasePrice) {
         // Create a null (zero payments) mortgage
         MortgageAgreement nullMortgage = new MortgageAgreement(this,false);
         nullMortgage.nPayments = 0;
@@ -508,7 +514,7 @@ public class Household implements IHouseOwner {
         nullMortgage.monthlyInterestRate = 0.0;
         nullMortgage.monthlyPayment = 0.0;
         nullMortgage.principal = 0.0;
-        nullMortgage.purchasePrice = 0.0;
+        nullMortgage.purchasePrice = oldPurchasePrice;
         // Become the owner of the inherited house and include it in my housePayments list (with a null mortgage)
         // TODO: Make sure the paper correctly explains that no debt is inherited
         housePayments.put(h, nullMortgage);
@@ -608,4 +614,8 @@ public class Household implements IHouseOwner {
         }
         return(0.0);        
     }
+
+    public double getInitialFinancialWealth() { return initialFinancialWealth; }
+
+    public double getInitialHousingWealth() { return initialHousingWealth; }
 }

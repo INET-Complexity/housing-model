@@ -121,7 +121,7 @@ public class Model {
             if (config.recordTransactions) { transactionRecorder.openSingleRunFiles(nSimulation); }
             if (config.recordBankBalance || config.recordNHousesOwned) {
                 microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
-                        config.recordNHousesOwned);
+                        config.recordNHousesOwned, config.recordSavingRate);
             }
 
 		    // For each simulation, initialise both houseSaleMarket and houseRentalMarket variables (including HPI)
@@ -149,7 +149,8 @@ public class Model {
             recorder.finishRun(config.recordCoreIndicators);
             if (config.recordTransactions) transactionRecorder.finishRun();
             if (config.recordBankBalance || config.recordNHousesOwned) {
-                microDataRecorder.finishRun(config.recordBankBalance, config.recordNHousesOwned);
+                microDataRecorder.finishRun(config.recordBankBalance, config.recordNHousesOwned,
+                        config.recordSavingRate);
             }
 		}
 
