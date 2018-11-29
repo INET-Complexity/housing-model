@@ -3,6 +3,7 @@ package collectors;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 import housing.Model;
 
@@ -21,6 +22,7 @@ public class Recorder {
     private String outputFolder;
 
     private PrintWriter outfile;
+    private PrintWriter qualityBandPriceFile;
 
     private PrintWriter ooLTI;
     private PrintWriter btlLTV;
@@ -86,8 +88,8 @@ public class Recorder {
         }
     }
 
-    public void openSingleRunFiles(int nRun) {
-        // Try opening output files and write first row header with column names
+    public void openSingleRunFiles(int nRun, boolean recordQualityBandPrice, int nQualityBands) {
+        // Try opening general output file and write first row header with column names
         try {
             outfile = new PrintWriter(outputFolder + "Output-run" + nRun + ".csv", "UTF-8");
             outfile.println("Model time, "
@@ -112,9 +114,24 @@ public class Recorder {
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        // If recording of quality band prices is active...
+        if(recordQualityBandPrice) {
+            // ...try opening output file and write first row header with column names
+            try {
+                qualityBandPriceFile = new PrintWriter(outputFolder + "QualityBandPrice-run" + nRun + ".csv", "UTF-8");
+                StringBuilder str = new StringBuilder();
+                str.append(String.format("Time, Q%d", 0));
+                for (int i = 1; i < nQualityBands; i++) {
+                    str.append(String.format(", Q%d", i));
+                }
+                qualityBandPriceFile.println(str);
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void writeTimeStampResults(boolean recordCoreIndicators, int time) {
+    public void writeTimeStampResults(boolean recordCoreIndicators, int time, boolean recordQualityBandPrice) {
         if (recordCoreIndicators) {
             // If not at the first point in time...
             if (time > 0) {
@@ -206,9 +223,16 @@ public class Recorder {
                 Model.rentalMarketStats.getExpAvFlowYield() + ", " +
                 // Credit data
                 Model.creditSupply.getnRegisteredMortgages());
+
+        // Write quality band prices to file
+        if (recordQualityBandPrice) {
+            String str = Arrays.toString(Model.housingMarketStats.getAvSalePricePerQuality());
+            str = str.substring(1, str.length() - 1);
+            qualityBandPriceFile.println(time + ", " + str);
+        }
     }
 
-    public void finishRun(boolean recordCoreIndicators) {
+    public void finishRun(boolean recordCoreIndicators, boolean recordQualityBandPrice) {
         if (recordCoreIndicators) {
             ooLTI.println("");
             btlLTV.println("");
@@ -226,6 +250,9 @@ public class Recorder {
             interestRateSpread.println("");
         }
         outfile.close();
+        if (recordQualityBandPrice) {
+            qualityBandPriceFile.close();
+        }
     }
 
     public void finish(boolean recordCoreIndicators) {
