@@ -35,9 +35,13 @@ public class Config {
     boolean recordAgentDecisions; 			// True to write data from agent decision methods
     
     // Decision equations
-    boolean FLEXIBLE_CREDIT_SUPPLY;			// make credit supply dependent on the housing cycle
+    boolean FLEXIBLE_CREDIT_SUPPLY;					// make credit supply dependent on the housing cycle
     boolean FLEXIBLE_CREDIT_CONSTRAINTS;			// toggle flexible LTV, LTI and affordability ratios by the bank
     boolean ALTERNATE_CONSUMPTION_FUNCTION;			// make consumption solely dependent on income and wealth
+    boolean TREND;									// add a trend to the employment income of households
+    
+    // trend parameters
+    double MONTHLY_INCREASE_EMPLOYMENT_INCOME; 		// monthly rate of increase in employment income per month
     
     // alternate consumption function parameters
     public double CONSUMPTION_FRACTION_DISP_INC;			// propensity to consume out of disposable income
