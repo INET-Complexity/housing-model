@@ -27,6 +27,7 @@ public class Household implements IHouseOwner, Serializable {
     public int                  id; // Only used for identifying households within the class MicroDataRecorder
     private double              annualGrossEmploymentIncome;
     private double              monthlyGrossEmploymentIncome;
+    private double				consumption;
     public HouseholdBehaviour   behaviour; // Behavioural plugin
 
     double                      incomePercentile; // Fixed for the whole lifetime of the household
@@ -83,25 +84,23 @@ public class Household implements IHouseOwner, Serializable {
      * - Buy/sell/rent out properties if BTL investor
      */
     public void step() {
-        //TEST
-    	if(id==4756 && Model.getTime()==1044) {
-    		System.out.println(id + " is id, time is: " + Model.getTime());
-    	}
     	isBankrupt = false; // Delete bankruptcies from previous time step
         age += 1.0/config.constants.MONTHS_IN_YEAR;
         // Update annual and monthly gross employment income
-        annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
+        if(config.TREND) {
+        	annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile)
+        									*Math.pow((1+config.MONTHLY_INCREASE_EMPLOYMENT_INCOME/config.constants.MONTHS_IN_YEAR), Model.getTime());
+        } else {
+        	annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
+        }
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
         bankBalance += getMonthlyDisposableIncome();
-        //TEST
-//        if(bankBalance < 0.0) {
-//        	System.out.println("weird, bank balance negative, agent-id: " + id + " and Model time: " + Model.getTime() + ". Bank Balance is: " + bankBalance);
-//        }
         // Consume based on monthly disposable income (after essential consumption and house payments have been subtracted)
-        bankBalance -= behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(), incomePercentile,
+        consumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(), incomePercentile,
         												getMonthlyDisposableIncome(), getPropertyValue(),
         												getTotalDebt(), getEquityPosition()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
+        bankBalance -= consumption;
         // Deal with bankruptcies
         // TODO: Improve bankruptcy procedures (currently, simple cash injection), such as terminating contracts!
         if (bankBalance < 0.0) {
@@ -122,8 +121,9 @@ public class Household implements IHouseOwner, Serializable {
             }            
         } else if (behaviour.isPropertyInvestor()) { // Only BTL investors who already own a home enter here
             double price = behaviour.btlPurchaseBid(this);
-            Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
+            //             Model.householdStats.countBTLBidsAboveExpAvSalePrice(price); stood here before
             if (behaviour.decideToBuyInvestmentProperty(this)) {
+                Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
                 Model.houseSaleMarket.BTLbid(this, price);
             }
         } else if (!isHomeowner()){
@@ -526,6 +526,8 @@ public class Household implements IHouseOwner, Serializable {
     //----- Helpers -----//
 
     public double getAge() { return age; }
+    
+    public double getConsumption() {return consumption; }
 
     public boolean isHomeowner() {
         if(home == null) return(false);
