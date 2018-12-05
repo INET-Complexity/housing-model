@@ -24,8 +24,9 @@ public class AgentDecisionRecorder extends CollectorBase{
 	private Config                     	config = Model.config; // Passes the Model's configuration parameters object to a private field	
 	public boolean 						active = false;	
 	
-	public PrintWriter							rentOrBuy;
-	public PrintWriter 							decideBuyInvestmentProperty;
+	public PrintWriter					rentOrBuy;
+	public PrintWriter 					decideBuyInvestmentProperty;
+	public PrintWriter					decideSellInvestmentProperty;
 
     //------------------------//
     //----- Constructors -----//
@@ -74,6 +75,15 @@ public class AgentDecisionRecorder extends CollectorBase{
 	            		+ "probToInvest, " + "BidOnHousingMarket, " + "Reason, "
 	            		);
 	            
+	            decideSellInvestmentProperty = new PrintWriter(outputFolderCopy + "AgentDecisions-DivestmentDecision" + run + ".csv", "UTF-8");
+	            decideSellInvestmentProperty.println(
+	            		// print data from the behaviourdecideToSellInvestmentProperty method
+	            		"ModelTime, " + "agentID, " + "only 2 houses, " + "bankBalance, " + "monthlyDisposableIncome, "
+	            		+ "MonthlyGrossEmploymentIncome, " + "EquityPosition, " + "CapGainCoeff," + "houseQuality, " + "currentMarketPrice, "
+	            		+ "equityOfHouse, " + "leverageOfHouse, " + "currentRentalYield, " + "mortgageRate, " 
+	            		+ "renatalExpAvFlowYield, "+ "longTermHPAExpectation, " + "expectedEquityYield, "
+	            		+ "probToKeepHouse, "
+	            		);
 	            }
 	        catch (FileNotFoundException | UnsupportedEncodingException e){
 	            e.printStackTrace();
@@ -86,6 +96,7 @@ public class AgentDecisionRecorder extends CollectorBase{
     	if (active) {
 	        rentOrBuy.close();
 	        decideBuyInvestmentProperty.close();
+	        decideSellInvestmentProperty.close();
     	}
     }
 
