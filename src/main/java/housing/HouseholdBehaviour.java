@@ -22,6 +22,7 @@ public class HouseholdBehaviour implements Serializable {
     private boolean                 BTLInvestor;
     private double                  BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
     private double                  propensityToSave;
+    private double					consumptionWealth;
     private LogNormalDistribution   downpaymentDistFTB; // Size distribution for downpayments of first-time-buyers
     private LogNormalDistribution   downpaymentDistOO; // Size distribution for downpayments of owner-occupiers
 
@@ -87,20 +88,42 @@ public class HouseholdBehaviour implements Serializable {
 			double debtConsumptionCoefficient = config.CONSUMPTION_DEBT;
 			// set the wealth effect according to the employment income position of the household, so that 
 			// households with higher employment income consume less out of their wealth
-			if(incomePercentile<0.25) wealthEffect = config.WEALTH_EFFECT_Q1;
-			else if(0.25 <= incomePercentile && incomePercentile < 0.5) wealthEffect = config.WEALTH_EFFECT_Q2;
-			else if(0.5 <= incomePercentile && incomePercentile <0.75) wealthEffect = config.WEALTH_EFFECT_Q3;
-			else wealthEffect = config.WEALTH_EFFECT_Q4;
+			if(incomePercentile<0.25) {
+				wealthEffect = config.WEALTH_EFFECT_Q1;
+				consumptionFraction = 0.95;
+			}
+			else if(0.25 <= incomePercentile && incomePercentile < 0.5) {
+				wealthEffect = config.WEALTH_EFFECT_Q2;
+				consumptionFraction = 0.85;
+			}
+			else if(0.5 <= incomePercentile && incomePercentile <0.75) {
+				wealthEffect = config.WEALTH_EFFECT_Q3;
+				consumptionFraction = 0.75;
+			}
+			else {
+				wealthEffect = config.WEALTH_EFFECT_Q4;
+				consumptionFraction = 0.6;
+			}
 			// calculate the desired consumption
 			consumption = consumptionFraction*disposableIncome 
-								 + wealthEffect*(liquidWealthConsumptionCoefficient*(bankBalance-disposableIncome) + propertyConsumptionCoefficient*propertyValues + debtConsumptionCoefficient*totalDebt);
+								 + wealthEffect*(liquidWealthConsumptionCoefficient*(bankBalance-disposableIncome) 
+										 + propertyConsumptionCoefficient*propertyValues + debtConsumptionCoefficient*totalDebt);
 
 			// calculate the different parts of consumption in order to extract this data
 			double incomeConsumption = consumptionFraction*disposableIncome;
 			double financialWealthConsumption = wealthEffect*(bankBalance-disposableIncome); 
 			double housingWealthConsumption = wealthEffect*propertyConsumptionCoefficient*propertyValues;
 			double debtConsumption = wealthEffect*debtConsumptionCoefficient*totalDebt;
+			
+			// restrict consumption so that the wealth effect cannot decrease liquid wealth below the ratio 
+			// of twice the disposable income
+			if((bankBalance-disposableIncome-consumption)<2*disposableIncome) {
+				consumption = incomeConsumption;
+			}
+			
 			// if HH wants to consume more than it has in cash, then limit to cash (otherwise bankrupt)
+			// as disposable income is already added to the bankBalance before the method is called, the HH
+			// effectively consumes all its disposable income
 			if(consumption > bankBalance) { 
 				consumption = bankBalance;
 				}
@@ -117,6 +140,7 @@ public class HouseholdBehaviour implements Serializable {
 				System.out.println("weird, consumption is negative, exactly: " + consumption + "in Time: " + Model.getTime());
 			}
 			Model.householdStats.countIncomeAndWealthConsumption(saving, consumption, incomeConsumption, financialWealthConsumption, housingWealthConsumption, debtConsumption);
+			consumptionWealth=financialWealthConsumption+housingWealthConsumption+debtConsumption;
 			return consumption;
 			}
 			// possibly add a stronger effect on consumption if the household is "under water"
@@ -284,8 +308,7 @@ public class HouseholdBehaviour implements Serializable {
             			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
             			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
             			+ ", " + String.format("%.2f", me.getEquityPosition())
-            			+ ", "
-            			+ ", " 
+            			+ ", " + ", " 
             			+ ", " + String.format("%.2f", mortgageApproval.monthlyPayment)
             			+ ", " + String.format("%.2f", purchasePrice)
             			+ ", " + String.format("%.2f", decideDownPayment(me, purchasePrice))
@@ -355,7 +378,20 @@ public class HouseholdBehaviour implements Serializable {
 	boolean decideToSellInvestmentProperty(House h, Household me) {
 		// Fast decisions...
         // ...always keep at least one investment property
-		if(me.nInvestmentProperties() < 2) return false;
+		if(me.nInvestmentProperties() < 2) {
+			// if agent decisions are recorded, record basic information and reason for not selling
+			if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+	        	Model.agentDecisionRecorder.decideSellInvestmentProperty.println(Model.getTime()
+	        			+ ", " + me.id
+	        			+ ", " + "true"
+	        			+ ", " + String.format("%.2f", me.getBankBalance())
+						+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+						+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+						+ ", " + String.format("%.2f", me.getEquityPosition())
+						+ ", " );
+			}
+			return false;
+		}
         // ...don't sell while occupied by tenant
 		if(!h.isOnRentalMarket()) return false;
 
@@ -388,6 +424,30 @@ public class HouseholdBehaviour implements Serializable {
 		// Compute a probability to keep the property as a function of the effective yield
 		double pKeep = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
                 1.0/config.constants.MONTHS_IN_YEAR);
+		
+		// if agent decision recorder is active, record decision parameters
+		if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+        	Model.agentDecisionRecorder.decideSellInvestmentProperty.println(Model.getTime()
+        			+ ", " + me.id
+        			+ ", " + "false"
+        			+ ", " + String.format("%.2f", me.getBankBalance())
+					+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+					+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+					+ ", " + String.format("%.2f", me.getEquityPosition())
+					+ ", " + BTLCapGainCoefficient
+					+ ", " + h.getQuality()
+					+ ", " + String.format("%.2f", currentMarketPrice)
+					+ ", " + String.format("%.2f", equity)
+					+ ", " + String.format("%.2f", leverage)
+					+ ", " + String.format("%.4f", currentRentalYield)
+					+ ", " + String.format("%.4f", mortgageRate)
+					+ ", " + String.format("%.4f", Model.rentalMarketStats.getLongTermExpAvFlowYield())
+					+ ", " + String.format("%.4f", getLongTermHPAExpectation())
+					+ ", " + String.format("%.4f", expectedEquityYield)
+					+ ", " + String.format("%.2f", pKeep)
+					+ ", ");
+        			
+		}
 		// Return true or false as a random draw from the computed probability
 		return prng.nextDouble() < (1.0 - pKeep);
 	}
@@ -407,7 +467,7 @@ public class HouseholdBehaviour implements Serializable {
         // Fast decisions...
     	//... with alternative consumption function some BTL investors seem to buy too many houses. Therefore,
     	// they cannot pay the "bills" and go bankrupt every month.
-    	// if payments make up more than 50% of disposable income, don't invest
+    	// if payments make up more than 30% of disposable income, don't invest
     	if(config.ALTERNATE_CONSUMPTION_FUNCTION) {
     		if(me.getMonthlyPayments() > 0.8*me.getMonthlyDisposableIncome()) {
     			// record DECISION DATA BTL
@@ -418,14 +478,7 @@ public class HouseholdBehaviour implements Serializable {
     						+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
     						+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
     						+ ", " + String.format("%.2f", me.getEquityPosition())
-    						+ ", "
-    						+ ", " 
-    						+ ", " 
-    						+ ", " 
-    						+ ", " 
-    						+ ", " 
-    						+ ", " 
-    						+ ", " 
+    						+ ", "+ ", " + ", " + ", " + ", " + ", " + ", " + ", " 
     						+ ", " + "false" 
     						+ ", " + "monthly mortgage payments already too high"
     						+ ", "); 
@@ -448,13 +501,7 @@ public class HouseholdBehaviour implements Serializable {
  	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
  	        			+ ", " + String.format("%.2f", me.getEquityPosition())
  	        			+ ", " + String.format("%.2f", btlPurchaseBid(me))
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
+ 	        			+ ", " + ", " + ", " + ", " + ", " + ", " + ", " 
  	     	        	+ ", " + "true"
  	     	        	+ ", " + "0 investment properties owned"
  	        			+ ", "); 
@@ -463,35 +510,48 @@ public class HouseholdBehaviour implements Serializable {
         	return true ; }
         // ...never buy (keep on saving) if bank balance is below the household's desired bank balance
         // TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
-        //TODO: for alternative consumption function, this should not be altered.
-        //(config.BTL_CHOICE_MIN_BANK_BALANCE-2*Model.housingMarketStats.getLongTermHPA())
-        // -2*Model.housingMarketStats.getLongTermHPA()
-        if (me.getBankBalance() < (getDesiredBankBalance(me.getAnnualGrossTotalIncome())*(config.BTL_CHOICE_MIN_BANK_BALANCE-Model.housingMarketStats.getLongTermHPA()))) {
-        	// record DECISION DATA BTL
-        	if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
- 				Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 
- 						+ ", " + me.id + ", " + ", " + ", " + ", " + ", " + ", " 
- 						+ ", " + String.format("%.2f", me.getBankBalance())
- 	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
- 	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
- 	        			+ ", " + String.format("%.2f", me.getEquityPosition())
- 	        			+ ", "
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	     	        	+ ", " + "false" 
- 	     	        	+ ", " + "bb too far apart from desired bb"
- 	     	        	+ ", " + String.format("%.2f", me.getBankBalance()) 
- 	     	        	+ ", " + String.format("%.2f", getDesiredBankBalance(me.getAnnualGrossTotalIncome())) 
- 	     	        	+ ", " + String.format("%.2f", getDesiredBankBalance(me.getAnnualGrossTotalIncome())*(config.BTL_CHOICE_MIN_BANK_BALANCE-Model.housingMarketStats.getLongTermHPA()))
- 	     	        	+ ", "); 
- 			}
-        	
-        	return false; }
+        // When the credit constraints are flexible, the BTL investors have a lower desire for deposits and more for housing wealth.
+        // This is to mimic the effect banks pushing investors to buy more 
+        if (config.FLEXIBLE_CREDIT_CONSTRAINTS) {
+        	if (me.getBankBalance() < (getDesiredBankBalance(me.getAnnualGrossTotalIncome())*(config.BTL_CHOICE_MIN_BANK_BALANCE-Model.housingMarketStats.getLongTermHPA()))) {
+        		// record DECISION DATA BTL
+        		if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+        			Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 
+        					+ ", " + me.id + ", " + ", " + ", " + ", " + ", " + ", " 
+        					+ ", " + String.format("%.2f", me.getBankBalance())
+        					+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+        					+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+        					+ ", " + String.format("%.2f", me.getEquityPosition())
+        					+ ", " + ", " + ", " + ", " + ", " + ", " + ", " + ", " + ", " 
+        					+ "false" + ", " + "bb too far apart from desired bb"
+        					+ ", " + String.format("%.2f", me.getBankBalance()) 
+        					+ ", " + String.format("%.2f", getDesiredBankBalance(me.getAnnualGrossTotalIncome())) 
+        					+ ", " + String.format("%.2f", getDesiredBankBalance(me.getAnnualGrossTotalIncome())*(config.BTL_CHOICE_MIN_BANK_BALANCE-Model.housingMarketStats.getLongTermHPA()))
+        					+ ", "); 
+        		}
+
+        		return false; }
+        }
+        if(!config.FLEXIBLE_CREDIT_CONSTRAINTS) {
+            if (me.getBankBalance() < (getDesiredBankBalance(me.getAnnualGrossTotalIncome())*config.BTL_CHOICE_MIN_BANK_BALANCE)) {
+            	// record DECISION DATA BTL
+            	if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+     				Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 
+     						+ ", " + me.id + ", " + ", " + ", " + ", " + ", " + ", " 
+     						+ ", " + String.format("%.2f", me.getBankBalance())
+     	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
+     	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
+     	        			+ ", " + String.format("%.2f", me.getEquityPosition())
+     	        			+ ", " + ", " + ", " + ", " + ", " + ", " + ", " + ", " + ", " 
+        					+ "false" + ", " + "bb too far apart from desired bb"
+     	     	        	+ ", " + String.format("%.2f", me.getBankBalance()) 
+     	     	        	+ ", " + String.format("%.2f", getDesiredBankBalance(me.getAnnualGrossTotalIncome())) 
+     	     	        	+ ", " + String.format("%.2f", getDesiredBankBalance(me.getAnnualGrossTotalIncome())*(config.BTL_CHOICE_MIN_BANK_BALANCE))
+     	     	        	+ ", "); 
+     			}
+            	
+            	return false; }
+        }
         // ...find maximum price (maximum mortgage) the household could pay
         double maxPrice = Model.bank.getMaxMortgage(me, false, true);
         // ...never buy if that maximum price is below the average price for the lowest quality
@@ -504,14 +564,7 @@ public class HouseholdBehaviour implements Serializable {
  	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
  	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
  	        			+ ", " + String.format("%.2f", me.getEquityPosition())
- 	        			+ ", " 
- 	        			+ ", "
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
- 	        			+ ", " 
+ 	        			+ ", " + ", "+ ", " + ", " + ", " + ", " + ", " + ", " 
  	     	        	+ ", " + "false"
  	        			+ ", " + "max price too small for houses on market"
  	        			+ ", "); 
@@ -634,4 +687,5 @@ public class HouseholdBehaviour implements Serializable {
     public double getBTLCapGainCoefficient() { return BTLCapGainCoefficient; }
 
     public boolean isPropertyInvestor() { return BTLInvestor; }
+    public double getConsumptionWealth() { return consumptionWealth;}
 }
