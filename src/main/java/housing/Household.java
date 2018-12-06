@@ -226,7 +226,7 @@ public class Household implements IHouseOwner {
                 Model.houseSaleMarket.removeOffer(forSale);
                 // TODO: Is first condition redundant?
                 if(house  != home && house.resident == null) {
-                    Model.houseRentalMarket.offer(house, buyToLetRent(house), false);
+                    Model.houseRentalMarket.offer(house, behaviour.buyToLetRent(house.getQuality()), false);
                 }
             }
         } else if(decideToSellHouse(house)) { // put house on market?
@@ -302,7 +302,8 @@ public class Household implements IHouseOwner {
                 home = sale.getHouse();
                 sale.getHouse().resident = this;
             } else if (sale.getHouse().resident == null) { // put empty buy-to-let house on rental market
-                Model.houseRentalMarket.offer(sale.getHouse(), buyToLetRent(sale.getHouse()), false);
+                Model.houseRentalMarket.offer(sale.getHouse(), behaviour.buyToLetRent(sale.getQuality()),
+                        false);
             }
             isFirstTimeBuyer = false;
         }
@@ -357,7 +358,7 @@ public class Household implements IHouseOwner {
 //        if(h.resident != null) System.out.println("Strange: renting out a house that has a resident");        
 //        if(h.resident != null && h.resident == h.owner) System.out.println("Strange: renting out a house that belongs to a homeowner");        
         if(h.isOnRentalMarket()) System.out.println("Strange: got endOfLettingAgreement on house on rental market");
-        if(!h.isOnMarket()) Model.houseRentalMarket.offer(h, buyToLetRent(h), false);
+        if(!h.isOnMarket()) Model.houseRentalMarket.offer(h, behaviour.buyToLetRent(h.getQuality()), false);
     }
 
     /**********************************************************
@@ -385,7 +386,6 @@ public class Household implements IHouseOwner {
         home = null;        
     }
 
-    
     /********************************************************
      * Do all the stuff necessary when this household moves
      * in to rented accommodation (i.e. set up a regular
@@ -410,7 +410,6 @@ public class Household implements IHouseOwner {
         }
         sale.getHouse().resident = this;
     }
-
 
     /********************************************************
      * Make the decision whether to bid on the housing market or rental market.
@@ -442,8 +441,7 @@ public class Household implements IHouseOwner {
             Model.houseRentalMarket.bid(this, behaviour.desiredRent(monthlyGrossEmploymentIncome), false);
         }
     }
-    
-    
+
     /********************************************************
      * Decide whether to sell ones own house.
      ********************************************************/
@@ -455,8 +453,6 @@ public class Household implements IHouseOwner {
         }
     }
 
-
-
     /***
      * Do stuff necessary when BTL investor lets out a rental
      * property
@@ -467,12 +463,6 @@ public class Household implements IHouseOwner {
             Model.houseSaleMarket.removeOffer(sale.getHouse().getSaleRecord());
         }
         monthlyGrossRentalIncome += sale.getPrice();
-    }
-
-    private double buyToLetRent(House h) {
-        return(behaviour.buyToLetRent(
-                Model.rentalMarketStats.getExpAvSalePriceForQuality(h.getQuality()),
-                Model.rentalMarketStats.getExpAvDaysOnMarket(), h));
     }
 
     /////////////////////////////////////////////////////////
@@ -577,7 +567,7 @@ public class Household implements IHouseOwner {
                 putHouseForSale(h);
             // ...or rent it out
             } else if(h.resident == null) {
-                Model.houseRentalMarket.offer(h, buyToLetRent(h), false);
+                Model.houseRentalMarket.offer(h, behaviour.buyToLetRent(h.getQuality()), false);
             }
         // If being an owner-occupier, put inherited house for sale
         } else {

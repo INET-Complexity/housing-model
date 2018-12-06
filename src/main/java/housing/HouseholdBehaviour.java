@@ -609,25 +609,25 @@ public class HouseholdBehaviour {
     }
 
 	/**
-	 * How much rent does an investor decide to charge on a buy-to-let house? 
-	 * @param rbar exponential average rent for house of this quality
-	 * @param d average days on market
-	 * @param h house being offered for rent
+	 * How much rent does an investor decide to charge on a buy-to-let house? To make a decision, the household will
+     * check current exponential average rent prices for houses of the same quality, and the current exponential average
+     * time on market for houses of the same quality.
+     *
+	 * @param quality The quality of the house
 	 */
-	double buyToLetRent(double rbar, double d, House h) {
+	double buyToLetRent(int quality) {
 		// TODO: What? Where does this equation come from?
 		final double beta = config.RENT_MARKUP/Math.log(config.RENT_EQ_MONTHS_ON_MARKET); // Weight of days-on-market effect
-
-		double exponent = config.RENT_MARKUP + Math.log(rbar + 1.0)
-                - beta*Math.log((d + 1.0)/(config.constants.DAYS_IN_MONTH + 1))
+		double exponent = config.RENT_MARKUP
+                + Math.log(Model.rentalMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
+                - beta*Math.log((Model.rentalMarketStats.getExpAvDaysOnMarket()+1.0)/(config.constants.DAYS_IN_MONTH+1))
                 + config.RENT_EPSILON * prng.nextGaussian();
 		double result = Math.exp(exponent);
         // TODO: The following contains a fudge (config.RENT_MAX_AMORTIZATION_PERIOD) to keep rental yield up
-		double minAcceptable = Model.housingMarketStats.getExpAvSalePriceForQuality(h.getQuality())
+		double minAcceptable = Model.housingMarketStats.getExpAvSalePriceForQuality(quality)
                 /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
 		if (result < minAcceptable) result = minAcceptable;
 		return result;
-
 	}
 
 	/**
