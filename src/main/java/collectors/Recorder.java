@@ -109,7 +109,10 @@ public class Recorder {
                     // Credit data
                     + "nRegisteredMortgages, "
             		//RUBEN additional variables
-            		+ "totalConsumption, totalSavings, totalCredit, nNegativeEquity");
+            		+ "totalIncome, totalConsumption, totalIncomeConsumption, totalFinancialWealthConsumption, "
+            		+ "totalHousingWealthConsumption, totalDebtConsumption, totalSaving, totalCredit, "
+            		+ "creditSupplyTarget, newlyPaidDownPayments, nNegativeEquity, "
+            		+ "LTV FTB, LTV OO, LTV BTL");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -207,10 +210,22 @@ public class Recorder {
                 // Credit data
                 Model.creditSupply.getnRegisteredMortgages() + ", " +
         		//RUBEN additional variables
+        		(Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR
+                        + Model.householdStats.getActiveBTLAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR
+                        + Model.householdStats.getNonOwnerAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR) + ", " + 
         		Model.householdStats.getTotalConsumption()  + ", " +
-        		Model.householdStats.getTotalSavings() + ", " +
+        		Model.householdStats.getIncomeConsumption()  + ", " +
+        		Model.householdStats.getFinancialWealthConsumption()  + ", " +
+        		Model.householdStats.getHousingWealthConsumption()  + ", " +
+        		Model.householdStats.getDebtConsumption()  + ", " +
+        		Model.householdStats.getTotalSaving() + ", " +
         		(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
-        		Model.householdStats.getNNegativeEquity());
+        		Model.bank.creditSupplyTarget(Model.households.size()) + ", " +
+        		Model.creditSupply.getNewlyPaidDownPayments() + ", " +
+        		Model.householdStats.getNNegativeEquity() + ", " +
+        		Model.bank.getLoanToValueLimit(true, true) + ", " +
+        		Model.bank.getLoanToValueLimit(false, true) + ", " +
+        		Model.bank.getLoanToValueLimit(false, false));
     }
 
     public void finishRun(boolean recordCoreIndicators) {

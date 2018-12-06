@@ -32,6 +32,26 @@ public class Config {
     boolean recordCoreIndicators;		    // True to write time series for each core indicator
     boolean recordMicroData;			    // True to write micro data for each transaction made
     boolean recordAgentData;				// True to write agent based data - very storage intensive
+    boolean recordAgentDecisions; 			// True to write data from agent decision methods
+    
+    // Decision equations
+    boolean FLEXIBLE_CREDIT_SUPPLY;					// make credit supply dependent on the housing cycle
+    boolean FLEXIBLE_CREDIT_CONSTRAINTS;			// toggle flexible LTV, LTI and affordability ratios by the bank
+    boolean ALTERNATE_CONSUMPTION_FUNCTION;			// make consumption solely dependent on income and wealth
+    boolean TREND;									// add a trend to the employment income of households
+    
+    // trend parameters
+    double MONTHLY_INCREASE_EMPLOYMENT_INCOME; 		// monthly rate of increase in employment income per month
+    
+    // alternate consumption function parameters
+    public double CONSUMPTION_FRACTION_DISP_INC;			// propensity to consume out of disposable income
+    public double WEALTH_EFFECT_Q1;							// lowest income quartile wealth effect
+    public double WEALTH_EFFECT_Q2;							// second income quartile wealth effect
+    public double WEALTH_EFFECT_Q3;							// third income quartile wealth effect
+    public double WEALTH_EFFECT_Q4;							// highest income quartile wealth effect
+    public double CONSUMPTION_BANK_BALANCE;					// coefficient for consumption out liquid wealth
+    public double CONSUMPTION_HOUSING;						// coefficient for consumption out housing wealth
+    public double CONSUMPTION_DEBT;							// coefficient for consumption out debt
     
     // House parameters
     public int N_QUALITY;                   // Number of quality bands for houses
@@ -113,6 +133,7 @@ public class Config {
     double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimun bank balance, as a percentage of the desired bank balance, to buy new properties
 
     // Bank parameters
+    double CREDIT_SUPPLY_ADJUSTMENT;		// Flexible credit supply adjustment parameter
     int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
     double BANK_INITIAL_BASE_RATE;          // Bank initial base-rate (currently remains unchanged)
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month

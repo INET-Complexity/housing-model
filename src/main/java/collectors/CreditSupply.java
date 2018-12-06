@@ -16,6 +16,7 @@ public class CreditSupply extends CollectorBase {
 		mortgageCounter = 0;
 		ftbCounter = 0;
 		btlCounter = 0;
+		newDownPayment = 0.0;
 		// TODO: This limit in the number of events taken into account to build statistics is not explained in the paper
         // TODO: (affects oo_lti, oo_ltv, btl_ltv, btl_icr, downpayments)
 		setArchiveLength(10000);
@@ -25,20 +26,27 @@ public class CreditSupply extends CollectorBase {
 	 * collect information for this timestep
 	 */
 	public void step() {
-        double oldTotalCredit = totalOOCredit + totalBTLCredit;
+        oldTotalCredit = totalOOCredit + totalBTLCredit;
+        oldTotalDownPayment = totalBTLDownPayment + totalOODownPayment;
         totalOOCredit = 0.0;
         totalBTLCredit = 0.0;
+        totalBTLDownPayment = 0.0;
+        totalOODownPayment = 0.0;
         for(MortgageAgreement m : Model.bank.mortgages) {
         	if(m.isBuyToLet) {
             	totalBTLCredit += m.principal;
+            	totalBTLDownPayment += m.downPayment;
         	} else {
         		totalOOCredit += m.principal;
+        		totalOODownPayment += m.downPayment;
         	}
         }
         if (oldTotalCredit > 0.0) {
             netCreditGrowth = (totalOOCredit + totalBTLCredit - oldTotalCredit)/oldTotalCredit;
+            netDownPaymentGrowth = (totalBTLDownPayment + totalOODownPayment - oldTotalDownPayment)/oldTotalDownPayment;
         } else {
             netCreditGrowth = 0;
+            netDownPaymentGrowth = 0;
         }
         nApprovedMortgages = mortgageCounter;
         nFTBMortgages = ftbCounter;
@@ -46,8 +54,18 @@ public class CreditSupply extends CollectorBase {
         mortgageCounter = 0;
         ftbCounter = 0;
         btlCounter = 0;
+        newDownPaymentsApproved = newDownPayment;
+        newDownPayment = 0.0;
 	}
-
+	//TODO this is not newly issued credit, but total credit in the simulation at time 't'
+	public double getNewlyIssuedCredit() {
+		return totalOOCredit+totalBTLCredit;
+	}
+	//TODO 
+	public double getNewlyPaidDownPayments() {
+		return newDownPaymentsApproved;
+	}
+	
 	/***
 	 * record information for a newly issued mortgage
 	 * @param h
@@ -75,6 +93,8 @@ public class CreditSupply extends CollectorBase {
 				downpayments.addValue(approval.downPayment);
 			}
 			mortgageCounter += 1;
+			newDownPayment += approval.downPayment;
+			
 			if(approval.isFirstTimeBuyer) ftbCounter += 1;
 			if(approval.isBuyToLet) btlCounter += 1;
 		}
@@ -152,6 +172,16 @@ public class CreditSupply extends CollectorBase {
 	public double totalBTLCredit = 0.0; // buy to let mortgage credit
 	public double totalOOCredit = 0.0; // owner-occupier mortgage credit	
 	public double netCreditGrowth; // rate of change of credit per month as percentage
+	public double oldTotalCredit;
+	
+	public double totalBTLDownPayment = 0.0;
+	public double totalOODownPayment = 0.0;
+	public double netDownPaymentGrowth;
+	public double oldTotalDownPayment;
+	public double newDownPayment;
+	public double newDownPaymentsApproved;
+
+	
 
 	private String outputFolderCopy;
 }
