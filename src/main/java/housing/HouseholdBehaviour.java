@@ -198,10 +198,9 @@ public class HouseholdBehaviour {
 	double getInitialSalePrice(int quality, double principal) {
         double exponent = config.SALE_MARKUP
                 + Math.log(Model.housingMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
-                - config.SALE_WEIGHT_DAYS_ON_MARKET*Math.log((Model.housingMarketStats.getExpAvMonthsOnMarket()
-                + 1.0)/(config.constants.DAYS_IN_MONTH + 1.0))
+                - config.SALE_WEIGHT_MONTHS_ON_MARKET*Math.log(Model.housingMarketStats.getExpAvMonthsOnMarket() + 1.0)
                 + config.SALE_EPSILON*prng.nextGaussian();
-        // TODO: ExpAv days on market could be computed for each quality band so as to use here only the correct one
+        // TODO: ExpAv months on market could be computed for each quality band so as to use here only the correct one
         return Math.max(Math.exp(exponent), principal);
 	}
 
@@ -617,10 +616,10 @@ public class HouseholdBehaviour {
 	 */
 	double buyToLetRent(int quality) {
 		// TODO: What? Where does this equation come from?
-		final double beta = config.RENT_MARKUP/Math.log(config.RENT_EQ_MONTHS_ON_MARKET); // Weight of days-on-market effect
+		final double beta = config.RENT_MARKUP/Math.log(config.RENT_EQ_MONTHS_ON_MARKET); // Weight of months-on-market effect
 		double exponent = config.RENT_MARKUP
                 + Math.log(Model.rentalMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
-                - beta*Math.log((Model.rentalMarketStats.getExpAvMonthsOnMarket()+1.0)/(config.constants.DAYS_IN_MONTH+1))
+                - beta*Math.log(Model.rentalMarketStats.getExpAvMonthsOnMarket() + 1.0)
                 + config.RENT_EPSILON * prng.nextGaussian();
 		double result = Math.exp(exponent);
         // TODO: The following contains a fudge (config.RENT_MAX_AMORTIZATION_PERIOD) to keep rental yield up

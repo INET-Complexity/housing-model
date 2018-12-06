@@ -98,7 +98,7 @@ public class Config {
     double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
     // Household behaviour parameters: initial sale price
     double SALE_MARKUP;                     // Initial markup over average price of same quality houses
-    double SALE_WEIGHT_DAYS_ON_MARKET;      // Weight of the days-on-market effect
+    double SALE_WEIGHT_MONTHS_ON_MARKET;    // Weight of the months-on-market effect
     double SALE_EPSILON;                    // Standard deviation of the noise
     // Household behaviour parameters: buyer's desired expenditure
     double BUY_SCALE;                       // Scale, number of annual salaries the buyer is willing to spend for buying a house
@@ -193,7 +193,7 @@ public class Config {
         public int HPI_RECORD_LENGTH;   // Number of months to record HPI (to compute price growth at different time scales)
         double MONTHS_UNDER_OFFER;      // Time (in months) that a house remains under offer
         double T;                       // Characteristic number of data-points over which to average market statistics
-        public double E;                // Decay constant for averaging days on market (in transactions)
+        public double E;                // Decay constant for averaging months on market (in transactions)
         public double G;                // Decay constant for averageListPrice averaging (in transactions)
         public double HPI_LOG_MEDIAN;   // Logarithmic median house price (scale parameter of the log-normal distribution)
         double HPI_REFERENCE;           // Mean of reference house prices

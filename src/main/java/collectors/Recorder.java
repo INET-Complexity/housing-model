@@ -105,7 +105,8 @@ public class Recorder {
                     + "Sale nSalesToFTB, "
                     // Rental market data
                     + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
-                    + "Rental AvMonthsOnMarket, Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
+                    + "Rental AvMonthsOnMarket, Rental ExpAvMonthsOnMarket, Rental nBuyers, Rental nSellers, "
+                    + "Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
                     + "nRegisteredMortgages, "
             		//RUBEN additional variables
@@ -203,6 +204,7 @@ public class Recorder {
                 Model.rentalMarketStats.getAvOfferPrice() + ", " +
                 Model.rentalMarketStats.getAvSalePrice() + ", " +
                 Model.rentalMarketStats.getAvMonthsOnMarket() + ", " +
+                Model.rentalMarketStats.getExpAvMonthsOnMarket() + ", " +
                 Model.rentalMarketStats.getnBuyers() + ", " +
                 Model.rentalMarketStats.getnSellers() + ", " +
                 Model.rentalMarketStats.getnSales() + ", " +

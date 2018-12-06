@@ -4,6 +4,8 @@ import housing.*;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+import java.util.Arrays;
+
 /**************************************************************************************************
  * Class to collect regional sale market statistics
  *
@@ -41,6 +43,7 @@ public class HousingMarketStats extends CollectorBase {
 	private double                  sumSoldReferencePriceCount; // Dummy counter
 	private double                  sumSoldPriceCount; // Dummy counter
 	private double                  sumMonthsOnMarketCount; // Dummy counter
+    private double []               sumMonthsOnMarketPerQualityCount; // Dummy counter
 	private double []               sumSalePricePerQualityCount; // Dummy counter
 	private int []                  nSalesPerQualityCount; // Dummy counter
 
@@ -51,13 +54,14 @@ public class HousingMarketStats extends CollectorBase {
 	private int 	                nUnsoldNewBuild; // Accumulated number of new built properties still unsold after market clearing
 	private double                  sumSoldReferencePrice; // Sum of reference prices for the qualities of properties sold this month
 	private double                  sumSoldPrice; // Sum of prices of properties sold this month
-	// TODO: This should probably be months, not days... also in HousingMarketStats
-	private double                  sumMonthsOnMarket; // Sum of the number of days on the market for properties sold this month
+	private double                  sumMonthsOnMarket; // Sum of the number of months on the market for properties sold this month
 	private double []               sumSalePricePerQuality; // Sum of the price for each quality band for properties sold this month
 	private int []                  nSalesPerQuality; // Number of sales for each quality band for properties sold this month
 
 	// Other variables computed after market clearing
 	private double                  expAvMonthsOnMarket; // Exponential moving average of the number of months on the market
+    private double []               sumMonthsOnMarketPerQuality; // Sum of the months on market for each quality band for properties sold this month
+    private double []               expAvMonthsOnMarketPerQuality; // Exponential moving average of the months on market for each quality band
     private double                  expAvSalePrice; // Exponential moving average of sale prices
 	private double []               expAvSalePricePerQuality; // Exponential moving average of the price for each quality band
 	private double                  housePriceIndex;
@@ -115,6 +119,9 @@ public class HousingMarketStats extends CollectorBase {
 
         // Set initial values for other variables computed after market clearing
         expAvMonthsOnMarket = 1.0; // TODO: Make this initialisation explicit in the paper!
+        sumMonthsOnMarketPerQuality = new double[config.N_QUALITY];
+        expAvMonthsOnMarketPerQuality  = new double[config.N_QUALITY];
+        Arrays.fill(expAvMonthsOnMarketPerQuality, 1.0); // TODO: Make this initialisation explicit in the paper!
         expAvSalePrice = getAvReferencePrice(); // TODO: Make this initialisation explicit in the paper!
         expAvSalePricePerQuality = new double[config.N_QUALITY];
         System.arraycopy(referencePricePerQuality, 0, expAvSalePricePerQuality, 0,
@@ -138,6 +145,7 @@ public class HousingMarketStats extends CollectorBase {
         sumSoldReferencePriceCount = 0;
         sumSoldPriceCount = 0;
         sumMonthsOnMarketCount = 0;
+        sumMonthsOnMarketPerQualityCount = new double[config.N_QUALITY];
         sumSalePricePerQualityCount = new double[config.N_QUALITY];
         nSalesPerQualityCount = new int[config.N_QUALITY];
 
@@ -219,6 +227,7 @@ public class HousingMarketStats extends CollectorBase {
      */
     public void recordTransaction(HouseOfferRecord sale) {
         sumMonthsOnMarketCount += Model.getTime() - sale.gettInitialListing();
+        sumMonthsOnMarketPerQualityCount[sale.getQuality()] += Model.getTime() - sale.gettInitialListing();
         sumSalePricePerQualityCount[sale.getQuality()] += sale.getPrice();
         nSalesPerQualityCount[sale.getQuality()]++;
         sumSoldReferencePriceCount += referencePricePerQuality[sale.getQuality()];
@@ -240,10 +249,11 @@ public class HousingMarketStats extends CollectorBase {
         sumSoldReferencePrice = sumSoldReferencePriceCount;
         sumSoldPrice = sumSoldPriceCount;
         sumMonthsOnMarket = sumMonthsOnMarketCount;
+        System.arraycopy(sumMonthsOnMarketPerQualityCount, 0, sumMonthsOnMarketPerQuality, 0, config.N_QUALITY);
         System.arraycopy(nSalesPerQualityCount, 0, nSalesPerQuality, 0, config.N_QUALITY);
         System.arraycopy(sumSalePricePerQualityCount, 0, sumSalePricePerQuality, 0, config.N_QUALITY);
         // Compute the rest of variables after market clearing...
-        // ... exponential averages of days in the market and prices per quality band (only if there have been sales)
+        // ... exponential averages of months in the market and prices per quality band (only if there have been sales)
         if (nSales > 0) {
             expAvMonthsOnMarket = config.derivedParams.E*expAvMonthsOnMarket
                     + (1.0 - config.derivedParams.E)*sumMonthsOnMarket/nSales;
@@ -254,6 +264,8 @@ public class HousingMarketStats extends CollectorBase {
             if (nSalesPerQuality[q] > 0) {
                 expAvSalePricePerQuality[q] = config.derivedParams.G*expAvSalePricePerQuality[q]
                         + (1.0 - config.derivedParams.G)*sumSalePricePerQuality[q]/nSalesPerQuality[q];
+                expAvMonthsOnMarketPerQuality[q] = config.derivedParams.E*expAvMonthsOnMarketPerQuality[q]
+                        + (1.0 - config.derivedParams.E)*sumMonthsOnMarketPerQuality[q]/nSalesPerQuality[q];
             }
         }
         // ... current house price index (only if there have been sales)
@@ -342,6 +354,10 @@ public class HousingMarketStats extends CollectorBase {
     double getSumSoldReferencePrice() { return sumSoldReferencePrice; }
     double getSumSoldPrice() { return sumSoldPrice; }
     double getSumMonthsOnMarket() { return sumMonthsOnMarket; }
+    public double [] getSumMonthsOnMarketPerQuality() { return sumMonthsOnMarketPerQuality; }
+    public double getSumMonthsOnMarketForQuality(int quality) { return sumMonthsOnMarketPerQuality[quality]; }
+    public double [] getExpAvMonthsOnMarketPerQuality() { return expAvMonthsOnMarketPerQuality; }
+    public double getExpAvMonthsOnMarketForQuality(int quality) { return expAvMonthsOnMarketPerQuality[quality]; }
     public double [] getSumSalePricePerQuality() { return sumSalePricePerQuality; }
     double getSumSalePriceForQuality(int quality) { return sumSalePricePerQuality[quality]; }
     public int [] getnSalesPerQuality() { return nSalesPerQuality; }
