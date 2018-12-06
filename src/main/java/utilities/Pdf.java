@@ -1,13 +1,9 @@
 package utilities;
 
 import java.io.IOException;
-import java.io.Serializable;
 
 import org.apache.commons.math3.random.MersenneTwister;
 
-import housing.Model;
-
-// import java.util.function.DoubleUnaryOperator; // not compatible with Java 1.7
 
 /****
  * Represents an arbitrarily shaped, 1-dimensional Probability Density Function.
@@ -17,7 +13,7 @@ import housing.Model;
  * @author daniel
  *
  */
-public class Pdf implements Serializable {
+public class Pdf {
 
 	/***
 	 * Read the pdf from a binned .csv file. The format should be as specified in

@@ -34,8 +34,6 @@ import org.apache.commons.io.FileUtils;
  *
  *************************************************************************************************/
 
-@SuppressWarnings("serial")
-
 public class Model {
 
     //------------------//

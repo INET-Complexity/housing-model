@@ -2,11 +2,10 @@ package housing;
 
 import org.apache.commons.math3.random.MersenneTwister;
 
-import java.io.Serializable;
 import java.util.HashSet;
 
 
-public class Construction implements IHouseOwner, Serializable {
+public class Construction implements IHouseOwner{
 
     //------------------//
     //----- Fields -----//

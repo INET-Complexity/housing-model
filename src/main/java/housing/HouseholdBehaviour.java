@@ -1,7 +1,5 @@
 package housing;
 
-import java.io.Serializable;
-
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.random.MersenneTwister;
 
@@ -11,7 +9,7 @@ import org.apache.commons.math3.random.MersenneTwister;
  * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
-public class HouseholdBehaviour implements Serializable {
+public class HouseholdBehaviour {
 
     //------------------//
     //----- Fields -----//

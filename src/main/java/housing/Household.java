@@ -1,6 +1,5 @@
 package housing;
 
-import java.io.Serializable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -16,7 +15,7 @@ import org.apache.commons.math3.random.MersenneTwister;
  *
  *************************************************************************************************/
 
-public class Household implements IHouseOwner, Serializable {
+public class Household implements IHouseOwner {
 
     //------------------//
     //----- Fields -----//
@@ -183,6 +182,7 @@ public class Household implements IHouseOwner, Serializable {
      * tax on employment income and national insurance contributions are implemented!
      */
     double getMonthlyNetTotalIncome() {
+        // TODO: Note that this implies there is no tax on rental income nor on bank balance returns
         return getMonthlyGrossTotalIncome()
                 - (Model.government.incomeTaxDue(annualGrossEmploymentIncome)   // Employment income tax
                 + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions

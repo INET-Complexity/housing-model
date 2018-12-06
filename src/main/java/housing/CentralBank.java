@@ -1,7 +1,5 @@
 package housing;
 
-import java.io.Serializable;
-
 /**************************************************************************************************
  * Class to represent the mortgage policy regulator or Central Bank. It reads a number of policy
  * thresholds from the config object into local variables with the purpose of allowing for dynamic
@@ -11,7 +9,7 @@ import java.io.Serializable;
  *
  *************************************************************************************************/
 
-public class CentralBank implements Serializable {
+public class CentralBank {
 
     //------------------//
     //----- Fields -----//
