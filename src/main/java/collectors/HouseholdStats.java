@@ -10,7 +10,7 @@ import housing.Model;
  * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
-public class HouseholdStats extends CollectorBase {
+public class HouseholdStats {
 
 	//------------------//
 	//----- Fields -----//
@@ -62,15 +62,6 @@ public class HouseholdStats extends CollectorBase {
     private double totalDebtConsumption;
     private double totalDebtConsumptionCounter;
     
-	//------------------------//
-	//----- Constructors -----//
-	//------------------------//
-
-    /**
-     * Initialises the household statistics collector
-     */
-    public HouseholdStats() { setActive(true); }
-
     //-------------------//
     //----- Methods -----//
     //-------------------//

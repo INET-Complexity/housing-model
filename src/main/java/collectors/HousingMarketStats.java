@@ -12,7 +12,7 @@ import java.util.Arrays;
  * @author daniel, Adrian Carro
  *
  *************************************************************************************************/
-public class HousingMarketStats extends CollectorBase {
+public class HousingMarketStats {
 
 	//------------------//
 	//----- Fields -----//
@@ -80,7 +80,6 @@ public class HousingMarketStats extends CollectorBase {
 	 *               for this class or as part of the construction of a RegionalRentalMarketStats
 	 */
 	public HousingMarketStats(HousingMarket market) {
-		setActive(true);
 		this.market = market;
 		referencePricePerQuality = new double[config.N_QUALITY];
 		System.arraycopy(data.HouseSaleMarket.getReferencePricePerQuality(), 0, referencePricePerQuality, 0,
@@ -216,7 +215,7 @@ public class HousingMarketStats extends CollectorBase {
             }
         }
         // TODO: Attention, calls to Model class should be avoided: need to pass transactionRecorder as constructor arg
-        Model.transactionRecorder.recordSale(purchase, sale, mortgage, market);
+        if (config.recordMicroData) { Model.transactionRecorder.recordSale(purchase, sale, mortgage, market); }
     }
 
     /**

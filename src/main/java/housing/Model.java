@@ -112,9 +112,6 @@ public class Model {
         // Create an instance of Model in order to initialise it (reading config file)
         new Model(configFileName, outputFolder);
 
-        // Start data recorders for output
-        setupStatics();
-
         // Open files for writing multiple runs results
         recorder.openMultiRunFiles(config.recordCoreIndicators);
 
@@ -123,6 +120,7 @@ public class Model {
 
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation);
+            if (config.recordMicroData) { transactionRecorder.openSingleRunFiles(nSimulation); }
             
             // For each simulation, open the AgentData files
             agentRecorder.openNewFiles(nSimulation);
@@ -158,27 +156,17 @@ public class Model {
 
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
             recorder.finishRun(config.recordCoreIndicators);
-            // TODO: Check what this is actually doing and if it is necessary
-            if(config.recordMicroData) transactionRecorder.endOfSim();
+            if (config.recordMicroData) transactionRecorder.finishRun();
 		}
 
         // After the last simulation, clean up
         recorder.finish(config.recordCoreIndicators);
-        if(config.recordMicroData) transactionRecorder.finish();
         //clean up agentRecorder
         agentRecorder.finish();
         if(config.recordAgentDecisions) agentDecisionRecorder.finish();
 
         //Stop the program when finished
 		System.exit(0);
-	}
-
-	private static void setupStatics() {
-        setRecordGeneral();
-		setRecordCoreIndicators(config.recordCoreIndicators);
-		setRecordMicroData(config.recordMicroData);
-		setRecordAgentData(config.recordAgentData);
-		setRecordAgentDecisionData(config.recordAgentDecisions);
 	}
 
 	private static void init() {
@@ -335,27 +323,4 @@ public class Model {
 	static public int getMonth() { return t%12 + 1; }
 
     public MersenneTwister getPrng() { return prng; }
-
-    private static void setRecordGeneral() {
-        creditSupply.setActive(true);
-        householdStats.setActive(true);
-        housingMarketStats.setActive(true);
-        rentalMarketStats.setActive(true);
-    }
-
-	private static void setRecordCoreIndicators(boolean recordCoreIndicators) {
-	    coreIndicators.setActive(recordCoreIndicators);
-	}
-
-	private static void setRecordMicroData(boolean record) { transactionRecorder.setActive(record); }
-	
-	// method to set AgentDataRecorder active
-	private static void setRecordAgentData(boolean recordAgent) {
-		agentRecorder.setActive(recordAgent);
-	}
-	
-	private static void setRecordAgentDecisionData(boolean record) {
-		agentDecisionRecorder.setActive(record);
-	}
-	
 }

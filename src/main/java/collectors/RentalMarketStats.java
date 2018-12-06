@@ -39,7 +39,6 @@ public class RentalMarketStats extends HousingMarketStats {
 	 */
 	public RentalMarketStats(HousingMarketStats housingMarketStats, HouseRentalMarket market) {
 		super(market);
-		setActive(true);
 		this.housingMarketStats = housingMarketStats;
 		referencePricePerQuality = new double[config.N_QUALITY];
 		System.arraycopy(data.HouseSaleMarket.getReferenceRentalPricePerQuality(), 0, referencePricePerQuality, 0,
