@@ -409,16 +409,9 @@ public class HouseholdBehaviour {
         // ...find the mortgage rate (pounds paid a year per pound of equity)
 		double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
         // ...finally, find expected equity yield, or yield on equity
-		double expectedEquityYield;
-		if(config.BTL_YIELD_SCALING) {
-			expectedEquityYield = leverage*((1.0 - BTLCapGainCoefficient)*currentRentalYield
-                    + BTLCapGainCoefficient*(Model.rentalMarketStats.getLongTermExpAvFlowYield()
-					+ getLongTermHPAExpectation())) - mortgageRate;
-		} else {
-			expectedEquityYield = leverage*((1.0 - BTLCapGainCoefficient)*currentRentalYield
-                    + BTLCapGainCoefficient*getLongTermHPAExpectation())
-                    - mortgageRate;
-		}
+		double expectedEquityYield = leverage*((1.0 - BTLCapGainCoefficient)*currentRentalYield
+				+ BTLCapGainCoefficient*getLongTermHPAExpectation())
+                - mortgageRate;
 		// Compute a probability to keep the property as a function of the effective yield
 		double pKeep = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
                 1.0/config.constants.MONTHS_IN_YEAR);
@@ -584,21 +577,10 @@ public class HouseholdBehaviour {
         // ...find the mortgage rate (pounds paid a year per pound of equity)
         double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
         // ...finally, find expected equity yield, or yield on equity
-        double expectedEquityYield;
-        if(config.BTL_YIELD_SCALING) {
-            expectedEquityYield = leverage*((1.0 - BTLCapGainCoefficient)*rentalYield
-                    + BTLCapGainCoefficient*(Model.rentalMarketStats.getLongTermExpAvFlowYield()
-                    + getLongTermHPAExpectation())) - mortgageRate;
-        } else {
-            expectedEquityYield = leverage*((1.0 - BTLCapGainCoefficient)*rentalYield
-                    + BTLCapGainCoefficient*getLongTermHPAExpectation())
-                    - mortgageRate;
-        }
+        double expectedEquityYield = leverage*((1.0 - BTLCapGainCoefficient)*rentalYield
+                + BTLCapGainCoefficient*getLongTermHPAExpectation())
+                - mortgageRate;
         // Compute the probability to decide to buy an investment property as a function of the expected equity yield
-        // TODO: This probability has been changed to correctly reflect the conversion from annual to monthly
-        // TODO: probability. This needs to be explained in the article
-//        double pBuy = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
-//                1.0/config.constants.MONTHS_IN_YEAR);
         double pBuy = 1.0 - Math.pow((1.0 - sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield)),
                 1.0/config.constants.MONTHS_IN_YEAR);
         // Return true or false as a random draw from the computed probability
