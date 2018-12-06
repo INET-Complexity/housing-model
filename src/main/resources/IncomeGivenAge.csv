@@ -1,4 +1,4 @@
-HRP age min,HRP age max,ln(income) min,ln(income) max,probability
+# HRP age min,HRP age max,ln(income) min,ln(income) max,probability
 15,25,7.70124371858,7.95124371858,0.004084196
 15,24,7.95124371858,8.20124371858,0.0284380253
 15,24,8.20124371858,8.45124371858,0

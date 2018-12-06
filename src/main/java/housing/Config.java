@@ -174,7 +174,6 @@ public class Config {
     public String DATA_INCOME_GIVEN_AGE;            // Address for conditional probability of income band given age band
 
     // Data addresses: Demographics
-    public String DATA_AGE_MARGINAL_PDF;            // Address for target initial age probability density for household representative person
     public String DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF;  // Address for pdf of household representative person's age at household birth
     public String DATA_DEATH_PROB_GIVEN_AGE;        // Address for data on the probability of death given the age of the household representative person
 

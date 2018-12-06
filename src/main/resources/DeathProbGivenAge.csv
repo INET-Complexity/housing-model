@@ -6,10 +6,9 @@
 # calibrated against AgeMarginalPDF.csv for static age distribution
 # ONS Statistical Bulletin: Historic and Projected Mortality. Data from the Period and Cohort
 # Life Tables, 2012-based, UK, 1981-2062
-0,55,0
 55,65,0.0181
 65,75,0.0142
 75,85,0.0035
 85,95,0.02
 95,105,0.2
-105,200,12
+105,115,12

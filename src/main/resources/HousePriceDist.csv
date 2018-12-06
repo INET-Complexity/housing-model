@@ -1,4 +1,4 @@
-year,month,meanlogprice,sdlogprice
+# year,month,meanlogprice,sdlogprice
 1995,1,10.93812,0.6040504
 1995,2,10.92117,0.5802486
 1995,3,10.92295,0.5735283

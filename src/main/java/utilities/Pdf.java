@@ -1,15 +1,12 @@
 package utilities;
 
-import java.io.IOException;
-
 import org.apache.commons.math3.random.MersenneTwister;
-
 
 /****
  * Represents an arbitrarily shaped, 1-dimensional Probability Density Function.
  * Supply a DoubleUnaryOperator class that returns the probability density for
  * a given value.
- * 
+ *
  * @author daniel
  *
  */
@@ -19,34 +16,21 @@ public class Pdf {
 	 * Read the pdf from a binned .csv file. The format should be as specified in
 	 * BinnedDataDouble.
 	 * @param filename
-	 * @throws IOException 
 	 */
 	public Pdf(String filename) {
-		try {
-			BinnedDataDouble data = new BinnedDataDouble(filename);
-			setPdf(data);
-		} catch (IOException e) {
-			System.out.println("Problem loading data from file while initialising Pdf");
-			System.out.println("filename = "+System.getProperty("user.dir")+"/"+filename);
-			e.printStackTrace();			
-		}
-	}
-
-    public Pdf(String filename, int NSamples) {
-        try {
-            BinnedDataDouble data = new BinnedDataDouble(filename);
-            setPdf(data, NSamples);
-        } catch (IOException e) {
-            System.out.println("Problem loading data from file while initialising Pdf");
-            System.out.println("filename = "+System.getProperty("user.dir")+"/"+filename);
-            e.printStackTrace();
-        }
-    }
-	
-	public Pdf(final BinnedDataDouble data) {
+		BinnedDataDouble data = new BinnedDataDouble(filename);
 		setPdf(data);
 	}
-	
+
+	public Pdf(String filename, int NSamples) {
+		BinnedDataDouble data = new BinnedDataDouble(filename);
+		setPdf(data, NSamples);
+	}
+
+	public Pdf(final BinnedDataDouble data) { setPdf(data); }
+
+	public Pdf(final BinnedDataDouble data, int NSamples) { setPdf(data, NSamples); }
+
 	/**
 	 * @param ipdf functional class whose apply function returns the probability density at that point
 	 * (should be defined on the interval [istart,iend) )
@@ -70,7 +54,7 @@ public class Pdf {
 		nSamples = NSamples;
 		initInverseCDF();
 	}
-	
+
 	public void setPdf(final BinnedDataDouble data) {
 		pdf = new DoubleUnaryOperator() {
 			public double applyAsDouble(double operand) {
@@ -79,7 +63,7 @@ public class Pdf {
 		start = data.getSupportLowerBound();
 		end = data.getSupportUpperBound();
 		nSamples = DEFAULT_CDF_SAMPLES;
-		initInverseCDF();		
+		initInverseCDF();
 	}
 
 	public void setPdf(final BinnedDataDouble data, int NSamples) {
@@ -92,33 +76,29 @@ public class Pdf {
 		nSamples = NSamples;
 		initInverseCDF();
 	}
-	
-	public double getSupportLowerBound() {
-		return start;
-	}
 
-	public double getSupportUpperBound() {
-		return end;
-	}
+	public double getSupportLowerBound() { return start; }
+
+	public double getSupportUpperBound() { return end; }
 
 	/***
 	 * Get probability density P(x)
-	 * @param x 
+	 * @param x
 	 * @return P(x)
 	 */
 	public double density(double x) {
 		if(x<start || x>=end) return(0.0);
 		return(pdf.applyAsDouble(x));
 	}
-	
+
 	public double inverseCumulativeProbability(double p) {
 		if(p < 0.0 || p>=1.0) throw(new IllegalArgumentException("p must be in the interval [0,1)"));
 		int i = (int)(p*(nSamples-1));
 		double remainder = p*(nSamples-1) - i;
 		return((1.0-remainder)*inverseCDF[i] + remainder*inverseCDF[i+1]);
 	}
-	
-	
+
+
 	/***
 	 * integrates "pdf" over "INTEGRATION_STEPS" steps, starting at
 	 * start + dx/2 and going up to end - dx/2, recording the values
@@ -155,20 +135,19 @@ public class Pdf {
 			inverseCDF[i] = x;
 		}
 	}
-	
+
 	/***
 	 * Sample from the PDF
 	 * @return A random sample from the PDF
 	 */
-	public double nextDouble(MersenneTwister prng) {
-		return(inverseCumulativeProbability(prng.nextDouble()));
+	public double nextDouble(MersenneTwister rand) {
+		return(inverseCumulativeProbability(rand.nextDouble()));
 //		double uniform = rand.nextDouble(); // uniform random sample on [0:1)
 //		int i = (int)(uniform*(nSamples-1));
 //		double remainder = uniform*(nSamples-1.0) - i;
 //		return((1.0-remainder)*inverseCDF[i] + remainder*inverseCDF[i+1]);
 	}
 
-	private MersenneTwister	        prng;
 	DoubleUnaryOperator				pdf;				// function that gives the pdf
 	public double					start;				// lowest value of x that has a non-zero probability
 	public double					end;				// highest value of x that has a non-zero probability

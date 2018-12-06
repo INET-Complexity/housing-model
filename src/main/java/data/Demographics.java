@@ -1,14 +1,10 @@
 package data;
 
+import housing.Config;
 import housing.Model;
 
-import org.apache.commons.math3.random.MersenneTwister;
+import utilities.BinnedDataDouble;
 import utilities.Pdf;
-
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.ArrayList;
 
 /**************************************************************************************************
  * Class to read and work with demographics data before passing it to the Demographics class. Note
@@ -24,44 +20,62 @@ public class Demographics {
     //----- Fields -----//
     //------------------//
 
-	/**
-	 * Target probability density of age of representative householder
-	 * at time t=0
-	 * Calibrated against (LCFS 2012)
-	 */
-	// TODO: Clarify if this is needed. Remove parameter and data file if not.
-	public static Pdf pdfAge = new Pdf(Model.config.DATA_AGE_MARGINAL_PDF);
+    private static Config config = Model.config; // Passes the Model's configuration parameters object to a private field
 
-	/**
-	 * Probability density by age of the representative householder given that
-	 * the household is newly formed.
-	 * New households can be formed by, e.g., children leaving home,
-	 * divorce, separation, people leaving an HMO.
-	 * Roughly calibrated against "The changing living arrangements of young adults in the UK"
-	 *  ONS Population Trends winter 2009 
-	 */
-// --- calibrated version...
-//	public static Pdf pdfHouseholdAgeAtBirth = new Pdf(15.0, 29.0, new DoubleUnaryOperator() {
-//		public double applyAsDouble(double age) {
-//			return(betaDist.density((age-14.5)/15.0));
-//		}	
-//	});
-	// --- version to make correct age distribution at equilibrium demographics
-    public static Pdf pdfHouseholdAgeAtBirth = new Pdf(Model.config.DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF, 800);
+    /**
+     * Probability density by age of the representative householder given that the household is newly formed. New
+     * households can be formed by, e.g., children leaving home, divorce, separation, people leaving an HMO. Roughly
+     * calibrated against "The changing living arrangements of young adults in the UK" ONS Population Trends winter 2009
+     */
+    private static BinnedDataDouble householdAgeAtBirth = new BinnedDataDouble(config.DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF);
+    public static Pdf pdfHouseholdAgeAtBirth = new Pdf(householdAgeAtBirth, 800);
 
-	/**
-	 * Probability that a household 'dies' per year given age of the representative householder
-	 * Death of a household may occur by marriage, death of single occupant, moving together.
-	 * As first order approx: we use female death rates, assuming singles live at home until marriage,
-	 * there is no divorce and the male always dies first
-	 */
-    // TODO: Clarify that the model was so far killing everybody over 105 with probability 1 per month
-    public static ArrayList<Double[]> probDeathGivenAgeData =
-            readProbDeathGivenAge(Model.config.DATA_DEATH_PROB_GIVEN_AGE);
+    /**
+     * Probability that a household 'dies' per year given age of the representative householder
+     * Death of a household may occur by marriage, death of single occupant, moving together.
+     * As first order approx: we use female death rates, assuming singles live at home until marriage,
+     * there is no divorce and the male always dies first
+     */
+    // Create a BinnedDataDouble object to keep bins and probabilities
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // Warning due to data array not being queried (other variables are used)
+    private static BinnedDataDouble probDeathGivenAgeData  = new BinnedDataDouble(config.DATA_DEATH_PROB_GIVEN_AGE);
+
+    // Once data on household age at birth and on death probabilities has been loaded, compute birth rate
+    private static double birthRate = computeBirthRate();
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
+
+    /**
+     * Compute monthly birth rate as a fraction of the target population, i.e., the number of births divided by the
+     * target population
+     */
+    private static double computeBirthRate() {
+        // First, compute total number of households with ages between the minimum possible age at birth and the maximum
+        // possible age at birth, which is also the last age for which death probability is zero (birth area)
+        double sum1 = 0.0;
+        for (int i = (int)householdAgeAtBirth.getSupportLowerBound()*config.constants.MONTHS_IN_YEAR;
+             i <= (int)householdAgeAtBirth.getSupportUpperBound()*config.constants.MONTHS_IN_YEAR - 2;
+             i++) {
+            sum1 += (householdAgeAtBirth.getSupportUpperBound()*config.constants.MONTHS_IN_YEAR - 1 - i)
+                    * probHouseholdAgeAtBirthPerMonth(i);
+        }
+        // Second, compute total number of households with ages between the minimum age at which death probability is
+        // non-zero and the maximum possible age, from which death probability is one (death area)
+        double sum2 = 0.0;
+        for (int j = (int)(probDeathGivenAgeData.getSupportLowerBound()*config.constants.MONTHS_IN_YEAR + 1);
+             j <= (int)(probDeathGivenAgeData.getSupportUpperBound()*config.constants.MONTHS_IN_YEAR - 1); j++) {
+            double product = 1;
+            for (int i = (int)(probDeathGivenAgeData.getSupportLowerBound()*config.constants.MONTHS_IN_YEAR);
+                 i <= j; i++) {
+                product *= (1.0 - probDeathGivenAge(((double) i) / config.constants.MONTHS_IN_YEAR)
+                        / config.constants.MONTHS_IN_YEAR);
+            }
+            sum2 += product;
+        }
+        return 1.0/(1 + sum1 + sum2);
+    }
 
     /**
      * Method that gives, for a given age in years, its corresponding probability of death
@@ -70,43 +84,31 @@ public class Demographics {
      * @return probability Probability of death for the given age in years (double)
      */
     public static double probDeathGivenAge(double ageInYears) {
-        for (Double[] band : probDeathGivenAgeData) {
-            if(ageInYears<band[1]) return(band[2]);
+        if (ageInYears < probDeathGivenAgeData.getSupportLowerBound()) {
+            return 0.0;
+        } else if (ageInYears >= probDeathGivenAgeData.getSupportUpperBound()) {
+            return config.constants.MONTHS_IN_YEAR;
+        } else {
+            return probDeathGivenAgeData.getBinAt(ageInYears);
         }
-        return(Model.config.constants.MONTHS_IN_YEAR);
     }
 
     /**
-     * Method to read bin edges and the corresponding death probabilities from a file
+     * Probability that a new household would be assigned a given age (in months)
      *
-     * @param fileName String with name of file (address inside source folder)
-     * @return probDeathGivenAgeData ArrayList of arrays of (3) Doubles (age edge min, age edge max, prob)
+     * @param ageInMonths Age in months (int)
      */
-    public static ArrayList<Double[]> readProbDeathGivenAge(String fileName) {
-        ArrayList<Double[]> probDeathGivenAgeData = new ArrayList<>();
-        // Try-with-resources statement
-        try (BufferedReader buffReader = new BufferedReader(new FileReader(fileName))) {
-            String line = buffReader.readLine();
-            while (line != null) {
-                if (line.charAt(0) != '#') {
-                    try {
-                        Double [] band = new Double[3];
-                        band[0] = Double.parseDouble(line.split(",")[0].trim());
-                        band[1] = Double.parseDouble(line.split(",")[1].trim());
-                        band[2] = Double.parseDouble(line.split(",")[2].trim());
-                        probDeathGivenAgeData.add(band);
-                    } catch (NumberFormatException nfe) {
-                        System.out.println("Exception " + nfe + " while trying to parse " +
-                                line.split(",")[0] + " for an double");
-                        nfe.printStackTrace();
-                    }
-                }
-                line = buffReader.readLine();
-            }
-        } catch (IOException ioe) {
-            System.out.println("Exception " + ioe + " while trying to read file '" + fileName + "'");
-            ioe.printStackTrace();
+    private static double probHouseholdAgeAtBirthPerMonth(int ageInMonths) {
+        if (ageInMonths / config.constants.MONTHS_IN_YEAR < householdAgeAtBirth.getSupportLowerBound()
+                || ageInMonths / config.constants.MONTHS_IN_YEAR > householdAgeAtBirth.getSupportUpperBound()) {
+            return 0.0;
+        } else {
+            return householdAgeAtBirth.getBinAt((double) ageInMonths / config.constants.MONTHS_IN_YEAR)
+                    / (config.constants.MONTHS_IN_YEAR * householdAgeAtBirth.getBinWidth());
         }
-        return probDeathGivenAgeData;
     }
+
+    //----- Getter/setter methods -----//
+
+    public static double getBirthRate() { return birthRate; }
 }
