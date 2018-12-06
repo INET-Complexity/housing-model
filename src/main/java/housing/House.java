@@ -20,8 +20,8 @@ public class House implements Comparable<House>, Serializable {
     public Household    resident;
     public int          id;
 
-    HouseSaleRecord     saleRecord;
-    HouseSaleRecord     rentalRecord;
+    HouseOfferRecord saleRecord;
+    HouseOfferRecord rentalRecord;
 
     private int         quality;
 
@@ -47,15 +47,15 @@ public class House implements Comparable<House>, Serializable {
 
 	boolean isOnMarket() { return saleRecord != null; }
 
-	HouseSaleRecord getSaleRecord() { return saleRecord; }
+	HouseOfferRecord getSaleRecord() { return saleRecord; }
 
-	HouseSaleRecord getRentalRecord() { return rentalRecord; }
+	HouseOfferRecord getRentalRecord() { return rentalRecord; }
 
 	boolean isOnRentalMarket() { return rentalRecord != null; }
-    void putForSale(HouseSaleRecord saleRecord) { this.saleRecord = saleRecord; }
+    void putForSale(HouseOfferRecord saleRecord) { this.saleRecord = saleRecord; }
 
 	void resetSaleRecord() { saleRecord = null; }
-    void putForRent(HouseSaleRecord rentalRecord) { this.rentalRecord = rentalRecord; }
+    void putForRent(HouseOfferRecord rentalRecord) { this.rentalRecord = rentalRecord; }
 
 	void resetRentalRecord() { rentalRecord = null; }
 

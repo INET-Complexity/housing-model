@@ -31,7 +31,7 @@ public class MicroDataRecorder {
 		}
 	}
 	
-	public void recordSale(HouseBuyerRecord purchase, HouseSaleRecord sale, MortgageAgreement mortgage, HousingMarket market) {
+	public void recordSale(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage, HousingMarket market) {
 		if(!active) return;
 		outfile.print(
     			Model.getTime()+", "
@@ -42,18 +42,18 @@ public class MicroDataRecorder {
 			outfile.print("rental, ");
 		}
 		outfile.print(
-    			sale.house.id+", "+
-    			sale.house.getQuality()+", "+
-    			sale.initialListedPrice+", "+
-    			sale.tInitialListing+", "+
+    			sale.getHouse().id+", "+
+    			sale.getHouse().getQuality()+", "+
+				sale.getInitialListedPrice() +", "+
+				sale.gettInitialListing() +", "+
     			sale.getPrice()+", "+
-    			purchase.buyer.id+", "+
-    			purchase.buyer.getAge()+", "+
-    			purchase.buyer.behaviour.isPropertyInvestor()+", "+
-    			purchase.buyer.getMonthlyGrossTotalIncome()+", "+
-    			purchase.buyer.getMonthlyGrossEmploymentIncome() +", "+
-    			purchase.buyer.getBankBalance()+", "+
-    			purchase.buyer.behaviour.getBTLCapGainCoefficient() +", "
+    			purchase.getBidder().id+", "+
+    			purchase.getBidder().getAge()+", "+
+    			purchase.getBidder().behaviour.isPropertyInvestor()+", "+
+    			purchase.getBidder().getMonthlyGrossTotalIncome()+", "+
+    			purchase.getBidder().getMonthlyGrossEmploymentIncome() +", "+
+    			purchase.getBidder().getBankBalance()+", "+
+    			purchase.getBidder().behaviour.getBTLCapGainCoefficient() +", "
 				);
 		if(mortgage != null) {
 			outfile.print(
@@ -64,8 +64,8 @@ public class MicroDataRecorder {
 		} else {
 			outfile.print("-1, false, false, ");
 		}
-		if(sale.house.owner instanceof Household) {
-			Household seller = (Household)sale.house.owner;
+		if(sale.getHouse().owner instanceof Household) {
+			Household seller = (Household) sale.getHouse().owner;
 			outfile.println(
 					seller.id+", "+
 					seller.getAge()+", "+

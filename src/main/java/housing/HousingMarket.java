@@ -21,13 +21,11 @@ public abstract class HousingMarket implements Serializable {
     //----- Fields -----//
     //------------------//
 
-    private static Authority                        authority = new Authority();
-
     private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
     private MersenneTwister                         prng;
     private PriorityQueue2D<HousingMarketRecord>    offersPQ;
 
-    ArrayList<HouseBuyerRecord>                     bids;
+    ArrayList<HouseBidderRecord>                     bids;
 
     //------------------------//
     //----- Constructors -----//
@@ -41,15 +39,6 @@ public abstract class HousingMarket implements Serializable {
         // TODO: normal arrays
         bids = new ArrayList<>(config.TARGET_POPULATION/16);
         this.prng = prng;
-    }
-
-    //----------------------//
-    //----- Subclasses -----//
-    //----------------------//
-
-    // TODO: Make sure this authority class is actually needed
-    static class Authority {
-        private Authority() {}
     }
 
     //-------------------//
@@ -67,10 +56,10 @@ public abstract class HousingMarket implements Serializable {
      *
      * @param house House to put on the market
      * @param price List price for the house
-     * @return HouseSaleRecord for the house
+     * @return HouseOfferRecord for the house
      */
-    public HouseSaleRecord offer(House house, double price) {
-        HouseSaleRecord hsr = new HouseSaleRecord(house, price);
+    public HouseOfferRecord offer(House house, double price, boolean BTLOffer) {
+        HouseOfferRecord hsr = new HouseOfferRecord(house, price, BTLOffer);
         offersPQ.add(hsr);
         return hsr;
     }
@@ -78,30 +67,31 @@ public abstract class HousingMarket implements Serializable {
     /**
      * Change the list-price on a house that is already on the market
      * 
-     * @param hsr The HouseSaleRecord of the house to change the price for
+     * @param hsr The HouseOfferRecord of the house to change the price for
      * @param newPrice The new price of the house
      */
-    public void updateOffer(HouseSaleRecord hsr, double newPrice) {
+    public void updateOffer(HouseOfferRecord hsr, double newPrice) {
         offersPQ.remove(hsr);
-        hsr.setPrice(newPrice, authority);
+        hsr.setPrice(newPrice);
         offersPQ.add(hsr);
     }
     
     /**
      * Take a house off the market
      * 
-     * @param hsr The HouseSaleRecord of the house to take off the market
+     * @param hsr The HouseOfferRecord of the house to take off the market
      */
-    public void removeOffer(HouseSaleRecord hsr) { offersPQ.remove(hsr); }
+    public void removeOffer(HouseOfferRecord hsr) { offersPQ.remove(hsr); }
 
     /**
-     * Make a bid on the market (i.e. make an offer on a (yet to be decided) house
+     * Make a non-BTL bid on the market, i.e. make an offer on a (yet to be decided) house to become the household's home
      * 
      * @param buyer The household that is making the bid
      * @param price The price that the household is willing to pay
      */
     public void bid(Household buyer, double price) {
-        bids.add(new HouseBuyerRecord(buyer, price)); }
+        bids.add(new HouseBidderRecord(buyer, price, false));
+    }
 
     //----- Market clearing methods -----//
 
@@ -133,13 +123,13 @@ public abstract class HousingMarket implements Serializable {
      * multiple bids.
      */
     private void matchBidsWithOffers() {
-        HouseSaleRecord offer;
-        for(HouseBuyerRecord bid : bids) {
+        HouseOfferRecord offer;
+        for(HouseBidderRecord bid : bids) {
             offer = getBestOffer(bid);
             // If buyer and seller is the same household, then the bid falls through and the household will need to
             // reissue it next month. Also, if the bid price is not enough to buy anything in this market and at this
             // time, the bid also falls through
-            if(offer != null && (offer.house.owner != bid.buyer)) {
+            if(offer != null && (offer.getHouse().owner != bid.getBidder())) {
                 offer.matchWith(bid);
             }
         }
@@ -155,7 +145,7 @@ public abstract class HousingMarket implements Serializable {
      */
     private void clearMatches() {
         // Clear and resolve oversubscribed offers
-        HouseSaleRecord offer;
+        HouseOfferRecord offer;
         GeometricDistribution geomDist;
         int nBids;
         double pSuccessfulBid;
@@ -164,8 +154,8 @@ public abstract class HousingMarket implements Serializable {
         int enoughBids; // Upper bounded number of bids on one house
         Iterator<HousingMarketRecord> record = getOffersIterator();
         while(record.hasNext()) {
-            offer = (HouseSaleRecord)record.next();
-            nBids = offer.matchedBids.size();
+            offer = (HouseOfferRecord)record.next();
+            nBids = offer.getMatchedBids().size();
             // If matches for this offer are multiple...
             if(nBids > 1) {
                 // ...first bid up the price
@@ -181,32 +171,32 @@ public abstract class HousingMarket implements Serializable {
                     salePrice = offer.getPrice();                    
                 }
                 // ...then choose a bid above the new price
-                offer.matchedBids.sort(new HouseBuyerRecord.PComparator()); // This orders the list with the highest price last
-                while(nBids > 0 && offer.matchedBids.get(nBids - 1).getPrice() >= salePrice) {
+                offer.getMatchedBids().sort(new HouseBidderRecord.PComparator()); // This orders the list with the highest price last
+                while(nBids > 0 && offer.getMatchedBids().get(nBids - 1).getPrice() >= salePrice) {
                     --nBids; // This counts the number of bids above the new price
                 }
-                if (offer.matchedBids.size() - nBids > 1) {
-                    winningBid = nBids + prng.nextInt(offer.matchedBids.size()- nBids); // This chooses a random one if they are multiple
-                } else if (offer.matchedBids.size() - nBids == 1) {
+                if (offer.getMatchedBids().size() - nBids > 1) {
+                    winningBid = nBids + prng.nextInt(offer.getMatchedBids().size()- nBids); // This chooses a random one if they are multiple
+                } else if (offer.getMatchedBids().size() - nBids == 1) {
                     winningBid = nBids; // This chooses the only one if there is only one
                 } else {
                     winningBid = nBids - 1;
-                    salePrice = offer.matchedBids.get(winningBid).getPrice(); // This chooses the highest bid if all of them are below the new price
+                    salePrice = offer.getMatchedBids().get(winningBid).getPrice(); // This chooses the highest bid if all of them are below the new price
                 }
                 // Remove this offer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
                 // Note that this needs to be done before modifying offer, so that it can be also found in the PY queue for the HouseSaleMarket case
                 removeOfferFromQueues(record, offer);
                 // ...update price for the offer
-                offer.setPrice(salePrice, authority);
+                offer.setPrice(salePrice);
                 // ...complete successful transaction and record it into the corresponding housingMarketStats
-                completeTransaction(offer.matchedBids.get(winningBid), offer);
+                completeTransaction(offer.getMatchedBids().get(winningBid), offer);
                 // Put the rest of the bids for this property (failed bids) back on bids array
-                bids.addAll(offer.matchedBids.subList(0, winningBid));
-                bids.addAll(offer.matchedBids.subList(winningBid + 1, offer.matchedBids.size()));
+                bids.addAll(offer.getMatchedBids().subList(0, winningBid));
+                bids.addAll(offer.getMatchedBids().subList(winningBid + 1, offer.getMatchedBids().size()));
             // If there is only one match...
             } else if (nBids == 1) {
                 // ...complete successful transaction and record it into the corresponding housingMarketStats
-                completeTransaction(offer.matchedBids.get(0), offer);
+                completeTransaction(offer.getMatchedBids().get(0), offer);
                 // ...remove this offer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
                 removeOfferFromQueues(record, offer);
             }
@@ -221,7 +211,7 @@ public abstract class HousingMarket implements Serializable {
      * @param record Iterator over the HousingMarketRecord objects contained in offersPQ
      * @param offer Offer to remove from queues
      */
-    void removeOfferFromQueues(Iterator<HousingMarketRecord> record, HouseSaleRecord offer) {
+    void removeOfferFromQueues(Iterator<HousingMarketRecord> record, HouseOfferRecord offer) {
         record.remove();
     }
 
@@ -229,14 +219,14 @@ public abstract class HousingMarket implements Serializable {
      * This abstract method allows for the different implementations at HouseSaleMarket and HouseRentalMarket to be
      * called as appropriate
      *
-     * @param purchase HouseBuyerRecord with information on the offer
-     * @param sale HouseSaleRecord with information on the bid
+     * @param purchase HouseBidderRecord with information on the offer
+     * @param sale HouseOfferRecord with information on the bid
      */
-    public abstract void completeTransaction(HouseBuyerRecord purchase, HouseSaleRecord sale);
+    public abstract void completeTransaction(HouseBidderRecord purchase, HouseOfferRecord sale);
 
     //----- Getter/setter methods -----//
 
-    public ArrayList<HouseBuyerRecord> getBids() { return bids; }
+    public ArrayList<HouseBidderRecord> getBids() { return bids; }
 
     public PriorityQueue2D<HousingMarketRecord> getOffersPQ() { return offersPQ; }
 
@@ -247,7 +237,7 @@ public abstract class HousingMarket implements Serializable {
      *
      * @param bid The highest possible price the buyer is ready to pay
      */
-    protected HouseSaleRecord getBestOffer(HouseBuyerRecord bid) { return (HouseSaleRecord)offersPQ.peek(bid); }
+    protected HouseOfferRecord getBestOffer(HouseBidderRecord bid) { return (HouseOfferRecord)offersPQ.peek(bid); }
 
     int getnHousesOnMarket() { return offersPQ.size(); }
 }

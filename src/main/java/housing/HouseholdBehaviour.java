@@ -271,9 +271,9 @@ public class HouseholdBehaviour implements Serializable {
 	 * it has been on the market for (another) month and hasn't
 	 * sold. Calibrated against Zoopla dataset in Bank of England
 	 * 
-	 * @param sale The HouseSaleRecord of the house that is on the market.
+	 * @param sale The HouseOfferRecord of the house that is on the market.
 	 ********************************************************/
-	double rethinkHouseSalePrice(HouseSaleRecord sale) {
+	double rethinkHouseSalePrice(HouseOfferRecord sale) {
 		if(prng.nextDouble() < config.P_SALE_PRICE_REDUCE) {
 			double logReduction = config.REDUCTION_MU + (prng.nextGaussian()*config.REDUCTION_SIGMA);
 			return(sale.getPrice()*(1.0 - Math.exp(logReduction)/100.0));
@@ -663,10 +663,10 @@ public class HouseholdBehaviour implements Serializable {
 	/**
 	 * Update the demanded rent for a property
 	 *
-	 * @param sale the HouseSaleRecord of the property for rent
+	 * @param sale the HouseOfferRecord of the property for rent
 	 * @return the new rent
      */
-	double rethinkBuyToLetRent(HouseSaleRecord sale) { return (1.0 - config.RENT_REDUCTION)*sale.getPrice(); }
+	double rethinkBuyToLetRent(HouseOfferRecord sale) { return (1.0 - config.RENT_REDUCTION)*sale.getPrice(); }
 
     /**
      * Logistic function, sometimes called sigma function, 1/1+e^(-x)

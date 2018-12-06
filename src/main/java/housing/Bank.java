@@ -221,11 +221,12 @@ public class Bank implements Serializable {
 //		}
 //		
 		approval.downPayment = housePrice - approval.principal;
-//
-//        if(liquidWealth < approval.downPayment) {
-//			System.out.println("Failed down-payment constraint: bank balance = " + liquidWealth + " downpayment = "
-//                    + approval.downPayment + "BTL: " + h.isHomeowner());
-//		}
+
+        if(liquidWealth < approval.downPayment) {
+			System.out.println("Failed down-payment constraint: bank balance = " + liquidWealth + " downpayment = "
+                    + approval.downPayment);
+			System.exit(0);
+		}
 		// --- allow larger downpayments
 		if(desiredDownPayment < 0.0) desiredDownPayment = 0.0;
 		if(desiredDownPayment > liquidWealth) desiredDownPayment = liquidWealth;

@@ -97,12 +97,12 @@ public class RentalMarketStats extends HousingMarketStats {
      * Updates the values of several counters every time a buyer and a seller are matched and the transaction is
 	 * completed. Note that only counter variables can be modified within this method
 	 *
-	 * @param sale The HouseSaleRecord of the house being sold
+	 * @param sale The HouseOfferRecord of the house being sold
 	 */
 	@Override
-	public void recordTransaction(HouseSaleRecord sale) {
+	public void recordTransaction(HouseOfferRecord sale) {
 		super.recordTransaction(sale);
-		sumMonthsOnMarketPerQualityCount[sale.getQuality()] += (Model.getTime() - sale.tInitialListing);
+		sumMonthsOnMarketPerQualityCount[sale.getQuality()] += (Model.getTime() - sale.gettInitialListing());
 	}
 
 	//----- Post-market-clearing methods -----//
