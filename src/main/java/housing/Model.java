@@ -52,10 +52,10 @@ public class Model {
     public static HouseholdStats        householdStats;
     public static HousingMarketStats    housingMarketStats;
     public static RentalMarketStats     rentalMarketStats;
-    public static MicroDataRecorder     transactionRecorder;
+    public static TransactionRecorder   transactionRecorder;
+    public static MicroDataRecorder     microDataRecorder;
     public static AgentDataRecorder		agentRecorder;
     public static AgentDecisionRecorder	agentDecisionRecorder;
-    public static MesoDataRecorder      mesoDataRecorder;
     public static int	                nSimulation; // To keep track of the simulation number
     public static int	                t; // To keep track of time (in months)
 
@@ -89,8 +89,8 @@ public class Model {
         houseRentalMarket = new HouseRentalMarket(prng);
 
         recorder = new collectors.Recorder(outputFolder);
-        transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
-        mesoDataRecorder = new collectors.MesoDataRecorder(outputFolder);
+        transactionRecorder = new TransactionRecorder(outputFolder);
+        microDataRecorder = new MicroDataRecorder(outputFolder);
         creditSupply = new collectors.CreditSupply(outputFolder);
         coreIndicators = new collectors.CoreIndicators();
         householdStats = new collectors.HouseholdStats();
@@ -122,9 +122,9 @@ public class Model {
 
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation);
-            if (config.recordMicroData) { transactionRecorder.openSingleRunFiles(nSimulation); }
-            if (config.recordBankBalance) {
-                mesoDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
+            if (config.recordTransactions) { transactionRecorder.openSingleRunFiles(nSimulation); }
+            if (config.recordBankBalance || config.recordNInvestmentProperties) {
+                microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
                         config.recordNInvestmentProperties);
             }
             
@@ -162,9 +162,9 @@ public class Model {
 
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
             recorder.finishRun(config.recordCoreIndicators);
-            if (config.recordMicroData) transactionRecorder.finishRun();
-            if (config.recordBankBalance) {
-                mesoDataRecorder.finishRun(config.recordBankBalance, config.recordNInvestmentProperties);
+            if (config.recordTransactions) transactionRecorder.finishRun();
+            if (config.recordBankBalance || config.recordNInvestmentProperties) {
+                microDataRecorder.finishRun(config.recordBankBalance, config.recordNInvestmentProperties);
             }
 		}
 

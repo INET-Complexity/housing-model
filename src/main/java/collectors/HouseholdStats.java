@@ -117,7 +117,7 @@ public class HouseholdStats {
         //RUBEN initialise nNegativeEquity
         nNegativeEquity = 0;
         // Time stamp householdStats mesoRecorders
-        Model.mesoDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance,
+        Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance,
                 config.recordNInvestmentProperties);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
@@ -163,12 +163,12 @@ public class HouseholdStats {
                     homelessAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
                 }
             }
-            // Record household's bankBalance to householdStats mesoRecorders
+            // Record household's bankBalance to householdStats microDataRecorders
             if (config.recordBankBalance) {
-                Model.mesoDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
+                Model.microDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
             }
             if (config.recordNInvestmentProperties) {
-                Model.mesoDataRecorder.recordNInvestmentProperties(Model.getTime(), h.nInvestmentProperties());
+                Model.microDataRecorder.recordNInvestmentProperties(Model.getTime(), h.nInvestmentProperties());
             }
         }
         // Annualise monthly income data

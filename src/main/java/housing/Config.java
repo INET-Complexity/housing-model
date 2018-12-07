@@ -31,7 +31,8 @@ public class Config {
     int N_SIMS; 					        // Number of simulations to run (monte-carlo)
     public boolean recordMicroData;			// True to write micro data for each transaction made
     boolean recordCoreIndicators;		    // True to write time series for each core indicator
-    public boolean recordBankBalance;       // True to write individual household bank balance data
+    public boolean recordTransactions;			// True to write data for each transaction
+    public boolean recordBankBalance;           // True to write individual household bank balance data
     public boolean recordNInvestmentProperties; // True to write individual household number of investment properties data
     boolean recordAgentDecisions; 			// True to write data from agent decision methods
     
