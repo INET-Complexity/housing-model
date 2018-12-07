@@ -13,7 +13,7 @@ public class MicroDataRecorder {
     private String outputFolder;
 
     private PrintWriter outfileBankBalance;
-    private PrintWriter outfileNInvestmentProperties;
+    private PrintWriter outfileNHousesOwned;
 
     //------------------------//
     //----- Constructors -----//
@@ -26,7 +26,7 @@ public class MicroDataRecorder {
     //-------------------//
 
     public void openSingleRunSingleVariableFiles(int nRun, boolean recordBankBalance,
-                                                 boolean recordNInvestmentProperties) {
+                                                 boolean recordNHousesOwned) {
         if (recordBankBalance) {
             try {
                 outfileBankBalance = new PrintWriter(outputFolder + "BankBalance-run" + nRun + ".csv", "UTF-8");
@@ -34,9 +34,9 @@ public class MicroDataRecorder {
                 e.printStackTrace();
             }
         }
-        if (recordNInvestmentProperties) {
+        if (recordNHousesOwned) {
             try {
-                outfileNInvestmentProperties = new PrintWriter(outputFolder + "NInvestmentProperties-run" + nRun
+                outfileNHousesOwned = new PrintWriter(outputFolder + "NHousesOwned-run" + nRun
                         + ".csv", "UTF-8");
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -45,7 +45,7 @@ public class MicroDataRecorder {
     }
 
     void timeStampSingleRunSingleVariableFiles(int time, boolean recordBankBalance,
-                                               boolean recordNInvestmentProperties) {
+                                               boolean recordNHousesOwned) {
         if (time % 100 == 0) {
             if (recordBankBalance) {
                 if (time != 0) {
@@ -53,11 +53,11 @@ public class MicroDataRecorder {
                 }
                 outfileBankBalance.print(time);
             }
-            if (recordNInvestmentProperties) {
+            if (recordNHousesOwned) {
                 if (time != 0) {
-                    outfileNInvestmentProperties.println("");
+                    outfileNHousesOwned.println("");
                 }
-                outfileNInvestmentProperties.print(time);
+                outfileNHousesOwned.print(time);
             }
         }
     }
@@ -68,18 +68,18 @@ public class MicroDataRecorder {
         }
 	}
 
-    void recordNInvestmentProperties(int time, int nInvestmentProperties) {
-        if (time % 100 == 0 && nInvestmentProperties > 0) {
-            outfileNInvestmentProperties.print(", " + nInvestmentProperties);
+    void recordNHousesOwned(int time, int nHousesOwned) {
+        if (time % 100 == 0) {
+            outfileNHousesOwned.print(", " + nHousesOwned);
         }
     }
 
-	public void finishRun(boolean recordBankBalance, boolean recordNInvestmentProperties) {
+	public void finishRun(boolean recordBankBalance, boolean recordNHousesOwned) {
         if (recordBankBalance) {
             outfileBankBalance.close();
         }
-        if (recordNInvestmentProperties) {
-            outfileNInvestmentProperties.close();
+        if (recordNHousesOwned) {
+            outfileNHousesOwned.close();
         }
 	}
 }

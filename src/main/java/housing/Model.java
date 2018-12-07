@@ -123,9 +123,9 @@ public class Model {
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation);
             if (config.recordTransactions) { transactionRecorder.openSingleRunFiles(nSimulation); }
-            if (config.recordBankBalance || config.recordNInvestmentProperties) {
+            if (config.recordBankBalance || config.recordNHousesOwned) {
                 microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
-                        config.recordNInvestmentProperties);
+                        config.recordNHousesOwned);
             }
             
             // For each simulation, open the AgentData files
@@ -163,8 +163,8 @@ public class Model {
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
             recorder.finishRun(config.recordCoreIndicators);
             if (config.recordTransactions) transactionRecorder.finishRun();
-            if (config.recordBankBalance || config.recordNInvestmentProperties) {
-                microDataRecorder.finishRun(config.recordBankBalance, config.recordNInvestmentProperties);
+            if (config.recordBankBalance || config.recordNHousesOwned) {
+                microDataRecorder.finishRun(config.recordBankBalance, config.recordNHousesOwned);
             }
 		}
 
