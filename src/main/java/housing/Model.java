@@ -55,6 +55,7 @@ public class Model {
     public static MicroDataRecorder     transactionRecorder;
     public static AgentDataRecorder		agentRecorder;
     public static AgentDecisionRecorder	agentDecisionRecorder;
+    public static MesoDataRecorder      mesoDataRecorder;
     public static int	                nSimulation; // To keep track of the simulation number
     public static int	                t; // To keep track of time (in months)
 
@@ -89,6 +90,7 @@ public class Model {
 
         recorder = new collectors.Recorder(outputFolder);
         transactionRecorder = new collectors.MicroDataRecorder(outputFolder);
+        mesoDataRecorder = new collectors.MesoDataRecorder(outputFolder);
         creditSupply = new collectors.CreditSupply(outputFolder);
         coreIndicators = new collectors.CoreIndicators();
         householdStats = new collectors.HouseholdStats();
@@ -121,6 +123,9 @@ public class Model {
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation);
             if (config.recordMicroData) { transactionRecorder.openSingleRunFiles(nSimulation); }
+            if (config.recordBankBalance) {
+                mesoDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance);
+            }
             
             // For each simulation, open the AgentData files
             agentRecorder.openNewFiles(nSimulation);
@@ -157,6 +162,9 @@ public class Model {
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
             recorder.finishRun(config.recordCoreIndicators);
             if (config.recordMicroData) transactionRecorder.finishRun();
+            if (config.recordBankBalance) {
+                mesoDataRecorder.finishRun(config.recordBankBalance);
+            }
 		}
 
         // After the last simulation, clean up
