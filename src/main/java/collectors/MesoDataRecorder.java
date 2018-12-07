@@ -13,6 +13,7 @@ public class MesoDataRecorder {
     private String outputFolder;
 
     private PrintWriter outfileBankBalance;
+    private PrintWriter outfileNInvestmentProperties;
 
     //------------------------//
     //----- Constructors -----//
@@ -24,7 +25,8 @@ public class MesoDataRecorder {
     //----- Methods -----//
     //-------------------//
 
-    public void openSingleRunSingleVariableFiles(int nRun, boolean recordBankBalance) {
+    public void openSingleRunSingleVariableFiles(int nRun, boolean recordBankBalance,
+                                                 boolean recordNInvestmentProperties) {
         if (recordBankBalance) {
             try {
                 outfileBankBalance = new PrintWriter(outputFolder + "BankBalance-run" + nRun + ".csv", "UTF-8");
@@ -32,15 +34,30 @@ public class MesoDataRecorder {
                 e.printStackTrace();
             }
         }
+        if (recordNInvestmentProperties) {
+            try {
+                outfileNInvestmentProperties = new PrintWriter(outputFolder + "NInvestmentProperties-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    void timeStampSingleRunSingleVariableFiles(int time, boolean recordBankBalance) {
+    void timeStampSingleRunSingleVariableFiles(int time, boolean recordBankBalance,
+                                               boolean recordNInvestmentProperties) {
         if (time % 100 == 0) {
             if (recordBankBalance) {
                 if (time != 0) {
                     outfileBankBalance.println("");
                 }
                 outfileBankBalance.print(time);
+            }
+            if (recordNInvestmentProperties) {
+                if (time != 0) {
+                    outfileNInvestmentProperties.println("");
+                }
+                outfileNInvestmentProperties.print(time);
             }
         }
     }
@@ -51,9 +68,18 @@ public class MesoDataRecorder {
         }
 	}
 
-	public void finishRun(boolean recordBankBalance) {
+    void recordNInvestmentProperties(int time, int nInvestmentProperties) {
+        if (time % 100 == 0 && nInvestmentProperties > 0) {
+            outfileNInvestmentProperties.print(", " + nInvestmentProperties);
+        }
+    }
+
+	public void finishRun(boolean recordBankBalance, boolean recordNInvestmentProperties) {
         if (recordBankBalance) {
             outfileBankBalance.close();
+        }
+        if (recordNInvestmentProperties) {
+            outfileNInvestmentProperties.close();
         }
 	}
 }

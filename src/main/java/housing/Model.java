@@ -124,7 +124,8 @@ public class Model {
             recorder.openSingleRunFiles(nSimulation);
             if (config.recordMicroData) { transactionRecorder.openSingleRunFiles(nSimulation); }
             if (config.recordBankBalance) {
-                mesoDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance);
+                mesoDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
+                        config.recordNInvestmentProperties);
             }
             
             // For each simulation, open the AgentData files
@@ -163,7 +164,7 @@ public class Model {
             recorder.finishRun(config.recordCoreIndicators);
             if (config.recordMicroData) transactionRecorder.finishRun();
             if (config.recordBankBalance) {
-                mesoDataRecorder.finishRun(config.recordBankBalance);
+                mesoDataRecorder.finishRun(config.recordBankBalance, config.recordNInvestmentProperties);
             }
 		}
 
