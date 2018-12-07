@@ -193,12 +193,7 @@ public class Household implements IHouseOwner {
      * Adds up all sources of (gross) income on a monthly basis: employment, property, returns on financial wealth
      */
     public double getMonthlyGrossTotalIncome() {
-        if (bankBalance > 0.0) {
-            return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome
-                    + bankBalance*config.RETURN_ON_FINANCIAL_WEALTH;
-        } else {
-            return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome;
-        }
+        return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome;
     }
 
     public double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
