@@ -32,10 +32,10 @@ public class Config {
     boolean recordCoreIndicators;		        // True to write time series for each core indicator
     boolean recordQualityBandPrice;             // True to write time series of prices for each quality band to a single file per run
     public boolean recordTransactions;			// True to write data for each transaction
-    public boolean recordBankBalance;           // True to write individual household bank balance data
-    public boolean recordNHousesOwned;          // True to write individual household number of houses owned data
-    public boolean recordSavingRate;            // True to write individual household saving rate data
-    public boolean recordInitTotalWealth;       // True to write individual household initial total wealth data
+    public boolean recordBankBalance;           // True to write individual household liquid wealth (bank balance) data (after market clearing)
+    public boolean recordHousingWealth;         // True to write individual household housing wealth data (after market clearing, assuming constant house prices!)
+    public boolean recordNHousesOwned;          // True to write individual household number of houses owned data (after market clearing)
+    public boolean recordSavingRate;            // True to write individual household saving rate data [1 - (taxExpenses + housing expenses(except deposits) + essentialConsumption + nonEssentialConsumption)/monthlyGrossTotalIncome]
 
     // House parameters
     public int N_QUALITY;                   // Number of quality bands for houses
