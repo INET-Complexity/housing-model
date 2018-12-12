@@ -490,7 +490,7 @@ public class HouseholdBehaviour {
  	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
  	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
  	        			+ ", " + String.format("%.2f", me.getEquityPosition())
- 	        			+ ", " + String.format("%.2f", btlPurchaseBid(me))
+ 	        			+ ", " + String.format("%.2f", Model.bank.getMaxMortgage(me, false, false))
  	        			+ ", " + ", " + ", " + ", " + ", " + ", " + ", " 
  	     	        	+ ", " + "true"
  	     	        	+ ", " + "0 investment properties owned"
@@ -593,7 +593,7 @@ public class HouseholdBehaviour {
      	        			+ ", " + String.format("%.2f", me.getMonthlyDisposableIncome())
      	        			+ ", " + String.format("%.2f", me.getMonthlyGrossEmploymentIncome())
      	        			+ ", " + String.format("%.2f", me.getEquityPosition())
-     	        			+ ", " + String.format("%.2f", btlPurchaseBid(me))
+     	        			+ ", " + String.format("%.2f", Model.bank.getMaxMortgage(me, false, false))
      	        			+ ", " + String.format("%.2f", equity)
      	        			+ ", " + String.format("%.2f", leverage)
      	        			+ ", " + String.format("%.6f", rentalYield)

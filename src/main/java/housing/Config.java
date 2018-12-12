@@ -29,9 +29,9 @@ public class Config {
     public int N_STEPS;				            // Simulation duration in time steps
     public int TIME_TO_START_RECORDING;	        // Time steps before recording statistics (initialisation time)
     int N_SIMS; 					        // Number of simulations to run (monte-carlo)
-    public boolean recordMicroData;			// True to write micro data for each transaction made
     boolean recordCoreIndicators;		    // True to write time series for each core indicator
     public boolean recordTransactions;			// True to write data for each transaction
+    boolean recordAgentData;					// True to write micro data for each agent each period
     public boolean recordBankBalance;           // True to write individual household bank balance data
     public boolean recordNHousesOwned;          // True to write individual household number of houses owned data
     boolean recordAgentDecisions; 			// True to write data from agent decision methods

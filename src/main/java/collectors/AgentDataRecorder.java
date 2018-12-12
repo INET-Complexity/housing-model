@@ -28,7 +28,7 @@ import static java.lang.Double.NaN;
  *
  *************************************************************************************************/
 
-public class AgentDataRecorder extends CollectorBase{
+public class AgentDataRecorder{
 	
     //------------------//
     //----- Fields -----//
@@ -268,13 +268,4 @@ public class AgentDataRecorder extends CollectorBase{
 	        consumptionWealth.close();
     	}
     }
-
-	public void setActive(boolean isActive) {
-		this.active = isActive;
-		if(isActive) {
-				Model.housingMarketStats.setActive(true);
-				Model.rentalMarketStats.setActive(true);
-				//openNewFiles(Model.nSimulation);
-		}
-	}
 }

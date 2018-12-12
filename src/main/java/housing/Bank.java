@@ -203,22 +203,22 @@ public class Bank {
 		double ltv_principal = housePrice * getLoanToValueLimit(h.isFirstTimeBuyer(), isHome); //Math.min(0.99, (getLoanToValueLimit(h.isFirstTimeBuyer(), isHome)+ 15*h.behaviour.getLongTermHPAExpectation()));
 		approval.principal = ltv_principal;
 		
-//		if(isHome) {
-//			// --- affordability constraint TODO: affordability for BTL?
-//			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyNetTotalIncome())
-//                    / getMonthlyPaymentFactor(isHome);
-//			approval.principal = Math.min(approval.principal, affordable_principal);
-//
-//			// --- lti constraint
-//			lti_principal = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome);
-//			approval.principal = Math.min(approval.principal, lti_principal);
-//		} else {
-//			// --- BTL ICR constraint
-//			icr_principal = Model.rentalMarketStats.getExpAvFlowYield()*housePrice
-//                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
-//			approval.principal = Math.min(approval.principal, icr_principal);
-//		}
-//		
+		if(isHome) {
+			// --- affordability constraint TODO: affordability for BTL?
+			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyNetTotalIncome())
+                    / getMonthlyPaymentFactor(isHome);
+			approval.principal = Math.min(approval.principal, affordable_principal);
+
+			// --- lti constraint
+			lti_principal = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome);
+			approval.principal = Math.min(approval.principal, lti_principal);
+		} else {
+			// --- BTL ICR constraint
+			icr_principal = Model.rentalMarketStats.getExpAvFlowYield()*housePrice
+                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
+			approval.principal = Math.min(approval.principal, icr_principal);
+		}
+		
 		approval.downPayment = housePrice - approval.principal;
 
         if(liquidWealth < approval.downPayment) {
@@ -294,16 +294,16 @@ public class Bank {
         
         max_price = ltv_max_price = max_downpayment/(1.0 - getLoanToValueLimit(h.isFirstTimeBuyer(), isHome));
 
-//		if(isHome) { // No LTI nor affordability constraints for BTL investors
-//			// Affordability constraint
-//            affordability_max_price = max_downpayment + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF
-//                    *h.getMonthlyNetTotalIncome())/getMonthlyPaymentFactor(isHome);
-//			max_price = Math.min(ltv_max_price, affordability_max_price);
-//            // Loan-To-Income constraint
-//			lti_max_price = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)
-//                    + max_downpayment;
-//			max_price = Math.min(max_price, lti_max_price);
-//			// First part of the DECISION DATA SH output
+		if(isHome) { // No LTI nor affordability constraints for BTL investors
+			// Affordability constraint
+            affordability_max_price = max_downpayment + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF
+                    *h.getMonthlyNetTotalIncome())/getMonthlyPaymentFactor(isHome);
+			max_price = Math.min(ltv_max_price, affordability_max_price);
+            // Loan-To-Income constraint
+			lti_max_price = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)
+                    + max_downpayment;
+			max_price = Math.min(max_price, lti_max_price);
+			// First part of the DECISION DATA SH output
 			if(isHome && config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
 				Model.agentDecisionRecorder.rentOrBuy.print(Model.getTime() 
 						+ ", " + h.id
@@ -312,13 +312,13 @@ public class Bank {
 						+ ", " //+ String.format("%.2f", lti_max_price)
 						+ ", ");
 			}
-//		} else {
-//		    // Interest-Cover-Ratio constraint
-//			icr_max_price = max_downpayment/(1.0 - Model.rentalMarketStats.getExpAvFlowYield()
-//                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
-//            max_price = Math.min(ltv_max_price,  icr_max_price);
-//			// First part of the DECISION DATA BTL output
-//            // agents 
+		} else {
+		    // Interest-Cover-Ratio constraint
+			icr_max_price = max_downpayment/(1.0 - Model.rentalMarketStats.getExpAvFlowYield()
+                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+            max_price = Math.min(ltv_max_price,  icr_max_price);
+			// First part of the DECISION DATA BTL output
+            // agents 
 			if(methodCallFromDecideToBuyInvestmentProperty && 
 				config.recordAgentDecisions && 
 				(Model.getTime() >= config.TIME_TO_START_RECORDING)) {
@@ -328,7 +328,7 @@ public class Bank {
 						+ ", " //+ String.format("%.2f", icr_max_price)
 						+ ", ");
 			}
-//        }
+        }
 		return max_price;
 	}
 

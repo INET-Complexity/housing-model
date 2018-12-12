@@ -14,7 +14,7 @@ import housing.Model;
  * @author Ruben Tarne
  *
  *********************************************************************************************/
-public class AgentDecisionRecorder extends CollectorBase{
+public class AgentDecisionRecorder{
 	
     //------------------//
     //----- Fields -----//
@@ -99,13 +99,4 @@ public class AgentDecisionRecorder extends CollectorBase{
 	        decideSellInvestmentProperty.close();
     	}
     }
-
-	public void setActive(boolean isActive) {
-		this.active = isActive;
-		if(isActive) {
-				Model.housingMarketStats.setActive(true);
-				Model.rentalMarketStats.setActive(true);
-				//openNewFiles(Model.nSimulation);
-		}
-	}
 }

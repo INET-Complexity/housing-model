@@ -140,7 +140,7 @@ public class Household implements IHouseOwner {
             }            
         } else if (behaviour.isPropertyInvestor()) { // Only BTL investors who already own a home enter here
             // BTL investors always bid the price corresponding to the maximum mortgage they could get
-            double price = Model.bank.getMaxMortgage(this, false);
+            double price = Model.bank.getMaxMortgage(this, false, false);
             Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
             if (behaviour.decideToBuyInvestmentProperty(this)) {
                 Model.houseSaleMarket.bid(this, price, true);
