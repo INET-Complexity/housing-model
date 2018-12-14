@@ -2,6 +2,8 @@ package collectors;
 
 import housing.*;
 
+import java.util.Map;
+
 /**************************************************************************************************
  * Class to collect regional household statistics
  *
@@ -116,7 +118,7 @@ public class HouseholdStats {
         nNegativeEquity = 0;
         // Time stamp householdStats mesoRecorders
         Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance,
-                config.recordInitTotalWealth, config.recordNHousesOwned, config.recordSavingRate);
+                config.recordHousingWealth, config.recordNHousesOwned, config.recordSavingRate);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
 
@@ -165,27 +167,23 @@ public class HouseholdStats {
             if (config.recordBankBalance) {
                 Model.microDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
             }
-            if (config.recordInitTotalWealth) {
-                Model.microDataRecorder.recordInitTotalWealth(Model.getTime(), h.getInitialFinancialWealth()
-                        + h.getInitialHousingWealth());
-//                Model.microDataRecorder.recordInitTotalWealth(Model.getTime(), h.getMonthlyGrossTotalIncome()); @@##@@ Alternative savings rate definition TODO: To remove one or the other implementation
+            if (config.recordHousingWealth) {
+                double housingWealth = 0.0;
+                for (Map.Entry<House, PaymentAgreement> entry : h.getHousePayments().entrySet()) {
+                    House house = entry.getKey();
+                    PaymentAgreement payment = entry.getValue();
+                    if (payment instanceof MortgageAgreement && house.owner == h) {
+                        housingWealth += ((MortgageAgreement) payment).purchasePrice
+                                - ((MortgageAgreement) payment).principal;
+                    }
+                }
+                Model.microDataRecorder.recordHousingWealth(Model.getTime(), housingWealth);
             }
             if (config.recordNHousesOwned) {
                 Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.nInvestmentProperties() + 1);
             }
             if (config.recordSavingRate) {
-                double housingWealth = 0.0;
-                for (PaymentAgreement payment: h.getHousePayments().values()) {
-                    if (payment instanceof MortgageAgreement) {
-                        housingWealth += ((MortgageAgreement) payment).purchasePrice
-                                - ((MortgageAgreement) payment).principal;
-                    }
-                }
-                Model.microDataRecorder.recordSavingRate(Model.getTime(),
-                        (h.getBankBalance() + housingWealth)/(h.getInitialFinancialWealth()
-                                + h.getInitialHousingWealth()));
-//                Model.microDataRecorder.recordSavingRate(Model.getTime(), (h.getBankBalance()
-//                        - h.getInitialFinancialWealth())/h.getMonthlyGrossTotalIncome()); @@##@@ Alternative savings rate definition TODO: To remove one or the other implementation
+                Model.microDataRecorder.recordSavingRate(Model.getTime(), h.getSavingRate());
             }
         }
         // Annualise monthly income data

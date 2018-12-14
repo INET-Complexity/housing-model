@@ -38,8 +38,7 @@ public class Household implements IHouseOwner {
     private double                          age; // Age of the household representative person
     private double                          bankBalance;
     private double                          monthlyGrossRentalIncome; // Keeps track of monthly rental income, as only tenants keep a reference to the rental contract, not landlords
-    private double                          initialFinancialWealth; // Bank balance at the beginning of the time step (previous bank balance + net total income)
-    private double                          initialHousingWealth; // Housing wealth at the beginning of the time step (sum of fractions owned in all purchased properties)
+    private double                          savingRate; // (disposableIncome - nonEssentialConsumption)/grossTotalIncome
     private boolean                         isFirstTimeBuyer;
     private boolean                         isBankrupt;
     
@@ -95,16 +94,17 @@ public class Household implements IHouseOwner {
         	annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         }
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
-        // Compute initial financial wealth
-        initialFinancialWealth = bankBalance + getMonthlyNetTotalIncome();
-//        initialFinancialWealth = bankBalance; @@##@@ Alternative savings rate definition TODO: To remove one or the other implementation
         // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
-        bankBalance += getMonthlyDisposableIncome();
-        // Consume based on monthly disposable income (after essential consumption and house payments have been subtracted)
+        double monthlyDisposableIncome = getMonthlyDisposableIncome();
+        bankBalance += monthlyDisposableIncome;
+        // Consume according to gross annual income and capped by current bank balance (after disposable income has been added)
+        double desiredConsumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome());
         consumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(), incomePercentile,
         												getMonthlyDisposableIncome(), getPropertyValue(),
         												getTotalDebt(), getEquityPosition()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
-        bankBalance -= consumption;
+        bankBalance -= desiredConsumption;
+        // Compute saving rate
+        savingRate = (monthlyDisposableIncome - desiredConsumption)/getMonthlyGrossTotalIncome();
         // Deal with bankruptcies
         // TODO: Improve bankruptcy procedures (currently, simple cash injection), such as terminating contracts!
         if (bankBalance < 0.0) {
@@ -117,7 +117,6 @@ public class Household implements IHouseOwner {
         Entry<House, PaymentAgreement> entry;
         House h;
         PaymentAgreement payment;
-        initialHousingWealth = 0.0;
         // Iterate over these house-paymentAgreement pairs...
         while (paymentIt.hasNext()) {
             entry = paymentIt.next();
@@ -126,9 +125,6 @@ public class Household implements IHouseOwner {
             // ...if the household is the owner of the house, then manage it
             if (h.owner == this) {
                 manageHouse(h);
-                // ...compute also initial housing wealth
-                initialHousingWealth += ((MortgageAgreement) payment).purchasePrice
-                        - ((MortgageAgreement) payment).principal;
             // ...otherwise, if the household is not the owner nor the resident, then it is an old debt due to
             // the household's inability to pay the remaining principal off after selling a property...
             } else if (h.resident != this) {
@@ -706,6 +702,7 @@ public class Household implements IHouseOwner {
         return(0.0);        
     }
 
+    public double getSavingRate() { return savingRate; }
     public double getInitialFinancialWealth() { return initialFinancialWealth; }
 
     public double getInitialHousingWealth() { return initialHousingWealth; }
