@@ -98,13 +98,12 @@ public class Household implements IHouseOwner {
         double monthlyDisposableIncome = getMonthlyDisposableIncome();
         bankBalance += monthlyDisposableIncome;
         // Consume according to gross annual income and capped by current bank balance (after disposable income has been added)
-        double desiredConsumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome());
         consumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(), incomePercentile,
         												getMonthlyDisposableIncome(), getPropertyValue(),
         												getTotalDebt(), getEquityPosition()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
-        bankBalance -= desiredConsumption;
+        bankBalance -= consumption;
         // Compute saving rate
-        savingRate = (monthlyDisposableIncome - desiredConsumption)/getMonthlyGrossTotalIncome();
+        savingRate = (monthlyDisposableIncome - consumption)/getMonthlyGrossTotalIncome();
         // Deal with bankruptcies
         // TODO: Improve bankruptcy procedures (currently, simple cash injection), such as terminating contracts!
         if (bankBalance < 0.0) {
@@ -703,9 +702,6 @@ public class Household implements IHouseOwner {
     }
 
     public double getSavingRate() { return savingRate; }
-    public double getInitialFinancialWealth() { return initialFinancialWealth; }
-
-    public double getInitialHousingWealth() { return initialHousingWealth; }
     
     public double getIncomePercentile() {return incomePercentile;}
 
