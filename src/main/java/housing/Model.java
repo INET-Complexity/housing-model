@@ -121,7 +121,7 @@ public class Model {
 		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
 
             // For each simulation, open files for writing single-run results
-            recorder.openSingleRunFiles(nSimulation);
+            recorder.openSingleRunFiles(nSimulation, true, config.N_QUALITY);
             if (config.recordTransactions) { transactionRecorder.openSingleRunFiles(nSimulation); }
             if (config.recordBankBalance || config.recordNHousesOwned) {
                 microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
@@ -149,7 +149,7 @@ public class Model {
                     //(this is only provisional, as it only writes one type of data)
                     agentRecorder.recordAgentData();
                     // Write results of this time step and run to both multi- and single-run files
-                    recorder.writeTimeStampResults(config.recordCoreIndicators, t);
+                    recorder.writeTimeStampResults(config.recordCoreIndicators, t, config.recordQualityBandPrice);
 
 
                 }
@@ -161,7 +161,7 @@ public class Model {
             }
 
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
-            recorder.finishRun(config.recordCoreIndicators);
+            recorder.finishRun(config.recordCoreIndicators, config.recordQualityBandPrice);
             if (config.recordTransactions) transactionRecorder.finishRun();
             if (config.recordBankBalance || config.recordNHousesOwned) {
                 microDataRecorder.finishRun(config.recordBankBalance, config.recordInitTotalWealth,
