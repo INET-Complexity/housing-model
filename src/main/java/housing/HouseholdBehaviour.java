@@ -43,7 +43,6 @@ public class HouseholdBehaviour {
         downpaymentDistOO = new LogNormalDistribution(this.prng, config.DOWNPAYMENT_OO_SCALE, config.DOWNPAYMENT_OO_SHAPE);
 	    // Compute propensity to save, so that it is constant for a given household
         propensityToSave = prng.nextDouble();
-        propensityToSave = config.DESIRED_BANK_BALANCE_EPSILON * prng.nextGaussian();
         // Decide if household is a BTL investor and, if so, its tendency to seek capital gains or rental yields
 		BTLCapGainCoefficient = 0.0;
         if(incomePercentile > config.MIN_INVESTOR_PERCENTILE &&
