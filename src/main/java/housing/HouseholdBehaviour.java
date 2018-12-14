@@ -147,9 +147,7 @@ public class HouseholdBehaviour {
 //			}			  			
 		
 		else{			
-			consumption = config.CONSUMPTION_FRACTION*Math.max(bankBalance - getDesiredBankBalance(annualGrossTotalIncome), 0.0);
-	double getDesiredConsumption(double bankBalance, double annualGrossTotalIncome) {
-		return config.CONSUMPTION_FRACTION*Math.max(bankBalance
+			consumption = config.CONSUMPTION_FRACTION*Math.max(bankBalance
                 - data.Wealth.getDesiredBankBalance(annualGrossTotalIncome, propensityToSave), 0.0);
 			saving = disposableIncome-consumption;
 			Model.householdStats.countIncomeAndWealthConsumption(saving, consumption, 0.0, 0.0, 0.0, 0.0);
@@ -610,7 +608,7 @@ public class HouseholdBehaviour {
         }
         if(!config.FLEXIBLE_CREDIT_CONSTRAINTS) {
         if (me.getBankBalance() < data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(),
-                me.behaviour.getPropensityToSave())*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
+                me.behaviour.getPropensityToSave())*config.BTL_CHOICE_MIN_BANK_BALANCE) { 
             	// record DECISION DATA BTL
             	if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
      				Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 

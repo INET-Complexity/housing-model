@@ -27,7 +27,7 @@ public class Config {
     // General model control parameters
     int SEED;                                   // Seed for the random number generator
     int N_STEPS;				                // Simulation duration in time steps
-    int TIME_TO_START_RECORDING;	            // Time steps before recording statistics (initialisation time)
+    public int TIME_TO_START_RECORDING;	            // Time steps before recording statistics (initialisation time)
     int N_SIMS; 					            // Number of simulations to run (monte-carlo)
     boolean recordCoreIndicators;		        // True to write time series for each core indicator
     boolean recordQualityBandPrice;             // True to write time series of prices for each quality band to a single file per run
