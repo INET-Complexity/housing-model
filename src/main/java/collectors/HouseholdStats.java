@@ -116,7 +116,7 @@ public class HouseholdStats {
         nNegativeEquity = 0;
         // Time stamp householdStats mesoRecorders
         Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance,
-                config.recordNHousesOwned, config.recordSavingRate);
+                config.recordInitTotalWealth, config.recordNHousesOwned, config.recordSavingRate);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
 
@@ -165,6 +165,11 @@ public class HouseholdStats {
             if (config.recordBankBalance) {
                 Model.microDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
             }
+            if (config.recordInitTotalWealth) {
+                Model.microDataRecorder.recordInitTotalWealth(Model.getTime(), h.getInitialFinancialWealth()
+                        + h.getInitialHousingWealth());
+//                Model.microDataRecorder.recordInitTotalWealth(Model.getTime(), h.getMonthlyGrossTotalIncome()); @@##@@ Alternative savings rate definition TODO: To remove one or the other implementation
+            }
             if (config.recordNHousesOwned) {
                 Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.nInvestmentProperties() + 1);
             }
@@ -179,6 +184,8 @@ public class HouseholdStats {
                 Model.microDataRecorder.recordSavingRate(Model.getTime(),
                         (h.getBankBalance() + housingWealth)/(h.getInitialFinancialWealth()
                                 + h.getInitialHousingWealth()));
+//                Model.microDataRecorder.recordSavingRate(Model.getTime(), (h.getBankBalance()
+//                        - h.getInitialFinancialWealth())/h.getMonthlyGrossTotalIncome()); @@##@@ Alternative savings rate definition TODO: To remove one or the other implementation
             }
         }
         // Annualise monthly income data

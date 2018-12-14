@@ -13,6 +13,7 @@ public class MicroDataRecorder {
     private String outputFolder;
 
     private PrintWriter outfileBankBalance;
+    private PrintWriter outfileInitTotalWealth;
     private PrintWriter outfileNHousesOwned;
     private PrintWriter outfileSavingRate;
 
@@ -26,11 +27,18 @@ public class MicroDataRecorder {
     //----- Methods -----//
     //-------------------//
 
-    public void openSingleRunSingleVariableFiles(int nRun, boolean recordBankBalance, boolean recordNHousesOwned,
-                                                 boolean recordSavingRate) {
+    public void openSingleRunSingleVariableFiles(int nRun, boolean recordBankBalance, boolean recordInitTotalWealth,
+                                                 boolean recordNHousesOwned, boolean recordSavingRate) {
         if (recordBankBalance) {
             try {
                 outfileBankBalance = new PrintWriter(outputFolder + "BankBalance-run" + nRun + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordInitTotalWealth) {
+            try {
+                outfileInitTotalWealth = new PrintWriter(outputFolder + "InitialTotalWealth-run" + nRun + ".csv", "UTF-8");
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -53,14 +61,20 @@ public class MicroDataRecorder {
         }
     }
 
-    void timeStampSingleRunSingleVariableFiles(int time, boolean recordBankBalance, boolean recordNHousesOwned,
-                                               boolean recordSavingRate) {
+    void timeStampSingleRunSingleVariableFiles(int time, boolean recordBankBalance, boolean recordInitTotalWealth,
+                                               boolean recordNHousesOwned, boolean recordSavingRate) {
         if (time % 100 == 0) {
             if (recordBankBalance) {
                 if (time != 0) {
                     outfileBankBalance.println("");
                 }
                 outfileBankBalance.print(time);
+            }
+            if (recordInitTotalWealth) {
+                if (time != 0) {
+                    outfileInitTotalWealth.println("");
+                }
+                outfileInitTotalWealth.print(time);
             }
             if (recordNHousesOwned) {
                 if (time != 0) {
@@ -83,6 +97,12 @@ public class MicroDataRecorder {
         }
 	}
 
+    void recordInitTotalWealth(int time, double initTotalWealth) {
+        if (time % 100 == 0) {
+            outfileInitTotalWealth.print(", " + initTotalWealth);
+        }
+    }
+
     void recordNHousesOwned(int time, int nHousesOwned) {
         if (time % 100 == 0) {
             outfileNHousesOwned.print(", " + nHousesOwned);
@@ -95,9 +115,13 @@ public class MicroDataRecorder {
         }
     }
 
-	public void finishRun(boolean recordBankBalance, boolean recordNHousesOwned, boolean recordSavingRate) {
+	public void finishRun(boolean recordBankBalance, boolean recordInitTotalWealth, boolean recordNHousesOwned,
+                          boolean recordSavingRate) {
         if (recordBankBalance) {
             outfileBankBalance.close();
+        }
+        if (recordInitTotalWealth) {
+            outfileInitTotalWealth.close();
         }
         if (recordNHousesOwned) {
             outfileNHousesOwned.close();
