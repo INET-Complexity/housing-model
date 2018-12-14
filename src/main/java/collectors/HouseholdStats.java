@@ -1,8 +1,6 @@
 package collectors;
 
-import housing.Config;
-import housing.Household;
-import housing.Model;
+import housing.*;
 
 /**************************************************************************************************
  * Class to collect regional household statistics
@@ -118,7 +116,7 @@ public class HouseholdStats {
         nNegativeEquity = 0;
         // Time stamp householdStats mesoRecorders
         Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance,
-                config.recordNHousesOwned);
+                config.recordNHousesOwned, config.recordSavingRate);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
 
@@ -169,6 +167,18 @@ public class HouseholdStats {
             }
             if (config.recordNHousesOwned) {
                 Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.nInvestmentProperties() + 1);
+            }
+            if (config.recordSavingRate) {
+                double housingWealth = 0.0;
+                for (PaymentAgreement payment: h.getHousePayments().values()) {
+                    if (payment instanceof MortgageAgreement) {
+                        housingWealth += ((MortgageAgreement) payment).purchasePrice
+                                - ((MortgageAgreement) payment).principal;
+                    }
+                }
+                Model.microDataRecorder.recordSavingRate(Model.getTime(),
+                        (h.getBankBalance() + housingWealth)/(h.getInitialFinancialWealth()
+                                + h.getInitialHousingWealth()));
             }
         }
         // Annualise monthly income data

@@ -34,6 +34,7 @@ public class Config {
     boolean recordAgentData;					// True to write micro data for each agent each period
     public boolean recordBankBalance;           // True to write individual household bank balance data
     public boolean recordNHousesOwned;          // True to write individual household number of houses owned data
+    public boolean recordSavingRate;            // True to write individual household saving rate data
     boolean recordAgentDecisions; 			// True to write data from agent decision methods
     
     // Decision equations
