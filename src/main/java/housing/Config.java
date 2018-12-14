@@ -173,8 +173,9 @@ public class Config {
     public String DATA_TAX_RATES;                   // Address for tax bands and rates data
     public String DATA_NATIONAL_INSURANCE_RATES;    // Address for national insurance bands and rates data
 
-    // Data addresses: EmploymentIncome
+    // Data addresses: EmploymentIncome and Wealth
     public String DATA_INCOME_GIVEN_AGE;            // Address for conditional probability of income band given age band
+    public String DATA_WEALTH_GIVEN_INCOME;         // Address for conditional probability of wealth given income
 
     // Data addresses: Demographics
     public String DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF;  // Address for pdf of household representative person's age at household birth

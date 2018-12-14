@@ -42,6 +42,7 @@ public class HouseholdBehaviour {
         downpaymentDistFTB = new LogNormalDistribution(this.prng, config.DOWNPAYMENT_FTB_SCALE, config.DOWNPAYMENT_FTB_SHAPE);
         downpaymentDistOO = new LogNormalDistribution(this.prng, config.DOWNPAYMENT_OO_SCALE, config.DOWNPAYMENT_OO_SHAPE);
 	    // Compute propensity to save, so that it is constant for a given household
+        propensityToSave = prng.nextDouble();
         propensityToSave = config.DESIRED_BANK_BALANCE_EPSILON * prng.nextGaussian();
         // Decide if household is a BTL investor and, if so, its tendency to seek capital gains or rental yields
 		BTLCapGainCoefficient = 0.0;
@@ -147,6 +148,9 @@ public class HouseholdBehaviour {
 		
 		else{			
 			consumption = config.CONSUMPTION_FRACTION*Math.max(bankBalance - getDesiredBankBalance(annualGrossTotalIncome), 0.0);
+	double getDesiredConsumption(double bankBalance, double annualGrossTotalIncome) {
+		return config.CONSUMPTION_FRACTION*Math.max(bankBalance
+                - data.Wealth.getDesiredBankBalance(annualGrossTotalIncome, propensityToSave), 0.0);
 			saving = disposableIncome-consumption;
 			Model.householdStats.countIncomeAndWealthConsumption(saving, consumption, 0.0, 0.0, 0.0, 0.0);
 			return consumption;
@@ -163,10 +167,92 @@ public class HouseholdBehaviour {
      *
 	 * @param annualGrossTotalIncome Household
      */
-	public double getDesiredBankBalance(double annualGrossTotalIncome) {
-		return Math.exp(config.DESIRED_BANK_BALANCE_ALPHA
-                + config.DESIRED_BANK_BALANCE_BETA*Math.log(annualGrossTotalIncome) + propensityToSave);
+	double getDesiredBankBalance(double annualGrossTotalIncome) {
+
+//######################################################################################################################
+//		return Math.exp(config.DESIRED_BANK_BALANCE_ALPHA
+//                + config.DESIRED_BANK_BALANCE_BETA*Math.log(annualGrossTotalIncome) + propensityToSave);
+        double[] incomeBins = {7.70124372, 7.95124372, 8.20124372, 8.45124372, 8.70124372, 8.95124372, 9.20124372,
+                9.45124372, 9.70124372, 9.95124372, 10.20124372, 10.45124372, 10.70124372, 10.95124372, 11.20124372,
+                11.45124372, 11.70124372};
+        double[] wealthBins = {0.0, 0.78550467, 1.57100934, 2.35651401, 3.14201869, 3.92752336, 4.71302803, 5.4985327,
+                6.28403737, 7.06954204, 7.85504671, 8.64055138, 9.42605606, 10.21156073, 10.9970654, 11.78257007,
+                12.56807474, 13.35357941, 14.13908408, 14.92458876, 15.71009343};
+        double[][] probability = {
+                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.07692308, 0.07692308, 0.07692308, 0.0, 0.07692308, 0.07692308, 0.0,
+                        0.23076923, 0.23076923, 0.15384615, 0.0, 0.0, 0.0, 0.0},
+                {0.0, 0.0, 0.03030303, 0.0, 0.0, 0.06060606, 0.0, 0.0, 0.12121212, 0.12121212, 0.09090909, 0.06060606,
+                        0.09090909, 0.27272727, 0.12121212, 0.0, 0.0, 0.03030303, 0.0, 0.0},
+                {0.06382979, 0.0212766, 0.0, 0.0, 0.0212766, 0.0212766, 0.06382979, 0.08510638, 0.08510638, 0.08510638,
+                        0.08510638, 0.06382979, 0.08510638, 0.08510638, 0.08510638, 0.10638298, 0.0, 0.04255319, 0.0, 0.0},
+                {0.02439024, 0.00813008, 0.02439024, 0.00813008, 0.02439024, 0.04878049, 0.04065041, 0.08130081, 0.12195122,
+                        0.10569106, 0.11382114, 0.05691057, 0.04065041, 0.06504065, 0.1300813, 0.04878049, 0.03252033, 0.02439024, 0.0, 0.0},
+                {0.00934579, 0.0, 0.0, 0.0, 0.02803738, 0.01869159, 0.03738318, 0.1588785, 0.12149533, 0.12149533, 0.04672897,
+                        0.07476636, 0.07476636, 0.11214953, 0.08411215, 0.07476636, 0.02803738, 0.00934579, 0.0, 0.0},
+                {0.02173913, 0.0, 0.01449275, 0.03623188, 0.02898551, 0.07971014, 0.02173913, 0.07971014, 0.11594203,
+                        0.11594203, 0.06521739, 0.11594203, 0.07971014, 0.11594203, 0.06521739, 0.02173913, 0.01449275, 0.00724638, 0.0, 0.0},
+                {0.00840336, 0.0, 0.01680672, 0.01680672, 0.02941176, 0.01680672, 0.02941176, 0.07983193, 0.10504202, 0.10084034,
+                        0.07563025, 0.10084034, 0.13445378, 0.08823529, 0.10504202, 0.06722689, 0.01680672, 0.00840336, 0.0, 0.0},
+                {0.01123596, 0.01498127, 0.01872659, 0.00749064, 0.01498127, 0.02996255, 0.05243446, 0.08988764, 0.1011236,
+                        0.12359551, 0.13108614, 0.06741573, 0.11985019, 0.07490637, 0.06741573, 0.05243446, 0.01498127, 0.00749064, 0.0, 0.0},
+                {0.0026738, 0.00802139, 0.00534759, 0.01336898, 0.02406417, 0.02406417, 0.04010695, 0.07486631, 0.10427807,
+                        0.10427807, 0.13636364, 0.11764706, 0.09625668, 0.10427807, 0.08823529, 0.04278075, 0.00534759, 0.0026738,
+                        0.0026738, 0.0026738},
+                {0.00383877,0.00191939,0.00767754,0.00191939,0.00575816,0.02111324,0.0403071,0.05758157,0.10940499,0.12284069,0.14395393,
+                        0.14203455, 0.09980806, 0.11900192, 0.06333973, 0.03838772, 0.01919386, 0.00191939, 0.0, 0.0},
+                {0.0, 0.0, 0.00606061, 0.0, 0.00757576, 0.01969697, 0.02878788, 0.0530303, 0.08333333, 0.11363636, 0.11515152, 0.14545455,
+                        0.13333333, 0.11515152, 0.09848485, 0.05151515, 0.02424242, 0.0030303, 0.00151515, 0.0},
+                {0.00128535, 0.00128535, 0.00385604, 0.00257069, 0.0, 0.00514139, 0.01542416, 0.04627249, 0.06298201, 0.10154242,
+                        0.16580977, 0.14910026, 0.14910026, 0.14524422, 0.08868895, 0.03856041, 0.01928021, 0.00385604, 0.0, 0.0},
+                {0.00278164, 0.0, 0.00417246, 0.00417246, 0.00417246, 0.00556328, 0.00834492, 0.02225313, 0.04867872, 0.07371349,
+                        0.12517385, 0.14603616, 0.14325452, 0.18776078, 0.12378303, 0.07788595, 0.01668985, 0.00556328, 0.0, 0.0},
+                {0.0, 0.0, 0.00163934, 0.00163934, 0.00327869, 0.00819672, 0.00655738, 0.01147541, 0.03114754, 0.04262295, 0.11147541,
+                        0.14754098, 0.16393443, 0.19836066, 0.14590164, 0.07868852, 0.03114754, 0.01311475, 0.00163934, 0.00163934},
+                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.00859599, 0.0, 0.02005731, 0.02292264, 0.08022923, 0.10601719, 0.13753582, 0.21489971,
+                        0.19770774, 0.15186246, 0.03724928, 0.01719198, 0.00573066, 0.0},
+                {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01086957, 0.00543478, 0.02717391, 0.04891304, 0.08152174, 0.11413043, 0.2173913,
+                        0.23913043, 0.1576087, 0.08152174, 0.01086957, 0.0, 0.00543478}
+        };
+        int incomeBin = floorSearch(incomeBins, Math.log(annualGrossTotalIncome));
+        int i = 0;
+        double prob = 0.0;
+        double randNum = propensityToSave;
+        while (prob < randNum) {
+            prob += probability[incomeBin][i];
+            i++;
+        }
+        i--;
+        return Math.exp(wealthBins[i]*(randNum-(prob-probability[incomeBin][i]))/probability[incomeBin][i]
+                + wealthBins[i+1]*(prob - randNum)/probability[incomeBin][i]);
 	}
+
+    /**
+     * Given a sorted array of doubles arr[] and a double value x, the floor of x is the index of the largest element in
+     * the array smaller than or equal to x
+     *
+     * @param arr Ordered array
+     * @param x Value to find the floor of
+     */
+    private static int floorSearch(double arr[], double x) {
+        // If last element is smaller than x, give index of last element
+        if (x >= arr[arr.length-1]) {
+            return arr.length - 2;
+        }
+        // If first element is greater than x, give index of first element anyway
+        if (x < arr[0]) {
+            return 0;
+        }
+        // Otherwise, linearly search for the first element greater than x
+        for (int i = 1; i < arr.length; i++) {
+            if (arr[i] > x) {
+                return (i - 1);
+            }
+        }
+        // Dummy return
+        return -1;
+    }
+//######################################################################################################################
+
 
     //----- Owner-Occupier behaviour -----//
 
@@ -523,7 +609,8 @@ public class HouseholdBehaviour {
         		return false; }
         }
         if(!config.FLEXIBLE_CREDIT_CONSTRAINTS) {
-            if (me.getBankBalance() < (getDesiredBankBalance(me.getAnnualGrossTotalIncome())*config.BTL_CHOICE_MIN_BANK_BALANCE)) {
+        if (me.getBankBalance() < data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(),
+                me.behaviour.getPropensityToSave())*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
             	// record DECISION DATA BTL
             	if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
      				Model.agentDecisionRecorder.decideBuyInvestmentProperty.println(Model.getTime() 
@@ -657,4 +744,6 @@ public class HouseholdBehaviour {
 
     public boolean isPropertyInvestor() { return BTLInvestor; }
     public double getConsumptionWealth() { return consumptionWealth;}
+
+    double getPropensityToSave() { return propensityToSave; }
 }
