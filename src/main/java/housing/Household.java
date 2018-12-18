@@ -183,14 +183,30 @@ public class Household implements IHouseOwner {
     
     /**
      * Subtracts the monthly aliquot part of all due taxes from the monthly gross total income. Note that only income
-     * tax on employment income and national insurance contributions are implemented!
+     * tax on employment and rental income and national insurance contributions are implemented (no capital gains tax)!
      */
     double getMonthlyNetTotalIncome() {
-        // TODO: Note that this implies there is no tax on rental income
         return getMonthlyGrossTotalIncome()
-                - (Model.government.incomeTaxDue(annualGrossEmploymentIncome)   // Employment income tax
+                - (Model.government.incomeTaxDue(getAnnualGrossTotalIncome() - getAnnualFinanceCosts())  // Income tax (with finance costs tax relief)
                 + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions
                 /config.constants.MONTHS_IN_YEAR;
+    }
+
+    /**
+     * Adds up all interests paid on buy-to-let properties currently rented by this household, for the purpose of
+     * obtaining tax relief on these costs
+     */
+    private double getAnnualFinanceCosts() {
+        double financeCosts = 0.0;
+        for (Map.Entry<House, PaymentAgreement> entry : housePayments.entrySet()) {
+            House house = entry.getKey();
+            PaymentAgreement payment = entry.getValue();
+            if (payment instanceof MortgageAgreement && house.owner == this && payment.nextPayment() != 0.0
+                    && house.resident != null && house.resident.getHousePayments().get(house).nextPayment() != 0.0) {
+                financeCosts += payment.nextPayment();
+            }
+        }
+        return financeCosts*config.constants.MONTHS_IN_YEAR;
     }
 
     /**
