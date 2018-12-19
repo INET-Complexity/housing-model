@@ -4,13 +4,16 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import housing.Config;
+import housing.Model;
+
 public class MicroDataRecorder {
 
     //------------------//
     //----- Fields -----//
     //------------------//
 
-    private String outputFolder;
+    private String 		outputFolder;
 
     private PrintWriter outfileBankBalance;
     private PrintWriter outfileHousingWealth;
@@ -65,7 +68,7 @@ public class MicroDataRecorder {
 
     void timeStampSingleRunSingleVariableFiles(int time, boolean recordBankBalance, boolean recordHousingWealth,
                                                boolean recordNHousesOwned, boolean recordSavingRate) {
-        if (time % 100 == 0) {
+        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
             if (recordBankBalance) {
                 if (time != 0) {
                     outfileBankBalance.println("");
@@ -94,25 +97,25 @@ public class MicroDataRecorder {
     }
 	
 	void recordBankBalance(int time, double bankBalance) {
-        if (time % 100 == 0) {
+        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
             outfileBankBalance.print(", " + bankBalance);
         }
 	}
 
     void recordHousingWealth(int time, double housingWealth) {
-        if (time % 100 == 0) {
+        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
             outfileHousingWealth.print(", " + housingWealth);
         }
     }
 
     void recordNHousesOwned(int time, int nHousesOwned) {
-        if (time % 100 == 0) {
+        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
             outfileNHousesOwned.print(", " + nHousesOwned);
         }
     }
 
     void recordSavingRate(int time, double savingRate) {
-        if (time % 100 == 0) {
+        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
             outfileSavingRate.print(", " + savingRate);
         }
     }
