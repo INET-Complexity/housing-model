@@ -226,8 +226,8 @@ public class HouseholdBehaviour {
 	 */
 	boolean decideToSellInvestmentProperty(House h, Household me) {
 		// Fast decisions...
-        // ...always keep at least one investment property
-		if(me.nInvestmentProperties() < 2) return false;
+        // ...always keep at least one investment property (i.e., at least two properties)
+		if(me.getNProperties() < 3) return false;
         // ...don't sell while occupied by tenant
 		if(!h.isOnRentalMarket()) return false;
 
@@ -270,8 +270,8 @@ public class HouseholdBehaviour {
      */
     boolean decideToBuyInvestmentProperty(Household me) {
         // Fast decisions...
-        // ...always decide to buy if owning no investment property yet
-        if (me.nInvestmentProperties() < 1) { return true ; }
+        // ...always decide to buy if owning no investment property yet (i.e., if owning only one property, a home)
+        if (me.getNProperties() < 2) { return true ; }
         // ...never buy (keep on saving) if bank balance is below the household's desired bank balance
         // TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
 
