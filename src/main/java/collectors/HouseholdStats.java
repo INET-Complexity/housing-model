@@ -130,14 +130,14 @@ public class HouseholdStats {
                 ++nBTL;
                 if (h.isBankrupt()) nBTLBankruptcies += 1;
                 // Active BTL investors
-                if (h.nInvestmentProperties() > 0) {
+                if (h.getNProperties() > 1) {
                     ++nActiveBTL;
                     activeBTLAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
-                    // Inactive BTL investors who own their house
-                } else if (h.nInvestmentProperties() == 0) {
+                // Inactive BTL investors who own their house
+                } else if (h.getNProperties() == 1) {
                     ++nBTLOwnerOccupier;
                     ownerOccupierAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
-                    // Inactive BTL investors in social housing
+                // Inactive BTL investors in social housing
                 } else {
                     ++nBTLHomeless;
                     homelessAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
@@ -168,19 +168,21 @@ public class HouseholdStats {
                 Model.microDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
             }
             if (config.recordHousingWealth) {
+                // Housing wealth is computed as mark-to-market net housing wealth, thus looking at current average
+                // prices for houses of the same quality
                 double housingWealth = 0.0;
                 for (Map.Entry<House, PaymentAgreement> entry : h.getHousePayments().entrySet()) {
                     House house = entry.getKey();
                     PaymentAgreement payment = entry.getValue();
                     if (payment instanceof MortgageAgreement && house.owner == h) {
-                        housingWealth += ((MortgageAgreement) payment).purchasePrice
+                        housingWealth += Model.housingMarketStats.getExpAvSalePriceForQuality(house.getQuality())
                                 - ((MortgageAgreement) payment).principal;
                     }
                 }
                 Model.microDataRecorder.recordHousingWealth(Model.getTime(), housingWealth);
             }
             if (config.recordNHousesOwned) {
-                Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.nInvestmentProperties() + 1);
+                Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.getNProperties());
             }
             if (config.recordSavingRate) {
                 Model.microDataRecorder.recordSavingRate(Model.getTime(), h.getSavingRate());

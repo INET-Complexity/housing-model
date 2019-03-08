@@ -457,8 +457,8 @@ public class HouseholdBehaviour {
 	 */
 	boolean decideToSellInvestmentProperty(House h, Household me) {
 		// Fast decisions...
-        // ...always keep at least one investment property
-		if(me.nInvestmentProperties() < 2) {
+        // ...always keep at least one investment property (i.e., at least two properties)
+		if(me.getNProperties() < 3) return false;
 			// if agent decisions are recorded, record basic information and reason for not selling
 			if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
 	        	Model.agentDecisionRecorder.decideSellInvestmentProperty.println(Model.getTime()
@@ -538,6 +538,8 @@ public class HouseholdBehaviour {
      */
     boolean decideToBuyInvestmentProperty(Household me) {
         // Fast decisions...
+        // ...always decide to buy if owning no investment property yet (i.e., if owning only one property, a home)
+        if (me.getNProperties() < 2) { return true ; }
     	//... with alternative consumption function some BTL investors seem to buy too many houses. Therefore,
     	// they cannot pay the "bills" and go bankrupt every month.
     	// if payments make up more than 30% of disposable income, don't invest

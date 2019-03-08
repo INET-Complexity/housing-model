@@ -631,8 +631,21 @@ public class Household implements IHouseOwner {
         return(n);
     }
 
-    public int nInvestmentProperties() { return housePayments.size() - 1; }
-    
+    /**
+     * Counts the number of houses owned by this household. By definition of the model, all households owning property
+     * do also own a home, i.e ., they live in one of their owned properties and thus only non-homeless households can
+     * own any property. As a consequence, the number of houses owned by renters and households in social housing is 0
+     *
+     * @return Number of houses owned by this household
+     */
+    public int getNProperties() {
+        if (isHomeowner()) {
+            return housePayments.size();
+        } else {
+            return 0;
+        }
+    }
+
     /***
      * @return Current mark-to-market (with exponentially averaged prices per quality) equity in this household's home.
      */
