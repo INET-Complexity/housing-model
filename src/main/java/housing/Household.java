@@ -731,7 +731,7 @@ public class Household implements IHouseOwner {
     	// add value of home
     	totalValue += Model.housingMarketStats.getExpAvSalePriceForQuality(home.getQuality());
     	// add value of all investment properties
-    	if(nInvestmentProperties() > 1) {
+    	if(getNProperties() > 1) {
     		for (House h: housePayments.keySet()) {
                 if (h.owner == this && h.resident !=this) {
                 	totalValue += Model.housingMarketStats.getExpAvSalePriceForQuality(h.getQuality());	
@@ -743,7 +743,7 @@ public class Household implements IHouseOwner {
     
     // get investment property equity for BTL investors
     double getInvestmentEquity() {
-    	if(nInvestmentProperties() > 0) {
+    	if(getNProperties() > 0) {
     		// if house is owned by investor AND it is not the home then
     		double investmentEquity = 0.0;
     		for (House h: housePayments.keySet()) {
@@ -765,7 +765,7 @@ public class Household implements IHouseOwner {
     	if(!isHomeowner())return(totalDebt);
     	// add principal outstanding on home
     	totalDebt -= mortgageFor(home).principal;
-    	if(nInvestmentProperties() > 0) {
+    	if(getNProperties() > 0) {
     		// if house is owned by investor AND it is not the home then..
     		for (House h: housePayments.keySet()) {
                 if (h.owner == this && h.resident !=this) {

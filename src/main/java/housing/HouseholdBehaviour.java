@@ -366,7 +366,7 @@ public class HouseholdBehaviour {
 	boolean decideToSellInvestmentProperty(House h, Household me) {
 		// Fast decisions...
         // ...always keep at least one investment property (i.e., at least two properties)
-		if(me.getNProperties() < 3) return false;
+		if(me.getNProperties() < 3) {
 			// if agent decisions are recorded, record basic information and reason for not selling
 			if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
 				Model.agentDecisionRecorder.recordKeepOneProperty(me);
@@ -435,7 +435,7 @@ public class HouseholdBehaviour {
 			}
 		}
 		// ...always decide to buy if owning no investment property yet
-		if (me.nInvestmentProperties() < 1) { 
+		if (me.getNProperties() < 1) { 
 			// record some DECISION DATA BTL
 			if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
 				Model.agentDecisionRecorder.recordNoInvestmentPropertyYet(me);
