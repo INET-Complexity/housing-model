@@ -23,7 +23,11 @@ public class Recorder {
 
     private PrintWriter outfile;
     private PrintWriter qualityBandPriceFile;
-
+    // writes the expected price per quality, i.e. adjusted 
+    private	PrintWriter qualityBandPriceExpectedFile;
+    
+    private PrintWriter HPI;
+    private PrintWriter consumptionToIncome;
     private PrintWriter ooLTI;
     private PrintWriter btlLTV;
     private PrintWriter creditGrowth;
@@ -54,6 +58,10 @@ public class Recorder {
         if(recordCoreIndicators) {
             // ...try opening necessary files
             try {
+            	HPI = new PrintWriter(outputFolder + "coreIndicator-HPI.csv",
+                		"UTF-8");
+                consumptionToIncome = new PrintWriter(outputFolder + "coreIndicator-consumptionToIncome.csv",
+                		"UTF-8");
                 ooLTI = new PrintWriter(outputFolder + "coreIndicator-ooLTI.csv",
                         "UTF-8");
                 btlLTV = new PrintWriter(outputFolder + "coreIndicator-btlLTV.csv",
@@ -112,10 +120,14 @@ public class Recorder {
                     // Credit data
                     + "nRegisteredMortgages, "
             		//RUBEN additional variables
-            		+ "totalIncome, totalConsumption, totalIncomeConsumption, totalFinancialWealthConsumption, "
-            		+ "totalHousingWealthConsumption, totalDebtConsumption, totalSaving, totalCredit, "
-            		+ "creditSupplyTarget, newlyPaidDownPayments, nNegativeEquity, "
-            		+ "LTV FTB, LTV OO, LTV BTL");
+            		+ "BankBalancesVeryBeginningOfPeriod, monthlyTotalGrossIncome, monthlyTotalNetIncome, monthlyGrossEmploymentIncome, monthlyTaxesPaid, "
+            		+ "monthlyInsurancePaid, BankBalancesBeforeConsumption, BankBalancesEndowed, "
+            		+ "totalConsumption, totalIncomeConsumption, totalFinancialWealthConsumption, "
+            		+ "totalHousingWealthConsumption, totalDebtConsumption, totalSavingForDeleveraging, totalSaving, totalCredit, "
+            		+ "totalPrincipalRepayment, totalPrincipalPaidBackForInheritance, totalInterestRepayment, totalRentalPayments, "
+            		+ "totalBankruptcyCashInjection, totalDebtReliefDueToDeceasedHousehold, "
+            		+ "creditSupplyTarget, newlyPaidDownPayments, newlyIssuedCredit, nNegativeEquity, "
+            		+ "LTV FTB, LTV OO, LTV BTL, interestRateSpread, moneyOutflowToConstructionSector");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -130,6 +142,10 @@ public class Recorder {
                     str.append(String.format(", Q%d", i));
                 }
                 qualityBandPriceFile.println(str);
+                
+                // .. try opening output file for the adjusted  prices per quality and write the first row with column names
+                qualityBandPriceExpectedFile = new PrintWriter(outputFolder + "QualityBandPriceExpected-run" + nRun + ".csv", "UTF-8");
+                qualityBandPriceExpectedFile.println(str);
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -141,6 +157,8 @@ public class Recorder {
             // If not at the first point in time...
             if (time > 0) {
                 // ...write value separation for core indicators (except for time 0)
+            	HPI.print(", ");
+            	consumptionToIncome.print(", ");
                 ooLTI.print(", ");
                 btlLTV.print(", ");
                 creditGrowth.print(", ");
@@ -157,6 +175,8 @@ public class Recorder {
                 interestRateSpread.print(", ");
             }
             // Write core indicators results
+            HPI.print(Model.coreIndicators.getHPI());
+            consumptionToIncome.print(Model.coreIndicators.getConsumptionOverIncome());
             ooLTI.print(Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
             btlLTV.print(Model.coreIndicators.getBuyToLetLTVMean());
             creditGrowth.print(Model.coreIndicators.getHouseholdCreditGrowth());
@@ -229,33 +249,60 @@ public class Recorder {
                 // Credit data
                 Model.creditSupply.getnRegisteredMortgages() + ", " +
         		//RUBEN additional variables
+        		Model.householdStats.getTotalBankBalancesVeryBeginningOfPeriod() + ", " +
         		(Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR
                         + Model.householdStats.getActiveBTLAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR
                         + Model.householdStats.getNonOwnerAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR) + ", " + 
-        		Model.householdStats.getTotalConsumption()  + ", " +
+                (Model.householdStats.getOwnerOccupierMonthlyNetIncome()
+                		+ Model.householdStats.getActiveMonthlyNetIncome()
+                		+ Model.householdStats.getNonOwnerMonthlyNetIncome()) + ", " +
+        		Model.householdStats.getMonthlyGrossEmploymentIncome() + ", " +	
+                Model.householdStats.getTotalMonthlyTaxesPaid() + ", " + 
+                Model.householdStats.getTotalMonthlyNICPaid() + ", " +
+                Model.householdStats.getTotalBankBalancesBeforeConsumption() + ", " + 
+                Model.householdStats.getTotalBankBalanceEndowment() + ", " +
+                Model.householdStats.getTotalConsumption()  + ", " +
         		Model.householdStats.getIncomeConsumption()  + ", " +
         		Model.householdStats.getFinancialWealthConsumption()  + ", " +
         		Model.householdStats.getHousingWealthConsumption()  + ", " +
         		Model.householdStats.getDebtConsumption()  + ", " +
+        		Model.householdStats.getTotalSavingForDeleveraging() + ", " + 
         		Model.householdStats.getTotalSaving() + ", " +
         		(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
+        		Model.householdStats.getTotalPrincipalRepayments() + ", " +
+        		Model.householdStats.getTotalPrincipalRepaymentDeceasedHouseholds() + ", " +
+        		Model.householdStats.getTotalInterestRepayments() + ", " +
+        		Model.householdStats.getTotalRentalPayments() + ", " +
+        		Model.householdStats.getTotalBankruptcyCashInjection() + ", " +
+        		Model.householdStats.getTotalDebtReliefOfDeceasedHouseholds() + ", " +
         		Model.bank.creditSupplyTarget(Model.households.size()) + ", " +
         		Model.creditSupply.getNewlyPaidDownPayments() + ", " +
+        		Model.creditSupply.getNewlyIssuedCredit() + ", " + 
         		Model.householdStats.getNNegativeEquity() + ", " +
         		Model.bank.getLoanToValueLimit(true, true) + ", " +
         		Model.bank.getLoanToValueLimit(false, true) + ", " +
-        		Model.bank.getLoanToValueLimit(false, false));
+        		Model.bank.getLoanToValueLimit(false, false) + ", " +
+        		// divide by 100 as the interest rate in core indicators is calculated as percentage
+        		Model.coreIndicators.getInterestRateSpread()/100 + ", " +
+        		Model.housingMarketStats.getMoneyToConstructionSector());
 
         // Write quality band prices to file
         if (recordQualityBandPrice) {
             String str = Arrays.toString(Model.housingMarketStats.getAvSalePricePerQuality());
             str = str.substring(1, str.length() - 1);
             qualityBandPriceFile.println(time + ", " + str);
+            
+            // write the expected average sale price to string
+            String str2 = Arrays.toString(Model.housingMarketStats.getExpAvSalePricePerQuality());
+            str2 = str2.substring(1, str2.length() - 1);
+            qualityBandPriceExpectedFile.println(time + ", " + str2);
         }
     }
 
     public void finishRun(boolean recordCoreIndicators, boolean recordQualityBandPrice) {
         if (recordCoreIndicators) {
+            HPI.println("");
+            consumptionToIncome.println("");
             ooLTI.println("");
             btlLTV.println("");
             creditGrowth.println("");
@@ -274,11 +321,14 @@ public class Recorder {
         outfile.close();
         if (recordQualityBandPrice) {
             qualityBandPriceFile.close();
+            qualityBandPriceExpectedFile.close();
         }
     }
 
     public void finish(boolean recordCoreIndicators) {
         if (recordCoreIndicators) {
+        	HPI.close();
+        	consumptionToIncome.close();
             ooLTI.close();
             btlLTV.close();
             creditGrowth.close();

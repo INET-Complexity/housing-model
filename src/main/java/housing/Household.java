@@ -26,6 +26,7 @@ public class Household implements IHouseOwner {
     public int                  id; // Only used for identifying households within the class TransactionRecorder
     private double              annualGrossEmploymentIncome;
     private double              monthlyGrossEmploymentIncome;
+    private double 				monthlyDisposableIncome;
     private double				consumption;
     public HouseholdBehaviour   behaviour; // Behavioural plugin
 
@@ -41,8 +42,14 @@ public class Household implements IHouseOwner {
     private double                          savingRate; // (disposableIncome - nonEssentialConsumption)/grossTotalIncome
     private boolean                         isFirstTimeBuyer;
     private boolean                         isBankrupt;
-    
-
+    private double 							monthlyPayments;
+    private double							principalPaidBack; // records how much of mortgage principal this household paid back this period
+    private double							principalPaidBackForInheritance; // this records the repayment of principal the bequeather paid back, before passing its wealth on to this household
+    private double							interestPaidBack; // records how much mortgage interest this household paid back this period
+    private double							rentalPayment; // records the rental payment of this period
+    private double							monthlyTaxesPaid; // records the monthly taxes paid (including tax relief)
+    private double 							monthlyNICPaid; // records national insurance contributions
+    private double 							cashInjection; // records the amount of cash injection when household goes bankrupt
 
     //------------------------//
     //----- Constructors -----//
@@ -65,6 +72,8 @@ public class Household implements IHouseOwner {
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         bankBalance = data.Wealth.getDesiredBankBalance(getAnnualGrossTotalIncome(), behaviour.getPropensityToSave()); // Desired bank balance is used as initial value for actual bank balance
+        // record deposits entering the simulation by initial endowment
+        Model.householdStats.recordBankBalanceEndowment(bankBalance);
         monthlyGrossRentalIncome = 0.0;
         
     }
@@ -85,111 +94,141 @@ public class Household implements IHouseOwner {
      */
     public void step() {
     	isBankrupt = false; // Delete bankruptcies from previous time step
-        age += 1.0/config.constants.MONTHS_IN_YEAR;
-        // Update annual and monthly gross employment income
-        if(config.TREND) {
-        	annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile)
-        									*Math.pow((1+config.MONTHLY_INCREASE_EMPLOYMENT_INCOME/config.constants.MONTHS_IN_YEAR), Model.getTime());
-        } else {
-        	annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
-        }
-        monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
-        // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
-        double monthlyDisposableIncome = getMonthlyDisposableIncome();
-        bankBalance += monthlyDisposableIncome;
-        // Consume according to gross annual income and capped by current bank balance (after disposable income has been added)
-        consumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(), incomePercentile,
-        												getMonthlyDisposableIncome(), getPropertyValue(),
-        												getTotalDebt(), getEquityPosition()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
-        bankBalance -= consumption;
-        // Compute saving rate
-        savingRate = (monthlyDisposableIncome - consumption)/getMonthlyGrossTotalIncome();
-        // Deal with bankruptcies
-        // TODO: Improve bankruptcy procedures (currently, simple cash injection), such as terminating contracts!
-        if (bankBalance < 0.0) {
-            bankBalance = 1.0;
-            isBankrupt = true;
-        }
-        // Manage owned properties and close debts on previously owned properties. To this end, first, create an
-        // iterator over the house-paymentAgreement pairs at the household's housePayments object
-        Iterator<Entry<House, PaymentAgreement>> paymentIt = housePayments.entrySet().iterator();
-        Entry<House, PaymentAgreement> entry;
-        House h;
-        PaymentAgreement payment;
-        // Iterate over these house-paymentAgreement pairs...
-        while (paymentIt.hasNext()) {
-            entry = paymentIt.next();
-            h = entry.getKey();
-            payment = entry.getValue();
-            // ...if the household is the owner of the house, then manage it
-            if (h.owner == this) {
-                manageHouse(h);
-            // ...otherwise, if the household is not the owner nor the resident, then it is an old debt due to
-            // the household's inability to pay the remaining principal off after selling a property...
-            } else if (h.resident != this) {
-                MortgageAgreement mortgage = (MortgageAgreement) payment;
-                // ...remove this type of houses from payments as soon as the household pays the debt off
-                if ((payment.nPayments == 0) & (mortgage.principal == 0.0)) {
-                    paymentIt.remove();
-                }
-            }
-        }
-        // Make housing decisions depending on current housing state
-        if (isInSocialHousing()) {
-            bidForAHome(); // When BTL households are born, they enter here the first time and until they manage to buy a home!
-        } else if (isRenting()) {
-            if (housePayments.get(home).nPayments == 0) { // End of rental period for this tenant
-                endTenancy();
-                bidForAHome();
-            }            
-        } else if (behaviour.isPropertyInvestor()) { // Only BTL investors who already own a home enter here
-            // BTL investors always bid the price corresponding to the maximum mortgage they could get
-            double price = Model.bank.getMaxMortgage(this, false, false);
-            Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
-            if (behaviour.decideToBuyInvestmentProperty(this)) {
-                Model.houseSaleMarket.bid(this, price, true);
-            }
-        } else if (!isHomeowner()){
-            System.out.println("Strange: this household is not a type I recognize");
-        }
+    	age += 1.0/config.constants.MONTHS_IN_YEAR;
+    	// set payment counters and cashInjection to zero, so they can be updated 
+    	//TODO is this necessary?
+    	principalPaidBack = 0.0; 
+    	interestPaidBack = 0.0; 
+    	rentalPayment = 0.0;
+    	cashInjection = 0.0;
+    	monthlyPayments = 0.0;
+    	// record bankBalance very beginning of period
+    	Model.householdStats.recordBankBalanceVeryBeginningOfPeriod(bankBalance);
+    	// Update annual gross employment income
+    	annualGrossEmploymentIncome = setAnnualGrossEmploymentIncome();
+    	// update monthly gross employment income
+    	monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
+    	// Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
+    	monthlyDisposableIncome = getMonthlyDisposableIncome();
+    	if(monthlyDisposableIncome < 0) {
+    	//	System.out.println("MonthlyDisposableIncome is negative: " + monthlyDisposableIncome);
+    	}
+    	bankBalance += monthlyDisposableIncome;
+    	// record bankBalance before consumption
+    	Model.householdStats.recordBankBalanceBeforeConsumption(bankBalance);
+    	// Consume according to gross annual income and capped by current bank balance (after disposable income has been added)
+    	consumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(), incomePercentile,
+    			monthlyDisposableIncome, getPropertyValue(),
+    			getTotalDebt(), getEquityPosition()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
+    	bankBalance -= consumption;
+    	// Compute saving rate
+    	savingRate = (monthlyDisposableIncome - consumption)/getMonthlyGrossTotalIncome();
+    	// Deal with bankruptcies
+    	// TODO: Improve bankruptcy procedures (currently, simple cash injection), such as terminating contracts!
+    	if (bankBalance < 0.0) {
+    		setCashInjection(-bankBalance);
+    		//System.out.println("household " + id +  " bankrupt. bankbalance: " + bankBalance + " and mDispIncome: " + monthlyDisposableIncome);
+    		bankBalance = 1.0;
+    		isBankrupt = true;
+    	}
+    	// Manage owned properties and close debts on previously owned properties. To this end, first, create an
+    	// iterator over the house-paymentAgreement pairs at the household's housePayments object
+    	Iterator<Entry<House, PaymentAgreement>> paymentIt = housePayments.entrySet().iterator();
+    	Entry<House, PaymentAgreement> entry;
+    	House h;
+    	PaymentAgreement payment;
+    	// Iterate over these house-paymentAgreement pairs...
+    	while (paymentIt.hasNext()) {
+    		entry = paymentIt.next();
+    		h = entry.getKey();
+    		payment = entry.getValue();
+    		// ...if the household is the owner of the house, then manage it
+    		if (h.owner == this) {
+    			manageHouse(h);
+    			// ...otherwise, if the household is not the owner nor the resident, then it is an old debt due to
+    			// the household's inability to pay the remaining principal off after selling a property...
+    		} else if (h.resident != this) {
+    			MortgageAgreement mortgage = (MortgageAgreement) payment;
+    			// ...remove this type of houses from payments as soon as the household pays the debt off
+    			if ((payment.nPayments == 0) & (mortgage.principal == 0.0)) {
+    				paymentIt.remove();
+    			}
+    		}
+    	}
+    	// Make housing decisions depending on current housing state
+    	if (isInSocialHousing()) {
+    		bidForAHome(); // When BTL households are born, they enter here the first time and until they manage to buy a home!
+    	} else if (isRenting()) {
+    		if (housePayments.get(home).nPayments == 0) { // End of rental period for this tenant
+    			endTenancy();
+    			bidForAHome();
+    		}            
+    	} else if (behaviour.isPropertyInvestor()) { // Only BTL investors who already own a home enter here
+    		// BTL investors always bid the price corresponding to the maximum mortgage they could get
+    		double price = Model.bank.getMaxMortgage(this, false, false);
+    		Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
+    		if (behaviour.decideToBuyInvestmentProperty(this)) {
+    			Model.houseSaleMarket.bid(this, price, true);
+    		}
+    	} else if (!isHomeowner()){
+    		System.out.println("Strange: this household is not a type I recognize");
+    	}
     }
 
+    
+    // get the annual gross employment income depending if a trend or inequality  or neither are introduced
+    private double setAnnualGrossEmploymentIncome() {
+    	annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
+
+    	if(config.trend && config.periodTrendStarting >= Model.getTime()) {
+    		//TODO check if yearly to monthly percentage change is implemented correctly. Same is true for inequality below
+    		annualGrossEmploymentIncome = annualGrossEmploymentIncome
+    				*Math.pow((1+config.yearlyIncreaseEmploymentIncome/config.constants.MONTHS_IN_YEAR), (Model.getTime()-config.periodTrendStarting));
+    	}
+    	// implement rising income inequality
+    	else if(config.risingIncomeInequality && Model.getTime() >= config.periodIncomeInequalityRises) {
+    		// this implies that the top 5% receive additional income. 
+    		if(incomePercentile >=0.95) { 
+    			annualGrossEmploymentIncome = annualGrossEmploymentIncome*
+    					Math.pow((1+config.yearlyInequalityIncrease/config.constants.MONTHS_IN_YEAR), (Model.getTime()-config.periodIncomeInequalityRises));
+    		}
+    	}
+    	// return the annual gross employment income
+    	return annualGrossEmploymentIncome;
+    }
+    
     /**
      * Subtracts the essential, necessary consumption and housing expenses (mortgage and rental payments) from the net
      * total income (employment income plus property income minus taxes)
      */
     public double getMonthlyDisposableIncome() {
         // Start with net monthly income
-        double monthlyDisposableIncome = getMonthlyNetTotalIncome();
+        monthlyDisposableIncome = getMonthlyNetTotalIncome();
         // Subtract essential, necessary consumption
         // TODO: ESSENTIAL_CONSUMPTION_FRACTION is not explained in the paper, all support is said to be consumed
         monthlyDisposableIncome -= config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT;
         // Subtract housing consumption
         for(PaymentAgreement payment: housePayments.values()) {
-        	monthlyDisposableIncome -= payment.makeMonthlyPayment();
+        	monthlyPayments += payment.makeMonthlyPayment(this);
+//        	if(monthlyDisposableIncome < -1000) {
+//        	//	System.out.println("MonthlyDisposableIncome is negative: " + monthlyDisposableIncome);
+//        	}
         }
+        monthlyDisposableIncome -= monthlyPayments;
         return monthlyDisposableIncome;
     }
-
-    // calculate the monthly payments of this agent
-    public double getMonthlyPayments() {
-    	double sumMonthlyPayments = 0.0;
-    	for(PaymentAgreement payment: housePayments.values()) {
-    		sumMonthlyPayments += payment.makeMonthlyPayment();
-    	}
-    	return sumMonthlyPayments;
-    }
-
     
     /**
      * Subtracts the monthly aliquot part of all due taxes from the monthly gross total income. Note that only income
      * tax on employment and rental income and national insurance contributions are implemented (no capital gains tax)!
      */
-    double getMonthlyNetTotalIncome() {
-        return getMonthlyGrossTotalIncome()
-                - (Model.government.incomeTaxDue(getAnnualGrossTotalIncome() - getAnnualFinanceCosts())  // Income tax (with finance costs tax relief)
-                + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions
-                /config.constants.MONTHS_IN_YEAR;
+    public double getMonthlyNetTotalIncome() {
+    	// Income tax (with finance costs tax relief)
+        monthlyTaxesPaid = Model.government.incomeTaxDue(getAnnualGrossTotalIncome() - getAnnualFinanceCosts())/config.constants.MONTHS_IN_YEAR;
+        // National insurance contributions
+    	monthlyNICPaid = Model.government.class1NICsDue(annualGrossEmploymentIncome)/config.constants.MONTHS_IN_YEAR; 
+    	
+    	return getMonthlyGrossTotalIncome() - monthlyTaxesPaid - monthlyNICPaid;
     }
 
     /**
@@ -261,6 +300,8 @@ public class Household implements IHouseOwner {
      ******************************************************/
     private void putHouseForSale(House h) {
         double principal;
+    	double initialSalePrice;
+
         MortgageAgreement mortgage = mortgageFor(h);
         if(mortgage != null) {
             principal = mortgage.principal;
@@ -270,7 +311,14 @@ public class Household implements IHouseOwner {
         if (h == home) {
             Model.houseSaleMarket.offer(h, behaviour.getInitialSalePrice(h.getQuality(), principal), false);
         } else {
-            Model.houseSaleMarket.offer(h, behaviour.getInitialSalePrice(h.getQuality(), principal), true);
+            initialSalePrice = behaviour.getInitialSalePrice(h.getQuality(), principal);
+        	Model.houseSaleMarket.offer(h, initialSalePrice, true);
+        	if(config.recordAgentDecisions 
+        			&& (Model.getTime() >= config.TIME_TO_START_RECORDING) 
+        			// to make sure that owner-occupiers inheriting a house and selling it do not get recorded
+        			&& behaviour.isPropertyInvestor()) {
+        		Model.agentDecisionRecorder.decideSellInvestmentProperty.println(initialSalePrice);
+        	}
         }
     }
 
@@ -330,7 +378,7 @@ public class Household implements IHouseOwner {
         bankBalance += sale.getPrice();
         // Second, find mortgage object and pay off as much outstanding debt as possible given bank balance
         MortgageAgreement mortgage = mortgageFor(sale.getHouse());
-        bankBalance -= mortgage.payoff(bankBalance);
+        bankBalance -= mortgage.payoff(bankBalance, this);
         // Third, if there is no more outstanding debt, remove the house from the household's housePayments object
         if (mortgage.nPayments == 0) {
             housePayments.remove(sale.getHouse());
@@ -440,7 +488,7 @@ public class Household implements IHouseOwner {
 		
         // write purchase Price in DECISION DATA SH output
 		if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
-			Model.agentDecisionRecorder.rentOrBuy.print(String.format("%.2f", desiredPurchasePrice) + ", ");
+			Model.agentDecisionRecorder.recordDesiredPurchasePriceSH(desiredPurchasePrice);
 		}
         
         // Record the bid on householdStats for counting the number of bids above exponential moving average sale price
@@ -502,39 +550,56 @@ public class Household implements IHouseOwner {
         PaymentAgreement payment;
         // Iterate over these house-paymentAgreement pairs
         while (paymentIt.hasNext()) {
-            entry = paymentIt.next();
-            h = entry.getKey();
-            payment = entry.getValue();
-            // If the deceased household owns the house, then...
-            if (h.owner == this) {
-                // ...first, withdraw the house from any market where it is currently being offered
-                if (h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
-                if (h.isOnMarket()) Model.houseSaleMarket.removeOffer(h.getSaleRecord());
-                // ...then, if there is a resident in the house...
-                if (h.resident != null) {
-                    // ...and this resident is different from the deceased household, then this resident must be a
-                    // tenant, who must get evicted
-                    if (h.resident != this) {
-                        h.resident.getEvicted(); // TODO: Explain in paper that renters always get evicted, not just if heir needs the house
-                    // ...otherwise, if the resident is the deceased household, remove it from the house
-                    } else {
-                        h.resident = null;
-                    }
-                }
-                // ...finally, transfer the property to the beneficiary household
-                beneficiary.inheritHouse(h, ((MortgageAgreement) payment).purchasePrice);
-            // Otherwise, if the deceased household does not own the house but it is living in it, then it must have
-            // been renting it: end the letting agreement
-            } else if (h == home) {
-                h.owner.endOfLettingAgreement(h, housePayments.get(h));
-                h.resident = null;
-            }
-            // If payment agreement is a mortgage, then try to pay off as much as possible from the deceased household's bank balance
-            if (payment instanceof MortgageAgreement) {
-                bankBalance -= ((MortgageAgreement) payment).payoff();
-            }
-            // Remove the house-paymentAgreement entry from the deceased household's housePayments object
-            paymentIt.remove(); // TODO: Not sure this is necessary. Note, though, that this implies erasing all outstanding debt
+        	entry = paymentIt.next();
+        	h = entry.getKey();
+        	payment = entry.getValue();
+        	// If the deceased household owns the house, then...
+        	if (h.owner == this) {
+        		// ...first, withdraw the house from any market where it is currently being offered
+        		if (h.isOnRentalMarket()) Model.houseRentalMarket.removeOffer(h.getRentalRecord());
+        		if (h.isOnMarket()) Model.houseSaleMarket.removeOffer(h.getSaleRecord());
+        		// ...then, if there is a resident in the house...
+        		if (h.resident != null) {
+        			// ...and this resident is different from the deceased household, then this resident must be a
+        			// tenant, who must get evicted
+        			if (h.resident != this) {
+        				h.resident.getEvicted(); // TODO: Explain in paper that renters always get evicted, not just if heir needs the house
+        				// ...otherwise, if the resident is the deceased household, remove it from the house
+        			} else {
+        				h.resident = null;
+        			}
+        		}
+        		// ...finally, transfer the property to the beneficiary household
+        		beneficiary.inheritHouse(h, ((MortgageAgreement) payment).purchasePrice);
+        		// Otherwise, if the deceased household does not own the house but it is living in it, then it must have
+        		// been renting it: end the letting agreement
+        	} else if (h == home) {
+        		h.owner.endOfLettingAgreement(h, housePayments.get(h));
+        		h.resident = null;
+        	}
+        	// If payment agreement is a mortgage, then try to pay off as much as possible from the deceased household's bank balance
+        	if (payment instanceof MortgageAgreement) {
+        		double payoff = ((MortgageAgreement) payment).payoff(beneficiary);
+        		double bankBalanceBeforePayoff = bankBalance;
+        		bankBalance -= payoff;
+        		// record the payoff of principal at the beneficiaries, as it will otherwise not be recorded. 
+        		// ... if the was higher than the bank balance, then record the amount that was paid off and the rest, which was not...
+        		if(bankBalance < 0.0 && bankBalanceBeforePayoff >= 0.0) {
+        			Model.householdStats.recordPrincipalRepaymentDeceasedHousehold(bankBalanceBeforePayoff);
+        			//beneficiary.setPrincipalPaidBackForInheritance(bankBalanceBeforePayoff);
+        			Model.householdStats.recordDebtReliefDeceasedHousehold(-bankBalance);
+        		// ... if the bank balance was already negative, due to former payoff (like 2nd mortgage), record debt relief as the amount of the principal..
+        		} else if(bankBalance < 0.0 && bankBalanceBeforePayoff < 0.0) {
+        			Model.householdStats.recordDebtReliefDeceasedHousehold(payoff);
+        		//... if the bankBalance is positive, this means no debt was relieved and the bankBalance can be transfered
+        		//... record the principal paid back
+        		} else {
+        			Model.householdStats.recordPrincipalRepaymentDeceasedHousehold(payoff);
+        			//beneficiary.setPrincipalPaidBackForInheritance(payoff);
+        		}
+        	}
+        	// Remove the house-paymentAgreement entry from the deceased household's housePayments object
+        	paymentIt.remove(); // TODO: Not sure this is necessary. Note, though, that this implies erasing all outstanding debt
         }
         // Finally, transfer all remaining liquid wealth to the beneficiary household
         beneficiary.bankBalance += Math.max(0.0, bankBalance);
@@ -619,6 +684,10 @@ public class Household implements IHouseOwner {
     public double getAnnualGrossEmploymentIncome() { return annualGrossEmploymentIncome; }
 
     public double getMonthlyGrossEmploymentIncome() { return monthlyGrossEmploymentIncome; }
+    
+	public double returnMonthlyDisposableIncome() { return monthlyDisposableIncome; }
+	
+	public double returnMonthlyGrossRentalIncome() { return monthlyGrossRentalIncome; }
 
     /***
      * @return Number of properties this household currently has on the sale market
@@ -733,5 +802,56 @@ public class Household implements IHouseOwner {
     public double getSavingRate() { return savingRate; }
     
     public double getIncomePercentile() {return incomePercentile;}
+    
+    public double getMonthlyPayments() {return monthlyPayments;}
+
+	public double getPrincipalPaidBack() {
+		return principalPaidBack;
+	}
+
+	public void setPrincipalPaidBack(double principalPaidBack) {
+		this.principalPaidBack += principalPaidBack;
+	}
+
+	public double getInterestPaidBack() {
+		return interestPaidBack;
+	}
+
+	public void setInterestPaidBack(double interestPaidBack) {
+		this.interestPaidBack += interestPaidBack;
+	}
+
+	public double getRentalPayment() {
+		return rentalPayment;
+	}
+
+	public void setRentalPayment(double rentalPayment) {
+		this.rentalPayment = rentalPayment;
+	}
+
+	public double getCashInjection() {
+		return cashInjection;
+	}
+
+	public void setCashInjection(double cashInjection) {
+		this.cashInjection = cashInjection;
+	}
+
+	public double getPrincipalPaidBackForInheritance() {
+		return principalPaidBackForInheritance;
+	}
+
+	public void setPrincipalPaidBackForInheritance(double principalPaidBackForInheritance) {
+		this.principalPaidBackForInheritance = principalPaidBackForInheritance;
+	}
+
+	public double getMonthlyTaxesPaid() {
+		return monthlyTaxesPaid;
+	}
+
+	public double getMonthlyNICPaid() {
+		return monthlyNICPaid;
+	}
+	
 
 }

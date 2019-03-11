@@ -92,7 +92,7 @@ public class HouseOfferRecord extends HousingMarketRecord {
 
     public House getHouse() { return house; }
 
-    ArrayList<HouseBidderRecord> getMatchedBids() { return matchedBids; }
+    public ArrayList<HouseBidderRecord> getMatchedBids() { return matchedBids; }
 
     public double getInitialListedPrice() { return initialListedPrice; }
 

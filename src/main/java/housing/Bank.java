@@ -81,14 +81,12 @@ public class Bank {
 	}
 	
 	// credit supply increases with HPA expectation
-	//(1+Model.housingMarketStats.getLongTermHPA()*config.HPA_EXPECTATION_FACTOR*100)*
-	//(1+Model.housingMarketStats.getLongTermHPA()*config.HPA_EXPECTATION_FACTOR*2)*
 	public double creditSupplyTarget(int totalPopulation) {
 		if(config.FLEXIBLE_CREDIT_SUPPLY) {
 			return (1+Model.housingMarketStats.getLongTermHPA()*config.CREDIT_SUPPLY_ADJUSTMENT)*(config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation);
-		}else if(config.TREND){
+		}else if(config.trend && config.periodTrendStarting >= Model.getTime()){
 			// adjust the credit supply by banks according to the income growth rate
-			return config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation * Model.getTime() * config.MONTHLY_INCREASE_EMPLOYMENT_INCOME; 
+			return config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation * (Model.getTime()-config.periodTrendStarting) * config.yearlyIncreaseEmploymentIncome; 
 		}else {
 			return config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation;
 		}
@@ -143,7 +141,7 @@ public class Bank {
 	 */
 	private double getMonthlyPaymentFactor(boolean isHome) {
 		// TEST BTL receive normal credit where they pay off the principal as well.
-		if(config.ALTERNATE_CONSUMPTION_FUNCTION) { return monthlyPaymentFactor;}
+		//if(config.ALTERNATE_CONSUMPTION_FUNCTION) { return monthlyPaymentFactor;}
 		if (isHome) {
 			return monthlyPaymentFactor; // Monthly payment factor to pay off the principal in N_PAYMENTS
 		} else {
@@ -203,22 +201,24 @@ public class Bank {
 		double ltv_principal = housePrice * getLoanToValueLimit(h.isFirstTimeBuyer(), isHome); //Math.min(0.99, (getLoanToValueLimit(h.isFirstTimeBuyer(), isHome)+ 15*h.behaviour.getLongTermHPAExpectation()));
 		approval.principal = ltv_principal;
 		
-		if(isHome) {
-			// --- affordability constraint TODO: affordability for BTL?
-			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyNetTotalIncome())
-                    / getMonthlyPaymentFactor(isHome);
-			approval.principal = Math.min(approval.principal, affordable_principal);
+		if(config.allCreditConstraintsActive) {
+			if(isHome) {
+				// --- affordability constraint TODO: affordability for BTL?
+				affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyNetTotalIncome())
+	                    / getMonthlyPaymentFactor(isHome);
+				approval.principal = Math.min(approval.principal, affordable_principal);
 
-			// --- lti constraint
-			lti_principal = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome);
-			approval.principal = Math.min(approval.principal, lti_principal);
-		} else {
-			// --- BTL ICR constraint
-			icr_principal = Model.rentalMarketStats.getExpAvFlowYield()*housePrice
-                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
-			approval.principal = Math.min(approval.principal, icr_principal);
+				// --- lti constraint
+				lti_principal = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome);
+				approval.principal = Math.min(approval.principal, lti_principal);
+			} else {
+				// --- BTL ICR constraint
+				icr_principal = Model.rentalMarketStats.getExpAvFlowYield()*housePrice
+	                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
+				approval.principal = Math.min(approval.principal, icr_principal);
+			}
 		}
-		
+
 		approval.downPayment = housePrice - approval.principal;
 
         if(liquidWealth < approval.downPayment) {
@@ -234,7 +234,7 @@ public class Bank {
 			approval.downPayment = desiredDownPayment;
 			approval.principal = housePrice - desiredDownPayment;
 		}
-		
+
 		approval.monthlyPayment = approval.principal* getMonthlyPaymentFactor(isHome);
 		approval.nPayments = config.derivedParams.N_PAYMENTS;
 		approval.monthlyInterestRate = r;
@@ -246,26 +246,17 @@ public class Bank {
 		// this records agents DECISION DATA SH, when they decide to rent or buy. 
 		// the rest of the variables gets recorded in the behaviour.decideRentOrPurchase method
 		if(!methodCalledFromRequestLoan 
-				&& config.recordAgentDecisions && isHome 
+				&& config.recordAgentDecisions 
 				&& (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
-			Model.agentDecisionRecorder.rentOrBuy.print("false"
-					+ ", " + String.format("%.2f", ltv_principal)
-					+ ", " + String.format("%.2f", affordable_principal)
-					+ ", " + String.format("%.2f", lti_principal)
-					+ ", "
-					);			
+			if(isHome) {
+				Model.agentDecisionRecorder.recordLoanRequestSH(ltv_principal, affordable_principal, lti_principal);		
+			}
+			// record agent data DECISION DATA BTL 
+			else {
+				Model.agentDecisionRecorder.recordLoanRequestBTL(ltv_principal, icr_principal);
+			}
 		}
-		// record agent data DECISION DATA BTL 
-		if(!methodCalledFromRequestLoan 
-				&& config.recordAgentDecisions && !isHome 
-				&& (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
-			Model.agentDecisionRecorder.decideBuyInvestmentProperty.print(String.format("%.2f", ltv_principal)
-					+ ", " + String.format("%.2f", icr_principal)
-					+ ", "
-					);
-			
-		}
-		
+
 		return approval;
 	}
 
@@ -277,59 +268,51 @@ public class Bank {
      * @param isHome True if household h plans to live in the house (non-BTL mortgage)
 	 * @return The maximum house price that this mortgage-lender is willing to approve a mortgage for
 	 */
-	double getMaxMortgage(Household h, boolean isHome, boolean methodCallFromDecideToBuyInvestmentProperty) {
-		double ltv_max_price;
-		double max_price;
-		double affordability_max_price; // Affordability (disposable income) constraint for maximum house price
-		double lti_max_price; // Loan to income constraint for maximum house price
-		double icr_max_price; // Interest cover ratio constraint for maximum house price
+	public double getMaxMortgage(Household h, boolean isHome, boolean methodCallFromDecideToBuyInvestmentProperty) {
+		double ltv_max_price =0.0;
+		double max_price = 0.0;
+		double affordability_max_price = 0.0; // Affordability (disposable income) constraint for maximum house price
+		double lti_max_price = 0.0; // Loan to income constraint for maximum house price
+		double icr_max_price = 0.0; // Interest cover ratio constraint for maximum house price
 		double liquidWealth = h.getBankBalance(); // No home equity needs to be added here: households always sell their homes before trying to buy new ones
         double max_downpayment = liquidWealth - 0.01; // Maximum down-payment the household could make, where 1 cent is subtracted to avoid rounding errors
 
         // LTV constraint: maximum house price the household could pay with the maximum mortgage the bank could provide
         // to the household given the Loan-To-Value limit and the maximum down-payment the household could make
 		// LTVFLEXIBLE
-		// adapted to make it dependent on HPA. 1.5 is a calibration value -> + 1.5 *h.behaviour.getLongTermHPAExpectation())
-		// the maximum LTV ratio is 0.99
+		// the maximum LTV ratio is 0.999
         
         max_price = ltv_max_price = max_downpayment/(1.0 - getLoanToValueLimit(h.isFirstTimeBuyer(), isHome));
 
-		if(isHome) { // No LTI nor affordability constraints for BTL investors
-			// Affordability constraint
-            affordability_max_price = max_downpayment + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF
-                    *h.getMonthlyNetTotalIncome())/getMonthlyPaymentFactor(isHome);
-			max_price = Math.min(ltv_max_price, affordability_max_price);
-            // Loan-To-Income constraint
-			lti_max_price = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)
-                    + max_downpayment;
-			max_price = Math.min(max_price, lti_max_price);
-			// First part of the DECISION DATA SH output
-			if(isHome && config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
-				Model.agentDecisionRecorder.rentOrBuy.print(Model.getTime() 
-						+ ", " + h.id
-						+ ", " + String.format("%.2f", ltv_max_price)
-						+ ", " //+ String.format("%.2f", affordability_max_price)
-						+ ", " //+ String.format("%.2f", lti_max_price)
-						+ ", ");
-			}
-		} else {
-		    // Interest-Cover-Ratio constraint
-			icr_max_price = max_downpayment/(1.0 - Model.rentalMarketStats.getExpAvFlowYield()
-                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
-            max_price = Math.min(ltv_max_price,  icr_max_price);
-			// First part of the DECISION DATA BTL output
-            // agents 
-			if(methodCallFromDecideToBuyInvestmentProperty && 
-				config.recordAgentDecisions && 
-				(Model.getTime() >= config.TIME_TO_START_RECORDING)) {
-				Model.agentDecisionRecorder.decideBuyInvestmentProperty.print(Model.getTime() 
-						+ ", " + h.id
-						+ ", " //+ String.format("%.2f", ltv_max_price)
-						+ ", " //+ String.format("%.2f", icr_max_price)
-						+ ", ");
-			}
+        if(config.allCreditConstraintsActive) {
+        	if(isHome) { // No LTI nor affordability constraints for BTL investors
+        		// Affordability constraint
+        		affordability_max_price = max_downpayment + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF
+        				*h.getMonthlyNetTotalIncome())/getMonthlyPaymentFactor(isHome);
+        		max_price = Math.min(ltv_max_price, affordability_max_price);
+        		// Loan-To-Income constraint
+        		lti_max_price = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)
+        				+ max_downpayment;
+        		max_price = Math.min(max_price, lti_max_price);
+        	} else {
+        		// Interest-Cover-Ratio constraint
+        		icr_max_price = max_downpayment/(1.0 - Model.rentalMarketStats.getExpAvFlowYield()
+        				/(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+        		max_price = Math.min(ltv_max_price,  icr_max_price);
+        	}
         }
-		return max_price;
+        // First part of the DECISION DATA SH output
+        if (config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
+        	if(isHome) {
+        		Model.agentDecisionRecorder.recordMaxMortgageSH(h, ltv_max_price, affordability_max_price, lti_max_price);
+        	}
+        	// First part of the DECISION DATA BTL output
+        	// agents 
+        	else if(methodCallFromDecideToBuyInvestmentProperty){
+        		Model.agentDecisionRecorder.recordMaxMortgageBTL(h, ltv_max_price, icr_max_price);
+        	}
+        }
+        return max_price;
 	}
 
     /**
@@ -355,12 +338,12 @@ public class Bank {
         		if(isFirstTimeBuyer) {
         			// return at least the set limit, but possibly higher, and at most 1.0
         			//return Math.max(Math.min(Model.housingMarketStats.getLongTermHPA()*0.2+firstTimeBuyerLTVLimit, 1.0), firstTimeBuyerLTVLimit);
-        			return Math.min(Model.housingMarketStats.getLongTermHPA()*0.6+firstTimeBuyerLTVLimit, 0.999);
+        			return Math.min(Model.housingMarketStats.getLongTermHPA()*config.LTVAdjustmentFactor+firstTimeBuyerLTVLimit, 0.999);
         		} else {
-        			return Math.min(Model.housingMarketStats.getLongTermHPA()*0.6+ownerOccupierLTVLimit, 0.999);
+        			return Math.min(Model.housingMarketStats.getLongTermHPA()*config.LTVAdjustmentFactor+ownerOccupierLTVLimit, 0.999);
         		}
         	}
-        	return Math.min(Model.housingMarketStats.getLongTermHPA()*0.6+buyToLetLTVLimit, 0.999);
+        	return Math.min(Model.housingMarketStats.getLongTermHPA()*config.LTVAdjustmentFactor+buyToLetLTVLimit, 0.999);
         }
         
     	if(isHome) {

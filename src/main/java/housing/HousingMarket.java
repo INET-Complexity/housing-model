@@ -144,16 +144,46 @@ public abstract class HousingMarket {
         int winningBid;
         int enoughBids; // Upper bounded number of bids on one house
         Iterator<HousingMarketRecord> record = getOffersIterator();
+        // counter to record below
+        int i = 1;
         while(record.hasNext()) {
             offer = (HouseOfferRecord)record.next();
             nBids = offer.getMatchedBids().size();
+ //*****************************************************           
+            // record the offer and the matched bids, but only the housing market
+            if(Model.getTime() >= Model.config.TIME_TO_START_RECORDING 
+            		&& Model.config.recordOffersAndBids
+            		&& offer.getHouse().isOnMarket()== true) {
+            	Model.offerAndBidRecorder.outfile.print(
+            			Model.getTime() + ", " 
+            					+ i + ", " 
+            					+ offer.getId() + ", " 
+            					+ offer.getHouse().id + ", "
+            					+ offer.getQuality() + ", "
+                    			+ offer.getYield() + ", " 
+            					+ String.format("%.2f",offer.getPrice()) + ", "
+            					+ String.format("%.2f",offer.getInitialListedPrice()) + ", "
+            					+ offer.gettInitialListing() + ", "
+            			);
+
+            	for(HouseBidderRecord bid : offer.getMatchedBids()){
+            		Model.offerAndBidRecorder.outfile.print(
+            				String.format("%.2f", bid.getPrice()) + ", "
+            						+ bid.getBidder().id + ", "
+            						+ bid.getBidder().getBankBalance() + ", "
+            						+ bid.getBidder().behaviour.isPropertyInvestor() + ", "
+            				);
+            	};
+            }
+//******************************************************            
             // If matches for this offer are multiple...
             if(nBids > 1) {
                 // ...first bid up the price
                 if(config.BIDUP > 1.0) {
                     // TODO: All this enough bids mechanism is not explained! The 10000/N factor, the 0.5 added, and the
                     // TODO: topping of the function at 4 are not declared in the paper. Remove or explain!
-                    enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/config.TARGET_POPULATION));
+                    // Comment Ruben: as I understand this, the cut-off at 4 is to signify 4 weeks of a month.
+                	enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/config.TARGET_POPULATION));
                     // TODO: Also, the role of MONTHS_UNDER_OFFER is not explained or declared!
                     pSuccessfulBid = Math.exp(-enoughBids*config.derivedParams.MONTHS_UNDER_OFFER);
                     geomDist = new GeometricDistribution(prng, pSuccessfulBid);
@@ -179,6 +209,17 @@ public abstract class HousingMarket {
                 removeOfferFromQueues(record, offer);
                 // ...update price for the offer
                 offer.setPrice(salePrice);
+  //*********************************************************              
+                // record the winning bid
+                if(Model.getTime() >= Model.config.TIME_TO_START_RECORDING
+                		&& Model.config.recordOffersAndBids
+                		&& offer.getHouse().isOnMarket()== true) {
+                	Model.offerAndBidRecorder.outfile.println(
+                			offer.getMatchedBids().get(winningBid).getBidder().id + ", "
+                			+ salePrice);
+                	++i;
+                }
+  //**********************************************************
                 // ...complete successful transaction and record it into the corresponding housingMarketStats
                 completeTransaction(offer.getMatchedBids().get(winningBid), offer);
                 // Put the rest of the bids for this property (failed bids) back on bids array
@@ -186,12 +227,28 @@ public abstract class HousingMarket {
                 bids.addAll(offer.getMatchedBids().subList(winningBid + 1, offer.getMatchedBids().size()));
             // If there is only one match...
             } else if (nBids == 1) {
+  //*********************************************************              
+                // end line in csv file and increase the counter
+                if(Model.getTime() >= Model.config.TIME_TO_START_RECORDING
+                		&& Model.config.recordOffersAndBids
+                		&& offer.getHouse().isOnMarket()== true) {
+                	Model.offerAndBidRecorder.outfile.println(", ");
+                	++i;
+                }
+  //**********************************************************
                 // ...complete successful transaction and record it into the corresponding housingMarketStats
                 completeTransaction(offer.getMatchedBids().get(0), offer);
                 // ...remove this offer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
                 removeOfferFromQueues(record, offer);
             }
             // Note that we skip the whole process if there are no matches
+            // end the line in the csv file
+            if(Model.getTime() >= Model.config.TIME_TO_START_RECORDING
+            		&& Model.config.recordOffersAndBids
+            		&& offer.getHouse().isOnMarket()== true) {	
+            	Model.offerAndBidRecorder.outfile.println("");
+            	++i;
+            }
         }
     }
 

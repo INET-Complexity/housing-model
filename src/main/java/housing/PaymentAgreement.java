@@ -27,11 +27,13 @@ public class PaymentAgreement {
      *
      * @return The amount of the monthly payment
      */
-	public double makeMonthlyPayment() {
+	public double makeMonthlyPayment(Household h) {
 		if (nPayments == 0) {
+			h.setRentalPayment(0.0);
 		    return 0.0;
         } else {
             nPayments -= 1;
+            h.setRentalPayment(monthlyPayment);
             return monthlyPayment;
         }
 	}

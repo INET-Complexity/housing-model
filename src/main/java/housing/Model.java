@@ -53,6 +53,7 @@ public class Model {
     public static HousingMarketStats    housingMarketStats;
     public static RentalMarketStats     rentalMarketStats;
     public static TransactionRecorder   transactionRecorder;
+    public static OfferAndBidRecorder 	offerAndBidRecorder;
     public static MicroDataRecorder     microDataRecorder;
     public static AgentDataRecorder		agentRecorder;
     public static AgentDecisionRecorder	agentDecisionRecorder;
@@ -80,22 +81,23 @@ public class Model {
         prng = new MersenneTwister(config.SEED);
 
         government = new Government();
-        demographics = new Demographics(prng);
-        construction = new Construction(prng);
+//        demographics = new Demographics(prng);
+//        construction = new Construction(prng);
         centralBank = new CentralBank();
         bank = new Bank();
         households = new ArrayList<>(config.TARGET_POPULATION*2);
-        houseSaleMarket = new HouseSaleMarket(prng);
-        houseRentalMarket = new HouseRentalMarket(prng);
+//        houseSaleMarket = new HouseSaleMarket(prng);
+//        houseRentalMarket = new HouseRentalMarket(prng);
 
         recorder = new collectors.Recorder(outputFolder);
         transactionRecorder = new TransactionRecorder(outputFolder);
+        offerAndBidRecorder = new OfferAndBidRecorder(outputFolder);
         microDataRecorder = new MicroDataRecorder(outputFolder);
         creditSupply = new collectors.CreditSupply(outputFolder);
         coreIndicators = new collectors.CoreIndicators();
         householdStats = new collectors.HouseholdStats();
-        housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket);
-        rentalMarketStats = new collectors.RentalMarketStats(housingMarketStats, houseRentalMarket);
+//        housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket);
+//        rentalMarketStats = new collectors.RentalMarketStats(housingMarketStats, houseRentalMarket);
         agentRecorder = new collectors.AgentDataRecorder(outputFolder);
         agentDecisionRecorder = new collectors.AgentDecisionRecorder(outputFolder);
         
@@ -119,35 +121,61 @@ public class Model {
 
         // Perform config.N_SIMS simulations
 		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
+			
+			// TEST change the seed every monte-carlo simulation, adding int nSimulation to it 
+			// (-1, so the first iteration is the seed implemented in the config)
+			// Model.config.setSeed(config.SEED + nSimulation-1);
+			// update the Mersenne twister with the new seed as well as the instances, where MersenneTwister
+			// is used
+			prng.setSeed(config.SEED + nSimulation-1);
+	        demographics = new Demographics(prng);
+	        construction = new Construction(prng);
+	        houseSaleMarket = new HouseSaleMarket(prng);
+	        houseRentalMarket = new HouseRentalMarket(prng);
+	        // construct the housing Market Stats with the new houseSaleMarket
+	        housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket);
+	        rentalMarketStats = new collectors.RentalMarketStats(housingMarketStats, houseRentalMarket);
+
 
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation, true, config.N_QUALITY);
             if (config.recordTransactions) { transactionRecorder.openSingleRunFiles(nSimulation); }
-            if (config.recordBankBalance || config.recordNHousesOwned) {
+            if (config.recordOffersAndBids) { offerAndBidRecorder.openSingleRunFiles(nSimulation); }
+            if (config.recordBankBalance || config.recordNHousesOwned 
+            		|| config.recordHousingWealth || config.recordSavingRate
+            		|| config.recordMonthlyGrossTotalIncome || config.recordMonthlyGrossEmploymentIncome
+            		|| config.recordMonthlyGrossRentalIncome || config.recordDebt || config.recordConsumption
+            		|| config.recordBTL) {
                 microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
-                        config.recordHousingWealth, config.recordNHousesOwned, config.recordSavingRate);
+                        config.recordHousingWealth, config.recordNHousesOwned, config.recordSavingRate,
+                        config.recordMonthlyGrossTotalIncome, config.recordMonthlyGrossEmploymentIncome,
+                        config.recordMonthlyGrossRentalIncome, config.recordDebt, config.recordConsumption, config.recordBTL);
             }
             
             // For each simulation, open the AgentData files
-            agentRecorder.openNewFiles(nSimulation);
+            if (config.recordAgentData) {agentRecorder.openNewFiles(nSimulation);}
             
             // For each simulation, open the agentDecisionRecorder files
-            agentDecisionRecorder.openNewFiles(nSimulation);
+            if (config.recordAgentDecisions) { agentDecisionRecorder.openNewFiles(nSimulation);}
 
 		    // For each simulation, initialise both houseSaleMarket and houseRentalMarket variables (including HPI)
             init();
 
             // For each simulation, run config.N_STEPS time steps
 			for (t = 0; t <= config.N_STEPS; t += 1) {
-
+				
+				if(t==809	) {
+					System.out.println("period: " + t);
+				}
+				
                 // Steps model and stores sale and rental markets bid and offer prices, and their averages, into their
                 // respective variables
                 modelStep();
 
                 if (t >= config.TIME_TO_START_RECORDING) {
-                    //RUBEN write results of every agent's variable x into the file 
+                    //write results of every agent's variable x into the file 
                     //(this is only provisional, as it only writes one type of data)
-                    agentRecorder.recordAgentData();
+                    if(config.recordAgentData) {agentRecorder.recordAgentData();}
                     // Write results of this time step and run to both multi- and single-run files
                     recorder.writeTimeStampResults(config.recordCoreIndicators, t, config.recordQualityBandPrice);
 
@@ -163,17 +191,20 @@ public class Model {
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
             recorder.finishRun(config.recordCoreIndicators, config.recordQualityBandPrice);
             if (config.recordTransactions) transactionRecorder.finishRun();
+            if (config.recordOffersAndBids) offerAndBidRecorder.finishRun();
             if (config.recordBankBalance || config.recordNHousesOwned) {
                 microDataRecorder.finishRun(config.recordBankBalance, config.recordHousingWealth,
-                        config.recordNHousesOwned, config.recordSavingRate);
+                        config.recordNHousesOwned, config.recordSavingRate, config.recordMonthlyGrossTotalIncome,
+                        config.recordMonthlyGrossEmploymentIncome, config.recordMonthlyGrossRentalIncome,
+                        config.recordDebt, config.recordConsumption, config.recordBTL);
             }
 		}
 
         // After the last simulation, clean up
         recorder.finish(config.recordCoreIndicators);
         //clean up agentRecorder
-        agentRecorder.finish();
-        if(config.recordAgentDecisions) agentDecisionRecorder.finish();
+        if(config.recordAgentData) {agentRecorder.finish();}
+        if(config.recordAgentDecisions) {agentDecisionRecorder.finish();}
 
         //Stop the program when finished
 		System.exit(0);

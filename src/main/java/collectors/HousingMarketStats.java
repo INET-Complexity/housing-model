@@ -46,6 +46,7 @@ public class HousingMarketStats {
     private double []               sumMonthsOnMarketPerQualityCount; // Dummy counter
 	private double []               sumSalePricePerQualityCount; // Dummy counter
 	private int []                  nSalesPerQualityCount; // Dummy counter
+	private double 					moneyToConstructionSectorCount; // Dummy counter
 
 	// Variables computed after market clearing to keep the previous values during the clearing
 	private int                     nSales; // Number of sales
@@ -57,7 +58,8 @@ public class HousingMarketStats {
 	private double                  sumMonthsOnMarket; // Sum of the number of months on the market for properties sold this month
 	private double []               sumSalePricePerQuality; // Sum of the price for each quality band for properties sold this month
 	private int []                  nSalesPerQuality; // Number of sales for each quality band for properties sold this month
-
+	private double 					moneyToConstructionSector; // money flowing out of the simulation via the construction sector
+	
 	// Other variables computed after market clearing
 	private double                  expAvMonthsOnMarket; // Exponential moving average of the number of months on the market
     private double []               sumMonthsOnMarketPerQuality; // Sum of the months on market for each quality band for properties sold this month
@@ -115,6 +117,7 @@ public class HousingMarketStats {
         sumMonthsOnMarket = 0;
         sumSalePricePerQuality = new double[config.N_QUALITY];
         nSalesPerQuality = new int[config.N_QUALITY];
+        moneyToConstructionSector = 0.0;
 
         // Set initial values for other variables computed after market clearing
         expAvMonthsOnMarket = 1.0; // TODO: Make this initialisation explicit in the paper!
@@ -147,6 +150,7 @@ public class HousingMarketStats {
         sumMonthsOnMarketPerQualityCount = new double[config.N_QUALITY];
         sumSalePricePerQualityCount = new double[config.N_QUALITY];
         nSalesPerQualityCount = new int[config.N_QUALITY];
+        moneyToConstructionSectorCount = 0.0;
 
         // Re-initialise to zero variables computed before market clearing
         nBuyers = market.getBids().size();
@@ -215,7 +219,7 @@ public class HousingMarketStats {
             }
         }
         // TODO: Attention, calls to Model class should be avoided: need to pass transactionRecorder as constructor arg
-        if (config.recordTransactions && Model.getTime() > 2000 && Model.getTime() < 2500) { Model.transactionRecorder.recordSale(purchase, sale, mortgage, market); }
+        if (config.recordTransactions && Model.getTime() >= Model.config.TIME_TO_START_RECORDING) { Model.transactionRecorder.recordSale(purchase, sale, mortgage, market); }
     }
 
     /**
@@ -233,6 +237,11 @@ public class HousingMarketStats {
         sumSoldPriceCount += sale.getPrice();
     }
 
+    // count money outflow to construction sector
+    public void recordMoneyOutflowToConstruction(HouseOfferRecord sale) {
+    	moneyToConstructionSectorCount += sale.getPrice();
+    }
+    
     //----- Post-market-clearing methods -----//
 
     /**
@@ -248,6 +257,7 @@ public class HousingMarketStats {
         sumSoldReferencePrice = sumSoldReferencePriceCount;
         sumSoldPrice = sumSoldPriceCount;
         sumMonthsOnMarket = sumMonthsOnMarketCount;
+        moneyToConstructionSector = moneyToConstructionSectorCount;
         System.arraycopy(sumMonthsOnMarketPerQualityCount, 0, sumMonthsOnMarketPerQuality, 0, config.N_QUALITY);
         System.arraycopy(nSalesPerQualityCount, 0, nSalesPerQuality, 0, config.N_QUALITY);
         System.arraycopy(sumSalePricePerQualityCount, 0, sumSalePricePerQuality, 0, config.N_QUALITY);
@@ -361,6 +371,7 @@ public class HousingMarketStats {
     double getSumSalePriceForQuality(int quality) { return sumSalePricePerQuality[quality]; }
     public int [] getnSalesPerQuality() { return nSalesPerQuality; }
     int getnSalesForQuality(int quality) { return nSalesPerQuality[quality]; }
+    public double getMoneyToConstructionSector() { return moneyToConstructionSector; }
 
     // Getters for other variables computed after market clearing
     public double getExpAvMonthsOnMarket() { return expAvMonthsOnMarket; }
@@ -443,3 +454,4 @@ public class HousingMarketStats {
         return avReferencePrice/referencePricePerQuality.length;
     }
 }
+

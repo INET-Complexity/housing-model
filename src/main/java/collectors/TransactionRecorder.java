@@ -32,11 +32,11 @@ public class TransactionRecorder {
             outfile = new PrintWriter(outputFolder + "Transactions-run" + nRun + ".csv", "UTF-8");
             outfile.println("Model time, "
                     + "transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, "
-                    + "transactionPrice, buyerId, buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, "
+                    + "transactionPrice, rentalYield, buyerId, buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, "
                     + "buyerMonthlyGrossEmploymentIncome, buyerPostPurchaseBankBalance, buyerCapGainCoeff, "
                     + "mortgageDownpayment, firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, "
                     + "sellerHasBTLGene, sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
-                    + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
+                    + "sellerPostPurchaseBankBalance, sellerCapGainCoeff, matchedBidsStartingHere");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -56,6 +56,7 @@ public class TransactionRecorder {
 				sale.getInitialListedPrice() + ", " +
 				sale.gettInitialListing() + ", " +
     			sale.getPrice() + ", " +
+				sale.getYield() + ", " + 
     			purchase.getBidder().id + ", " +
     			purchase.getBidder().getAge() + ", " +
     			purchase.getBidder().behaviour.isPropertyInvestor() + ", " +
@@ -73,18 +74,19 @@ public class TransactionRecorder {
 		}
 		if (sale.getHouse().owner instanceof Household) {
 			Household seller = (Household) sale.getHouse().owner;
-			outfile.println(
+			outfile.print(
 					seller.id + ", " +
 					seller.getAge() + ", " +
 					seller.behaviour.isPropertyInvestor() + ", " +
 					seller.getMonthlyGrossTotalIncome() + ", " +
 					seller.getMonthlyGrossEmploymentIncome() + ", " +
 					seller.getBankBalance() + ", " +
-					seller.behaviour.getBTLCapGainCoefficient());
+					seller.behaviour.getBTLCapGainCoefficient() +", ");
 		} else {
 			// must be construction sector
 			outfile.println("-1, 0, false, 0, 0, 0, 0");
 		}
+		outfile.println(sale.getMatchedBids());
 	}
 
 	public void finishRun() { outfile.close(); }

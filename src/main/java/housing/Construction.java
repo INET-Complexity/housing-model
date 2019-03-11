@@ -1,6 +1,7 @@
 package housing;
 
 import org.apache.commons.math3.random.MersenneTwister;
+import collectors.HousingMarketStats;
 
 import java.util.HashSet;
 
@@ -76,7 +77,11 @@ public class Construction implements IHouseOwner{
 	}
 
 	@Override
-	public void completeHouseSale(HouseOfferRecord sale) { onMarket.remove(sale.getHouse()); }
+	public void completeHouseSale(HouseOfferRecord sale) { 
+		onMarket.remove(sale.getHouse());
+		//RUBEN TEST can I record the money outflow by hh paying the construction sector?
+		Model.housingMarketStats.recordMoneyOutflowToConstruction(sale);
+	}
 
 	@Override
 	public void endOfLettingAgreement(House h, PaymentAgreement p) {

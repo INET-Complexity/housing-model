@@ -32,31 +32,52 @@ public class Config {
     boolean recordCoreIndicators;		        // True to write time series for each core indicator
     boolean recordQualityBandPrice;             // True to write time series of prices for each quality band to a single file per run
     public boolean recordTransactions;			// True to write data for each transaction
+    public boolean 	recordOffersAndBids;		// true to write every offer with its matches over the clearing cycle
+    public int microDataRecordIntervall;		// at which intervall should the micro data be recorded
     public boolean recordBankBalance;           // True to write individual household liquid wealth (bank balance) data (after market clearing)
     public boolean recordHousingWealth;         // True to write individual household housing wealth data (after market clearing, assuming constant house prices!)
     public boolean recordNHousesOwned;          // True to write individual household number of houses owned data (after market clearing)
     public boolean recordSavingRate;            // True to write individual household saving rate data [1 - (taxExpenses + housing expenses(except deposits) + essentialConsumption + nonEssentialConsumption)/monthlyGrossTotalIncome]
-    boolean recordAgentData;					// True to write micro data for each agent each period
-    boolean recordAgentDecisions; 			// True to write data from agent decision methods
+    public boolean recordMonthlyGrossTotalIncome; 	// True to write individual household monthly gross total income
+    public boolean recordMonthlyGrossEmploymentIncome; // True to write individual household monthly gross employment income
+    public boolean recordMonthlyGrossRentalIncome;	// True to write individual household monthly gross rental income
+    public boolean recordAgentData;					// True to write micro data for each agent each period
+    public boolean recordAgentDecisions; 			// True to write data from agent decision methods
+    public boolean recordDebt;					// True to write individual household debt (after market clearing) (boolean)
+    public boolean recordConsumption;			// True to write individual household total consumption
+    public boolean recordBTL; 				// True to write "1" if agent is BTL
+
     
     // Decision equations
     boolean FLEXIBLE_CREDIT_SUPPLY;					// make credit supply dependent on the housing cycle
     boolean FLEXIBLE_CREDIT_CONSTRAINTS;			// toggle flexible LTV, LTI and affordability ratios by the bank
+    boolean allCreditConstraintsActive;				// if false, then only LTV is active, if true all other constraints are binding as well
     boolean ALTERNATE_CONSUMPTION_FUNCTION;			// make consumption solely dependent on income and wealth
-    boolean TREND;									// add a trend to the employment income of households
+    
+    // income inequality parameters
+    boolean risingIncomeInequality; 				// implement rising employment income inequality
+    double yearlyInequalityIncrease; 				// percentage by which the employment income inequality rises per year
+    int periodIncomeInequalityRises;				// period when income inequality is rising
     
     // trend parameters
-    double MONTHLY_INCREASE_EMPLOYMENT_INCOME; 		// monthly rate of increase in employment income per month
+    boolean trend;									// add a trend to the employment income of households
+    int periodTrendStarting;							// period when trend should increase
+    double yearlyIncreaseEmploymentIncome; 			// yearly rate of increase in employment income per month
     
     // alternate consumption function parameters
-    public double CONSUMPTION_FRACTION_DISP_INC;			// propensity to consume out of disposable income
-    public double WEALTH_EFFECT_Q1;							// lowest income quartile wealth effect
-    public double WEALTH_EFFECT_Q2;							// second income quartile wealth effect
-    public double WEALTH_EFFECT_Q3;							// third income quartile wealth effect
-    public double WEALTH_EFFECT_Q4;							// highest income quartile wealth effect
-    public double CONSUMPTION_BANK_BALANCE;					// coefficient for consumption out liquid wealth
-    public double CONSUMPTION_HOUSING;						// coefficient for consumption out housing wealth
-    public double CONSUMPTION_DEBT;							// coefficient for consumption out debt
+    public double consumptionFractionQ1;					// propensity to consume out of disposable income for lowest income quartile
+    public double consumptionFractionQ2;					// propensity to consume out of disposable income for second income quartile
+    public double consumptionFractionQ3; 					// propensity to consume out of disposable income for third income quartile
+    public double consumptionFractionQ4;					// propensity to consume out of disposable income for highest income quartile
+    public double wealthEffectQ1;							// lowest income quartile wealth effect
+    public double wealthEffectQ2;							// second income quartile wealth effect
+    public double wealthEffectQ3;							// third income quartile wealth effect
+    public double wealthEffectQ4;							// highest income quartile wealth effect
+    public double consumptionBankBalance;					// coefficient for consumption out liquid wealth
+    public double consumptionHousing;						// coefficient for consumption out housing wealth
+    public double consumptionDebt;							// coefficient for consumption out debt
+    public double paymentsToIncome;							// share of MonthlyNetTotalIncome used for mortgage payments
+    public double consumptionAdjustmentForDeleveraging; 	// if households is negative lower consumption by this factor
     
     // House parameters
     public int N_QUALITY;                   // Number of quality bands for houses
@@ -84,9 +105,11 @@ public class Config {
     double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
     double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
     double P_FUNDAMENTALIST; 			    // Probability that a BTL investor is a fundamentalist versus a trend-follower
+    public double btlHousepriceSensitivity;		// How fast do BTL investors adjust their investment decision with regard to their desired bank balance
+   
     // Household behaviour parameters: rent
     double DESIRED_RENT_INCOME_FRACTION;    // Desired proportion of income to be spent on rent
-    double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
+    public double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
     double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
     // Household behaviour parameters: general
     double BANK_BALANCE_FOR_CASH_DOWNPAYMENT;   // If bankBalance/housePrice is above this, payment will be made fully in cash
@@ -99,7 +122,7 @@ public class Config {
     double REDUCTION_SIGMA;                 // Standard deviation of percentage reductions for prices of houses on the market
     // Household behaviour parameters: consumption
     double CONSUMPTION_FRACTION;            // Fraction of monthly budget for consumption (monthly budget = bank balance - minimum desired bank balance)
-    double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
+    public double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
     // Household behaviour parameters: initial sale price
     double SALE_MARKUP;                     // Initial markup over average price of same quality houses
     double SALE_WEIGHT_MONTHS_ON_MARKET;    // Weight of the months-on-market effect
@@ -133,10 +156,11 @@ public class Config {
     double DECISION_TO_SELL_INTEREST;       // TODO: fudge parameter, explicitly explained otherwise in the paper
     // Household behaviour parameters: BTL buy/sell choice
     double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield
-    double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimun bank balance, as a percentage of the desired bank balance, to buy new properties
+    public double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimun bank balance, as a percentage of the desired bank balance, to buy new properties
 
     // Bank parameters
     double CREDIT_SUPPLY_ADJUSTMENT;		// Flexible credit supply adjustment parameter
+    double LTVAdjustmentFactor;				// Sensitivity of the LTV parameter to the HPA
     int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
     double BANK_INITIAL_BASE_RATE;          // Bank initial base-rate (currently remains unchanged)
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
@@ -270,6 +294,10 @@ public class Config {
         return P_INVESTOR;
     }
 
+    public void setSeed(int seed) {
+    	SEED = seed;
+    }
+    
     /**
      * Method to read configuration parameters from a configuration (.properties) file
      * @param   configFileName    String with name of configuration (.properties) file (address inside source folder)

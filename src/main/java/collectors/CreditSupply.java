@@ -56,16 +56,19 @@ public class CreditSupply {
         btlCounter = 0;
         newDownPaymentsApproved = newDownPayment;
         newDownPayment = 0.0;
+        newPrincipalIssued = newPrincipalIssuedCounter;
+        newPrincipalIssuedCounter = 0.0;
 	}
 	//TODO this is not newly issued credit, but total credit in the simulation at time 't'
 	public double getNewlyIssuedCredit() {
-		return totalOOCredit+totalBTLCredit;
+		return newPrincipalIssued;
 	}
 	//TODO 
 	public double getNewlyPaidDownPayments() {
 		return newDownPaymentsApproved;
 	}
 	
+
 	/***
 	 * record information for a newly issued mortgage
 	 * @param h
@@ -94,6 +97,7 @@ public class CreditSupply {
 			}
 			mortgageCounter += 1;
 			newDownPayment += approval.downPayment;
+			newPrincipalIssuedCounter += approval.principal;
 			
 			if(approval.isFirstTimeBuyer) ftbCounter += 1;
 			if(approval.isBuyToLet) btlCounter += 1;
@@ -180,6 +184,8 @@ public class CreditSupply {
 	public double oldTotalDownPayment;
 	public double newDownPayment;
 	public double newDownPaymentsApproved;
+	private double newPrincipalIssuedCounter;
+	private double newPrincipalIssued;
 
 	
 

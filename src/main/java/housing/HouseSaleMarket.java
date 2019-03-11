@@ -78,16 +78,23 @@ public class HouseSaleMarket extends HousingMarket {
 	
 	@Override
 	protected HouseOfferRecord getBestOffer(HouseBidderRecord bid) {
-        if (bid.isBTLBid()) { // BTL bidder (yield driven)
+		double minDownpayment;
+		if (bid.isBTLBid()) { // BTL bidder (yield driven)
 			HouseOfferRecord bestOffer = (HouseOfferRecord)offersPY.peek(bid);
 			if (bestOffer != null) {
-					double minDownpayment = bestOffer.getPrice()*(1.0
-                            - Model.rentalMarketStats.getExpAvFlowYield()
-                            /(Model.centralBank.getInterestCoverRatioLimit(false)
-                            *config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
-					if (bid.getBidder().getBankBalance() >= minDownpayment) {
-						return bestOffer;
-					}
+				if(config.allCreditConstraintsActive==false 
+						&& config.FLEXIBLE_CREDIT_CONSTRAINTS) {
+					minDownpayment = bestOffer.getPrice() * (1.0 - Model.bank.getLoanToValueLimit(false, false));
+				} else {
+					minDownpayment = 
+							bestOffer.getPrice()*(1.0
+									- Model.rentalMarketStats.getExpAvFlowYield()
+									/(Model.centralBank.getInterestCoverRatioLimit(false)
+											*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+				}
+				if (bid.getBidder().getBankBalance() >= minDownpayment) {
+					return bestOffer;
+				}
 			}
 			return null;
 		} else { // must be OO buyer (quality driven)

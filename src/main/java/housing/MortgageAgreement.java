@@ -19,7 +19,7 @@ public class MortgageAgreement extends PaymentAgreement {
 	public final boolean    isBuyToLet;
 	public final boolean    isFirstTimeBuyer;
 	public double           principal; // Remaining principal to be paid off
-	double                  monthlyInterestRate;
+	public double           monthlyInterestRate;
 
     //------------------------//
     //----- Constructors -----//
@@ -39,16 +39,20 @@ public class MortgageAgreement extends PaymentAgreement {
 	 * This method updates the internal variables to simulate a monthly payment being made, though it does not move any
      * assets from payer to payee!
 	 * 
-	 * @return The amount of the monthly payment
+	 * @return The amount of the monthly payment and record the payments
 	 */
 	@Override
-    public double makeMonthlyPayment() {
+    public double makeMonthlyPayment(Household h) {
 	    // If no more payments are due...
         if (nPayments == 0) {
             // ...but mortgage is still active...
             if (isActive) {
+//            	if(principal>20) {
+//            	//	System.out.println("BTL repayment of principal: " + principal);
+//            	}
                 isActive = false; // ...then deactivate the mortgage...
-                return payoff(principal); // ...by paying off all remaining principle (this also removes mortgage from the bank's list)...
+                double payoff = payoff(principal, h);
+                return payoff; // ...by paying off all remaining principle (this also removes mortgage from the bank's list)...
             // ...otherwise, if mortgage is already inactive...
             } else {
                 return 0.0; // ...simply return a zero payment
@@ -56,24 +60,39 @@ public class MortgageAgreement extends PaymentAgreement {
         // If more payments are still due...
         } else {
             nPayments -= 1; // ...then reduce number of payments due by one,
+            double principalBefore = principal;
             principal = principal*(1.0 + monthlyInterestRate) - monthlyPayment; // ...reduce amount due by amount to be paid this month
+            // ... calculate the principal and interest repayment and record it ...
+            h.setPrincipalPaidBack(principalBefore-principal);
+            // as there are tiny rounding errors, i subtract a small amount for this test
+            if((principal-0.01)>principalBefore) {
+            	System.out.println("weird, the mortgage volume increased");
+            }
+            // ... calculate the the interest repayment as the amount of interest accrued this month
+            h.setInterestPaidBack(principalBefore*(1.0 + monthlyInterestRate)-principalBefore);
+            // as there are tiny rounding errors, I add 0.01 to monthly payments
+            if((principalBefore*(1.0 + monthlyInterestRate)-principalBefore)> (monthlyPayment+0.1) 
+            		&& monthlyPayment != 0.0) {
+            	System.out.println("weird, the monthly payment made was smaller than the increase in credit by the interest rate");
+            }
             return monthlyPayment; // ...and return the monthly payment
         }
 	}
-
+	
 	/**
 	 * Use this method to pay off the mortgage early or make a one-off payment.
 	 * 
 	 * @param amount Desired amount to pay off
 	 * @return The amount that was actually paid off
 	 */
-	double payoff(double amount) {
+	double payoff(double amount, Household h) {
 		if (amount >= principal) {
             amount = principal;
             principal = 0.0;
             monthlyPayment = 0.0;
             nPayments = 0;
             Model.bank.endMortgageContract(this);
+            h.setPrincipalPaidBack(amount); // (record the repayment..)
 		} else {
 			monthlyPayment *= (principal - amount)/principal;
 			principal -= amount;
@@ -86,5 +105,5 @@ public class MortgageAgreement extends PaymentAgreement {
      *
      * @return The amount that was actually paid off
      */
-	double payoff() { return payoff(principal); }
+	double payoff(Household h) { return payoff(principal, h); }
 }

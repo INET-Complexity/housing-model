@@ -19,3 +19,7 @@
 # ignore python pyc files
 *.pyc
 Results/
+
+src/config-files/
+
+\.Rhistory
