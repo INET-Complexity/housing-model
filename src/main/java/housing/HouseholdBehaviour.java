@@ -87,33 +87,21 @@ public class HouseholdBehaviour {
 			double savingForDeleveraging = 0.0;
 			// set the wealth effect according to the employment income position of the household, so that 
 			// households with higher employment income consume less out of their wealth
-			if(incomePercentile<0.20) {
+			if(incomePercentile<0.25) {
 				wealthEffect = config.wealthEffectQ1;
 				consumptionFraction = config.consumptionFractionQ1;
 			}
-			else if(0.2 <= incomePercentile && incomePercentile < 0.4) {
+			else if(0.25 <= incomePercentile && incomePercentile < 0.5) {
 				wealthEffect = config.wealthEffectQ2;
 				consumptionFraction = config.consumptionFractionQ2;
 			}
-			else if(0.4 <= incomePercentile && incomePercentile <0.6) {
+			else if(0.5 <= incomePercentile && incomePercentile <0.75) {
 				wealthEffect = config.wealthEffectQ3;
 				consumptionFraction = config.consumptionFractionQ3;
 			}
-			else if(0.6<= incomePercentile && incomePercentile <0.8) {
-				wealthEffect = config.wealthEffectQ4;
-				consumptionFraction = config.consumptionFractionQ4;
-			}
-			else if(0.8<= incomePercentile && incomePercentile<0.95) {
-				wealthEffect = config.wealthEffectQ4;
-				consumptionFraction = config.consumptionFractionQ5;
-			}
-			else if(0.95<= incomePercentile && incomePercentile < 0.99) {
-				wealthEffect = config.wealthEffectQ4;
-				consumptionFraction = config.consumptionFractionTop5;
-			}
 			else {
 				wealthEffect = config.wealthEffectQ4;
-				consumptionFraction = config.consumptionFractionTop1;
+				consumptionFraction = config.consumptionFractionQ4;
 			}
 			// calculate the desired consumption
 			consumption = consumptionFraction*disposableIncome 
