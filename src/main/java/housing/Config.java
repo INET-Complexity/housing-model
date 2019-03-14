@@ -69,6 +69,9 @@ public class Config {
     public double consumptionFractionQ2;					// propensity to consume out of disposable income for second income quartile
     public double consumptionFractionQ3; 					// propensity to consume out of disposable income for third income quartile
     public double consumptionFractionQ4;					// propensity to consume out of disposable income for highest income quartile
+    public double consumptionFractionQ5;
+    public double consumptionFractionTop5;
+    public double consumptionFractionTop1;
     public double wealthEffectQ1;							// lowest income quartile wealth effect
     public double wealthEffectQ2;							// second income quartile wealth effect
     public double wealthEffectQ3;							// third income quartile wealth effect
