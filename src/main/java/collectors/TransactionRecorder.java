@@ -34,8 +34,8 @@ public class TransactionRecorder {
                     + "transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, "
                     + "transactionPrice, buyerId, buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, "
                     + "buyerMonthlyGrossEmploymentIncome, buyerPostPurchaseBankBalance, buyerCapGainCoeff, "
-                    + "mortgageDownpayment, firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, "
-                    + "sellerHasBTLGene, sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
+                    + "mortgageDownpayment, mortgagePrincipal, firstTimeBuyerMortgage, buyToLetMortgage, sellerId, "
+                    + "sellerAge, sellerHasBTLGene, sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
                     + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -66,10 +66,11 @@ public class TransactionRecorder {
 		if (mortgage != null) {
 			outfile.print(
 					mortgage.downPayment + ", " +
+                    mortgage.principal + ", " +
 					mortgage.isFirstTimeBuyer + ", " +
 					mortgage.isBuyToLet + ", ");
 		} else {
-			outfile.print("-1, false, false, ");
+			outfile.print("-1, -1, false, false, ");
 		}
 		if (sale.getHouse().owner instanceof Household) {
 			Household seller = (Household) sale.getHouse().owner;
