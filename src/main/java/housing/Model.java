@@ -134,10 +134,8 @@ public class Model {
                 // respective variables
                 modelStep();
 
-//                if (t >= config.TIME_TO_START_RECORDING) {
-                    // Write results of this time step and run to both multi- and single-run files
-                    recorder.writeTimeStampResults(config.recordCoreIndicators, t, config.recordQualityBandPrice);
-//                }
+                // Write results of this time step and run to both multi- and single-run files
+                recorder.writeTimeStampResults(config.recordCoreIndicators, t, config.recordQualityBandPrice);
 
                 // Print time information to screen
                 if (t % 100 == 0) {

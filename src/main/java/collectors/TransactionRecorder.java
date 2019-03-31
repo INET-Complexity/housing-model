@@ -16,6 +16,8 @@ public class TransactionRecorder {
 
     private PrintWriter outfile;
 
+    private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
+
     //------------------------//
     //----- Constructors -----//
     //------------------------//
@@ -44,48 +46,50 @@ public class TransactionRecorder {
 	
 	void recordSale(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage,
                     HousingMarket market) {
-		outfile.print(Model.getTime() + ", ");
-		if (market instanceof HouseSaleMarket) {
-			outfile.print("sale, ");
-		} else {
-			outfile.print("rental, ");
-		}
-		outfile.print(
-    			sale.getHouse().id + ", " +
-    			sale.getHouse().getQuality() + ", " +
-				sale.getInitialListedPrice() + ", " +
-				sale.gettInitialListing() + ", " +
-    			sale.getPrice() + ", " +
-    			purchase.getBidder().id + ", " +
-    			purchase.getBidder().getAge() + ", " +
-    			purchase.getBidder().behaviour.isPropertyInvestor() + ", " +
-    			purchase.getBidder().getMonthlyGrossTotalIncome() + ", " +
-    			purchase.getBidder().getMonthlyGrossEmploymentIncome() + ", " +
-    			purchase.getBidder().getBankBalance() + ", "+
-    			purchase.getBidder().behaviour.getBTLCapGainCoefficient() + ", ");
-		if (mortgage != null) {
-			outfile.print(
-					mortgage.downPayment + ", " +
-                    mortgage.principal + ", " +
-					mortgage.isFirstTimeBuyer + ", " +
-					mortgage.isBuyToLet + ", ");
-		} else {
-			outfile.print("-1, -1, false, false, ");
-		}
-		if (sale.getHouse().owner instanceof Household) {
-			Household seller = (Household) sale.getHouse().owner;
-			outfile.println(
-					seller.id + ", " +
-					seller.getAge() + ", " +
-					seller.behaviour.isPropertyInvestor() + ", " +
-					seller.getMonthlyGrossTotalIncome() + ", " +
-					seller.getMonthlyGrossEmploymentIncome() + ", " +
-					seller.getBankBalance() + ", " +
-					seller.behaviour.getBTLCapGainCoefficient());
-		} else {
-			// must be construction sector
-			outfile.println("-1, 0, false, 0, 0, 0, 0");
-		}
+        if (Model.getTime() >= config.TIME_TO_START_RECORDING_TRANSACTIONS) {
+            outfile.print(Model.getTime() + ", ");
+            if (market instanceof HouseSaleMarket) {
+                outfile.print("sale, ");
+            } else {
+                outfile.print("rental, ");
+            }
+            outfile.print(
+                    sale.getHouse().id + ", " +
+                            sale.getHouse().getQuality() + ", " +
+                            sale.getInitialListedPrice() + ", " +
+                            sale.gettInitialListing() + ", " +
+                            sale.getPrice() + ", " +
+                            purchase.getBidder().id + ", " +
+                            purchase.getBidder().getAge() + ", " +
+                            purchase.getBidder().behaviour.isPropertyInvestor() + ", " +
+                            purchase.getBidder().getMonthlyGrossTotalIncome() + ", " +
+                            purchase.getBidder().getMonthlyGrossEmploymentIncome() + ", " +
+                            purchase.getBidder().getBankBalance() + ", " +
+                            purchase.getBidder().behaviour.getBTLCapGainCoefficient() + ", ");
+            if (mortgage != null) {
+                outfile.print(
+                        mortgage.downPayment + ", " +
+                                mortgage.principal + ", " +
+                                mortgage.isFirstTimeBuyer + ", " +
+                                mortgage.isBuyToLet + ", ");
+            } else {
+                outfile.print("-1, -1, false, false, ");
+            }
+            if (sale.getHouse().owner instanceof Household) {
+                Household seller = (Household) sale.getHouse().owner;
+                outfile.println(
+                        seller.id + ", " +
+                                seller.getAge() + ", " +
+                                seller.behaviour.isPropertyInvestor() + ", " +
+                                seller.getMonthlyGrossTotalIncome() + ", " +
+                                seller.getMonthlyGrossEmploymentIncome() + ", " +
+                                seller.getBankBalance() + ", " +
+                                seller.behaviour.getBTLCapGainCoefficient());
+            } else {
+                // must be construction sector
+                outfile.println("-1, 0, false, 0, 0, 0, 0");
+            }
+        }
 	}
 
 	public void finishRun() { outfile.close(); }
