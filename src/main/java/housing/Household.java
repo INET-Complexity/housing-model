@@ -590,6 +590,8 @@ public class Household implements IHouseOwner {
 
     public double getMonthlyGrossEmploymentIncome() { return monthlyGrossEmploymentIncome; }
 
+    public double getMonthlyGrossRentalIncome() { return monthlyGrossRentalIncome; }
+
     /***
      * @return Number of properties this household currently has on the sale market
      */

@@ -32,6 +32,8 @@ public class Config {
     boolean recordTransactions;			                // True to write data for each transaction
     boolean recordCoreIndicators;		                // True to write time series for each core indicator
     boolean recordQualityBandPrice;                     // True to write time series of prices for each quality band to a single file per run
+    public boolean recordEmploymentIncome;              // True to write individual household monthly gross employment income data
+    public boolean recordRentalIncome;                  // True to write individual household monthly gross rental income data (after market clearing)
     public boolean recordBankBalance;                   // True to write individual household liquid wealth (bank balance) data (after market clearing)
     public boolean recordHousingWealth;                 // True to write individual household housing wealth data (after market clearing, assuming constant house prices!)
     public boolean recordNHousesOwned;                  // True to write individual household number of houses owned data (after market clearing)
