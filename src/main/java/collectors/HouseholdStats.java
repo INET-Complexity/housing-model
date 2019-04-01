@@ -90,7 +90,7 @@ public class HouseholdStats {
         // Time stamp householdStats microDataRecorders
         Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordEmploymentIncome,
                 config.recordRentalIncome, config.recordBankBalance, config.recordHousingWealth,
-                config.recordNHousesOwned, config.recordSavingRate);
+                config.recordNHousesOwned, config.recordAge, config.recordSavingRate);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
             if (h.behaviour.isPropertyInvestor()) {
@@ -156,6 +156,9 @@ public class HouseholdStats {
             }
             if (config.recordNHousesOwned) {
                 Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.getNProperties());
+            }
+            if (config.recordAge) {
+                Model.microDataRecorder.recordAge(Model.getTime(), h.getAge());
             }
             if (config.recordSavingRate) {
                 Model.microDataRecorder.recordSavingRate(Model.getTime(), h.getSavingRate());

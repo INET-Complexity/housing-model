@@ -119,11 +119,9 @@ public class Model {
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation, true, config.N_QUALITY);
             if (config.recordTransactions) { transactionRecorder.openSingleRunFiles(nSimulation); }
-            if (config.recordBankBalance || config.recordNHousesOwned) {
-                microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordEmploymentIncome,
-                        config.recordRentalIncome, config.recordBankBalance, config.recordHousingWealth,
-                        config.recordNHousesOwned, config.recordSavingRate);
-            }
+            microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordEmploymentIncome,
+                    config.recordRentalIncome, config.recordBankBalance, config.recordHousingWealth,
+                    config.recordNHousesOwned, config.recordAge, config.recordSavingRate);
 
 		    // For each simulation, initialise both houseSaleMarket and houseRentalMarket variables (including HPI)
             init();
@@ -147,11 +145,9 @@ public class Model {
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
             recorder.finishRun(config.recordCoreIndicators, config.recordQualityBandPrice);
             if (config.recordTransactions) transactionRecorder.finishRun();
-            if (config.recordBankBalance || config.recordNHousesOwned) {
-                microDataRecorder.finishRun(config.recordEmploymentIncome, config.recordRentalIncome,
-                        config.recordBankBalance, config.recordHousingWealth, config.recordNHousesOwned,
-                        config.recordSavingRate);
-            }
+            microDataRecorder.finishRun(config.recordEmploymentIncome, config.recordRentalIncome,
+                    config.recordBankBalance, config.recordHousingWealth, config.recordNHousesOwned, config.recordAge,
+                    config.recordSavingRate);
 		}
 
         // After the last simulation, clean up
