@@ -36,7 +36,7 @@ public class TransactionRecorder {
                     + "buyerMonthlyGrossEmploymentIncome, buyerPostPurchaseBankBalance, buyerCapGainCoeff, "
                     + "mortgageDownpayment, firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, "
                     + "sellerHasBTLGene, sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
-                    + "sellerPostPurchaseBankBalance, sellerCapGainCoeff, matchedBidsStartingHere");
+                    + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -86,7 +86,6 @@ public class TransactionRecorder {
 			// must be construction sector
 			outfile.println("-1, 0, false, 0, 0, 0, 0");
 		}
-		outfile.println(sale.getMatchedBids());
 	}
 
 	public void finishRun() { outfile.close(); }
