@@ -22,8 +22,8 @@ public class HouseRentalMarket extends HousingMarket {
 	public void completeTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
         Model.rentalMarketStats.recordTransaction(sale);
 		sale.getHouse().rentalRecord = null;
-		purchase.getBidder().completeHouseRental(sale);
-		sale.getHouse().owner.completeHouseLet(sale);
+		RentalAgreement rentalAgreement = purchase.getBidder().completeHouseRental(sale);
+		sale.getHouse().owner.completeHouseLet(sale, rentalAgreement);
 		Model.rentalMarketStats.recordSale(purchase, sale);
 	}
 

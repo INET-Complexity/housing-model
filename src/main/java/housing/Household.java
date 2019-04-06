@@ -32,11 +32,11 @@ public class Household implements IHouseOwner {
 
     private House                           home;
     private Map<House, PaymentAgreement>    housePayments = new TreeMap<>(); // Houses owned and their payment agreements
+    private Map<House, RentalAgreement>     rentalContracts = new TreeMap<>(); // Houses rented out by this landlord and their payment agreements
     private Config                          config = Model.config; // Passes the Model's configuration parameters object to a private field
     private MersenneTwister                 prng;
     private double                          age; // Age of the household representative person
     private double                          bankBalance;
-    private double                          monthlyGrossRentalIncome; // Keeps track of monthly rental income, as only tenants keep a reference to the rental contract, not landlords
     private double                          savingRate; // (disposableIncome - nonEssentialConsumption)/grossTotalIncome
     private boolean                         isFirstTimeBuyer;
     private boolean                         isBankrupt;
@@ -62,7 +62,6 @@ public class Household implements IHouseOwner {
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         bankBalance = data.Wealth.getDesiredBankBalance(getAnnualGrossTotalIncome(), behaviour.getPropensityToSave()); // Desired bank balance is used as initial value for actual bank balance
-        monthlyGrossRentalIncome = 0.0;
     }
 
     //-------------------//
@@ -191,9 +190,17 @@ public class Household implements IHouseOwner {
     /**
      * Adds up all sources of (gross) income on a monthly basis: employment and property income
      */
-    public double getMonthlyGrossTotalIncome() { return monthlyGrossEmploymentIncome + monthlyGrossRentalIncome; }
+    public double getMonthlyGrossTotalIncome() { return monthlyGrossEmploymentIncome + getMonthlyGrossRentalIncome(); }
 
     double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
+
+    public double getMonthlyGrossRentalIncome() {
+        double monthlyGrossRentalIncome = 0.0;
+        for(RentalAgreement rentalAgreement: rentalContracts.values()) {
+            monthlyGrossRentalIncome += rentalAgreement.nextPayment();
+        }
+        return monthlyGrossRentalIncome;
+    }
 
     //----- Methods for house owners -----//
 
@@ -327,7 +334,7 @@ public class Household implements IHouseOwner {
         // ...otherwise, if the house has a resident, it must be a renter, who must get evicted, also the rental income
         // corresponding to this tenancy must be subtracted from the owner's monthly rental income
         } else if (sale.getHouse().resident != null) {
-            monthlyGrossRentalIncome -= sale.getHouse().resident.housePayments.get(sale.getHouse()).monthlyPayment;
+            rentalContracts.remove(sale.getHouse());
             sale.getHouse().resident.getEvicted();
         }
     }
@@ -341,7 +348,7 @@ public class Household implements IHouseOwner {
      ********************************************************/
     @Override
     public void endOfLettingAgreement(House h, PaymentAgreement contract) {
-        monthlyGrossRentalIncome -= contract.monthlyPayment;
+        rentalContracts.remove(h);
 
         // put house back on rental market
         if(!housePayments.containsKey(h)) {
@@ -383,15 +390,13 @@ public class Household implements IHouseOwner {
      * in to rented accommodation (i.e. set up a regular
      * payment contract. At present we use a MortgageApproval).
      ********************************************************/
-    void completeHouseRental(HouseOfferRecord sale) {
-        if(sale.getHouse().owner != this) { // if renting own house, no need for contract
-            RentalAgreement rent = new RentalAgreement();
-            rent.monthlyPayment = sale.getPrice();
-            rent.nPayments = config.TENANCY_LENGTH_AVERAGE
-                    + prng.nextInt(2*config.TENANCY_LENGTH_EPSILON + 1) - config.TENANCY_LENGTH_EPSILON;
-//            rent.principal = rent.monthlyPayment*rent.nPayments;
-            housePayments.put(sale.getHouse(), rent);
-        }
+    RentalAgreement completeHouseRental(HouseOfferRecord sale) {
+        if(sale.getHouse().owner == this) System.out.println("Strange: I'm trying to rent a house I own!");
+        RentalAgreement rent = new RentalAgreement();
+        rent.monthlyPayment = sale.getPrice();
+        rent.nPayments = config.TENANCY_LENGTH_AVERAGE
+                + prng.nextInt(2*config.TENANCY_LENGTH_EPSILON + 1) - config.TENANCY_LENGTH_EPSILON;
+        housePayments.put(sale.getHouse(), rent);
         if(home != null) System.out.println("Strange: I'm renting a house but not homeless");
         home = sale.getHouse();
         if(sale.getHouse().resident != null) {
@@ -401,6 +406,7 @@ public class Household implements IHouseOwner {
             if(sale.getHouse().owner == sale.getHouse().resident) System.out.println("...It's a homeowner!");
         }
         sale.getHouse().resident = this;
+        return rent;
     }
 
     /********************************************************
@@ -443,11 +449,11 @@ public class Household implements IHouseOwner {
      * property
      */
     @Override
-    public void completeHouseLet(HouseOfferRecord sale) {
+    public void completeHouseLet(HouseOfferRecord sale, RentalAgreement rentalAgreement) {
         if(sale.getHouse().isOnMarket()) {
             Model.houseSaleMarket.removeOffer(sale.getHouse().getSaleRecord());
         }
-        monthlyGrossRentalIncome += sale.getPrice();
+        rentalContracts.put(sale.getHouse(), rentalAgreement);
     }
 
     /////////////////////////////////////////////////////////
@@ -589,8 +595,6 @@ public class Household implements IHouseOwner {
     public double getAnnualGrossEmploymentIncome() { return annualGrossEmploymentIncome; }
 
     public double getMonthlyGrossEmploymentIncome() { return monthlyGrossEmploymentIncome; }
-
-    public double getMonthlyGrossRentalIncome() { return monthlyGrossRentalIncome; }
 
     /***
      * @return Number of properties this household currently has on the sale market

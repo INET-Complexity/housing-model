@@ -19,6 +19,6 @@ public interface IHouseOwner {
 	void endOfLettingAgreement(House house, PaymentAgreement contract);
 
     /** Called when an agent lets a house **/
-	void completeHouseLet(HouseOfferRecord saleRecord);
+	void completeHouseLet(HouseOfferRecord saleRecord, RentalAgreement rentalAgreement);
 	
 }

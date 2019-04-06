@@ -84,7 +84,7 @@ public class Construction implements IHouseOwner{
 	}
 
 	@Override
-	public void completeHouseLet(HouseOfferRecord sale) {
+	public void completeHouseLet(HouseOfferRecord sale, RentalAgreement rentalAgreement) {
         System.out.println("Strange: the construction sector is trying to let a house!");
 	}
 
