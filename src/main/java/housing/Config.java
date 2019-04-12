@@ -73,10 +73,9 @@ public class Config {
     public double wealthEffectQ2;							// second income quartile wealth effect
     public double wealthEffectQ3;							// third income quartile wealth effect
     public double wealthEffectQ4;							// highest income quartile wealth effect
-    public double consumptionBankBalance;					// coefficient for consumption out liquid wealth
-    public double consumptionHousing;						// coefficient for consumption out housing wealth
-    public double consumptionDebt;							// coefficient for consumption out debt
+    public double consumptionNetHousingWealth;				// coefficient for consumption out net housing wealth (i.e. housing wealth less debt)
     public double paymentsToIncome;							// share of MonthlyNetTotalIncome used for mortgage payments
+    public double liquidityPreference;						// times the monthly disposable income households want to hold liquid
     public double consumptionAdjustmentForDeleveraging; 	// if households is negative lower consumption by this factor
     
     // House parameters

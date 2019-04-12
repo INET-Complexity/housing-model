@@ -81,9 +81,7 @@ public class HouseholdBehaviour {
 			double consumptionFraction;
 			// these are monthly values! 
 			double wealthEffect;
-			double liquidWealthConsumptionCoefficient = config.consumptionBankBalance;
-			double propertyConsumptionCoefficient = config.consumptionHousing;
-			double debtConsumptionCoefficient = config.consumptionDebt;
+			double netWealthConsumptionCoefficient = config.consumptionNetHousingWealth;
 			double savingForDeleveraging = 0.0;
 			// set the wealth effect according to the employment income position of the household, so that 
 			// households with higher employment income consume less out of their wealth
@@ -105,12 +103,11 @@ public class HouseholdBehaviour {
 			}
 			// calculate the desired consumption
 			consumption = consumptionFraction*disposableIncome 
-					+ wealthEffect*(liquidWealthConsumptionCoefficient*(bankBalance-disposableIncome) 
-							+ propertyConsumptionCoefficient*propertyValues + debtConsumptionCoefficient*totalDebt);
+					+ wealthEffect*((bankBalance-disposableIncome) 
+							+ netWealthConsumptionCoefficient*(propertyValues + totalDebt));
 
 			// add a stronger effect on consumption if the household is "under water", in order to restore their balance sheet
 			// the additional restrictions entail that negative equity has only a limiting effect if...
-			
 			if(equityPosition<0 
 					// ...desired consumption would be smaller than disposable income and liquid wealth as it gets already limited..
 					&& consumption < bankBalance 
@@ -122,12 +119,12 @@ public class HouseholdBehaviour {
 			// calculate the different parts of consumption in order to extract this data
 			double incomeConsumption = consumptionFraction*disposableIncome;
 			double financialWealthConsumption = wealthEffect*(bankBalance-disposableIncome); 
-			double housingWealthConsumption = wealthEffect*propertyConsumptionCoefficient*propertyValues;
-			double debtConsumption = wealthEffect*debtConsumptionCoefficient*totalDebt;
+			double housingWealthConsumption = wealthEffect*netWealthConsumptionCoefficient*propertyValues;
+			double debtConsumption = wealthEffect*netWealthConsumptionCoefficient*totalDebt;
 
 			// restrict consumption so that the wealth effect cannot decrease liquid wealth below the ratio 
 			// of twice the disposable income
-			if((bankBalance-disposableIncome-consumption)<2*disposableIncome) {
+			if((bankBalance-disposableIncome-consumption)<config.liquidityPreference*disposableIncome) {
 				consumption = incomeConsumption;
 			}
 
