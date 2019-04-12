@@ -117,14 +117,17 @@ public class CoreIndicators {
 
     // House price to household disposable income ratio
     // TODO: ATTENTION ---> Gross total income is used here, not disposable income! Post-tax income should be used!
+	// TODO: BoE uses Gross Disposable Income, which is defined: "money that that all of the individuals in the 
+	// household sector have available for spending or saving after income distribution measures 
+	// (for example, taxes, social contributions and benefits) have taken effect." 
+	// TODO: therefore, I use Net Income of ALL households
 	public double getPriceToIncome() {
 	    // TODO: Also, why to use HPI*HPIReference? Why not average house price?
 		return(Model.housingMarketStats.getHPI()*config.derivedParams.getHPIReference()
-				*(Model.households.size()
-                - Model.householdStats.getnRenting()
-                - Model.householdStats.getnHomeless())
-                /(Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()
-                + Model.householdStats.getActiveBTLAnnualisedTotalIncome()));
+				*(Model.households.size())
+                /((Model.householdStats.getOwnerOccupierMonthlyNetIncome()
+                		+ Model.householdStats.getActiveMonthlyNetIncome()
+                		+ Model.householdStats.getNonOwnerMonthlyNetIncome())*12));
 		// TODO: Finally, for security, population count should be made with nActiveBTL and nOwnerOccupier
 	}
 
