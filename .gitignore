@@ -23,3 +23,5 @@ Results/
 src/config-files/
 
 \.Rhistory
+
+\.RData
