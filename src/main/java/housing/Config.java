@@ -102,10 +102,6 @@ public class Config {
     double DOWNPAYMENT_MIN_INCOME;          // Minimum income percentile to consider any downpayment, below this level, downpayment is set to 0
     double DOWNPAYMENT_BTL_MEAN;            // Average downpayment, as percentage of house price, by but-to-let investors
     double DOWNPAYMENT_BTL_EPSILON;         // Standard deviation of the noise
-    // Household behaviour parameters: desired bank balance
-    double DESIRED_BANK_BALANCE_ALPHA;
-    double DESIRED_BANK_BALANCE_BETA;
-    double DESIRED_BANK_BALANCE_EPSILON;
     // Household behaviour parameters: selling decision
     double DECISION_TO_SELL_ALPHA;          // Weight of houses per capita effect
     double DECISION_TO_SELL_BETA;           // Weight of interest rate effect
