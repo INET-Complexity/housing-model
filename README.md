@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/EconomicSL/housing-model.svg?branch=master)](https://travis-ci.org/EconomicSL/housing-model)
+[![Build Status](https://travis-ci.org/INET-Complexity/housing-model.svg?branch=master)](https://travis-ci.org/EconomicSL/housing-model)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/a740a85350b54e49b49dd84157f30fac)](https://www.codacy.com/app/EconomicSL/housing-model?utm_source=github.com&utm_medium=referral&utm_content=EconomicSL/housing-model&utm_campaign=badger)
 
 Agent-Based Model of the UK Housing Market
