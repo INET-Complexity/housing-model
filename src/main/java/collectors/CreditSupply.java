@@ -1,18 +1,45 @@
 package collectors;
 
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-
-import housing.*;
+import housing.Config;
+import housing.Model;
+import housing.Household;
+import housing.MortgageAgreement;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
+/**************************************************************************************************
+ * Class to record mortgage data
+ *
+ * @author daniel, Adrian Carro
+ *
+ *************************************************************************************************/
 public class CreditSupply {
 
-	private Config config = Model.config;	// Passes the Model's configuration parameters object to a private field
+    //------------------//
+    //----- Fields -----//
+    //------------------//
 
-	public CreditSupply(String outputFolder) {
-	    outputFolderCopy = outputFolder;
+    private Config config = Model.config;       // Passes the Model's configuration parameters object to a private field
+    private DescriptiveStatistics oo_lti;
+    private DescriptiveStatistics oo_ltv;
+    private DescriptiveStatistics btl_ltv;
+    private DescriptiveStatistics btl_icr;
+    private DescriptiveStatistics downpayments; // TODO: This quantity only includes downpayments when the principal of the loan is > 0
+    private double totalBTLCredit = 0.0;        // Buy to let mortgage credit
+    private double totalOOCredit = 0.0;         // Owner-occupier mortgage credit
+    private double netCreditGrowth;             // Rate of change of credit per month as percentage
+    private double affordability = 0.0;         // Affordability coefficient
+    private int mortgageCounter;                // Counter for total number of new mortgages
+    private int nApprovedMortgages;             // total number of new mortgages
+    private int ftbCounter;                     // Counter for total number of new first time buyer mortgages
+    private int nFTBMortgages;                  // Total number of new first time buyer mortgages
+    private int btlCounter;                     // Counter for total number of new buy to let mortgages
+    private int nBTLMortgages;                  // Total number of new buy to let mortgages
+
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
+
+	public CreditSupply() {
 		mortgageCounter = 0;
 		ftbCounter = 0;
 		btlCounter = 0;
@@ -21,8 +48,12 @@ public class CreditSupply {
 		setArchiveLength(10000);
 	}
 
-	/***
-	 * collect information for this timestep
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
+
+	/**
+     * Collect information for this time step
 	 */
 	public void step() {
         double oldTotalCredit = totalOOCredit + totalBTLCredit;
@@ -48,12 +79,12 @@ public class CreditSupply {
         btlCounter = 0;
 	}
 
-	/***
-	 * record information for a newly issued mortgage
-	 * @param h
-	 * @param approval
+	/**
+	 * Record information for a newly issued mortgage
+	 * @param h Household being awarded the loan
+	 * @param approval Mortgage agreement
 	 */
-	public void recordLoan(Household h, MortgageAgreement approval, House house) {
+	public void recordLoan(Household h, MortgageAgreement approval) {
 		double housePrice;
 		housePrice = approval.principal + approval.downPayment;
 		// TODO: Check with Arzu, Marc if monthly gross income used here should include total income or just employment income (as of now)
@@ -74,55 +105,8 @@ public class CreditSupply {
 		if(approval.isFirstTimeBuyer) ftbCounter += 1;
 		if(approval.isBuyToLet) btlCounter += 1;
 	}
-	
-    //TODO: Check which of these functions should be kept and which removed!
-	// ---- Mason stuff
-	// ----------------
-	
-    public double [] getOOLTVDistribution() {return(oo_ltv.getValues());}
-    public double [] getOOLTIDistribution() {return(oo_lti.getValues());}
-    public double [] getBTLLTVDistribution() {return(btl_ltv.getValues());}
-    public double [] getDownpaymentDistribution() {return(downpayments.getValues());}
-    public double [] getBTLICRDistribution() {return(btl_icr.getValues());}
-       
-    public boolean getSaveOOLTVDistribution() { return(false);}
-    public void setSaveOOLTVDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
-        writeDistributionToFile(getOOLTVDistribution(),"ooLTVVals.csv");
-    }
-    public boolean getSaveBTLLTVDistribution() { return(false);}
-    public void setSaveBTLLTVDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
-        writeDistributionToFile(getBTLLTVDistribution(),"btlLTVVals.csv");
-    }
-    public boolean getSaveOOLTIDistribution() { return(false);}
-    public void setSaveOOLTIDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
-        writeDistributionToFile(getOOLTIDistribution(),"ooLTIVals.csv");
-    }
-    public boolean getSaveBTLICRDistribution() { return(false);}
-    public void setSaveBTLICRDistribution(boolean doSave) throws FileNotFoundException, UnsupportedEncodingException {
-        writeDistributionToFile(getBTLICRDistribution(),"btlICRVals.csv");
-    }
-    
 
-    public int getnRegisteredMortgages() { return(Model.bank.mortgages.size()); }
-
-	public int getArchiveLength() {
-		return archiveLength;
-	}
-	
-	public void writeDistributionToFile(double [] vals, String filename) throws FileNotFoundException,
-            UnsupportedEncodingException {
-        PrintWriter dist = new PrintWriter(outputFolderCopy + filename, "UTF-8");
-        if(vals.length > 0) {
-        	dist.print(vals[0]);
-        	for(int i=1; i<vals.length; ++i) {
-        		dist.print(", "+vals[i]);
-        	}
-        }
-        dist.close();
-	}
-
-	public void setArchiveLength(int archiveLength) {
-		this.archiveLength = archiveLength;
+	private void setArchiveLength(int archiveLength) {
 		oo_lti = new DescriptiveStatistics(archiveLength);
 		oo_ltv = new DescriptiveStatistics(archiveLength);
 		btl_ltv = new DescriptiveStatistics(archiveLength);
@@ -130,23 +114,25 @@ public class CreditSupply {
 		downpayments = new DescriptiveStatistics(archiveLength);
 	}
 
+    //----- Getter/setter methods -----//
 
-	public int archiveLength; // number of mortgage approvals to remember
-	public double affordability = 0.0;
-	public DescriptiveStatistics oo_lti;
-	public DescriptiveStatistics oo_ltv;
-	public DescriptiveStatistics btl_ltv;
-	public DescriptiveStatistics btl_icr;
-	public DescriptiveStatistics downpayments; // TODO: This quantity only includes downpayments when the principal of the loan is > 0
-	public int mortgageCounter;
-	public int ftbCounter;	
-	public int btlCounter;	
-	public int nApprovedMortgages; // total number of new mortgages
-	public int nFTBMortgages; // number of new first time buyer mortgages given
-	public int nBTLMortgages; // number of new buy to let mortgages given
-	public double totalBTLCredit = 0.0; // buy to let mortgage credit
-	public double totalOOCredit = 0.0; // owner-occupier mortgage credit	
-	public double netCreditGrowth; // rate of change of credit per month as percentage
+    DescriptiveStatistics getOO_lti() { return oo_lti; }
 
-	private String outputFolderCopy;
+    DescriptiveStatistics getOO_ltv() { return oo_ltv; }
+
+    DescriptiveStatistics getBTL_ltv() { return btl_ltv; }
+
+    int getnRegisteredMortgages() { return Model.bank.mortgages.size(); }
+
+    int getnApprovedMortgages() { return nApprovedMortgages; }
+
+    int getnFTBMortgages() { return nFTBMortgages; }
+
+    int getnBTLMortgages() { return nBTLMortgages; }
+
+    double getTotalBTLCredit() { return totalBTLCredit; }
+
+    double getTotalOOCredit() { return totalOOCredit; }
+
+    double getNetCreditGrowth() { return netCreditGrowth; }
 }

@@ -281,7 +281,8 @@ public class Household implements IHouseOwner {
                 endTenancy();
             }
         }
-        MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(), behaviour.decideDownPayment(this,sale.getPrice()), home == null, sale.getHouse());
+        MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(),
+                behaviour.decideDownPayment(this,sale.getPrice()), home == null);
         if(mortgage == null) {
             // TODO: need to either provide a way for house sales to fall through or to ensure that pre-approvals are always satisfiable
             System.out.println("Can't afford to buy house: strange");

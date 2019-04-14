@@ -103,7 +103,7 @@ public class Bank {
 	/**
 	 * Get the interest rate on mortgages.
 	 */
-	double getMortgageInterestRate() { return baseRate + interestSpread; }
+	private double getMortgageInterestRate() { return baseRate + interestSpread; }
 	
 
 	/**
@@ -143,15 +143,14 @@ public class Bank {
 	 * @param isHome True if household h plans to live in the house (non-BTL mortgage)
 	 * @return The MortgageApproval object, or NULL if the mortgage is declined
 	 */
-	MortgageAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome,
-                                  House house) {
+	MortgageAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
 		MortgageAgreement approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
 		if(approval == null) return(null);
 		// --- if all's well, go ahead and arrange mortgage
 		supplyVal += approval.principal;
 		if(approval.principal > 0.0) {
 			mortgages.add(approval);
-			Model.creditSupply.recordLoan(h, approval, house);
+			Model.creditSupply.recordLoan(h, approval);
             if(isHome) {
                 ++nOOMortgages;
                 if(approval.principal/h.getAnnualGrossEmploymentIncome() >
