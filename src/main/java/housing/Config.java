@@ -72,7 +72,6 @@ public class Config {
     double BANK_BALANCE_FOR_CASH_DOWNPAYMENT;   // If bankBalance/housePrice is above this, payment will be made fully in cash
     double HPA_EXPECTATION_FACTOR;              // Weight assigned to current trend when computing expectations
     public int HPA_YEARS_TO_CHECK;              // Number of years of the HPI record to check when computing the annual HPA
-    private double HOLD_PERIOD;                 // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: sale price reduction
     double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
     double REDUCTION_MU;                    // Mean percentage reduction for prices of houses on the market
@@ -103,10 +102,7 @@ public class Config {
     double DOWNPAYMENT_BTL_MEAN;            // Average downpayment, as percentage of house price, by but-to-let investors
     double DOWNPAYMENT_BTL_EPSILON;         // Standard deviation of the noise
     // Household behaviour parameters: selling decision
-    double DECISION_TO_SELL_ALPHA;          // Weight of houses per capita effect
-    double DECISION_TO_SELL_BETA;           // Weight of interest rate effect
-    double DECISION_TO_SELL_HPC;            // TODO: fudge parameter, explicitly explained otherwise in the paper
-    double DECISION_TO_SELL_INTEREST;       // TODO: fudge parameter, explicitly explained otherwise in the paper
+    private double HOLD_PERIOD;                 // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: BTL buy/sell choice
     double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield
     double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimun bank balance, as a percentage of the desired bank balance, to buy new properties
