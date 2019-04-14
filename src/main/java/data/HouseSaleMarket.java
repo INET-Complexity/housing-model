@@ -1,8 +1,8 @@
 package data;
 
 import housing.Config;
-
 import housing.Model;
+
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 
 /**************************************************************************************************
@@ -52,9 +52,7 @@ public class HouseSaleMarket {
 	private static double [] setupRefPrice() {
 		double [] result = new double[config.N_QUALITY];
 		for(int q = 0; q < config.N_QUALITY; ++q) {
-		    // TODO: Why to discount this initial price distribution with INITIAL_HPI (which is < 1)?
-			result[q] = config.INITIAL_HPI
-                    *listPriceDistribution.inverseCumulativeProbability((q + 0.5)/config.N_QUALITY);
+			result[q] = listPriceDistribution.inverseCumulativeProbability((q + 0.5)/config.N_QUALITY);
 		}
 		return result;
 	}

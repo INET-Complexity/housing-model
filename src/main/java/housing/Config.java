@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Properties;
-import java.lang.Integer;
 import java.util.Set;
 
 /**************************************************************************************************
@@ -82,16 +81,15 @@ public class Config {
     public int N_QUALITY;                   // Number of quality bands for houses
 
     // Housing market parameters
-    int DAYS_UNDER_OFFER;                       // Time (in days) that a house remains under offer
+    private int DAYS_UNDER_OFFER;               // Time (in days) that a house remains under offer
     double BIDUP;                               // Smallest proportional increase in price that can cause a gazump
     public double MARKET_AVERAGE_PRICE_DECAY;   // Decay constant for the exponential moving average of sale prices
-    public double INITIAL_HPI;                  // Initial housing price index
-    double HPI_MEDIAN;                          // Median house price
+    private double HPI_MEDIAN;                  // Median house price
     public double HPI_SHAPE;                    // Shape parameter for the log-normal distribution of housing prices
     public double RENT_GROSS_YIELD;             // Profit margin for buy-to-let investors
 
     // Demographic parameters
-    public int TARGET_POPULATION;           // Target number of households
+    int TARGET_POPULATION;                  // Target number of households
     public double FUTURE_BIRTH_RATE;        // Future birth rate (births per year per capita), calibrated with flux of FTBs
 
     // Household parameters
@@ -99,7 +97,7 @@ public class Config {
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
 
     // Household behaviour parameters: buy-to-let
-    double P_INVESTOR;                      // Prior probability of being (wanting to be) a BTL investor
+    private double P_INVESTOR;              // Prior probability of being (wanting to be) a BTL investor
     double MIN_INVESTOR_PERCENTILE;         // Minimum income percentile for a household to be a BTL investor
     double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
     double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
@@ -114,7 +112,7 @@ public class Config {
     double BANK_BALANCE_FOR_CASH_DOWNPAYMENT;   // If bankBalance/housePrice is above this, payment will be made fully in cash
     double HPA_EXPECTATION_FACTOR;              // Weight assigned to current trend when computing expectations
     public int HPA_YEARS_TO_CHECK;              // Number of years of the HPI record to check when computing the annual HPA
-    double HOLD_PERIOD;                         // Average period, in years, for which owner-occupiers hold their houses
+    private double HOLD_PERIOD;                 // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: sale price reduction
     double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
     double REDUCTION_MU;                    // Mean percentage reduction for prices of houses on the market
@@ -160,7 +158,7 @@ public class Config {
     // Bank parameters
     double CREDIT_SUPPLY_ADJUSTMENT;		// Flexible credit supply adjustment parameter
     double LTVAdjustmentFactor;				// Sensitivity of the LTV parameter to the HPA
-    int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
+    private int MORTGAGE_DURATION_YEARS;    // Mortgage duration in years
     double BANK_INITIAL_BASE_RATE;          // Bank initial base-rate (currently remains unchanged)
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
     double BANK_MAX_FTB_LTV;                // Maximum LTV ratio that the private bank would allow for first-time-buyers
@@ -187,8 +185,8 @@ public class Config {
     public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;        // Minimum monthly earnings for a married couple from income support
 
     // Collectors parameters
-    double UK_HOUSEHOLDS;                       // Approximate number of households in UK, used to scale up results for core indicators
-    boolean MORTGAGE_DIAGNOSTICS_ACTIVE;        // Whether to record mortgage statistics
+    private double UK_HOUSEHOLDS;                   // Approximate number of households in UK, used to scale up results for core indicators
+    private boolean MORTGAGE_DIAGNOSTICS_ACTIVE;    // Whether to record mortgage statistics
 
     /** Declaration of addresses **/        // They must be public to be accessed from data package
 
@@ -257,7 +255,7 @@ public class Config {
      * Class to contain all constants (not read from the configuration file nor derived from it)
      */
     public class Constants {
-        final public int DAYS_IN_MONTH = 30;
+        final int DAYS_IN_MONTH = 30;
         final public int MONTHS_IN_YEAR = 12;
     }
 
@@ -285,13 +283,9 @@ public class Config {
         return MORTGAGE_DIAGNOSTICS_ACTIVE;
     }
 
-    public double getUKHouseholds() {
-        return UK_HOUSEHOLDS;
-    }
+    public double getUKHouseholds() { return UK_HOUSEHOLDS; }
 
-    public double getPInvestor() {
-        return P_INVESTOR;
-    }
+    double getPInvestor() { return P_INVESTOR; }
 
     public void setSeed(int seed) {
     	SEED = seed;
