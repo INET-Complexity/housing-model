@@ -69,7 +69,6 @@ public class Config {
     double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
     double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
     // Household behaviour parameters: general
-    double BANK_BALANCE_FOR_CASH_DOWNPAYMENT;   // If bankBalance/housePrice is above this, payment will be made fully in cash
     double HPA_EXPECTATION_FACTOR;              // Weight assigned to current trend when computing expectations
     public int HPA_YEARS_TO_CHECK;              // Number of years of the HPI record to check when computing the annual HPA
     // Household behaviour parameters: sale price reduction
@@ -94,13 +93,14 @@ public class Config {
     public double RENT_MAX_AMORTIZATION_PERIOD; // Maximum period BTL investors are ready to wait to get back their investment, this determines their minimum demanded rent
     double RENT_REDUCTION;                      // Percentage reduction of demanded rent for every month the property is in the market, not rented
     // Household behaviour parameters: downpayment
-    double DOWNPAYMENT_FTB_SCALE;           // Scale parameter for the log-normal distribution of downpayments by first-time-buyers
-    double DOWNPAYMENT_FTB_SHAPE;           // Shape parameter for the log-normal distribution of downpayments by first-time-buyers
-    double DOWNPAYMENT_OO_SCALE;            // Scale parameter for the log-normal distribution of downpayments by owner-occupiers
-    double DOWNPAYMENT_OO_SHAPE;            // Shape parameter for the log-normal distribution of downpayments by owner-occupiers
-    double DOWNPAYMENT_MIN_INCOME;          // Minimum income percentile to consider any downpayment, below this level, downpayment is set to 0
-    double DOWNPAYMENT_BTL_MEAN;            // Average downpayment, as percentage of house price, by but-to-let investors
-    double DOWNPAYMENT_BTL_EPSILON;         // Standard deviation of the noise
+    double DOWNPAYMENT_BANK_BALANCE_FOR_CASH_SALE;  // If bankBalance/housePrice is above this, payment will be made fully in cash
+    double DOWNPAYMENT_FTB_SCALE;                   // Scale parameter for the log-normal distribution of downpayments by first-time-buyers
+    double DOWNPAYMENT_FTB_SHAPE;                   // Shape parameter for the log-normal distribution of downpayments by first-time-buyers
+    double DOWNPAYMENT_OO_SCALE;                    // Scale parameter for the log-normal distribution of downpayments by owner-occupiers
+    double DOWNPAYMENT_OO_SHAPE;                    // Shape parameter for the log-normal distribution of downpayments by owner-occupiers
+    double DOWNPAYMENT_MIN_INCOME;                  // Minimum income percentile to consider any downpayment, below this level, downpayment is set to 0
+    double DOWNPAYMENT_BTL_MEAN;                    // Average downpayment, as percentage of house price, by but-to-let investors
+    double DOWNPAYMENT_BTL_EPSILON;                 // Standard deviation of the noise
     // Household behaviour parameters: selling decision
     private double HOLD_PERIOD;                 // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: BTL buy/sell choice
@@ -136,7 +136,6 @@ public class Config {
 
     // Collectors parameters
     private double UK_HOUSEHOLDS;                   // Approximate number of households in UK, used to scale up results for core indicators
-    private boolean MORTGAGE_DIAGNOSTICS_ACTIVE;    // Whether to record mortgage statistics
 
     /** Declaration of addresses **/        // They must be public to be accessed from data package
 
@@ -228,10 +227,6 @@ public class Config {
     //-------------------//
     //----- Methods -----//
     //-------------------//
-
-    public boolean isMortgageDiagnosticsActive() {
-        return MORTGAGE_DIAGNOSTICS_ACTIVE;
-    }
 
     public double getUKHouseholds() { return UK_HOUSEHOLDS; }
 
