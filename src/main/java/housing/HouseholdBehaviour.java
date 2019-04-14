@@ -218,24 +218,13 @@ public class HouseholdBehaviour {
 
 	/**
      * This method implements a household's decision to sell their owner-occupied property. On average, households sell
-     * owner-occupied houses every 11 years, due to exogenous reasons not addressed in the model. In order to prevent
-     * an unrealistic build-up of housing stock and unrealistic fluctuations of the interest rate, we modify this
-     * probability by introducing two extra factors, depending, respectively, on the number of houses per capita
-     * currently on the market and its exponential moving average, and on the interest rate and its exponential moving
-     * average. In this way, the long-term selling probability converges to 1/11.
-     * TODO: This method includes 2 unidentified fudge parameters, DECISION_TO_SELL_HPC (houses per capita) and
-     * TODO: DECISION_TO_SELL_INTEREST, which are explicitly explained otherwise in the manuscript. URGENT!
-     * TODO: Basically, need to implement both exponential moving averages referred above
+     * owner-occupied houses every 11 years, due to exogenous reasons not addressed in the model.
      *
 	 * @return True if the owner-occupier decides to sell the house and false otherwise.
 	 */
 	boolean decideToSellHome() {
         // TODO: This if implies BTL agents never sell their homes, need to explain in paper!
-        return !isPropertyInvestor() && (prng.nextDouble() < config.derivedParams.MONTHLY_P_SELL*(1.0
-                + config.DECISION_TO_SELL_ALPHA*(config.DECISION_TO_SELL_HPC
-                - (double)Model.houseSaleMarket.getnHousesOnMarket()/Model.households.size())
-                + config.DECISION_TO_SELL_BETA*(config.DECISION_TO_SELL_INTEREST
-                - Model.bank.getMortgageInterestRate())));
+        return !isPropertyInvestor() && (prng.nextDouble() < config.derivedParams.MONTHLY_P_SELL);
     }
 
 	/**
