@@ -51,7 +51,7 @@ public class MortgageAgreement extends PaymentAgreement {
 //            	//	System.out.println("BTL repayment of principal: " + principal);
 //            	}
                 isActive = false; // ...then deactivate the mortgage...
-                double payoff = payoff(principal, h);
+                double payoff = payoff(principal, h, false);
                 return payoff; // ...by paying off all remaining principle (this also removes mortgage from the bank's list)...
             // ...otherwise, if mortgage is already inactive...
             } else {
@@ -85,14 +85,15 @@ public class MortgageAgreement extends PaymentAgreement {
 	 * @param amount Desired amount to pay off
 	 * @return The amount that was actually paid off
 	 */
-	double payoff(double amount, Household h) {
+	double payoff(double amount, Household h, boolean payoffDueToHouseSale) {
 		if (amount >= principal) {
             amount = principal;
             principal = 0.0;
             monthlyPayment = 0.0;
             nPayments = 0;
             Model.bank.endMortgageContract(this);
-            h.setPrincipalPaidBack(amount); // (record the repayment..)
+            if(payoffDueToHouseSale) {h.setPrincipalDueToHouseSale(amount);}
+            else {h.setPrincipalPaidBack(amount);} // (record the repayment..)
 		} else {
 			monthlyPayment *= (principal - amount)/principal;
 			principal -= amount;
@@ -105,5 +106,5 @@ public class MortgageAgreement extends PaymentAgreement {
      *
      * @return The amount that was actually paid off
      */
-	double payoff(Household h) { return payoff(principal, h); }
+	double payoff(Household h) { return payoff(principal, h, false); }
 }

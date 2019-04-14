@@ -124,7 +124,7 @@ public class Recorder {
             		+ "monthlyInsurancePaid, BankBalancesBeforeConsumption, BankBalancesEndowed, "
             		+ "totalConsumption, totalIncomeConsumption, totalFinancialWealthConsumption, "
             		+ "totalHousingWealthConsumption, totalDebtConsumption, totalSavingForDeleveraging, totalSaving, totalCredit, "
-            		+ "totalPrincipalRepayment, totalPrincipalPaidBackForInheritance, totalInterestRepayment, totalRentalPayments, "
+            		+ "totalPrincipalRepayment, totalPrincipalRepaymentsDueToHouseSale, totalPrincipalPaidBackForInheritance, totalInterestRepayment, totalRentalPayments, "
             		+ "totalBankruptcyCashInjection, totalDebtReliefDueToDeceasedHousehold, "
             		+ "creditSupplyTarget, newlyPaidDownPayments, newlyIssuedCredit, nNegativeEquity, "
             		+ "LTV FTB, LTV OO, LTV BTL, interestRateSpread, moneyOutflowToConstructionSector");
@@ -270,6 +270,7 @@ public class Recorder {
         		Model.householdStats.getTotalSaving() + ", " +
         		(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
         		Model.householdStats.getTotalPrincipalRepayments() + ", " +
+        		Model.householdStats.getTotalPrincipalRepaymentsDueToHouseSale() + ", " + 
         		Model.householdStats.getTotalPrincipalRepaymentDeceasedHouseholds() + ", " +
         		Model.householdStats.getTotalInterestRepayments() + ", " +
         		Model.householdStats.getTotalRentalPayments() + ", " +

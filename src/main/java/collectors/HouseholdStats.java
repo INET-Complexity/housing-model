@@ -69,6 +69,8 @@ public class HouseholdStats {
     private double totalBankBalanceEndowmentCounter;
     private double totalPrincipalRepayments;
     private double totalPrincipalRepaymentsCounter;
+    private double totalPrincipalRepaymentsDueToHouseSale;
+    private double totalPrincipalRepaymentsDueToHouseSaleCounter;
     private double totalPrincipalPaidBackForInheritance;
     private double totalPrincipalPaidBackForInheritanceCounter;
     private double totalInterestRepayments;
@@ -140,6 +142,7 @@ public class HouseholdStats {
         totalBankBalancesVeryBeginningOfPeriod = 0.0;
         totalBankBalanceEndowment = 0.0;
         totalPrincipalRepayments = 0.0;
+        totalPrincipalRepaymentsDueToHouseSale = 0.0;
         totalPrincipalPaidBackForInheritance = 0.0;
         totalInterestRepayments = 0.0;
         totalRentalPayments = 0.0;
@@ -181,6 +184,7 @@ public class HouseholdStats {
     	homelessMonthlyGrossEmploymentIncome = 0.0;
         sumStockYield = 0.0;
         totalPrincipalRepayments = 0.0;
+        totalPrincipalRepaymentsDueToHouseSale = 0.0;
         totalPrincipalPaidBackForInheritance = 0.0;
         totalInterestRepayments = 0.0;
         totalRentalPayments = 0.0;
@@ -200,6 +204,7 @@ public class HouseholdStats {
         	//TODO Ruben: check if removable, as I implemented totalPrincipalRepaymentDeceasedHousehold
         	// record household fields containing credit repayments, rent payments and cash injections
             totalPrincipalRepaymentsCounter += h.getPrincipalPaidBack();
+            totalPrincipalRepaymentsDueToHouseSaleCounter += h.getPrincipalDueToHouseSale();
             //totalPrincipalPaidBackForInheritanceCounter += h.getPrincipalPaidBackForInheritance();
             // the principal repayments due to inheritance are recorded before households are managed..
             //... therefore they are set back to zero here and not in the household.step() method
@@ -331,6 +336,7 @@ public class HouseholdStats {
         totalBankBalanceEndowmentCounter = 0.0;
         
         totalPrincipalRepayments = totalPrincipalRepaymentsCounter;
+        totalPrincipalRepaymentsDueToHouseSale = totalPrincipalRepaymentsDueToHouseSaleCounter;
         totalPrincipalPaidBackForInheritance = totalPrincipalPaidBackForInheritanceCounter;
         totalInterestRepayments = totalInterestRepaymentsCounter;
         totalRentalPayments = totalRentalPaymentsCounter;
@@ -338,6 +344,7 @@ public class HouseholdStats {
         totalMonthlyNICPaid = totalMonthlyNICPaidCounter;
         totalBankruptcyCashInjection = totalBankruptcyCashInjectionCounter;
         totalPrincipalRepaymentsCounter = 0.0;
+        totalPrincipalRepaymentsDueToHouseSaleCounter = 0.0;
         totalPrincipalPaidBackForInheritanceCounter = 0.0;
         totalInterestRepaymentsCounter = 0.0;
         totalRentalPaymentsCounter = 0.0;
@@ -482,6 +489,8 @@ public class HouseholdStats {
     
     // getters of different types of payments made as well as bank's cash injection and debt relief
     public double getTotalPrincipalRepayments() { return totalPrincipalRepayments;	}
+    
+    public double getTotalPrincipalRepaymentsDueToHouseSale() { return totalPrincipalRepaymentsDueToHouseSale; }
     
     public double getTotalPrincipalPaidBackForInheritance() { return totalPrincipalPaidBackForInheritance;}
 

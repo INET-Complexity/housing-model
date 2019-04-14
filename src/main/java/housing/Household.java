@@ -45,6 +45,7 @@ public class Household implements IHouseOwner {
     private double 							monthlyPayments;
     private double							principalPaidBack; // records how much of mortgage principal this household paid back this period
     private double							principalPaidBackForInheritance; // this records the repayment of principal the bequeather paid back, before passing its wealth on to this household
+    private double							principalPaidBackDueToHouseSale; // when a household sells a house with a mortgage on, it gets recorded here
     private double							interestPaidBack; // records how much mortgage interest this household paid back this period
     private double							rentalPayment; // records the rental payment of this period
     private double							monthlyTaxesPaid; // records the monthly taxes paid (including tax relief)
@@ -96,8 +97,8 @@ public class Household implements IHouseOwner {
     	isBankrupt = false; // Delete bankruptcies from previous time step
     	age += 1.0/config.constants.MONTHS_IN_YEAR;
     	// set payment counters and cashInjection to zero, so they can be updated 
-    	//TODO is this necessary?
-    	principalPaidBack = 0.0; 
+    	principalPaidBack = 0.0;
+    	principalPaidBackDueToHouseSale = 0.0;
     	interestPaidBack = 0.0; 
     	rentalPayment = 0.0;
     	cashInjection = 0.0;
@@ -378,7 +379,7 @@ public class Household implements IHouseOwner {
         bankBalance += sale.getPrice();
         // Second, find mortgage object and pay off as much outstanding debt as possible given bank balance
         MortgageAgreement mortgage = mortgageFor(sale.getHouse());
-        bankBalance -= mortgage.payoff(bankBalance, this);
+        bankBalance -= mortgage.payoff(bankBalance, this, true);
         // Third, if there is no more outstanding debt, remove the house from the household's housePayments object
         if (mortgage.nPayments == 0) {
             housePayments.remove(sale.getHouse());
@@ -811,6 +812,14 @@ public class Household implements IHouseOwner {
 
 	public void setPrincipalPaidBack(double principalPaidBack) {
 		this.principalPaidBack += principalPaidBack;
+	}
+	
+	public double getPrincipalDueToHouseSale() {
+		return principalPaidBackDueToHouseSale;
+	}
+	
+	public void setPrincipalDueToHouseSale(double principalPaidBack) {
+		this.principalPaidBackDueToHouseSale += principalPaidBack;
 	}
 
 	public double getInterestPaidBack() {
