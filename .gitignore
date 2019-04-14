@@ -25,3 +25,8 @@ src/config-files/
 \.Rhistory
 
 \.RData
+
+
+# ignore figures
+*.eps
+*.pdf
