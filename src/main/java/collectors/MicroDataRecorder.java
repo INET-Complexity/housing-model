@@ -24,6 +24,10 @@ public class MicroDataRecorder {
     private PrintWriter outfileMonthlyGrossRentalIncome;
     private PrintWriter outfileDebt;
     private PrintWriter outfileConsumption;
+    private PrintWriter outfileIncomeConsumption;
+    private PrintWriter outfileFinancialWealthConsumption;
+    private PrintWriter outfileHousingWealthConsumption;
+    private PrintWriter outfileDebtConsumption;
     private PrintWriter outfileBTL;
 
     //------------------------//
@@ -40,7 +44,9 @@ public class MicroDataRecorder {
                                                  boolean recordNHousesOwned, boolean recordSavingRate,
                                                  boolean recordMonthlyGrossTotalIncome, boolean recordMonthlyGrossEmploymentIncome,
                                                  boolean recordMonthlyGrossRentalIncome, boolean recordDebt,
-                                                 boolean recordConsumption, boolean recordBTL) {
+                                                 boolean recordConsumption, boolean recordIncomeConsumption,
+                                                 boolean recordFinancialWealthConsumption, boolean recordHousingWealthConsumption,
+                                                 boolean recordDebtConsumption, boolean recordBTL) {
         if (recordBankBalance) {
             try {
                 outfileBankBalance = new PrintWriter(outputFolder + "BankBalance-run" + nRun
@@ -113,6 +119,38 @@ public class MicroDataRecorder {
         		e.printStackTrace();
         	}
         }
+        if(recordIncomeConsumption) {
+        	try {
+        		outfileIncomeConsumption = new PrintWriter(outputFolder + 
+        				"IncomeConsumption-run" + nRun + ".csv", "UTF-8");
+        	} catch(FileNotFoundException | UnsupportedEncodingException e) {
+        		e.printStackTrace();
+        	}
+        }
+        if(recordFinancialWealthConsumption) {
+        	try {
+        		outfileFinancialWealthConsumption = new PrintWriter(outputFolder + 
+        				"FinancialWealthConsumption-run" + nRun + ".csv", "UTF-8");
+        	} catch(FileNotFoundException | UnsupportedEncodingException e) {
+        		e.printStackTrace();
+        	}
+        }
+        if(recordHousingWealthConsumption) {
+        	try {
+        		outfileHousingWealthConsumption = new PrintWriter(outputFolder + 
+        				"HousingWealthConsumption-run" + nRun + ".csv", "UTF-8");
+        	} catch(FileNotFoundException | UnsupportedEncodingException e) {
+        		e.printStackTrace();
+        	}
+        }
+        if(recordDebtConsumption) {
+        	try {
+        		outfileDebtConsumption = new PrintWriter(outputFolder + 
+        				"DebtConsumption-run" + nRun + ".csv", "UTF-8");
+        	} catch(FileNotFoundException | UnsupportedEncodingException e) {
+        		e.printStackTrace();
+        	}
+        }
         if(recordBTL) {
         	try {
         		outfileBTL = new PrintWriter(outputFolder + 
@@ -127,7 +165,9 @@ public class MicroDataRecorder {
                                                boolean recordNHousesOwned, boolean recordSavingRate, 
                                                boolean recordMonthlyGrossTotalIncome, boolean recordMonthlyGrossEmploymentIncome,
                                                boolean recordMonthlyGrossRentalIncome, boolean recordDebt,
-                                               boolean recordConsumption, boolean recordBTL) {
+                                               boolean recordConsumption, boolean recordIncomeConsumption,
+                                               boolean recordFinancialWealthConsumption, boolean recordHousingWealthConsumption,
+                                               boolean recordDebtConsumption, boolean recordBTL) {
         if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
             if (recordBankBalance) {
                 if (time != 0) {
@@ -182,6 +222,30 @@ public class MicroDataRecorder {
             		outfileConsumption.println("");
             	}
             	outfileConsumption.print(time);
+            }
+            if (recordIncomeConsumption) {
+            	if (time != 0) {
+            		outfileIncomeConsumption.println("");
+            	}
+            	outfileIncomeConsumption.print(time);
+            }
+            if (recordFinancialWealthConsumption) {
+            	if (time != 0) {
+            		outfileFinancialWealthConsumption.println("");
+            	}
+            	outfileFinancialWealthConsumption.print(time);
+            }
+            if (recordHousingWealthConsumption) {
+            	if (time != 0) {
+            		outfileHousingWealthConsumption.println("");
+            	}
+            	outfileHousingWealthConsumption.print(time);
+            }
+            if (recordDebtConsumption) {
+            	if (time != 0) {
+            		outfileDebtConsumption.println("");
+            	}
+            	outfileDebtConsumption.print(time);
             }
             if (recordBTL) {
             	if (time != 0) {
@@ -246,6 +310,30 @@ public class MicroDataRecorder {
     	}
     }
     
+    void recordIncomeConsumption(int time, double consumption) {
+    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
+    		outfileIncomeConsumption.print(", " + consumption);
+    	}
+    }
+    
+    void recordFinancialWealthConsumption(int time, double consumption) {
+    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
+    		outfileFinancialWealthConsumption.print(", " + consumption);
+    	}
+    }
+    
+    void recordHousingWealthConsumption(int time, double consumption) {
+    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
+    		outfileHousingWealthConsumption.print(", " + consumption);
+    	}
+    }
+    
+    void recordDebtConsumption(int time, double consumption) {
+    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
+    		outfileDebtConsumption.print(", " + consumption);
+    	}
+    }
+    
     void recordBTL(int time, boolean isBTL) {
     	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
     		if(isBTL)outfileBTL.print(", " + 1);
@@ -255,8 +343,9 @@ public class MicroDataRecorder {
 
 	public void finishRun(boolean recordBankBalance, boolean recordHousingWealth, boolean recordNHousesOwned,
                           boolean recordSavingRate, boolean recordMonthlyGrossTotalIncome, boolean recordMonthlyGrossEmploymentIncome,
-                          boolean recordMonthlyGrossRentalIncome, boolean recordDebt, boolean recordConsumption,
-                          boolean recordBTL) {
+                          boolean recordMonthlyGrossRentalIncome, boolean recordDebt, boolean recordConsumption, 
+                          boolean recordIncomeConsumption, boolean recordFinancialWealthConsumption, boolean recordHousingWealthConsumption,
+                          boolean recordDebtConsumption, boolean recordBTL) {
         if (recordBankBalance) {
             outfileBankBalance.close();
         }
@@ -283,6 +372,18 @@ public class MicroDataRecorder {
         }
         if (recordConsumption) {
         	outfileConsumption.close();
+        }
+        if (recordIncomeConsumption) {
+        	outfileIncomeConsumption.close();
+        }
+        if (recordFinancialWealthConsumption) {
+        	outfileFinancialWealthConsumption.close();
+        }
+        if (recordHousingWealthConsumption) {
+        	outfileHousingWealthConsumption.close();
+        }
+        if (recordDebtConsumption) {
+        	outfileDebtConsumption.close();
         }
         if (recordBTL) {
         	outfileBTL.close();

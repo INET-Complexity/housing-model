@@ -44,6 +44,10 @@ public class Config {
     public boolean recordAgentDecisions; 			// True to write data from agent decision methods
     public boolean recordDebt;					// True to write individual household debt (after market clearing) (boolean)
     public boolean recordConsumption;			// True to write individual household total consumption
+    public boolean recordIncomeConsumption; 	// True to write individual households consumption induced by income
+    public boolean recordFinancialWealthConsumption; 	// True to write individual households consumption induced by their bankBalances
+    public boolean recordHousingWealthConsumption; 	// True to write individual households consumption induced by their housing Wealth
+    public boolean recordDebtConsumption;			// True to write individual households consumption induced by their debt levels
     public boolean recordBTL; 				// True to write "1" if agent is BTL
 
     

@@ -144,12 +144,16 @@ public class Model {
             if (config.recordBankBalance || config.recordNHousesOwned 
             		|| config.recordHousingWealth || config.recordSavingRate
             		|| config.recordMonthlyGrossTotalIncome || config.recordMonthlyGrossEmploymentIncome
-            		|| config.recordMonthlyGrossRentalIncome || config.recordDebt || config.recordConsumption
-            		|| config.recordBTL) {
+            		|| config.recordMonthlyGrossRentalIncome || config.recordDebt || config.recordConsumption || config.recordIncomeConsumption 
+            		|| config.recordFinancialWealthConsumption || config.recordHousingWealthConsumption
+            		|| config.recordDebtConsumption|| config.recordBTL
+            		) {
                 microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
                         config.recordHousingWealth, config.recordNHousesOwned, config.recordSavingRate,
                         config.recordMonthlyGrossTotalIncome, config.recordMonthlyGrossEmploymentIncome,
-                        config.recordMonthlyGrossRentalIncome, config.recordDebt, config.recordConsumption, config.recordBTL);
+                        config.recordMonthlyGrossRentalIncome, config.recordDebt, config.recordConsumption, 
+                        config.recordIncomeConsumption, config.recordFinancialWealthConsumption, 
+                        config.recordHousingWealthConsumption, config.recordDebtConsumption, config.recordBTL);
             }
             
             // For each simulation, open the AgentData files
@@ -196,7 +200,9 @@ public class Model {
                 microDataRecorder.finishRun(config.recordBankBalance, config.recordHousingWealth,
                         config.recordNHousesOwned, config.recordSavingRate, config.recordMonthlyGrossTotalIncome,
                         config.recordMonthlyGrossEmploymentIncome, config.recordMonthlyGrossRentalIncome,
-                        config.recordDebt, config.recordConsumption, config.recordBTL);
+                        config.recordDebt, config.recordConsumption, config.recordIncomeConsumption, 
+                        config.recordFinancialWealthConsumption, config.recordHousingWealthConsumption, 
+                        config.recordDebtConsumption, config.recordBTL);
             }
 		}
 

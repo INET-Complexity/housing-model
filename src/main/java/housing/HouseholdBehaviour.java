@@ -71,9 +71,13 @@ public class HouseholdBehaviour {
 	 * @param bankBalance Household's liquid wealth
      * @param annualGrossTotalIncome Household's annual gross total income
 	 */
-	public double getDesiredConsumption(double bankBalance, double annualGrossTotalIncome, double incomePercentile,
-										double disposableIncome, double propertyValues, 
-										double totalDebt, double equityPosition) {
+	public double getDesiredConsumption(Household me, double bankBalance, double incomePercentile,
+			double disposableIncome) {
+		double annualGrossTotalIncome = me.getAnnualGrossTotalIncome();
+		double propertyValues = me.getPropertyValue();
+		double totalDebt = me.getTotalDebt();
+		double equityPosition = me.getEquityPosition();
+
 		double consumption;
 		double saving;
 		// if alternate consumption is active, use the following way to calculate it
@@ -162,17 +166,26 @@ public class HouseholdBehaviour {
 				System.out.println("weird, consumption factors do not add up to total consumption. difference: " + 
 						(consumption-(incomeConsumption+financialWealthConsumption+housingWealthConsumption+debtConsumption)));
 			}
-			// record the consumption contributors
+			// record the consumption contributors for the aggregate recorders
 			Model.householdStats.countIncomeAndWealthConsumption(saving, consumption, incomeConsumption, 
 					financialWealthConsumption, housingWealthConsumption, debtConsumption, savingForDeleveraging);
 			consumptionWealth=financialWealthConsumption+housingWealthConsumption+debtConsumption;
+			// record the single consumption components to be recorded by the MicroDataRecorder
+			// only record if any of the individual consumption recorders is active 
+			if(Model.getTime() % Model.config.microDataRecordIntervall == 0 && Model.getTime() >= Model.config.TIME_TO_START_RECORDING &&
+					(config.recordIncomeConsumption || config.recordFinancialWealthConsumption 
+							|| config.recordHousingWealthConsumption|| config.recordDebtConsumption)) {
+				me.setIncomeConsumption(incomeConsumption);
+				me.setFinancialWealthConsumption(financialWealthConsumption);
+				me.setHousingWealthConsumption(housingWealthConsumption);
+				me.setDebtConsumption(debtConsumption);
+			}
 			return consumption;
 		}
 
 		else{			
+			annualGrossTotalIncome = me.getAnnualGrossTotalIncome();
 			consumption = config.CONSUMPTION_FRACTION*Math.max(bankBalance
-					//					- 	getDesiredBankBalance(annualGrossTotalIncome), 0.0);	
-					// TEST to see how the new calculation of the desired bank balance affects the outcome
 					- data.Wealth.getDesiredBankBalance(annualGrossTotalIncome, propensityToSave), 0.0);
 			saving = disposableIncome-consumption;
 			Model.householdStats.countIncomeAndWealthConsumption(saving, consumption, 0.0, 0.0, 0.0, 0.0, 0.0);

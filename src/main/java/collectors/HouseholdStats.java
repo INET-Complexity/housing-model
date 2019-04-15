@@ -197,7 +197,8 @@ public class HouseholdStats {
         Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance,
                 config.recordHousingWealth, config.recordNHousesOwned, config.recordSavingRate, config.recordMonthlyGrossTotalIncome,
                 config.recordMonthlyGrossEmploymentIncome, config.recordMonthlyGrossRentalIncome,
-                config.recordDebt, config.recordConsumption, config.recordBTL);
+                config.recordDebt, config.recordConsumption, config.recordIncomeConsumption, config.recordFinancialWealthConsumption, 
+                config.recordHousingWealthConsumption, config.recordDebtConsumption, config.recordBTL);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
         	
@@ -308,6 +309,22 @@ public class HouseholdStats {
             if(config.recordConsumption) {
             	// record non-essential and essential consumption
             	Model.microDataRecorder.recordConsumption(Model.getTime(), (h.getConsumption()+config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT));
+            }
+            if(config.recordIncomeConsumption) {
+            	// record non-essential income consumption and essential consumption
+            	Model.microDataRecorder.recordIncomeConsumption(Model.getTime(), (h.getIncomeConsumption()+config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT));
+            }
+            if(config.recordFinancialWealthConsumption) {
+            	// record consumption induced by financial wealth
+            	Model.microDataRecorder.recordFinancialWealthConsumption(Model.getTime(), (h.getFinancialWealthConsumption()));
+            }
+            if(config.recordHousingWealthConsumption) {
+            	// record consumption induced by housing wealth
+            	Model.microDataRecorder.recordHousingWealthConsumption(Model.getTime(), (h.getHousingWealthConsumption()));
+            }
+            if(config.recordDebtConsumption) {
+            	// record consumption induced by debt
+            	Model.microDataRecorder.recordDebtConsumption(Model.getTime(), (h.getDebtConsumption()));
             }
             if(config.recordBTL) {
             	Model.microDataRecorder.recordBTL(Model.getTime(), h.behaviour.isPropertyInvestor());

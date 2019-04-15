@@ -28,6 +28,10 @@ public class Household implements IHouseOwner {
     private double              monthlyGrossEmploymentIncome;
     private double 				monthlyDisposableIncome;
     private double				consumption;
+    private double				incomeConsumption;
+    private double				financialWealthConsumption;
+    private double				housingWealthConsumption;
+    private double				debtConsumption;
     public HouseholdBehaviour   behaviour; // Behavioural plugin
 
     double                      incomePercentile; // Fixed for the whole lifetime of the household
@@ -118,9 +122,8 @@ public class Household implements IHouseOwner {
     	// record bankBalance before consumption
     	Model.householdStats.recordBankBalanceBeforeConsumption(bankBalance);
     	// Consume according to gross annual income and capped by current bank balance (after disposable income has been added)
-    	consumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(), incomePercentile,
-    			monthlyDisposableIncome, getPropertyValue(),
-    			getTotalDebt(), getEquityPosition()); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
+    	consumption = behaviour.getDesiredConsumption(this, bankBalance, incomePercentile,
+    			monthlyDisposableIncome); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
     	bankBalance -= consumption;
     	// Compute saving rate
     	savingRate = (monthlyDisposableIncome - consumption)/getMonthlyGrossTotalIncome();
@@ -659,7 +662,26 @@ public class Household implements IHouseOwner {
     public double getAge() { return age; }
     
     public double getConsumption() {return consumption; }
+    
+    public double getIncomeConsumption() { return incomeConsumption;}
+    
+    public void setIncomeConsumption(double incomeConsumption) {this.incomeConsumption = incomeConsumption; }
 
+    public double getFinancialWealthConsumption() { return financialWealthConsumption; }
+    
+    public void setFinancialWealthConsumption(double financialWealthConsumption) {
+    	this.financialWealthConsumption = financialWealthConsumption; }
+
+    public double getHousingWealthConsumption()	{ return housingWealthConsumption; }
+    
+    public void setHousingWealthConsumption(double housingWealthConsumption) {
+    	this.housingWealthConsumption = housingWealthConsumption;
+    }
+    
+    public double getDebtConsumption()	{ return debtConsumption; }
+    
+    public void setDebtConsumption(double debtConsumption) { this.debtConsumption = debtConsumption; }
+    
     public boolean isHomeowner() {
         if(home == null) return(false);
         return(home.owner == this);
