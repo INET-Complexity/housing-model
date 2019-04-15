@@ -48,6 +48,7 @@ public class Config {
     public boolean recordFinancialWealthConsumption; 	// True to write individual households consumption induced by their bankBalances
     public boolean recordHousingWealthConsumption; 	// True to write individual households consumption induced by their housing Wealth
     public boolean recordDebtConsumption;			// True to write individual households consumption induced by their debt levels
+    public boolean recordSavingForDeleveraging; 		// True to write individual households consumption reduction induced by negative equity
     public boolean recordBTL; 				// True to write "1" if agent is BTL
 
     

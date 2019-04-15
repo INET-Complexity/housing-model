@@ -32,6 +32,7 @@ public class Household implements IHouseOwner {
     private double				financialWealthConsumption;
     private double				housingWealthConsumption;
     private double				debtConsumption;
+    private double 				savingForDeleveraging;
     public HouseholdBehaviour   behaviour; // Behavioural plugin
 
     double                      incomePercentile; // Fixed for the whole lifetime of the household
@@ -682,7 +683,15 @@ public class Household implements IHouseOwner {
     
     public void setDebtConsumption(double debtConsumption) { this.debtConsumption = debtConsumption; }
     
-    public boolean isHomeowner() {
+    public double getSavingForDeleveraging() {
+		return savingForDeleveraging;
+	}
+
+	public void setSavingForDeleveraging(double savingForDeleveraging) {
+		this.savingForDeleveraging = savingForDeleveraging;
+	}
+
+	public boolean isHomeowner() {
         if(home == null) return(false);
         return(home.owner == this);
     }

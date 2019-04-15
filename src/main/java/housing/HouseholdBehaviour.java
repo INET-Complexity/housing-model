@@ -174,11 +174,13 @@ public class HouseholdBehaviour {
 			// only record if any of the individual consumption recorders is active 
 			if(Model.getTime() % Model.config.microDataRecordIntervall == 0 && Model.getTime() >= Model.config.TIME_TO_START_RECORDING &&
 					(config.recordIncomeConsumption || config.recordFinancialWealthConsumption 
-							|| config.recordHousingWealthConsumption|| config.recordDebtConsumption)) {
+							|| config.recordHousingWealthConsumption|| config.recordDebtConsumption
+							|| config.recordSavingForDeleveraging)) {
 				me.setIncomeConsumption(incomeConsumption);
 				me.setFinancialWealthConsumption(financialWealthConsumption);
 				me.setHousingWealthConsumption(housingWealthConsumption);
 				me.setDebtConsumption(debtConsumption);
+				me.setSavingForDeleveraging(savingForDeleveraging);
 			}
 			return consumption;
 		}

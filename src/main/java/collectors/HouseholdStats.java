@@ -198,7 +198,7 @@ public class HouseholdStats {
                 config.recordHousingWealth, config.recordNHousesOwned, config.recordSavingRate, config.recordMonthlyGrossTotalIncome,
                 config.recordMonthlyGrossEmploymentIncome, config.recordMonthlyGrossRentalIncome,
                 config.recordDebt, config.recordConsumption, config.recordIncomeConsumption, config.recordFinancialWealthConsumption, 
-                config.recordHousingWealthConsumption, config.recordDebtConsumption, config.recordBTL);
+                config.recordHousingWealthConsumption, config.recordDebtConsumption, config.recordSavingForDeleveraging, config.recordBTL);
         // Run through all households counting population in each type and summing their gross incomes
         for (Household h : Model.households) {
         	
@@ -325,6 +325,10 @@ public class HouseholdStats {
             if(config.recordDebtConsumption) {
             	// record consumption induced by debt
             	Model.microDataRecorder.recordDebtConsumption(Model.getTime(), (h.getDebtConsumption()));
+            }
+            if(config.recordSavingForDeleveraging) {
+            	// record consumption reduction induced by negative equity position of the household
+            	Model.microDataRecorder.recordSavingForDeleveraging(Model.getTime(), (h.getSavingForDeleveraging()));
             }
             if(config.recordBTL) {
             	Model.microDataRecorder.recordBTL(Model.getTime(), h.behaviour.isPropertyInvestor());

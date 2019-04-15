@@ -146,14 +146,15 @@ public class Model {
             		|| config.recordMonthlyGrossTotalIncome || config.recordMonthlyGrossEmploymentIncome
             		|| config.recordMonthlyGrossRentalIncome || config.recordDebt || config.recordConsumption || config.recordIncomeConsumption 
             		|| config.recordFinancialWealthConsumption || config.recordHousingWealthConsumption
-            		|| config.recordDebtConsumption|| config.recordBTL
+            		|| config.recordDebtConsumption|| config.recordSavingForDeleveraging || config.recordBTL
             		) {
                 microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordBankBalance,
                         config.recordHousingWealth, config.recordNHousesOwned, config.recordSavingRate,
                         config.recordMonthlyGrossTotalIncome, config.recordMonthlyGrossEmploymentIncome,
                         config.recordMonthlyGrossRentalIncome, config.recordDebt, config.recordConsumption, 
-                        config.recordIncomeConsumption, config.recordFinancialWealthConsumption, 
-                        config.recordHousingWealthConsumption, config.recordDebtConsumption, config.recordBTL);
+                        config.recordIncomeConsumption, config.recordFinancialWealthConsumption,
+                        config.recordHousingWealthConsumption, config.recordDebtConsumption, config.recordSavingForDeleveraging,
+                		config.recordBTL);
             }
             
             // For each simulation, open the AgentData files
@@ -202,7 +203,7 @@ public class Model {
                         config.recordMonthlyGrossEmploymentIncome, config.recordMonthlyGrossRentalIncome,
                         config.recordDebt, config.recordConsumption, config.recordIncomeConsumption, 
                         config.recordFinancialWealthConsumption, config.recordHousingWealthConsumption, 
-                        config.recordDebtConsumption, config.recordBTL);
+                        config.recordDebtConsumption, config.recordSavingForDeleveraging, config.recordBTL);
             }
 		}
 
