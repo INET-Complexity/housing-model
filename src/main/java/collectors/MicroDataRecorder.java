@@ -58,7 +58,7 @@ public class MicroDataRecorder {
         }
         if (recordInitTotalWealth) {
             try {
-                outfileHousingWealth = new PrintWriter(outputFolder + "HousingWealth-run" + nRun
+                outfileHousingWealth = new PrintWriter(outputFolder + "NetHousingWealth-run" + nRun
                         + ".csv", "UTF-8");
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();

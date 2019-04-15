@@ -233,7 +233,7 @@ public class AgentDataRecorder{
         		}else { dataArray[9][h.id-oldestID] = 0;}
         		dataArray[10][h.id-oldestID] = h.getAnnualGrossEmploymentIncome();
         		dataArray[11][h.id-oldestID] = h.getTotalDebt();
-        		dataArray[12][h.id-oldestID] = h.behaviour.getConsumptionWealth();
+        		dataArray[12][h.id-oldestID] = h.getFinancialWealthConsumption()+h.getHousingWealthConsumption()+h.getDebtConsumption();
         	}            
         	return dataArray;
         }

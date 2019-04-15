@@ -20,7 +20,6 @@ public class HouseholdBehaviour {
     private boolean                 BTLInvestor;
     private double                  BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
     private double                  propensityToSave;
-    private double					consumptionWealth;
     private LogNormalDistribution   downpaymentDistFTB; // Size distribution for downpayments of first-time-buyers
     private LogNormalDistribution   downpaymentDistOO; // Size distribution for downpayments of owner-occupiers
 
@@ -169,7 +168,6 @@ public class HouseholdBehaviour {
 			// record the consumption contributors for the aggregate recorders
 			Model.householdStats.countIncomeAndWealthConsumption(saving, consumption, incomeConsumption, 
 					financialWealthConsumption, housingWealthConsumption, debtConsumption, savingForDeleveraging);
-			consumptionWealth=financialWealthConsumption+housingWealthConsumption+debtConsumption;
 			// record the single consumption components to be recorded by the MicroDataRecorder
 			// only record if any of the individual consumption recorders is active 
 			if(Model.getTime() % Model.config.microDataRecordIntervall == 0 && Model.getTime() >= Model.config.TIME_TO_START_RECORDING &&
@@ -561,7 +559,6 @@ public class HouseholdBehaviour {
     public double getBTLCapGainCoefficient() { return BTLCapGainCoefficient; }
 
     public boolean isPropertyInvestor() { return BTLInvestor; }
-    public double getConsumptionWealth() { return consumptionWealth;}
 
     public double getPropensityToSave() { return propensityToSave; }
 }
