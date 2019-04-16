@@ -27,6 +27,7 @@ public class Household implements IHouseOwner {
     private double              annualGrossEmploymentIncome;
     private double              monthlyGrossEmploymentIncome;
     private double 				monthlyDisposableIncome;
+    private double				equityPosition;
     private double				consumption;
     private double				incomeConsumption;
     private double				financialWealthConsumption;
@@ -122,6 +123,9 @@ public class Household implements IHouseOwner {
     	bankBalance += monthlyDisposableIncome;
     	// record bankBalance before consumption
     	Model.householdStats.recordBankBalanceBeforeConsumption(bankBalance);
+    	// set the equityPosition of the household for the beginning of the period. This way HouseholdStats at the end of the period 
+    	// does not recalculate the equity position with new HPI and different bank balances
+    	setEquityPosition();
     	// Consume according to gross annual income and capped by current bank balance (after disposable income has been added)
     	consumption = behaviour.getDesiredConsumption(this, bankBalance, incomePercentile,
     			monthlyDisposableIncome); // Old implementation: if(isFirstTimeBuyer() || !isInSocialHousing()) bankBalance -= behaviour.getDesiredConsumption(getBankBalance(), getAnnualGrossTotalIncome());
@@ -812,8 +816,13 @@ public class Household implements IHouseOwner {
     
     // getter for the total equity position
     public double getEquityPosition() {
-    	return getBankBalance() + getInvestmentEquity() + getHomeEquity();
+    	return equityPosition;
     }
+    // set equity position to the value at the beginning of the period, this way collectors 
+    public void setEquityPosition() {
+    	this.equityPosition = getBankBalance() + getInvestmentEquity() + getHomeEquity();
+    }
+    
     
     public MortgageAgreement mortgageFor(House h) {
         PaymentAgreement payment = housePayments.get(h);
