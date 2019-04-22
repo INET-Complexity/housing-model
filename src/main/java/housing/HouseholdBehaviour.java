@@ -75,8 +75,7 @@ public class HouseholdBehaviour {
 		double annualGrossTotalIncome = me.getAnnualGrossTotalIncome();
 		double propertyValues = me.getPropertyValue();
 		double totalDebt = me.getTotalDebt();
-		double equityPosition = me.getEquityPosition();
-
+		double equityPosition = me.getEquityPosition();		
 		double consumption;
 		double saving;
 		// if alternate consumption is active, use the following way to calculate it
@@ -443,20 +442,6 @@ public class HouseholdBehaviour {
 		}
 		// ...never buy (keep on saving) if bank balance is below the household's desired bank balance
 		// TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
-		// When the credit constraints are flexible, the BTL investors have a lower desire for deposits and more for housing wealth.
-		// This is to mimic the effect banks pushing investors to buy more 
-		if (config.FLEXIBLE_CREDIT_CONSTRAINTS) {
-			if (me.getBankBalance() < (
-					data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(), me.behaviour.getPropensityToSave())
-					//        			getDesiredBankBalance(me.getAnnualGrossTotalIncome())
-					*(config.btlHousepriceSensitivity*config.BTL_CHOICE_MIN_BANK_BALANCE-Model.housingMarketStats.getLongTermHPA()))) {
-				// record DECISION DATA BTL
-				if(config.recordAgentDecisions && (Model.getTime() >= config.TIME_TO_START_RECORDING)) {
-					Model.agentDecisionRecorder.recordBankBalanceTooLow(me, true);
-				}
-
-				return false; }
-		}
 		if(!config.FLEXIBLE_CREDIT_CONSTRAINTS) {
 			if (me.getBankBalance() < 
 					data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(), me.behaviour.getPropensityToSave())

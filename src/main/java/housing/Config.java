@@ -107,7 +107,6 @@ public class Config {
     double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
     double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
     double P_FUNDAMENTALIST; 			    // Probability that a BTL investor is a fundamentalist versus a trend-follower
-    public double btlHousepriceSensitivity;		// How fast do BTL investors adjust their investment decision with regard to their desired bank balance
    
     // Household behaviour parameters: rent
     double DESIRED_RENT_INCOME_FRACTION;    // Desired proportion of income to be spent on rent
