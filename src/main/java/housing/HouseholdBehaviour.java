@@ -442,7 +442,7 @@ public class HouseholdBehaviour {
 		}
 		// ...never buy (keep on saving) if bank balance is below the household's desired bank balance
 		// TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
-		if(!config.FLEXIBLE_CREDIT_CONSTRAINTS) {
+		if(!config.FLEXIBLE_CREDIT_CONSTRAINTS && !config.ALTERNATE_CONSUMPTION_FUNCTION) {
 			if (me.getBankBalance() < 
 					data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(), me.behaviour.getPropensityToSave())
 					//    			getDesiredBankBalance(me.getAnnualGrossTotalIncome())
