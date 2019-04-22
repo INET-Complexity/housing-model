@@ -503,11 +503,9 @@ public class HouseholdBehaviour {
 	 * @param quality The quality of the house
 	 */
 	double buyToLetRent(int quality) {
-		// TODO: What? Where does this equation come from?
-		final double beta = config.RENT_MARKUP/Math.log(config.RENT_EQ_MONTHS_ON_MARKET); // Weight of months-on-market effect
 		double exponent = config.RENT_MARKUP
                 + Math.log(Model.rentalMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
-                - beta*Math.log(Model.rentalMarketStats.getExpAvMonthsOnMarketForQuality(quality) + 1.0)
+                - config.RENT_EQ_MONTHS_ON_MARKET*Math.log(Model.rentalMarketStats.getExpAvMonthsOnMarketForQuality(quality) + 1.0)
                 + config.RENT_EPSILON * prng.nextGaussian();
 		double result = Math.exp(exponent);
         // TODO: The following contains a fudge (config.RENT_MAX_AMORTIZATION_PERIOD) to keep rental yield up
