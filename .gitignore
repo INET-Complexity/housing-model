@@ -18,7 +18,3 @@
 
 # ignore python pyc files
 *.pyc
-
-# ignore figures
-*.eps
-*.pdf
