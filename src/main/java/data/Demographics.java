@@ -27,7 +27,8 @@ public class Demographics {
      * households can be formed by, e.g., children leaving home, divorce, separation, people leaving an HMO. Roughly
      * calibrated against "The changing living arrangements of young adults in the UK" ONS Population Trends winter 2009
      */
-    private static BinnedDataDouble householdAgeAtBirth = new BinnedDataDouble(config.DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF);
+//    private static BinnedDataDouble householdAgeAtBirth = new BinnedDataDouble(config.DATA_HOUSEHOLD_AGE_AT_BIRTH_PDF);
+    private static BinnedDataDouble householdAgeAtBirth = new BinnedDataDouble(config.DATA_AGE_DISTRIBUTION);
     public static Pdf pdfHouseholdAgeAtBirth = new Pdf(householdAgeAtBirth, 800);
 
     /**
@@ -38,7 +39,8 @@ public class Demographics {
      */
     // Create a BinnedDataDouble object to keep bins and probabilities
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // Warning due to data array not being queried (other variables are used)
-    private static BinnedDataDouble probDeathGivenAgeData  = new BinnedDataDouble(config.DATA_DEATH_PROB_GIVEN_AGE);
+//    private static BinnedDataDouble probDeathGivenAgeData  = new BinnedDataDouble(config.DATA_DEATH_PROB_GIVEN_AGE);
+    private static BinnedDataDouble probDeathGivenAgeData  = new BinnedDataDouble(config.DATA_AGE_DISTRIBUTION);
 
     // Once data on household age at birth and on death probabilities has been loaded, compute birth rate
     private static double birthRate = computeBirthRate();

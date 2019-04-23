@@ -109,8 +109,8 @@ public class EmploymentIncome {
         if (boundAge < lnIncomeGivenAge.getSupportLowerBound()) {
             boundAge = lnIncomeGivenAge.getSupportLowerBound();
         }
-        // If boundAge is above maximum age bin, then maximum age bin is assigned
-        else if (boundAge > lnIncomeGivenAge.getSupportUpperBound()) {
+        // If boundAge is above or equal to the maximum age bin, then maximum age bin is assigned, minus small amount
+        else if (boundAge >= lnIncomeGivenAge.getSupportUpperBound()) {
             boundAge = lnIncomeGivenAge.getSupportUpperBound() - 1e-7;
         }
         // Assign gross annual income according to the determined boundAge
