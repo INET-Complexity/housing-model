@@ -49,13 +49,13 @@ public class Household implements IHouseOwner {
      * Initialises behaviour (determine whether the household will be a BTL investor). Households start off in social
      * housing and with their "desired bank balance" in the bank
      */
-    public Household(MersenneTwister prng) {
+    public Household(MersenneTwister prng, double age) {
         this.prng = prng; // Passes the Model's random number generator to a private field of each instance
+        this.age = age;
         home = null;
         isFirstTimeBuyer = true;
         isBankrupt = false;
         id = ++id_pool;
-        age = data.Demographics.pdfHouseholdAgeAtBirth.nextDouble(this.prng);
         incomePercentile = this.prng.nextDouble();
         behaviour = new HouseholdBehaviour(this.prng, incomePercentile);
         // Find initial values for the annual and monthly gross employment income
@@ -80,7 +80,6 @@ public class Household implements IHouseOwner {
      */
     public void step() {
         isBankrupt = false; // Delete bankruptcies from previous time step
-        age += 1.0/config.constants.MONTHS_IN_YEAR;
         // Update annual and monthly gross employment income
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
@@ -570,6 +569,8 @@ public class Household implements IHouseOwner {
     //----- Helpers -----//
 
     public double getAge() { return age; }
+
+    void ageOneMonth() { age += 1.0/config.constants.MONTHS_IN_YEAR; }
 
     public boolean isHomeowner() {
         if(home == null) return(false);

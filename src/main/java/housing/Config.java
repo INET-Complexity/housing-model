@@ -51,8 +51,7 @@ public class Config {
     public double RENT_GROSS_YIELD;             // Profit margin for buy-to-let investors
 
     // Demographic parameters
-    int TARGET_POPULATION;                  // Target number of households
-    public double FUTURE_BIRTH_RATE;        // Future birth rate (births per year per capita), calibrated with flux of FTBs
+    public int TARGET_POPULATION;           // Target number of households
 
     // Household parameters
     public int TENANCY_LENGTH_AVERAGE;      // Average number of months a tenant will stay in a rented house
