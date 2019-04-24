@@ -99,41 +99,43 @@ public class Recorder {
         }
     }
 
-    public void openSingleRunFiles(int nRun, boolean recordQualityBandPrice, int nQualityBands) {
+    public void openSingleRunFiles(int nRun, boolean recordOutfile, boolean recordQualityBandPrice, int nQualityBands) {
         // Try opening general output file and write first row header with column names
-        try {
-            outfile = new PrintWriter(outputFolder + "Output-run" + nRun + ".csv", "UTF-8");
-            outfile.println("Model time, "
-                    // Number of households of each type
-                    + "nNonBTLHomeless, nBTLHomeless, nHomeless, nRenting, nNonOwner, "
-                    + "nNonBTLOwnerOccupier, nBTLOwnerOccupier, nOwnerOccupier, nActiveBTL, nBTL, nNonBTLBankrupt, "
-                    + "nBTLBankrupt, TotalPopulation, "
-                    // Numbers of houses of each type
-                    + "HousingStock, nNewBuild, nUnsoldNewBuild, nEmptyHouses, BTLStockFraction, "
-                    // House sale market data
-                    + "Sale HPI, Sale AnnualHPA, Sale AvBidPrice, Sale AvOfferPrice, Sale AvSalePrice, "
-                    + "Sale ExAvSalePrice, Sale AvMonthsOnMarket, Sale ExpAvMonthsOnMarket, Sale nBuyers, "
-                    + "Sale nBTLBuyers, Sale nSellers, Sale nNewSellers, Sale nBTLSellers, Sale nSales, "
-                    + "Sale nNonBTLBidsAboveExpAvSalePrice, Sale nBTLBidsAboveExpAvSalePrice, Sale nSalesToBTL, "
-                    + "Sale nSalesToFTB, "
-                    // Rental market data
-                    + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
-                    + "Rental AvMonthsOnMarket, Rental ExpAvMonthsOnMarket, Rental nBuyers, Rental nSellers, "
-                    + "Rental nSales, Rental ExpAvFlowYield, "
-                    // Credit data
-                    + "nRegisteredMortgages, "
-            		//RUBEN additional variables
-            		+ "BankBalancesVeryBeginningOfPeriod, monthlyTotalGrossIncome, monthlyTotalNetIncome, monthlyGrossEmploymentIncome, monthlyTaxesPaid, "
-            		+ "monthlyInsurancePaid, BankBalancesBeforeConsumption, BankBalancesEndowed, "
-            		+ "totalConsumption, totalIncomeConsumption, totalFinancialWealthConsumption, "
-            		+ "totalHousingWealthConsumption, totalDebtConsumption, totalSavingForDeleveraging, totalSaving, totalCredit, "
-            		+ "totalPrincipalRepayment, totalPrincipalRepaymentsDueToHouseSale, totalPrincipalPaidBackForInheritance, totalInterestRepayment, totalRentalPayments, "
-            		+ "totalBankruptcyCashInjection, totalDebtReliefDueToDeceasedHousehold, "
-            		+ "creditSupplyTarget, newlyPaidDownPayments, newlyIssuedCredit, nNegativeEquity, "
-            		+ "LTV FTB, LTV OO, LTV BTL, interestRateSpread, moneyOutflowToConstructionSector");
-        } catch (FileNotFoundException | UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
+    	if (recordOutfile) {
+    		try {
+    			outfile = new PrintWriter(outputFolder + "Output-run" + nRun + ".csv", "UTF-8");
+    			outfile.println("Model time, "
+    					// Number of households of each type
+    					+ "nNonBTLHomeless, nBTLHomeless, nHomeless, nRenting, nNonOwner, "
+    					+ "nNonBTLOwnerOccupier, nBTLOwnerOccupier, nOwnerOccupier, nActiveBTL, nBTL, nNonBTLBankrupt, "
+    					+ "nBTLBankrupt, TotalPopulation, "
+    					// Numbers of houses of each type
+    					+ "HousingStock, nNewBuild, nUnsoldNewBuild, nEmptyHouses, BTLStockFraction, "
+    					// House sale market data
+    					+ "Sale HPI, Sale AnnualHPA, Sale AvBidPrice, Sale AvOfferPrice, Sale AvSalePrice, "
+    					+ "Sale ExAvSalePrice, Sale AvMonthsOnMarket, Sale ExpAvMonthsOnMarket, Sale nBuyers, "
+    					+ "Sale nBTLBuyers, Sale nSellers, Sale nNewSellers, Sale nBTLSellers, Sale nSales, "
+    					+ "Sale nNonBTLBidsAboveExpAvSalePrice, Sale nBTLBidsAboveExpAvSalePrice, Sale nSalesToBTL, "
+    					+ "Sale nSalesToFTB, "
+    					// Rental market data
+    					+ "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
+    					+ "Rental AvMonthsOnMarket, Rental ExpAvMonthsOnMarket, Rental nBuyers, Rental nSellers, "
+    					+ "Rental nSales, Rental ExpAvFlowYield, "
+    					// Credit data
+    					+ "nRegisteredMortgages, "
+    					//RUBEN additional variables
+    					+ "BankBalancesVeryBeginningOfPeriod, monthlyTotalGrossIncome, monthlyTotalNetIncome, monthlyGrossEmploymentIncome, monthlyTaxesPaid, "
+    					+ "monthlyInsurancePaid, BankBalancesBeforeConsumption, BankBalancesEndowed, "
+    					+ "totalConsumption, totalIncomeConsumption, totalFinancialWealthConsumption, "
+    					+ "totalHousingWealthConsumption, totalDebtConsumption, totalSavingForDeleveraging, totalSaving, totalCredit, "
+    					+ "totalPrincipalRepayment, totalPrincipalRepaymentsDueToHouseSale, totalPrincipalPaidBackForInheritance, totalInterestRepayment, totalRentalPayments, "
+    					+ "totalBankruptcyCashInjection, totalDebtReliefDueToDeceasedHousehold, "
+    					+ "creditSupplyTarget, newlyPaidDownPayments, newlyIssuedCredit, nNegativeEquity, "
+    					+ "LTV FTB, LTV OO, LTV BTL, interestRateSpread, moneyOutflowToConstructionSector");
+    		} catch (FileNotFoundException | UnsupportedEncodingException e) {
+    			e.printStackTrace();
+    		}
+    	}
         // If recording of quality band prices is active...
         if(recordQualityBandPrice) {
             // ...try opening output file and write first row header with column names
@@ -155,7 +157,7 @@ public class Recorder {
         }
     }
 
-    public void writeTimeStampResults(boolean recordCoreIndicators, int time, boolean recordQualityBandPrice) {
+    public void writeTimeStampResults(boolean recordOutfile, boolean recordCoreIndicators, int time, boolean recordQualityBandPrice) {
         if (recordCoreIndicators) {
             // If not at the first point in time...
             if (time > 0) {
@@ -199,98 +201,100 @@ public class Recorder {
         }
 
         // Write general output results to output file
-        outfile.println(time + ", " +
-                // Number of households of each type
-                Model.householdStats.getnNonBTLHomeless() + ", " +
-                Model.householdStats.getnBTLHomeless() + ", " +
-                Model.householdStats.getnHomeless() + ", " +
-                Model.householdStats.getnRenting() + ", " +
-                Model.householdStats.getnNonOwner() + ", " +
-                Model.householdStats.getnNonBTLOwnerOccupier() + ", " +
-                Model.householdStats.getnBTLOwnerOccupier() + ", " +
-                Model.householdStats.getnOwnerOccupier() + ", " +
-                Model.householdStats.getnActiveBTL() + ", " +
-                Model.householdStats.getnBTL() + ", " +
-                Model.householdStats.getnNonBTLBankruptcies() + ", " +
-                Model.householdStats.getnBTLBankruptcies() + ", " +
-                Model.households.size() + ", " +
-                // Numbers of houses of each type
-                Model.construction.getHousingStock() + ", " +
-                Model.construction.getnNewBuild() + ", " +
-                Model.housingMarketStats.getnUnsoldNewBuild() + ", " +
-                Model.householdStats.getnEmptyHouses() + ", " +
-                Model.householdStats.getBTLStockFraction() + ", " +
-                // House sale market data
-                Model.housingMarketStats.getHPI() + ", " +
-                Model.housingMarketStats.getAnnualHPA() + ", " +
-                Model.housingMarketStats.getAvBidPrice() + ", " +
-                Model.housingMarketStats.getAvOfferPrice() + ", " +
-                Model.housingMarketStats.getAvSalePrice() + ", " +
-                Model.housingMarketStats.getExpAvSalePrice() + ", " +
-                Model.housingMarketStats.getAvMonthsOnMarket() + ", " +
-                Model.housingMarketStats.getExpAvMonthsOnMarket() + ", " +
-                Model.housingMarketStats.getnBuyers() + ", " +
-                Model.housingMarketStats.getnBTLBuyers() + ", " +
-                Model.housingMarketStats.getnSellers() + ", " +
-                Model.housingMarketStats.getnNewSellers() + ", " +
-                Model.housingMarketStats.getnBTLSellers() + ", " +
-                Model.housingMarketStats.getnSales() + ", " +
-                Model.householdStats.getnNonBTLBidsAboveExpAvSalePrice() + ", " +
-                Model.householdStats.getnBTLBidsAboveExpAvSalePrice() + ", " +
-                Model.housingMarketStats.getnSalesToBTL() + ", " +
-                Model.housingMarketStats.getnSalesToFTB() + ", " +
-                // Rental market data
-                Model.rentalMarketStats.getHPI() + ", " +
-                Model.rentalMarketStats.getAnnualHPA() + ", " +
-                Model.rentalMarketStats.getAvBidPrice() + ", " +
-                Model.rentalMarketStats.getAvOfferPrice() + ", " +
-                Model.rentalMarketStats.getAvSalePrice() + ", " +
-                Model.rentalMarketStats.getAvMonthsOnMarket() + ", " +
-                Model.rentalMarketStats.getExpAvMonthsOnMarket() + ", " +
-                Model.rentalMarketStats.getnBuyers() + ", " +
-                Model.rentalMarketStats.getnSellers() + ", " +
-                Model.rentalMarketStats.getnSales() + ", " +
-                Model.rentalMarketStats.getExpAvFlowYield() + ", " +
-                // Credit data
-                Model.creditSupply.getnRegisteredMortgages() + ", " +
-        		//RUBEN additional variables
-        		Model.householdStats.getTotalBankBalancesVeryBeginningOfPeriod() + ", " +
-        		(Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR
-                        + Model.householdStats.getActiveBTLAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR
-                        + Model.householdStats.getNonOwnerAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR) + ", " + 
-                (Model.householdStats.getOwnerOccupierMonthlyNetIncome()
-                		+ Model.householdStats.getActiveMonthlyNetIncome()
-                		+ Model.householdStats.getNonOwnerMonthlyNetIncome()) + ", " +
-        		Model.householdStats.getMonthlyGrossEmploymentIncome() + ", " +	
-                Model.householdStats.getTotalMonthlyTaxesPaid() + ", " + 
-                Model.householdStats.getTotalMonthlyNICPaid() + ", " +
-                Model.householdStats.getTotalBankBalancesBeforeConsumption() + ", " + 
-                Model.householdStats.getTotalBankBalanceEndowment() + ", " +
-                Model.householdStats.getTotalConsumption()  + ", " +
-        		Model.householdStats.getIncomeConsumption()  + ", " +
-        		Model.householdStats.getFinancialWealthConsumption()  + ", " +
-        		Model.householdStats.getHousingWealthConsumption()  + ", " +
-        		Model.householdStats.getDebtConsumption()  + ", " +
-        		Model.householdStats.getTotalSavingForDeleveraging() + ", " + 
-        		Model.householdStats.getTotalSaving() + ", " +
-        		(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
-        		Model.householdStats.getTotalPrincipalRepayments() + ", " +
-        		Model.householdStats.getTotalPrincipalRepaymentsDueToHouseSale() + ", " + 
-        		Model.householdStats.getTotalPrincipalRepaymentDeceasedHouseholds() + ", " +
-        		Model.householdStats.getTotalInterestRepayments() + ", " +
-        		Model.householdStats.getTotalRentalPayments() + ", " +
-        		Model.householdStats.getTotalBankruptcyCashInjection() + ", " +
-        		Model.householdStats.getTotalDebtReliefOfDeceasedHouseholds() + ", " +
-        		Model.bank.creditSupplyTarget(Model.households.size()) + ", " +
-        		Model.creditSupply.getNewlyPaidDownPayments() + ", " +
-        		Model.creditSupply.getNewlyIssuedCredit() + ", " + 
-        		Model.householdStats.getNNegativeEquity() + ", " +
-        		Model.bank.getLoanToValueLimit(true, true) + ", " +
-        		Model.bank.getLoanToValueLimit(false, true) + ", " +
-        		Model.bank.getLoanToValueLimit(false, false) + ", " +
-        		// divide by 100 as the interest rate in core indicators is calculated as percentage
-        		Model.coreIndicators.getInterestRateSpread()/100 + ", " +
-        		Model.housingMarketStats.getMoneyToConstructionSector());
+        if (recordOutfile) {
+        	outfile.println(time + ", " +
+        			// Number of households of each type
+        			Model.householdStats.getnNonBTLHomeless() + ", " +
+        			Model.householdStats.getnBTLHomeless() + ", " +
+        			Model.householdStats.getnHomeless() + ", " +
+        			Model.householdStats.getnRenting() + ", " +
+        			Model.householdStats.getnNonOwner() + ", " +
+        			Model.householdStats.getnNonBTLOwnerOccupier() + ", " +
+        			Model.householdStats.getnBTLOwnerOccupier() + ", " +
+        			Model.householdStats.getnOwnerOccupier() + ", " +
+        			Model.householdStats.getnActiveBTL() + ", " +
+        			Model.householdStats.getnBTL() + ", " +
+        			Model.householdStats.getnNonBTLBankruptcies() + ", " +
+        			Model.householdStats.getnBTLBankruptcies() + ", " +
+        			Model.households.size() + ", " +
+        			// Numbers of houses of each type
+        			Model.construction.getHousingStock() + ", " +
+        			Model.construction.getnNewBuild() + ", " +
+        			Model.housingMarketStats.getnUnsoldNewBuild() + ", " +
+        			Model.householdStats.getnEmptyHouses() + ", " +
+        			Model.householdStats.getBTLStockFraction() + ", " +
+        			// House sale market data
+        			Model.housingMarketStats.getHPI() + ", " +
+        			Model.housingMarketStats.getAnnualHPA() + ", " +
+        			Model.housingMarketStats.getAvBidPrice() + ", " +
+        			Model.housingMarketStats.getAvOfferPrice() + ", " +
+        			Model.housingMarketStats.getAvSalePrice() + ", " +
+        			Model.housingMarketStats.getExpAvSalePrice() + ", " +
+        			Model.housingMarketStats.getAvMonthsOnMarket() + ", " +
+        			Model.housingMarketStats.getExpAvMonthsOnMarket() + ", " +
+        			Model.housingMarketStats.getnBuyers() + ", " +
+        			Model.housingMarketStats.getnBTLBuyers() + ", " +
+        			Model.housingMarketStats.getnSellers() + ", " +
+        			Model.housingMarketStats.getnNewSellers() + ", " +
+        			Model.housingMarketStats.getnBTLSellers() + ", " +
+        			Model.housingMarketStats.getnSales() + ", " +
+        			Model.householdStats.getnNonBTLBidsAboveExpAvSalePrice() + ", " +
+        			Model.householdStats.getnBTLBidsAboveExpAvSalePrice() + ", " +
+        			Model.housingMarketStats.getnSalesToBTL() + ", " +
+        			Model.housingMarketStats.getnSalesToFTB() + ", " +
+        			// Rental market data
+        			Model.rentalMarketStats.getHPI() + ", " +
+        			Model.rentalMarketStats.getAnnualHPA() + ", " +
+        			Model.rentalMarketStats.getAvBidPrice() + ", " +
+        			Model.rentalMarketStats.getAvOfferPrice() + ", " +
+        			Model.rentalMarketStats.getAvSalePrice() + ", " +
+        			Model.rentalMarketStats.getAvMonthsOnMarket() + ", " +
+        			Model.rentalMarketStats.getExpAvMonthsOnMarket() + ", " +
+        			Model.rentalMarketStats.getnBuyers() + ", " +
+        			Model.rentalMarketStats.getnSellers() + ", " +
+        			Model.rentalMarketStats.getnSales() + ", " +
+        			Model.rentalMarketStats.getExpAvFlowYield() + ", " +
+        			// Credit data
+        			Model.creditSupply.getnRegisteredMortgages() + ", " +
+        			//RUBEN additional variables
+        			Model.householdStats.getTotalBankBalancesVeryBeginningOfPeriod() + ", " +
+        			(Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR
+        					+ Model.householdStats.getActiveBTLAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR
+        					+ Model.householdStats.getNonOwnerAnnualisedTotalIncome()/Model.config.constants.MONTHS_IN_YEAR) + ", " + 
+        					(Model.householdStats.getOwnerOccupierMonthlyNetIncome()
+        							+ Model.householdStats.getActiveMonthlyNetIncome()
+        							+ Model.householdStats.getNonOwnerMonthlyNetIncome()) + ", " +
+        							Model.householdStats.getMonthlyGrossEmploymentIncome() + ", " +	
+        							Model.householdStats.getTotalMonthlyTaxesPaid() + ", " + 
+        							Model.householdStats.getTotalMonthlyNICPaid() + ", " +
+        							Model.householdStats.getTotalBankBalancesBeforeConsumption() + ", " + 
+        							Model.householdStats.getTotalBankBalanceEndowment() + ", " +
+        							Model.householdStats.getTotalConsumption()  + ", " +
+        							Model.householdStats.getIncomeConsumption()  + ", " +
+        							Model.householdStats.getFinancialWealthConsumption()  + ", " +
+        							Model.householdStats.getHousingWealthConsumption()  + ", " +
+        							Model.householdStats.getDebtConsumption()  + ", " +
+        							Model.householdStats.getTotalSavingForDeleveraging() + ", " + 
+        							Model.householdStats.getTotalSaving() + ", " +
+        							(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
+        							Model.householdStats.getTotalPrincipalRepayments() + ", " +
+        							Model.householdStats.getTotalPrincipalRepaymentsDueToHouseSale() + ", " + 
+        							Model.householdStats.getTotalPrincipalRepaymentDeceasedHouseholds() + ", " +
+        							Model.householdStats.getTotalInterestRepayments() + ", " +
+        							Model.householdStats.getTotalRentalPayments() + ", " +
+        							Model.householdStats.getTotalBankruptcyCashInjection() + ", " +
+        							Model.householdStats.getTotalDebtReliefOfDeceasedHouseholds() + ", " +
+        							Model.bank.creditSupplyTarget(Model.households.size()) + ", " +
+        							Model.creditSupply.getNewlyPaidDownPayments() + ", " +
+        							Model.creditSupply.getNewlyIssuedCredit() + ", " + 
+        							Model.householdStats.getNNegativeEquity() + ", " +
+        							Model.bank.getLoanToValueLimit(true, true) + ", " +
+        							Model.bank.getLoanToValueLimit(false, true) + ", " +
+        							Model.bank.getLoanToValueLimit(false, false) + ", " +
+        							// divide by 100 as the interest rate in core indicators is calculated as percentage
+        							Model.coreIndicators.getInterestRateSpread()/100 + ", " +
+        							Model.housingMarketStats.getMoneyToConstructionSector());
+        }
 
         // Write quality band prices to file
         if (recordQualityBandPrice) {
@@ -305,7 +309,7 @@ public class Recorder {
         }
     }
 
-    public void finishRun(boolean recordCoreIndicators, boolean recordQualityBandPrice) {
+    public void finishRun(boolean recordOutfile, boolean recordCoreIndicators, boolean recordQualityBandPrice) {
         if (recordCoreIndicators) {
             HPI.println("");
             top10NetTotalWealthShare.println("");
@@ -325,7 +329,7 @@ public class Recorder {
             housePriceGrowth.println("");
             interestRateSpread.println("");
         }
-        outfile.close();
+        if (recordOutfile) outfile.close();
         if (recordQualityBandPrice) {
             qualityBandPriceFile.close();
             qualityBandPriceExpectedFile.close();

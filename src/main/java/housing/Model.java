@@ -138,7 +138,7 @@ public class Model {
 
 
             // For each simulation, open files for writing single-run results
-            recorder.openSingleRunFiles(nSimulation, true, config.N_QUALITY);
+            recorder.openSingleRunFiles(nSimulation, config.recordOutfile, config.recordQualityBandPrice, config.N_QUALITY);
             if (config.recordTransactions) { transactionRecorder.openSingleRunFiles(nSimulation); }
             if (config.recordOffersAndBids) { offerAndBidRecorder.openSingleRunFiles(nSimulation); }
             if (config.recordBankBalance || config.recordNHousesOwned 
@@ -169,10 +169,6 @@ public class Model {
             // For each simulation, run config.N_STEPS time steps
 			for (t = 0; t <= config.N_STEPS; t += 1) {
 				
-				if(t==809	) {
-					System.out.println("period: " + t);
-				}
-				
                 // Steps model and stores sale and rental markets bid and offer prices, and their averages, into their
                 // respective variables
                 modelStep();
@@ -182,7 +178,7 @@ public class Model {
                     //(this is only provisional, as it only writes one type of data)
                     if(config.recordAgentData) {agentRecorder.recordAgentData();}
                     // Write results of this time step and run to both multi- and single-run files
-                    recorder.writeTimeStampResults(config.recordCoreIndicators, t, config.recordQualityBandPrice);
+                    recorder.writeTimeStampResults(config.recordOutfile, config.recordCoreIndicators, t, config.recordQualityBandPrice);
 
 
                 }
@@ -194,7 +190,7 @@ public class Model {
             }
 
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
-            recorder.finishRun(config.recordCoreIndicators, config.recordQualityBandPrice);
+            recorder.finishRun(config.recordOutfile, config.recordCoreIndicators, config.recordQualityBandPrice);
             if (config.recordTransactions) transactionRecorder.finishRun();
             if (config.recordOffersAndBids) offerAndBidRecorder.finishRun();
             if (config.recordBankBalance || config.recordNHousesOwned) {
