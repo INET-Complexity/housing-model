@@ -272,95 +272,65 @@ public class MicroDataRecorder {
         }
     }
 	
-	void recordBankBalance(int time, double bankBalance) {
-        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-            outfileBankBalance.print(", " + bankBalance);
-        }
-	}
+    void recordBankBalance(int time, double bankBalance) {
+    	outfileBankBalance.print(", " + bankBalance);
+    }
 
     void recordHousingWealth(int time, double housingWealth) {
-        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-            outfileHousingWealth.print(", " + housingWealth);
-        }
+    	outfileHousingWealth.print(", " + housingWealth);
     }
 
     void recordNHousesOwned(int time, int nHousesOwned) {
-        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-            outfileNHousesOwned.print(", " + nHousesOwned);
-        }
+        outfileNHousesOwned.print(", " + nHousesOwned);
     }
 
     void recordSavingRate(int time, double savingRate) {
-        if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-            outfileSavingRate.print(", " + savingRate);
-        }
+        outfileSavingRate.print(", " + savingRate);
     }
     
     void recordMonthlyGrossTotalIncome(int time, double monthlyGrossTotalIncome) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileMonthlyGrossTotalIncome.print(", " + monthlyGrossTotalIncome);
-    	}
+    	outfileMonthlyGrossTotalIncome.print(", " + monthlyGrossTotalIncome);
     }
     
     void recordMonthlyGrossEmploymentIncome(int time, double monthlyGrossEmploymentIncome) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileMonthlyGrossEmploymentIncome.print(", " + monthlyGrossEmploymentIncome);
-    	}
+    	outfileMonthlyGrossEmploymentIncome.print(", " + monthlyGrossEmploymentIncome);
     }
     
     void recordMonthlyGrossRentalIncome(int time, double monthlyGrossRentalIncome) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileMonthlyGrossRentalIncome.print(", " + monthlyGrossRentalIncome);
-    	}
+    	outfileMonthlyGrossRentalIncome.print(", " + monthlyGrossRentalIncome);
     }
     
     void recordDebt(int time, double debt) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileDebt.print(", " + debt);
-    	}
+    	outfileDebt.print(", " + debt);
     }
     
     void recordConsumption(int time, double consumption) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileConsumption.print(", " + consumption);
-    	}
-    }
+		outfileConsumption.print(", " + consumption);
+	}
     
     void recordIncomeConsumption(int time, double consumption) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileIncomeConsumption.print(", " + consumption);
-    	}
+		outfileIncomeConsumption.print(", " + consumption);
     }
     
     void recordFinancialWealthConsumption(int time, double consumption) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileFinancialWealthConsumption.print(", " + consumption);
-    	}
+		outfileFinancialWealthConsumption.print(", " + consumption);
     }
     
     void recordHousingWealthConsumption(int time, double consumption) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileHousingWealthConsumption.print(", " + consumption);
-    	}
+    	outfileHousingWealthConsumption.print(", " + consumption);
     }
     
     void recordDebtConsumption(int time, double consumption) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileDebtConsumption.print(", " + consumption);
-    	}
+		outfileDebtConsumption.print(", " + consumption);
     }
     
     void recordSavingForDeleveraging(int time, double savingForDeleveraging) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		outfileSavingForDeleveraging.print(", " + savingForDeleveraging);
-    	}
+    	outfileSavingForDeleveraging.print(", " + savingForDeleveraging);
     }
     
     void recordBTL(int time, boolean isBTL) {
-    	if (time % Model.config.microDataRecordIntervall == 0 && time >= Model.config.TIME_TO_START_RECORDING) {
-    		if(isBTL)outfileBTL.print(", " + 1);
-    		else outfileBTL.print(", " + 0);
-    	}
+		if(isBTL)outfileBTL.print(", " + 1);
+		else outfileBTL.print(", " + 0);
     }
 
 	public void finishRun(boolean recordBankBalance, boolean recordHousingWealth, boolean recordNHousesOwned,

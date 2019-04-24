@@ -269,7 +269,11 @@ public class HouseholdStats {
                     homelessMonthlyGrossEmploymentIncome += h.getMonthlyGrossEmploymentIncome();
                 }
             }
-            // Record household micro-data
+        	
+        	// record the total net wealth into the descriptive statistics
+        	if(Model.getTime() % Model.config.microDataRecordIntervall == 0 && Model.getTime()>=config.TIME_TO_START_RECORDING)
+        	
+            // Record household micro-data 
         	if(Model.getTime()>=config.TIME_TO_START_RECORDING) {
         		if (config.recordBankBalance) {
         			Model.microDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
