@@ -4,6 +4,10 @@ import housing.Config;
 import housing.Model;
 import utilities.MeanAboveMedian;
 
+import java.util.Arrays;
+import java.util.stream.DoubleStream;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+
 /**************************************************************************************************
  * Class to collect the information contained in the Bank of England "Core Indicators" set for LTV
  * and LTI limits, as set out in the Bank of England's draft policy statement "The Financial policy
@@ -34,6 +38,24 @@ public class CoreIndicators {
 	// simple HPI
 	double getHPI() {
 		return Model.housingMarketStats.getHPI();
+	}
+	
+	// get total net wealth share of the top 10 % of households
+	
+	double getS90TotalNetWealth() {
+		// get the sorted array of total net wealth of every household
+		double[] sortedNetWealth = Model.householdStats.totalNetWealth.getSortedValues();
+		long numberAgents = Model.householdStats.totalNetWealth.getN();
+		System.out.println("N is: " + numberAgents);
+		int arrayPositionTop10 = (int) (numberAgents-(numberAgents/10));
+		System.out.println("arrayPositionTop10 is: " + arrayPositionTop10);
+		double[] S90Array = Arrays.copyOfRange(sortedNetWealth, arrayPositionTop10, (int) numberAgents) ;
+		// share of top 10 wealth
+		double sumS90 = DoubleStream.of(S90Array).parallel().sum();
+		double sumTotalNetWealth = DoubleStream.of(sortedNetWealth).parallel().sum();
+		System.out.println("Sum of the top 10 is: " + sumS90 + ", sum of all is: " + sumTotalNetWealth + 
+				" and their ratio is: " + sumS90/sumTotalNetWealth);
+		return sumS90/sumTotalNetWealth;
 	}
 	
 	//consumption

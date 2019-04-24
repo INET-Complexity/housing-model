@@ -1,6 +1,7 @@
 package collectors;
 
 import housing.*;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 import java.util.Map;
 
@@ -101,6 +102,9 @@ public class HouseholdStats {
     private double totalSavingForDeleveraging;
     private double totalSavingForDeleveragingCounter;
     
+    // For sensitivity analysis
+    public DescriptiveStatistics totalNetWealth; 
+    
     //-------------------//
     //----- Methods -----//
     //-------------------//
@@ -157,6 +161,7 @@ public class HouseholdStats {
         totalHousingWealthConsumption = 0.0;
         totalDebtConsumption = 0.0;
         totalSavingForDeleveraging = 0.0;
+        totalNetWealth = new DescriptiveStatistics();
     }
 
     public void record() {
@@ -216,7 +221,11 @@ public class HouseholdStats {
             totalMonthlyNICPaidCounter += h.getMonthlyNICPaid();
             totalBankruptcyCashInjectionCounter += h.getCashInjection();
         	
+            // count if the household had a negative equity position at the beginning of the period
             if (h.getEquityPosition() < 0) {
+//            	if(h.getSavingForDeleveraging()<0.01 && Model.getTime()>2600) {
+//            		System.out.println("stop, this is weird, equity position is: " + h.getEquityPosition() + " and they saved: " + h.getSavingForDeleveraging());
+//            	}
             	nNegativeEquity++;
             }
             
@@ -271,7 +280,9 @@ public class HouseholdStats {
             }
         	
         	// record the total net wealth into the descriptive statistics
-        	if(Model.getTime() % Model.config.microDataRecordIntervall == 0 && Model.getTime()>=config.TIME_TO_START_RECORDING)
+        	if(Model.getTime()>=config.TIME_TO_START_RECORDING) {
+        		totalNetWealth.addValue(h.getEquityPosition());
+        	}
         	
             // Record household micro-data 
         	if(Model.getTime()>=config.TIME_TO_START_RECORDING) {

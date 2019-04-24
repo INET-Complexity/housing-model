@@ -27,6 +27,7 @@ public class Recorder {
     private	PrintWriter qualityBandPriceExpectedFile;
     
     private PrintWriter HPI;
+    private PrintWriter top10NetTotalWealthShare;
     private PrintWriter consumptionToIncome;
     private PrintWriter ooLTI;
     private PrintWriter btlLTV;
@@ -59,6 +60,8 @@ public class Recorder {
             // ...try opening necessary files
             try {
             	HPI = new PrintWriter(outputFolder + "coreIndicator-HPI.csv",
+                		"UTF-8");
+            	top10NetTotalWealthShare = new PrintWriter(outputFolder + "coreIndicator-top10NetTotalWealthShare.csv",
                 		"UTF-8");
                 consumptionToIncome = new PrintWriter(outputFolder + "coreIndicator-consumptionToIncome.csv",
                 		"UTF-8");
@@ -158,6 +161,7 @@ public class Recorder {
             if (time > 0) {
                 // ...write value separation for core indicators (except for time 0)
             	HPI.print(", ");
+            	top10NetTotalWealthShare.print(", ");
             	consumptionToIncome.print(", ");
                 ooLTI.print(", ");
                 btlLTV.print(", ");
@@ -176,6 +180,7 @@ public class Recorder {
             }
             // Write core indicators results
             HPI.print(Model.coreIndicators.getHPI());
+            top10NetTotalWealthShare.print(Model.coreIndicators.getS90TotalNetWealth());
             consumptionToIncome.print(Model.coreIndicators.getConsumptionOverIncome());
             ooLTI.print(Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
             btlLTV.print(Model.coreIndicators.getBuyToLetLTVMean());
@@ -303,6 +308,7 @@ public class Recorder {
     public void finishRun(boolean recordCoreIndicators, boolean recordQualityBandPrice) {
         if (recordCoreIndicators) {
             HPI.println("");
+            top10NetTotalWealthShare.println("");
             consumptionToIncome.println("");
             ooLTI.println("");
             btlLTV.println("");
@@ -329,6 +335,7 @@ public class Recorder {
     public void finish(boolean recordCoreIndicators) {
         if (recordCoreIndicators) {
         	HPI.close();
+        	top10NetTotalWealthShare.close();
         	consumptionToIncome.close();
             ooLTI.close();
             btlLTV.close();
