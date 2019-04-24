@@ -270,69 +270,72 @@ public class HouseholdStats {
                 }
             }
             // Record household micro-data
-            if (config.recordBankBalance) {
-                Model.microDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
-            }
-            if (config.recordHousingWealth) {
-                // Housing wealth is computed as mark-to-market net housing wealth, thus looking at current average
-                // prices for houses of the same quality
-                double housingWealth = 0.0;
-                for (Map.Entry<House, PaymentAgreement> entry : h.getHousePayments().entrySet()) {
-                    House house = entry.getKey();
-                    PaymentAgreement payment = entry.getValue();
-                    if (payment instanceof MortgageAgreement && house.owner == h) {
-                        housingWealth += Model.housingMarketStats.getExpAvSalePriceForQuality(house.getQuality())
-                                - ((MortgageAgreement) payment).principal;
-                    }
-                }
-                Model.microDataRecorder.recordHousingWealth(Model.getTime(), housingWealth);
-            }
-            //TODO: this does not seem to work properly, as the total number of houses recorded here is considerably higher than the housing stock
-            if (config.recordNHousesOwned) {
-                Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.getNProperties());
-            }
-            if (config.recordSavingRate) {
-                Model.microDataRecorder.recordSavingRate(Model.getTime(), h.getSavingRate());
-            }
-            if(config.recordMonthlyGrossTotalIncome) {
-            	Model.microDataRecorder.recordMonthlyGrossTotalIncome(Model.getTime(), h.getMonthlyGrossTotalIncome());
-            }
-            if(config.recordMonthlyGrossEmploymentIncome) {
-            	Model.microDataRecorder.recordMonthlyGrossEmploymentIncome(Model.getTime(), h.getMonthlyGrossEmploymentIncome());
-            }
-            if(config.recordMonthlyGrossRentalIncome) {
-            	Model.microDataRecorder.recordMonthlyGrossRentalIncome(Model.getTime(), h.returnMonthlyGrossRentalIncome());
-            }
-            if(config.recordDebt) {
-            	Model.microDataRecorder.recordDebt(Model.getTime(), h.getTotalDebt());
-            }
-            if(config.recordConsumption) {
-            	// record non-essential and essential consumption
-            	Model.microDataRecorder.recordConsumption(Model.getTime(), (h.getConsumption()+config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT));
-            }
-            if(config.recordIncomeConsumption) {
-            	// record non-essential income consumption and essential consumption
-            	Model.microDataRecorder.recordIncomeConsumption(Model.getTime(), (h.getIncomeConsumption()+config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT));
-            }
-            if(config.recordFinancialWealthConsumption) {
-            	// record consumption induced by financial wealth
-            	Model.microDataRecorder.recordFinancialWealthConsumption(Model.getTime(), (h.getFinancialWealthConsumption()));
-            }
-            if(config.recordHousingWealthConsumption) {
-            	// record consumption induced by housing wealth
-            	Model.microDataRecorder.recordHousingWealthConsumption(Model.getTime(), (h.getHousingWealthConsumption()));
-            }
-            if(config.recordDebtConsumption) {
-            	// record consumption induced by debt
-            	Model.microDataRecorder.recordDebtConsumption(Model.getTime(), (h.getDebtConsumption()));
-            }
-            if(config.recordSavingForDeleveraging) {
-            	// record consumption reduction induced by negative equity position of the household
-            	Model.microDataRecorder.recordSavingForDeleveraging(Model.getTime(), (h.getSavingForDeleveraging()));
-            }
-            if(config.recordBTL) {
-            	Model.microDataRecorder.recordBTL(Model.getTime(), h.behaviour.isPropertyInvestor());
-            }
+        	if(Model.getTime()>=config.TIME_TO_START_RECORDING) {
+        		if (config.recordBankBalance) {
+        			Model.microDataRecorder.recordBankBalance(Model.getTime(), h.getBankBalance());
+        		}
+        		if (config.recordHousingWealth) {
+        			// Housing wealth is computed as mark-to-market net housing wealth, thus looking at current average
+        			// prices for houses of the same quality
+        			double housingWealth = 0.0;
+        			for (Map.Entry<House, PaymentAgreement> entry : h.getHousePayments().entrySet()) {
+        				House house = entry.getKey();
+        				PaymentAgreement payment = entry.getValue();
+        				if (payment instanceof MortgageAgreement && house.owner == h) {
+        					housingWealth += Model.housingMarketStats.getExpAvSalePriceForQuality(house.getQuality())
+        							- ((MortgageAgreement) payment).principal;
+        				}
+        			}
+        			Model.microDataRecorder.recordHousingWealth(Model.getTime(), housingWealth);
+        		}
+
+        		if (config.recordNHousesOwned) {
+        			Model.microDataRecorder.recordNHousesOwned(Model.getTime(), h.getNProperties());
+        		}
+        		if (config.recordSavingRate) {
+        			Model.microDataRecorder.recordSavingRate(Model.getTime(), h.getSavingRate());
+        		}
+        		if(config.recordMonthlyGrossTotalIncome) {
+        			Model.microDataRecorder.recordMonthlyGrossTotalIncome(Model.getTime(), h.getMonthlyGrossTotalIncome());
+        		}
+        		if(config.recordMonthlyGrossEmploymentIncome) {
+        			Model.microDataRecorder.recordMonthlyGrossEmploymentIncome(Model.getTime(), h.getMonthlyGrossEmploymentIncome());
+        		}
+        		if(config.recordMonthlyGrossRentalIncome) {
+        			Model.microDataRecorder.recordMonthlyGrossRentalIncome(Model.getTime(), h.returnMonthlyGrossRentalIncome());
+        		}
+        		if(config.recordDebt) {
+        			Model.microDataRecorder.recordDebt(Model.getTime(), h.getTotalDebt());
+        		}
+        		if(config.recordConsumption) {
+        			// record non-essential and essential consumption
+        			Model.microDataRecorder.recordConsumption(Model.getTime(), (h.getConsumption()+config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT));
+        		}
+        		if(config.recordIncomeConsumption) {
+        			// record non-essential income consumption and essential consumption
+        			Model.microDataRecorder.recordIncomeConsumption(Model.getTime(), (h.getIncomeConsumption()+config.ESSENTIAL_CONSUMPTION_FRACTION*config.GOVERNMENT_MONTHLY_INCOME_SUPPORT));
+        		}
+        		if(config.recordFinancialWealthConsumption) {
+        			// record consumption induced by financial wealth
+        			Model.microDataRecorder.recordFinancialWealthConsumption(Model.getTime(), (h.getFinancialWealthConsumption()));
+        		}
+        		if(config.recordHousingWealthConsumption) {
+        			// record consumption induced by housing wealth
+        			Model.microDataRecorder.recordHousingWealthConsumption(Model.getTime(), (h.getHousingWealthConsumption()));
+        		}
+        		if(config.recordDebtConsumption) {
+        			// record consumption induced by debt
+        			Model.microDataRecorder.recordDebtConsumption(Model.getTime(), (h.getDebtConsumption()));
+        		}
+        		if(config.recordSavingForDeleveraging) {
+        			// record consumption reduction induced by negative equity position of the household
+        			Model.microDataRecorder.recordSavingForDeleveraging(Model.getTime(), (h.getSavingForDeleveraging()));
+        		}
+        		if(config.recordBTL) {
+        			Model.microDataRecorder.recordBTL(Model.getTime(), h.behaviour.isPropertyInvestor());
+        		}
+
+        	}
         }
         // Annualise monthly income data
         activeBTLAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
