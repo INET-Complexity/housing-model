@@ -198,6 +198,7 @@ public class HouseholdStats {
         totalBankruptcyCashInjection = 0.0;
         //RUBEN initialise nNegativeEquity
         nNegativeEquity = 0;
+        totalNetWealth.clear();
         // Time stamp householdStats mesoRecorders
         Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordBankBalance,
                 config.recordHousingWealth, config.recordNHousesOwned, config.recordSavingRate, config.recordMonthlyGrossTotalIncome,
