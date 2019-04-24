@@ -28,6 +28,9 @@ public class Recorder {
     
     private PrintWriter HPI;
     private PrintWriter top10NetTotalWealthShare;
+    private PrintWriter numberBankruptcies;
+    private PrintWriter shareEmptyHouses;
+    private PrintWriter BTLMarketShare;
     private PrintWriter consumptionToIncome;
     private PrintWriter ooLTI;
     private PrintWriter btlLTV;
@@ -62,6 +65,12 @@ public class Recorder {
             	HPI = new PrintWriter(outputFolder + "coreIndicator-HPI.csv",
                 		"UTF-8");
             	top10NetTotalWealthShare = new PrintWriter(outputFolder + "coreIndicator-top10NetTotalWealthShare.csv",
+                		"UTF-8");
+            	numberBankruptcies = new PrintWriter(outputFolder + "coreIndicator-numberBankruptcies.csv",
+                		"UTF-8");
+            	shareEmptyHouses = new PrintWriter(outputFolder + "coreIndicator-shareEmptyHouses.csv",
+                		"UTF-8");
+            	BTLMarketShare = new PrintWriter(outputFolder + "coreIndicator-BTLMarketShare.csv",
                 		"UTF-8");
                 consumptionToIncome = new PrintWriter(outputFolder + "coreIndicator-consumptionToIncome.csv",
                 		"UTF-8");
@@ -164,6 +173,9 @@ public class Recorder {
                 // ...write value separation for core indicators (except for time 0)
             	HPI.print(", ");
             	top10NetTotalWealthShare.print(", ");
+            	numberBankruptcies.print(", ");
+            	shareEmptyHouses.print(", ");
+            	BTLMarketShare.print(", ");
             	consumptionToIncome.print(", ");
                 ooLTI.print(", ");
                 btlLTV.print(", ");
@@ -183,6 +195,9 @@ public class Recorder {
             // Write core indicators results
             HPI.print(Model.coreIndicators.getHPI());
             top10NetTotalWealthShare.print(Model.coreIndicators.getS90TotalNetWealth());
+            numberBankruptcies.print(Model.coreIndicators.getNumberBankruptcies());
+        	shareEmptyHouses.print(Model.coreIndicators.getShareEmptyHouses());
+        	BTLMarketShare.print(Model.coreIndicators.getBTLMarketShare());
             consumptionToIncome.print(Model.coreIndicators.getConsumptionOverIncome());
             ooLTI.print(Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
             btlLTV.print(Model.coreIndicators.getBuyToLetLTVMean());
@@ -264,36 +279,36 @@ public class Recorder {
         					(Model.householdStats.getOwnerOccupierMonthlyNetIncome()
         							+ Model.householdStats.getActiveMonthlyNetIncome()
         							+ Model.householdStats.getNonOwnerMonthlyNetIncome()) + ", " +
-        							Model.householdStats.getMonthlyGrossEmploymentIncome() + ", " +	
-        							Model.householdStats.getTotalMonthlyTaxesPaid() + ", " + 
-        							Model.householdStats.getTotalMonthlyNICPaid() + ", " +
-        							Model.householdStats.getTotalBankBalancesBeforeConsumption() + ", " + 
-        							Model.householdStats.getTotalBankBalanceEndowment() + ", " +
-        							Model.householdStats.getTotalConsumption()  + ", " +
-        							Model.householdStats.getIncomeConsumption()  + ", " +
-        							Model.householdStats.getFinancialWealthConsumption()  + ", " +
-        							Model.householdStats.getHousingWealthConsumption()  + ", " +
-        							Model.householdStats.getDebtConsumption()  + ", " +
-        							Model.householdStats.getTotalSavingForDeleveraging() + ", " + 
-        							Model.householdStats.getTotalSaving() + ", " +
-        							(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
-        							Model.householdStats.getTotalPrincipalRepayments() + ", " +
-        							Model.householdStats.getTotalPrincipalRepaymentsDueToHouseSale() + ", " + 
-        							Model.householdStats.getTotalPrincipalRepaymentDeceasedHouseholds() + ", " +
-        							Model.householdStats.getTotalInterestRepayments() + ", " +
-        							Model.householdStats.getTotalRentalPayments() + ", " +
-        							Model.householdStats.getTotalBankruptcyCashInjection() + ", " +
-        							Model.householdStats.getTotalDebtReliefOfDeceasedHouseholds() + ", " +
-        							Model.bank.creditSupplyTarget(Model.households.size()) + ", " +
-        							Model.creditSupply.getNewlyPaidDownPayments() + ", " +
-        							Model.creditSupply.getNewlyIssuedCredit() + ", " + 
-        							Model.householdStats.getNNegativeEquity() + ", " +
-        							Model.bank.getLoanToValueLimit(true, true) + ", " +
-        							Model.bank.getLoanToValueLimit(false, true) + ", " +
-        							Model.bank.getLoanToValueLimit(false, false) + ", " +
-        							// divide by 100 as the interest rate in core indicators is calculated as percentage
-        							Model.coreIndicators.getInterestRateSpread()/100 + ", " +
-        							Model.housingMarketStats.getMoneyToConstructionSector());
+					Model.householdStats.getMonthlyGrossEmploymentIncome() + ", " +	
+					Model.householdStats.getTotalMonthlyTaxesPaid() + ", " + 
+					Model.householdStats.getTotalMonthlyNICPaid() + ", " +
+					Model.householdStats.getTotalBankBalancesBeforeConsumption() + ", " + 
+					Model.householdStats.getTotalBankBalanceEndowment() + ", " +
+					Model.householdStats.getTotalConsumption()  + ", " +
+					Model.householdStats.getIncomeConsumption()  + ", " +
+					Model.householdStats.getFinancialWealthConsumption()  + ", " +
+					Model.householdStats.getHousingWealthConsumption()  + ", " +
+					Model.householdStats.getDebtConsumption()  + ", " +
+					Model.householdStats.getTotalSavingForDeleveraging() + ", " + 
+					Model.householdStats.getTotalSaving() + ", " +
+					(Model.creditSupply.totalBTLCredit + Model.creditSupply.totalOOCredit) + ", " +
+					Model.householdStats.getTotalPrincipalRepayments() + ", " +
+					Model.householdStats.getTotalPrincipalRepaymentsDueToHouseSale() + ", " + 
+					Model.householdStats.getTotalPrincipalRepaymentDeceasedHouseholds() + ", " +
+					Model.householdStats.getTotalInterestRepayments() + ", " +
+					Model.householdStats.getTotalRentalPayments() + ", " +
+					Model.householdStats.getTotalBankruptcyCashInjection() + ", " +
+					Model.householdStats.getTotalDebtReliefOfDeceasedHouseholds() + ", " +
+					Model.bank.creditSupplyTarget(Model.households.size()) + ", " +
+					Model.creditSupply.getNewlyPaidDownPayments() + ", " +
+					Model.creditSupply.getNewlyIssuedCredit() + ", " + 
+					Model.householdStats.getNNegativeEquity() + ", " +
+					Model.bank.getLoanToValueLimit(true, true) + ", " +
+					Model.bank.getLoanToValueLimit(false, true) + ", " +
+					Model.bank.getLoanToValueLimit(false, false) + ", " +
+					// divide by 100 as the interest rate in core indicators is calculated as percentage
+					Model.coreIndicators.getInterestRateSpread()/100 + ", " +
+					Model.housingMarketStats.getMoneyToConstructionSector());
         }
 
         // Write quality band prices to file
@@ -313,6 +328,9 @@ public class Recorder {
         if (recordCoreIndicators) {
             HPI.println("");
             top10NetTotalWealthShare.println("");
+            numberBankruptcies.println("");
+            shareEmptyHouses.println("");
+            BTLMarketShare.println("");
             consumptionToIncome.println("");
             ooLTI.println("");
             btlLTV.println("");
@@ -340,6 +358,9 @@ public class Recorder {
         if (recordCoreIndicators) {
         	HPI.close();
         	top10NetTotalWealthShare.close();
+        	numberBankruptcies.close();
+        	shareEmptyHouses.close();
+        	BTLMarketShare.close();
         	consumptionToIncome.close();
             ooLTI.close();
             btlLTV.close();

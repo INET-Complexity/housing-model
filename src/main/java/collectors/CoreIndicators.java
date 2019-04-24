@@ -6,7 +6,6 @@ import utilities.MeanAboveMedian;
 
 import java.util.Arrays;
 import java.util.stream.DoubleStream;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 
 /**************************************************************************************************
  * Class to collect the information contained in the Bank of England "Core Indicators" set for LTV
@@ -52,6 +51,19 @@ public class CoreIndicators {
 		double sumS90 = DoubleStream.of(S90Array).parallel().sum();
 		double sumTotalNetWealth = DoubleStream.of(sortedNetWealth).parallel().sum();
 		return sumS90/sumTotalNetWealth;
+	}
+	
+	// number of bankruptcies
+	int getNumberBankruptcies() {
+		return Model.householdStats.getnNonBTLBankruptcies() + Model.householdStats.getnBTLBankruptcies();
+	}
+	
+	double getShareEmptyHouses() {
+		return ((double)Model.householdStats.getnEmptyHouses())/Model.construction.getHousingStock();
+	}
+	
+	double getBTLMarketShare() {
+		return Model.householdStats.getBTLStockFraction();
 	}
 	
 	//consumption
@@ -134,7 +146,6 @@ public class CoreIndicators {
 	int getAdvancesToHomeMovers() { return(getMortgageApprovals() - getAdvancesToFTBs() - getAdvancesToBTL()); }
 
     // House price to household disposable income ratio
-    // TODO: ATTENTION ---> Gross total income is used here, not disposable income! Post-tax income should be used!
 	// TODO: BoE uses Gross Disposable Income, which is defined: "money that that all of the individuals in the 
 	// household sector have available for spending or saving after income distribution measures 
 	// (for example, taxes, social contributions and benefits) have taken effect." 
