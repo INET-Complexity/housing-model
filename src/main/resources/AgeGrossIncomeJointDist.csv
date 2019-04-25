@@ -1,4 +1,4 @@
-Age (lower edge), Age (upper edge), Log Gross Income (lower edge), Log Gross Income (upper edge), Probability
+# Age (lower edge), Age (upper edge), Log Gross Income (lower edge), Log Gross Income (upper edge), Probability
 15, 25, 8.08948247436, 8.25260892014, 0.0
 15, 25, 8.25260892014, 8.41573536592, 0.00829842760539
 15, 25, 8.41573536592, 8.57886181171, 0.00272074672914
