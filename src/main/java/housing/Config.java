@@ -55,8 +55,6 @@ public class Config {
     public String DATA_AGE_DISTRIBUTION;    // Address for data on the age distribution of household representative persons
 
     // Household parameters
-    public int TENANCY_LENGTH_AVERAGE;      // Average number of months a tenant will stay in a rented house
-    int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
     public String DATA_INCOME_GIVEN_AGE;    // Address for conditional probability of total gross non-rent income given age
     public String DATA_WEALTH_GIVEN_INCOME; // Address for conditional probability of liquid wealth given total gross non-rent income
 
@@ -67,7 +65,9 @@ public class Config {
     double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
     double P_FUNDAMENTALIST; 			    // Probability that a BTL investor is a fundamentalist versus a trend-follower
     // Household behaviour parameters: rent
-    double DESIRED_RENT_INCOME_FRACTION;    // Desired proportion of income to be spent on rent
+    public int TENANCY_LENGTH_AVERAGE;      // Average number of months a tenant will stay in a rented house
+    int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
+    double BID_RENT_AS_FRACTION_OF_INCOME;  // Proportion of income households bid on the rental market
     double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
     double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
     // Household behaviour parameters: general

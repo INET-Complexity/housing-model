@@ -196,7 +196,7 @@ public class HouseholdBehaviour {
 	 * Source: Zoopla rental prices 2008-2009 (at Bank of England)
 	 ********************************************************/
 	double desiredRent(double monthlyGrossEmploymentIncome) {
-	    return monthlyGrossEmploymentIncome*config.DESIRED_RENT_INCOME_FRACTION;
+	    return monthlyGrossEmploymentIncome*config.BID_RENT_AS_FRACTION_OF_INCOME;
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
