@@ -66,13 +66,13 @@ public class Household implements IHouseOwner {
      * Initialises behaviour (determine whether the household will be a BTL investor). Households start off in social
      * housing and with their "desired bank balance" in the bank
      */
-    public Household(MersenneTwister prng) {
+    public Household(MersenneTwister prng, double age) {
         this.prng = prng; // Passes the Model's random number generator to a private field of each instance
+        this.age = age;
         home = null;
         isFirstTimeBuyer = true;
         isBankrupt = false;
         id = ++id_pool;
-        age = data.Demographics.pdfHouseholdAgeAtBirth.nextDouble(this.prng);
         incomePercentile = this.prng.nextDouble();
         behaviour = new HouseholdBehaviour(this.prng, incomePercentile);
         // Find initial values for the annual and monthly gross employment income
@@ -100,8 +100,7 @@ public class Household implements IHouseOwner {
      * - Buy/sell/rent out properties if BTL investor
      */
     public void step() {
-    	isBankrupt = false; // Delete bankruptcies from previous time step
-    	age += 1.0/config.constants.MONTHS_IN_YEAR;
+        isBankrupt = false; // Delete bankruptcies from previous time step
     	// set payment counters and cashInjection to zero, so they can be updated 
     	principalPaidBack = 0.0;
     	principalPaidBackDueToHouseSale = 0.0;
@@ -111,15 +110,11 @@ public class Household implements IHouseOwner {
     	monthlyPayments = 0.0;
     	// record bankBalance very beginning of period
     	Model.householdStats.recordBankBalanceVeryBeginningOfPeriod(bankBalance);
-    	// Update annual gross employment income
-    	annualGrossEmploymentIncome = setAnnualGrossEmploymentIncome();
-    	// update monthly gross employment income
-    	monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
+        // Update annual and monthly gross employment income
+        annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
+        monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
     	// Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
     	monthlyDisposableIncome = getMonthlyDisposableIncome();
-    	if(monthlyDisposableIncome < 0) {
-    	//	System.out.println("MonthlyDisposableIncome is negative: " + monthlyDisposableIncome);
-    	}
     	bankBalance += monthlyDisposableIncome;
     	// record bankBalance before consumption
     	Model.householdStats.recordBankBalanceBeforeConsumption(bankBalance);
@@ -694,8 +689,9 @@ public class Household implements IHouseOwner {
 	public void setSavingForDeleveraging(double savingForDeleveraging) {
 		this.savingForDeleveraging = savingForDeleveraging;
 	}
+    void ageOneMonth() { age += 1.0/config.constants.MONTHS_IN_YEAR; }
 
-	public boolean isHomeowner() {
+    public boolean isHomeowner() {
         if(home == null) return(false);
         return(home.owner == this);
     }
