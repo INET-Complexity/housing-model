@@ -52,10 +52,13 @@ public class Config {
 
     // Demographic parameters
     public int TARGET_POPULATION;           // Target number of households
+    public String DATA_AGE_DISTRIBUTION;    // Address for data on the age distribution of household representative persons
 
     // Household parameters
     public int TENANCY_LENGTH_AVERAGE;      // Average number of months a tenant will stay in a rented house
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
+    public String DATA_INCOME_GIVEN_AGE;    // Address for conditional probability of total gross non-rent income given age
+    public String DATA_WEALTH_GIVEN_INCOME; // Address for conditional probability of liquid wealth given total gross non-rent income
 
     // Household behaviour parameters: buy-to-let
     private double P_INVESTOR;              // Prior probability of being (wanting to be) a BTL investor
@@ -132,22 +135,11 @@ public class Config {
     double GOVERNMENT_GENERAL_PERSONAL_ALLOWANCE;           // General personal allowance to be deducted when computing taxable income
     double GOVERNMENT_INCOME_LIMIT_FOR_PERSONAL_ALLOWANCE;  // Limit of income above which personal allowance starts to decrease £1 for every £2 of income above this limit
     public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;        // Minimum monthly earnings for a married couple from income support
+    public String DATA_TAX_RATES;                           // Address for tax bands and rates data
+    public String DATA_NATIONAL_INSURANCE_RATES;            // Address for national insurance bands and rates data
 
     // Collectors parameters
     private double UK_HOUSEHOLDS;                   // Approximate number of households in UK, used to scale up results for core indicators
-
-    /** Declaration of addresses **/        // They must be public to be accessed from data package
-
-    // Data addresses: Government
-    public String DATA_TAX_RATES;                   // Address for tax bands and rates data
-    public String DATA_NATIONAL_INSURANCE_RATES;    // Address for national insurance bands and rates data
-
-    // Data addresses: EmploymentIncome and Wealth
-    public String DATA_INCOME_GIVEN_AGE;            // Address for conditional probability of income band given age band
-    public String DATA_WEALTH_GIVEN_INCOME;         // Address for conditional probability of wealth given income
-
-    // Data addresses: Demographics
-    public String DATA_AGE_DISTRIBUTION;            // Address for data on the age distribution of household representative persons
 
     /** Construction of objects to contain derived parameters and constants **/
 
@@ -180,21 +172,13 @@ public class Config {
         // Collectors parameters
         double AFFORDABILITY_DECAY; 	// Decay constant for the exponential moving average of affordability
 
-        public double getAffordabilityDecay() {
-          return AFFORDABILITY_DECAY;
-        }
+        public double getAffordabilityDecay() { return AFFORDABILITY_DECAY; }
 
-        public double getE() {
-            return E;
-        }
+        public double getE() { return E; }
 
-        public int getHPIRecordLength() {
-            return HPI_RECORD_LENGTH;
-        }
+        public int getHPIRecordLength() { return HPI_RECORD_LENGTH; }
 
-        public double getHPIReference() {
-            return HPI_REFERENCE;
-        }
+        public double getHPIReference() { return HPI_REFERENCE; }
 
     }
 
