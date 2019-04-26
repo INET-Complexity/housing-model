@@ -31,6 +31,12 @@ public class Recorder {
     private PrintWriter numberBankruptcies;
     private PrintWriter shareEmptyHouses;
     private PrintWriter BTLMarketShare;
+    private PrintWriter financialWealth;
+    private PrintWriter incomeConsumption;
+    private PrintWriter financialConsumption;
+    private PrintWriter grossHousingWealthConsumption;
+    private PrintWriter debtConsumption;
+    private PrintWriter savingDeleveraging;
     private PrintWriter consumptionToIncome;
     private PrintWriter ooLTI;
     private PrintWriter btlLTV;
@@ -72,7 +78,19 @@ public class Recorder {
                 		"UTF-8");
             	BTLMarketShare = new PrintWriter(outputFolder + "coreIndicator-BTLMarketShare.csv",
                 		"UTF-8");
-                consumptionToIncome = new PrintWriter(outputFolder + "coreIndicator-consumptionToIncome.csv",
+            	financialWealth = new PrintWriter(outputFolder + "coreIndicator-financialWealth.csv",
+                		"UTF-8");
+            	incomeConsumption = new PrintWriter(outputFolder + "coreIndicator-incomeConsumption.csv",
+                		"UTF-8");
+            	financialConsumption = new PrintWriter(outputFolder + "coreIndicator-financialConsumption.csv",
+                		"UTF-8");
+            	grossHousingWealthConsumption = new PrintWriter(outputFolder + "coreIndicator-grossHousingWealthConsumption.csv",
+                		"UTF-8");
+            	debtConsumption = new PrintWriter(outputFolder + "coreIndicator-debtConsumption.csv",
+                		"UTF-8");
+            	savingDeleveraging = new PrintWriter(outputFolder + "coreIndicator-savingDeleveraging.csv",
+                		"UTF-8");           	
+            	consumptionToIncome = new PrintWriter(outputFolder + "coreIndicator-consumptionToIncome.csv",
                 		"UTF-8");
                 ooLTI = new PrintWriter(outputFolder + "coreIndicator-ooLTI.csv",
                         "UTF-8");
@@ -176,6 +194,12 @@ public class Recorder {
             	numberBankruptcies.print(", ");
             	shareEmptyHouses.print(", ");
             	BTLMarketShare.print(", ");
+                financialWealth.print(", ");
+                incomeConsumption.print(", ");
+                financialConsumption.print(", ");
+                grossHousingWealthConsumption.print(", ");
+                debtConsumption.print(", ");
+                savingDeleveraging.print(", ");
             	consumptionToIncome.print(", ");
                 ooLTI.print(", ");
                 btlLTV.print(", ");
@@ -198,6 +222,12 @@ public class Recorder {
             numberBankruptcies.print(Model.coreIndicators.getNumberBankruptcies());
         	shareEmptyHouses.print(Model.coreIndicators.getShareEmptyHouses());
         	BTLMarketShare.print(Model.coreIndicators.getBTLMarketShare());
+            financialWealth.print(Model.coreIndicators.getTotalFinancialWealth());
+            incomeConsumption.print(Model.coreIndicators.getTotalIncomeConsumption());
+            financialConsumption.print(Model.coreIndicators.getTotalFinancialConsumption());
+            grossHousingWealthConsumption.print(Model.coreIndicators.getTotalGrossHousingWealthConsumption());
+            debtConsumption.print(Model.coreIndicators.getDebtConsumption());
+            savingDeleveraging.print(Model.coreIndicators.getSavingForDeleveraging());
             consumptionToIncome.print(Model.coreIndicators.getConsumptionOverIncome());
             ooLTI.print(Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
             btlLTV.print(Model.coreIndicators.getBuyToLetLTVMean());
@@ -331,6 +361,12 @@ public class Recorder {
             numberBankruptcies.println("");
             shareEmptyHouses.println("");
             BTLMarketShare.println("");
+            financialWealth.println("");
+            incomeConsumption.println("");
+            financialConsumption.println("");
+            grossHousingWealthConsumption.println("");
+            debtConsumption.println("");
+            savingDeleveraging.println("");
             consumptionToIncome.println("");
             ooLTI.println("");
             btlLTV.println("");
@@ -361,6 +397,12 @@ public class Recorder {
         	numberBankruptcies.close();
         	shareEmptyHouses.close();
         	BTLMarketShare.close();
+            financialWealth.close();
+            incomeConsumption.close();
+            financialConsumption.close();
+            grossHousingWealthConsumption.close();
+            debtConsumption.close();
+            savingDeleveraging.close();
         	consumptionToIncome.close();
             ooLTI.close();
             btlLTV.close();

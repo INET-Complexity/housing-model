@@ -66,6 +66,30 @@ public class CoreIndicators {
 		return Model.householdStats.getBTLStockFraction();
 	}
 	
+	double getTotalFinancialWealth() {
+		return Model.householdStats.getTotalBankBalancesVeryBeginningOfPeriod();
+	}
+	
+	double getTotalIncomeConsumption() {
+		return Model.householdStats.getIncomeConsumption();
+	}
+	
+	double getTotalFinancialConsumption() {
+		return Model.householdStats.getFinancialWealthConsumption();
+	}
+	
+	double getTotalGrossHousingWealthConsumption() {
+		return Model.householdStats.getHousingWealthConsumption();
+	}
+	
+	double getDebtConsumption() {
+		return Model.householdStats.getDebtConsumption();
+	}
+	
+	double getSavingForDeleveraging() {
+		return Model.householdStats.getTotalSavingForDeleveraging();
+	}
+	
 	//consumption
 	double getConsumptionOverIncome() {
 		return Model.householdStats.getTotalConsumption()/((Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()
