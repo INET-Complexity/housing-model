@@ -318,7 +318,7 @@ public class AgentDecisionRecorder{
         					(me.getAnnualGrossTotalIncome(), me.behaviour.getPropensityToSave())) 
         			+ ", " + String.format("%.2f", data.Wealth.getDesiredBankBalance
         					(me.getAnnualGrossTotalIncome(), me.behaviour.getPropensityToSave())
-        					*(config.btlHousepriceSensitivity*config.BTL_CHOICE_MIN_BANK_BALANCE-Model.housingMarketStats.getLongTermHPA()))
+        					*(config.BTL_CHOICE_MIN_BANK_BALANCE-Model.housingMarketStats.getLongTermHPA()))
     				+ ", " + String.format("%.2f", me.getPrincipalPaidBack())
     				+ ", " + String.format("%.2f", me.getInterestPaidBack())
         			+ ", " + String.format("%.2f", Model.housingMarketStats.getHPI())
