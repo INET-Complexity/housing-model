@@ -105,7 +105,7 @@ public class CoreIndicators {
     // TODO: ATTENTION ---> Gross total income is used here, not disposable income! Post-tax income should be used!
 	double getPriceToIncome() {
 	    // TODO: Also, why to use HPI*HPIReference? Why not average house price?
-		return(Model.housingMarketStats.getHPI()*config.derivedParams.getHPIReference()
+		return(Model.housingMarketStats.getHPI()*config.derivedParams.getHousePricesMean()
 				*(Model.households.size()
                 - Model.householdStats.getnRenting()
                 - Model.householdStats.getnHomeless())

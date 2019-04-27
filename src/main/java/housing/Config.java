@@ -46,8 +46,8 @@ public class Config {
     private int DAYS_UNDER_OFFER;               // Time (in days) that a house remains under offer
     double BIDUP;                               // Smallest proportional increase in price that can cause a gazump
     public double MARKET_AVERAGE_PRICE_DECAY;   // Decay constant for the exponential moving average of sale prices
-    private double HPI_MEDIAN;                  // Median house price
-    public double HPI_SHAPE;                    // Shape parameter for the log-normal distribution of housing prices
+    public double HOUSE_PRICES_SCALE;           // Scale parameter for the log-normal distribution of house prices (logarithm of median house price = mean and median of logarithmic house prices)
+    public double HOUSE_PRICES_SHAPE;           // Shape parameter for the log-normal distribution of house prices (standard deviation of logarithmic house prices)
     public double RENT_GROSS_YIELD;             // Profit margin for buy-to-let investors
 
     // Demographic parameters
@@ -160,8 +160,7 @@ public class Config {
         double T;                       // Characteristic number of data-points over which to average market statistics
         public double E;                // Decay constant for averaging months on market (in transactions)
         public double G;                // Decay constant for averageListPrice averaging (in transactions)
-        public double HPI_LOG_MEDIAN;   // Logarithmic median house price (scale parameter of the log-normal distribution)
-        double HPI_REFERENCE;           // Mean of reference house prices
+        double HOUSE_PRICES_MEAN;       // Mean of reference house prices (scale + shape**2/2)
         // Household behaviour parameters: general
         double MONTHLY_P_SELL;          // Monthly probability for owner-occupiers to sell their houses
         // Bank parameters
@@ -178,7 +177,7 @@ public class Config {
 
         public int getHPIRecordLength() { return HPI_RECORD_LENGTH; }
 
-        public double getHPIReference() { return HPI_REFERENCE; }
+        public double getHousePricesMean() { return HOUSE_PRICES_MEAN; }
 
     }
 
@@ -332,8 +331,7 @@ public class Config {
         derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from, and provide explanation for this formula
         derivedParams.E = Math.exp(-1.0/derivedParams.T);           // TODO: Provide explanation for this formula
         derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);     // TODO: Provide explanation for this formula
-        derivedParams.HPI_LOG_MEDIAN = Math.log(HPI_MEDIAN);
-        derivedParams.HPI_REFERENCE = Math.exp(derivedParams.HPI_LOG_MEDIAN + HPI_SHAPE*HPI_SHAPE/2.0);
+        derivedParams.HOUSE_PRICES_MEAN = Math.exp(HOUSE_PRICES_SCALE + HOUSE_PRICES_SHAPE*HOUSE_PRICES_SHAPE/2.0); // Mean of a log-normal distribution
         // Household behaviour parameters: general
         derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*constants.MONTHS_IN_YEAR);
         // Bank parameters
