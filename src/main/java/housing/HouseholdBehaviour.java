@@ -15,13 +15,15 @@ public class HouseholdBehaviour {
     //----- Fields -----//
     //------------------//
 
-    private Config                  config = Model.config; // Passes the Model's configuration parameters object to a private field
-    private MersenneTwister	        prng;
-    private boolean                 BTLInvestor;
-    private double                  BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
-    private double                  propensityToSave;
-    private LogNormalDistribution   downpaymentDistFTB; // Size distribution for downpayments of first-time-buyers
-    private LogNormalDistribution   downpaymentDistOO; // Size distribution for downpayments of owner-occupiers
+    private static Config                   config = Model.config; // Passes the Model's configuration parameters object to a private static field
+    private static MersenneTwister	        prng = Model.prng; // Passes the Model's random number generator to a private static field
+    private static LogNormalDistribution    downpaymentDistFTB = new LogNormalDistribution(prng,
+            config.DOWNPAYMENT_FTB_SCALE, config.DOWNPAYMENT_FTB_SHAPE); // Size distribution for downpayments of first-time-buyers
+    private static LogNormalDistribution    downpaymentDistOO = new LogNormalDistribution(prng,
+            config.DOWNPAYMENT_OO_SCALE, config.DOWNPAYMENT_OO_SHAPE); // Size distribution for downpayments of owner-occupiers
+    private boolean                         BTLInvestor;
+    private double                          BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
+    private double                          propensityToSave;
 
     //------------------------//
     //----- Constructors -----//
@@ -34,12 +36,7 @@ public class HouseholdBehaviour {
 	 *
 	 * @param incomePercentile Fixed income percentile for the household (assumed constant over a lifetime)
      */
-	HouseholdBehaviour(MersenneTwister prng, double incomePercentile) {
-		this.prng = prng;  // initialize the random number generator
-
-        // Set downpayment distributions for both first-time-buyers and owner-occupiers
-        downpaymentDistFTB = new LogNormalDistribution(this.prng, config.DOWNPAYMENT_FTB_SCALE, config.DOWNPAYMENT_FTB_SHAPE);
-        downpaymentDistOO = new LogNormalDistribution(this.prng, config.DOWNPAYMENT_OO_SCALE, config.DOWNPAYMENT_OO_SHAPE);
+	HouseholdBehaviour(double incomePercentile) {
 	    // Compute propensity to save, so that it is constant for a given household
         propensityToSave = prng.nextDouble();
         // Decide if household is a BTL investor and, if so, its tendency to seek capital gains or rental yields

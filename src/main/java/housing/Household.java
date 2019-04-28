@@ -57,7 +57,7 @@ public class Household implements IHouseOwner {
         isBankrupt = false;
         id = ++id_pool;
         incomePercentile = this.prng.nextDouble();
-        behaviour = new HouseholdBehaviour(this.prng, incomePercentile);
+        behaviour = new HouseholdBehaviour(incomePercentile);
         // Find initial values for the annual and monthly gross employment income
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
