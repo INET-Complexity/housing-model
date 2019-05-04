@@ -10,13 +10,15 @@ import org.apache.commons.math3.random.MersenneTwister;
  *************************************************************************************************/
 public class HouseRentalMarket extends HousingMarket {
 
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
+
+	public HouseRentalMarket(MersenneTwister prng) { super(prng); }
+
     //-------------------//
     //----- Methods -----//
     //-------------------//
-
-	public HouseRentalMarket(MersenneTwister prng) {
-	    super(prng);
-    }
 
     @Override
 	public void completeTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
@@ -29,9 +31,6 @@ public class HouseRentalMarket extends HousingMarket {
 
 	@Override
 	public HouseOfferRecord offer(House house, double price, boolean BTLOffer) {
-		if(house.isOnMarket()) {
-			System.out.println("Got offer on rental market of house already on sale market");			
-		}
 		HouseOfferRecord hsr = super.offer(house, price, false);
 		house.putForRent(hsr);
 		return(hsr);

@@ -31,11 +31,11 @@ public class HouseSaleMarket extends HousingMarket {
 	 * This method deals with doing all the stuff necessary whenever a house gets sold.
 	 */
 	public void completeTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
+        Household buyer = purchase.getBidder();
+        if(buyer == sale.getHouse().owner) System.out.println("Strange: Trying to buy a house I already own!");
         // TODO: Revise if it makes sense to have recordTransaction as a separate method from recordSale
 		Model.housingMarketStats.recordTransaction(sale);
 		sale.getHouse().saleRecord = null;
-		Household buyer = purchase.getBidder();
-		if(buyer == sale.getHouse().owner) return; // TODO: Shouldn't this if be the first line in this method?
 		sale.getHouse().owner.completeHouseSale(sale);
 		buyer.completeHousePurchase(sale);
         Model.housingMarketStats.recordSale(purchase, sale);
