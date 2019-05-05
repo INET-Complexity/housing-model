@@ -110,7 +110,7 @@ public class Recorder {
                     + "Rental AvMonthsOnMarket, Rental ExpAvMonthsOnMarket, Rental nBuyers, Rental nSellers, "
                     + "Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
-                    + "nRegisteredMortgages");
+                    + "nRegisteredMortgages, interestRate");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -222,7 +222,8 @@ public class Recorder {
                 Model.rentalMarketStats.getnSales() + ", " +
                 Model.rentalMarketStats.getExpAvFlowYield() + ", " +
                 // Credit data
-                Model.creditSupply.getnRegisteredMortgages());
+                Model.creditSupply.getnRegisteredMortgages() + ", " +
+                Model.creditSupply.getInterestRate());
 
         // Write quality band prices to file
         if (recordQualityBandPrice) {

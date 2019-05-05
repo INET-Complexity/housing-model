@@ -24,6 +24,7 @@ public class CreditSupply {
     private DescriptiveStatistics btl_ltv;
     private DescriptiveStatistics btl_icr;
     private DescriptiveStatistics downpayments; // TODO: This quantity only includes downpayments when the principal of the loan is > 0
+    private double interestRate;                // To record interest rate and give it to recorder object for file writing
     private double totalBTLCredit = 0.0;        // Buy to let mortgage credit
     private double totalOOCredit = 0.0;         // Owner-occupier mortgage credit
     private double netCreditGrowth;             // Rate of change of credit per month as percentage
@@ -56,6 +57,7 @@ public class CreditSupply {
      * Collect information for this time step
 	 */
 	public void step() {
+	    interestRate = Model.bank.getMortgageInterestRate();
         double oldTotalCredit = totalOOCredit + totalBTLCredit;
         totalOOCredit = 0.0;
         totalBTLCredit = 0.0;
@@ -121,6 +123,8 @@ public class CreditSupply {
     DescriptiveStatistics getOO_ltv() { return oo_ltv; }
 
     DescriptiveStatistics getBTL_ltv() { return btl_ltv; }
+
+    double getInterestRate() { return interestRate; }
 
     int getnRegisteredMortgages() { return Model.bank.mortgages.size(); }
 

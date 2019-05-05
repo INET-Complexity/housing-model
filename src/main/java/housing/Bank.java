@@ -103,7 +103,7 @@ public class Bank {
 	/**
 	 * Get the interest rate on mortgages.
 	 */
-	private double getMortgageInterestRate() { return baseRate + interestSpread; }
+	public double getMortgageInterestRate() { return baseRate + interestSpread; }
 	
 
 	/**
