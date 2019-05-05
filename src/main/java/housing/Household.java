@@ -162,7 +162,7 @@ public class Household implements IHouseOwner {
      * Subtracts the monthly aliquot part of all due taxes from the monthly gross total income. Note that only income
      * tax on employment and rental income and national insurance contributions are implemented (no capital gains tax)!
      */
-    double getMonthlyNetTotalIncome() {
+    private double getMonthlyNetTotalIncome() {
         return getMonthlyGrossTotalIncome()
                 - (Model.government.incomeTaxDue(getAnnualGrossTotalIncome() - getAnnualFinanceCosts())  // Income tax (with finance costs tax relief)
                 + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions
@@ -170,8 +170,24 @@ public class Household implements IHouseOwner {
     }
 
     /**
+     * For the purpose of affordability checks for non-BTL households, a monthly net employment income is needed. This
+     * makes sure that no rental income is accounted for, which non-BTL households can temporarily receive as a result
+     * of temporarily renting out inherited properties while they manage to sell them. Thus, this subtracts the monthly
+     * aliquot part of all due taxes (without any finance cost relief) from the monthly gross employment income
+     * (ignoring any rental income). Note that only income tax on employment income and national insurance contributions
+     * are implemented (no capital gains tax)!
+     */
+    double getMonthlyNetEmploymentIncome() {
+        return getMonthlyGrossEmploymentIncome()
+                - (Model.government.incomeTaxDue(annualGrossEmploymentIncome)  // Income tax
+                + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions
+                /config.constants.MONTHS_IN_YEAR;
+    }
+
+    /**
      * Adds up all interests paid on buy-to-let properties currently rented by this household, for the purpose of
-     * obtaining tax relief on these costs
+     * obtaining tax relief on these costs. Note that this algorithm assumes buy-to-let investors always have interest
+     * only mortgages, and that non BTL households inheriting properties never inherit any debt on these properties
      */
     private double getAnnualFinanceCosts() {
         double financeCosts = 0.0;
@@ -187,12 +203,18 @@ public class Household implements IHouseOwner {
     }
 
     /**
-     * Adds up all sources of (gross) income on a monthly basis: employment and property income
+     * Annualised gross total income, i.e., both employment and rental income
+     */
+    double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
+
+    /**
+     * Adds up all sources of (gross) income on a monthly basis, i.e., both employment and rental income
      */
     public double getMonthlyGrossTotalIncome() { return monthlyGrossEmploymentIncome + getMonthlyGrossRentalIncome(); }
 
-    double getAnnualGrossTotalIncome() { return getMonthlyGrossTotalIncome()*config.constants.MONTHS_IN_YEAR; }
-
+    /**
+     * Adds up this month's rental income from all currently owned and rented properties
+     */
     public double getMonthlyGrossRentalIncome() {
         double monthlyGrossRentalIncome = 0.0;
         for(RentalAgreement rentalAgreement: rentalContracts.values()) {
@@ -448,9 +470,6 @@ public class Household implements IHouseOwner {
      */
     @Override
     public void completeHouseLet(HouseOfferRecord sale, RentalAgreement rentalAgreement) {
-        if(sale.getHouse().isOnMarket()) {
-            Model.houseSaleMarket.removeOffer(sale.getHouse().getSaleRecord());
-        }
         rentalContracts.put(sale.getHouse(), rentalAgreement);
     }
 

@@ -185,8 +185,8 @@ public class Bank {
 
 		if(isHome) {
 			// --- affordability constraint TODO: affordability for BTL?
-			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyNetTotalIncome())
-                    / getMonthlyPaymentFactor(isHome);
+			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF
+                    * h.getMonthlyNetEmploymentIncome()) / getMonthlyPaymentFactor(isHome);
 			approval.principal = Math.min(approval.principal, affordable_principal);
 
 			// --- lti constraint
@@ -246,7 +246,7 @@ public class Bank {
 		if(isHome) { // No LTI nor affordability constraints for BTL investors
 			// Affordability constraint
             affordability_max_price = max_downpayment + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF
-                    *h.getMonthlyNetTotalIncome())/getMonthlyPaymentFactor(isHome);
+                    * h.getMonthlyNetEmploymentIncome())/getMonthlyPaymentFactor(isHome);
 			max_price = Math.min(max_price, affordability_max_price);
             // Loan-To-Income constraint
 			lti_max_price = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)
