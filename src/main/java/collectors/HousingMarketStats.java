@@ -117,10 +117,10 @@ public class HousingMarketStats {
         nSalesPerQuality = new int[config.N_QUALITY];
 
         // Set initial values for other variables computed after market clearing
-        expAvMonthsOnMarket = 1.0; // TODO: Make this initialisation explicit in the paper!
+        expAvMonthsOnMarket = 0.0; // TODO: Make this initialisation explicit in the paper!
         sumMonthsOnMarketPerQuality = new double[config.N_QUALITY];
         expAvMonthsOnMarketPerQuality  = new double[config.N_QUALITY];
-        Arrays.fill(expAvMonthsOnMarketPerQuality, 1.0); // TODO: Make this initialisation explicit in the paper!
+        Arrays.fill(expAvMonthsOnMarketPerQuality, 0.0); // TODO: Make this initialisation explicit in the paper!
         expAvSalePrice = getAvReferencePrice(); // TODO: Make this initialisation explicit in the paper!
         expAvSalePricePerQuality = new double[config.N_QUALITY];
         System.arraycopy(referencePricePerQuality, 0, expAvSalePricePerQuality, 0,
