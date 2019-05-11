@@ -28,7 +28,7 @@ public class Demographics {
     private static BinnedDataDouble monthlyAgeDistribution = transformAgeDistributionToMonthly(ageDistribution);
 
     // Compute expected number of households for each monthly age band given a certain target population
-    private static double [] expectedHouseholdsPerAgeBand = computeExpectedHouseholdsPerAgeBand(monthlyAgeDistribution,
+    private static int [] expectedHouseholdsPerAgeBand = computeExpectedHouseholdsPerAgeBand(monthlyAgeDistribution,
             config.TARGET_POPULATION);
 
     //-------------------//
@@ -134,20 +134,21 @@ public class Demographics {
     }
 
     /**
-     * Compute the expected number of households in each age band give a target population
+     * Compute the expected number of households in each age band given a target population
      */
-    private static double [] computeExpectedHouseholdsPerAgeBand(BinnedDataDouble ageDistribution,
-                                                                 int targetPopulation) {
-        double [] expectedHouseholdsPerAgeBand = new double[ageDistribution.size()];
+    private static int [] computeExpectedHouseholdsPerAgeBand(BinnedDataDouble ageDistribution,
+                                                              int targetPopulation) {
+        int [] expectedHouseholdsPerAgeBand = new int[ageDistribution.size()];
         for (int i = 0; i < ageDistribution.size(); i++) {
-            expectedHouseholdsPerAgeBand[i] = targetPopulation * ageDistribution.get(i) * ageDistribution.getBinWidth();
+            expectedHouseholdsPerAgeBand[i] = (int)Math.round(targetPopulation * ageDistribution.get(i)
+                    * ageDistribution.getBinWidth());
         }
         return expectedHouseholdsPerAgeBand;
     }
 
     //----- Getter/setter methods -----//
 
-    public static double getExpectedHouseholdsForAgeBand(int i) {
+    public static int getExpectedHouseholdsForAgeBand(int i) {
         return expectedHouseholdsPerAgeBand[i];
     }
 

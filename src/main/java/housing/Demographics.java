@@ -71,8 +71,7 @@ public class Demographics {
      */
     private void updateBirthsAndDeaths() {
         for (int i = 0; i < householdsPerAgeBand.length; i++) {
-            birthsAndDeaths[i] = (int) (data.Demographics.getExpectedHouseholdsForAgeBand(i) + prng.nextDouble())
-                    - householdsPerAgeBand[i];
+            birthsAndDeaths[i] = data.Demographics.getExpectedHouseholdsForAgeBand(i) - householdsPerAgeBand[i];
         }
     }
 
@@ -116,11 +115,17 @@ public class Demographics {
         Iterator<Household> iterator = Model.households.iterator();
         while (iterator.hasNext()) {
             Household h = iterator.next();
-            double pDeath = deathProbabilities[(int)((h.getAge() - firstBinMin)/binWidth)];
-            if (prng.nextDouble() < pDeath) {
+            int i = (int)((h.getAge() - firstBinMin)/binWidth);
+            if (prng.nextDouble() < deathProbabilities[i]) {
                 iterator.remove();
                 // Implement inheritance with a randomly chosen heir
                 h.transferAllWealthTo(Model.households.get(prng.nextInt(Model.households.size())));
+                // Update the death probability for the corresponding age band. This prevents killing more than strictly
+                // necessary. Note that this will tend to underestimate the number of deaths and this, in its turn, lead
+                // to a slight overpopulation
+                birthsAndDeaths[i]++;
+                householdsPerAgeBand[i]--;
+                deathProbabilities[i] = -(double) birthsAndDeaths[i] / householdsPerAgeBand[i];
             }
         }
 	}
