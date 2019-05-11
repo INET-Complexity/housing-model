@@ -235,16 +235,19 @@ public class Household implements IHouseOwner {
      * @param house A house owned by the household
      */
     private void manageHouse(House house) {
-        // If house is for sale (on sale market), and it has not just been inherited...
+        // If house is for sale (on sale market)...
         HouseOfferRecord forSale = house.getSaleRecord();
-        if (forSale != null && Model.getTime() > forSale.gettInitialListing()) {
-            // ...then update its price, if the new price is above the mortgage debt on this house
-            double newPrice = behaviour.rethinkHouseSalePrice(forSale);
-            if (newPrice > mortgageFor(house).principal) {
-                Model.houseSaleMarket.updateOffer(forSale, newPrice);
-            // ...otherwise, remove the offer from the sale market (note that investment properties will continue to be rented out)
-            } else {
-                Model.houseSaleMarket.removeOffer(forSale);
+        if (forSale != null) {
+            // ...and it has not just been inherited...
+            if (Model.getTime() > forSale.gettInitialListing()) {
+                // ...then update its price, if the new price is above the mortgage debt on this house
+                double newPrice = behaviour.rethinkHouseSalePrice(forSale);
+                if (newPrice > mortgageFor(house).principal) {
+                    Model.houseSaleMarket.updateOffer(forSale, newPrice);
+                // ...otherwise, remove the offer from the sale market (note that investment properties will continue to be rented out)
+                } else {
+                    Model.houseSaleMarket.removeOffer(forSale);
+                }
             }
         // Otherwise, if the house is not currently for sale, decide whether to sell it or not
         } else if (decideToSellHouse(house)) putHouseForSale(house);
