@@ -307,10 +307,11 @@ public class HouseholdBehaviour {
                 - beta*Math.log(Model.rentalMarketStats.getExpAvMonthsOnMarketForQuality(quality) + 1.0)
                 + config.RENT_EPSILON * prng.nextGaussian();
 		double result = Math.exp(exponent);
-        // TODO: The following contains a fudge (config.RENT_MAX_AMORTIZATION_PERIOD) to keep rental yield up
-		double minAcceptable = Model.housingMarketStats.getExpAvSalePriceForQuality(quality)
-                /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
-		if (result < minAcceptable) result = minAcceptable;
+        // TODO: The following contains clamps rent prices to be at least 12*RENT_MAX_AMORTIZATION_PERIOD times below
+        // TODO: sale prices, thus setting also a minimum rental yield
+//		double minAcceptable = Model.housingMarketStats.getExpAvSalePriceForQuality(quality)
+//                /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
+//		if (result < minAcceptable) result = minAcceptable;
 		return result;
 	}
 
