@@ -118,7 +118,8 @@ public class Model {
 
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation, true, config.N_QUALITY);
-            if (config.recordTransactions) { transactionRecorder.openSingleRunFiles(nSimulation); }
+            transactionRecorder.openSingleRunFiles(nSimulation, config.recordTransactions,
+                    config.recordNBidUpFrequency);
             microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordEmploymentIncome,
                     config.recordRentalIncome, config.recordBankBalance, config.recordHousingWealth,
                     config.recordNHousesOwned, config.recordAge, config.recordSavingRate);
@@ -144,7 +145,7 @@ public class Model {
 
 			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
             recorder.finishRun(config.recordCoreIndicators, config.recordQualityBandPrice);
-            if (config.recordTransactions) transactionRecorder.finishRun();
+            transactionRecorder.finishRun(config.recordTransactions, config.recordNBidUpFrequency);
             microDataRecorder.finishRun(config.recordEmploymentIncome, config.recordRentalIncome,
                     config.recordBankBalance, config.recordHousingWealth, config.recordNHousesOwned, config.recordAge,
                     config.recordSavingRate);

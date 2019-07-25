@@ -28,7 +28,8 @@ public class Config {
     int N_STEPS;				                        // Simulation duration in time steps
     int N_SIMS; 					                    // Number of simulations to run (monte-carlo)
     public int TIME_TO_START_RECORDING_TRANSACTIONS;    // Time step to start recording transactions (to avoid too large files)
-    boolean recordTransactions;			                // True to write data for each transaction
+    public boolean recordTransactions;			        // True to write data for each transaction
+    boolean recordNBidUpFrequency;			            // True to write the frequency of the number of bid-ups
     boolean recordCoreIndicators;		                // True to write time series for each core indicator
     boolean recordQualityBandPrice;                     // True to write time series of prices for each quality band to a single file per run
     public boolean recordEmploymentIncome;              // True to write individual household monthly gross employment income data
@@ -43,7 +44,7 @@ public class Config {
     public int N_QUALITY;                   // Number of quality bands for houses
 
     // Housing market parameters
-    private int DAYS_UNDER_OFFER;               // Time (in days) that a house remains under offer
+    private double DAYS_UNDER_OFFER;               // Time (in days) that a house remains under offer
     double BIDUP;                               // Smallest proportional increase in price that can cause a gazump
     public double MARKET_AVERAGE_PRICE_DECAY;   // Decay constant for the exponential moving average of sale prices
     public double HOUSE_PRICES_SCALE;           // Scale parameter for the log-normal distribution of house prices (logarithm of median house price = mean and median of logarithmic house prices)
@@ -327,7 +328,7 @@ public class Config {
     private void setDerivedParams() {
         // Housing market parameters
         derivedParams.HPI_RECORD_LENGTH = HPA_YEARS_TO_CHECK*constants.MONTHS_IN_YEAR + 3;  // Plus three months in a quarter
-        derivedParams.MONTHS_UNDER_OFFER = (double)DAYS_UNDER_OFFER/constants.DAYS_IN_MONTH;
+        derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/constants.DAYS_IN_MONTH;
         derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from, and provide explanation for this formula
         derivedParams.E = Math.exp(-1.0/derivedParams.T);           // TODO: Provide explanation for this formula
         derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);     // TODO: Provide explanation for this formula
