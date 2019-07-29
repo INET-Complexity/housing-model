@@ -637,11 +637,15 @@ public class Household implements IHouseOwner {
      * @return Number of houses owned by this household
      */
     public int getNProperties() {
-        if (isHomeowner()) {
-            return housePayments.size();
-        } else {
-            return 0;
+        int nHouses = 0;
+        for (Map.Entry<House, PaymentAgreement> entry : housePayments.entrySet()) {
+            House house = entry.getKey();
+            PaymentAgreement payment = entry.getValue();
+            if (payment instanceof MortgageAgreement && house.owner == this) {
+                nHouses += 1;
+            }
         }
+        return nHouses;
     }
 
     /***
