@@ -3,7 +3,9 @@ language: java
 jdk:
   - oraclejdk8
   - openjdk8
- 
+
+ dist: trusty
+
 cache:
   directories:
   - "$HOME/.m2"
