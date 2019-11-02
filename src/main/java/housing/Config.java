@@ -60,8 +60,8 @@ public class Config {
     public String DATA_WEALTH_GIVEN_INCOME; // Address for conditional probability of liquid wealth given total gross non-rent income
 
     // Household behaviour parameters: buy-to-let
-    private double P_INVESTOR;              // Prior probability of being (wanting to be) a BTL investor
-    double MIN_INVESTOR_PERCENTILE;         // Minimum income percentile for a household to be a BTL investor
+    String DATA_BTL_PROBABILITY;            // Probability of being a buy-to-let investor per income percentile bin
+    double BTL_PROBABILITY_MULTIPLIER;      // # Multiplier for the probability of being a buy-to-let investor
     double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
     double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
     double P_FUNDAMENTALIST; 			    // Probability that a BTL investor is a fundamentalist versus a trend-follower
@@ -211,8 +211,6 @@ public class Config {
     //-------------------//
 
     public double getUKHouseholds() { return UK_HOUSEHOLDS; }
-
-    double getPInvestor() { return P_INVESTOR; }
 
     /**
      * Method to read configuration parameters from a configuration (.properties) file

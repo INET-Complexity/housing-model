@@ -2,6 +2,7 @@ package housing;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.random.MersenneTwister;
+import utilities.BinnedDataDouble;
 
 /**************************************************************************************************
  * Class to implement the behavioural decisions made by households
@@ -25,6 +26,8 @@ public class HouseholdBehaviour {
     private double                          BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
     private double                          propensityToSave;
 
+    private static BinnedDataDouble BTLProbability = new BinnedDataDouble(config.DATA_BTL_PROBABILITY);
+
     //------------------------//
     //----- Constructors -----//
     //------------------------//
@@ -41,9 +44,10 @@ public class HouseholdBehaviour {
         propensityToSave = prng.nextDouble();
         // Decide if household is a BTL investor and, if so, its tendency to seek capital gains or rental yields
 		BTLCapGainCoefficient = 0.0;
-        if(incomePercentile > config.MIN_INVESTOR_PERCENTILE &&
-                prng.nextDouble() < config.getPInvestor()/config.MIN_INVESTOR_PERCENTILE) {
+		// Decide whether the household will have a BTL tendency...
+        if (prng.nextDouble() < config.BTL_PROBABILITY_MULTIPLIER*BTLProbability.getBinAt(incomePercentile)) {
             BTLInvestor = true;
+            // ...and, if so, whether it will have a fundamentalist or a trend-following attitude
             if(prng.nextDouble() < config.P_FUNDAMENTALIST) {
                 BTLCapGainCoefficient = config.FUNDAMENTALIST_CAP_GAIN_COEFF;
             } else {
