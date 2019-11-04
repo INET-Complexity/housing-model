@@ -1,6 +1,8 @@
 package collectors;
 
-import housing.*;
+import housing.Config;
+import housing.HouseRentalMarket;
+import housing.Model;
 
 import java.util.Arrays;
 
@@ -18,14 +20,13 @@ public class RentalMarketStats extends HousingMarketStats {
 
 	// General fields
 	private HousingMarketStats  		housingMarketStats;
-	private Config                      config = Model.config; // Passes the Model's configuration parameters object to a private field
+	private Config 						config = Model.config; // Passes the Model's configuration parameters object to a private field
 
 	// Rental-specific variables computed after market clearing to keep the previous values during the clearing
 	private double []                   avOccupancyPerQuality; // Average fraction of time a rental property stays rented for each quality band
 	private double []                   avFlowYieldPerQuality; // Average gross rental yield for each quality band for properties rented out this month
 	private double                      avFlowYield; // Average gross rental yield for properties rented out this month
-	private double                      expAvFlowYield; // Exponential moving average (fast decay) of the average flow gross rental yield
-	private double                      longTermExpAvFlowYield; // Exponential moving average (slow decay) of the average flow gross rental yield
+	private double                      expAvFlowYield; // Exponential moving average of the average flow gross rental yield
 
 	//------------------------//
 	//----- Constructors -----//
@@ -65,7 +66,6 @@ public class RentalMarketStats extends HousingMarketStats {
 		Arrays.fill(avFlowYieldPerQuality, config.RENT_GROSS_YIELD);
 		avFlowYield = config.RENT_GROSS_YIELD;
 		expAvFlowYield = config.RENT_GROSS_YIELD;
-		longTermExpAvFlowYield = config.RENT_GROSS_YIELD;
 	}
 
 	//----- Post-market-clearing methods -----//
@@ -98,8 +98,6 @@ public class RentalMarketStats extends HousingMarketStats {
 		}
 		// ... a short and a long term exponential moving average of the average flow gross rental yield
 		expAvFlowYield = expAvFlowYield*config.derivedParams.K + (1.0 - config.derivedParams.K)*avFlowYield;
-		longTermExpAvFlowYield = longTermExpAvFlowYield*config.derivedParams.KL
-				+ (1.0 - config.derivedParams.KL)*avFlowYield;
 	}
 
 	//----- Getter/setter methods -----//
@@ -113,5 +111,4 @@ public class RentalMarketStats extends HousingMarketStats {
 	public double getAvFlowYieldForQuality(int quality) { return avFlowYieldPerQuality[quality]; }
 	public double getAvFlowYield() { return avFlowYield; }
 	public double getExpAvFlowYield() { return expAvFlowYield; }
-	public double getLongTermExpAvFlowYield() { return longTermExpAvFlowYield; }
 }

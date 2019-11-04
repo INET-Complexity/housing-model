@@ -167,8 +167,7 @@ public class Config {
         // Bank parameters
         int N_PAYMENTS;                 // Number of monthly repayments (mortgage duration in months)
         // House rental market parameters
-        public double K;                // Decay factor for exponential moving average of gross yield from rentals (averageSoldGrossYield)
-        public double KL;               // Decay factor for long-term exponential moving average of gross yield from rentals (longTermAverageGrossYield)
+        public double K;                // Decay factor for exponential moving average of gross yield from rentals
         // Collectors parameters
         double AFFORDABILITY_DECAY; 	// Decay constant for the exponential moving average of affordability
 
@@ -336,8 +335,7 @@ public class Config {
         // Bank parameters
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
         // House rental market parameters
-        derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen?
-        derivedParams.KL = Math.exp(-10000.0/(TARGET_POPULATION*50.0*200.0));   // TODO: Also, they are not reported in the paper!
+        derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen? Also, they're not reported in the paper!
         // Collectors parameters
         derivedParams.AFFORDABILITY_DECAY = Math.exp(-1.0/100.0);
     }
