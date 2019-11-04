@@ -2,6 +2,9 @@ package housing;
 
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.random.MersenneTwister;
+
+import collectors.RentalMarketStats;
+
 import utilities.BinnedDataDouble;
 
 /**************************************************************************************************
@@ -18,15 +21,15 @@ public class HouseholdBehaviour {
 
     private static Config                   config = Model.config; // Passes the Model's configuration parameters object to a private static field
     private static MersenneTwister	        prng = Model.prng; // Passes the Model's random number generator to a private static field
+    private static RentalMarketStats        rentalMarketStats = Model.rentalMarketStats; // Passes the Model's rental market stats object to a private static field
     private static LogNormalDistribution    downpaymentDistFTB = new LogNormalDistribution(prng,
             config.DOWNPAYMENT_FTB_SCALE, config.DOWNPAYMENT_FTB_SHAPE); // Size distribution for downpayments of first-time-buyers
     private static LogNormalDistribution    downpaymentDistOO = new LogNormalDistribution(prng,
             config.DOWNPAYMENT_OO_SCALE, config.DOWNPAYMENT_OO_SHAPE); // Size distribution for downpayments of owner-occupiers
+    private static BinnedDataDouble         BTLProbability = new BinnedDataDouble(config.DATA_BTL_PROBABILITY);
     private boolean                         BTLInvestor;
     private double                          BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
     private double                          propensityToSave;
-
-    private static BinnedDataDouble BTLProbability = new BinnedDataDouble(config.DATA_BTL_PROBABILITY);
 
     //------------------------//
     //----- Constructors -----//
@@ -217,9 +220,9 @@ public class HouseholdBehaviour {
 	boolean decideToSellInvestmentProperty(House h, Household me) {
 		// Fast decisions...
         // ...always keep at least one investment property (i.e., at least two properties)
-		if(me.getNProperties() < 3) return false;
+		if (me.getNProperties() < 3) return false;
         // ...don't sell while occupied by tenant
-		if(!h.isOnRentalMarket()) return false;
+		if (!h.isOnRentalMarket()) return false;
 
         // Find the expected equity yield rate of this property as a weighted mix of both rental yield and capital gain
         // times the leverage
@@ -230,19 +233,19 @@ public class HouseholdBehaviour {
         // ...find equity, or assets minus liabilities
         double equity = Math.max(0.01, currentMarketPrice - mortgage.principal); // The 0.01 prevents possible divisions by zero later on
         // ...find the leverage on that mortgage (Assets divided by equity, or return on equity)
-		double leverage = currentMarketPrice/equity;
-        // ...find the expected rental yield of this property as its current rental price divided by its current (fair market value) sale price
-		// TODO: ATTENTION ---> This rental yield is not accounting for expected occupancy... shouldn't it?
-		double currentRentalYield = h.getRentalRecord().getPrice()*config.constants.MONTHS_IN_YEAR/currentMarketPrice;
+		double leverage = currentMarketPrice / equity;
+        // ...find the expected rental yield of this property as its current rental price (under current average occupancy) divided by its current (fair market value) sale price
+        double currentRentalYield = h.getRentalRecord().getPrice() * config.constants.MONTHS_IN_YEAR
+                * rentalMarketStats.getAvOccupancyForQuality(h.getQuality()) / currentMarketPrice;
         // ...find the mortgage rate (pounds paid a year per pound of equity)
-		double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
+		double mortgageRate = mortgage.nextPayment() * config.constants.MONTHS_IN_YEAR / equity;
         // ...finally, find expected equity yield, or yield on equity
-		double expectedEquityYield = leverage*((1.0 - BTLCapGainCoefficient)*currentRentalYield
-				+ BTLCapGainCoefficient*getLongTermHPAExpectation())
+		double expectedEquityYield = leverage * ((1.0 - BTLCapGainCoefficient) * currentRentalYield
+				+ BTLCapGainCoefficient * getLongTermHPAExpectation())
                 - mortgageRate;
 		// Compute a probability to keep the property as a function of the effective yield
-		double pKeep = Math.pow(sigma(config.BTL_CHOICE_INTENSITY*expectedEquityYield),
-                1.0/config.constants.MONTHS_IN_YEAR);
+		double pKeep = Math.pow(sigma(config.BTL_CHOICE_INTENSITY * expectedEquityYield),
+                1.0 / config.constants.MONTHS_IN_YEAR);
 		// Return true or false as a random draw from the computed probability
 		return prng.nextDouble() < (1.0 - pKeep);
 	}
@@ -264,7 +267,6 @@ public class HouseholdBehaviour {
         if (me.getNProperties() < 2) { return true ; }
         // ...never buy (keep on saving) if bank balance is below the household's desired bank balance
         // TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
-
         if (me.getBankBalance() < data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(),
                 me.behaviour.getPropensityToSave())*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
         // ...find maximum price (maximum mortgage) the household could pay
@@ -311,8 +313,8 @@ public class HouseholdBehaviour {
                 - beta*Math.log(Model.rentalMarketStats.getExpAvMonthsOnMarketForQuality(quality) + 1.0)
                 + config.RENT_EPSILON * prng.nextGaussian();
 		double result = Math.exp(exponent);
-        // TODO: The following contains clamps rent prices to be at least 12*RENT_MAX_AMORTIZATION_PERIOD times below
-        // TODO: sale prices, thus setting also a minimum rental yield
+        // TODO: The following contains a clamp for rent prices to be at least 12*RENT_MAX_AMORTIZATION_PERIOD times
+        // TODO: below sale prices, thus setting also a minimum rental yield
 //		double minAcceptable = Model.housingMarketStats.getExpAvSalePriceForQuality(quality)
 //                /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
 //		if (result < minAcceptable) result = minAcceptable;
