@@ -4,7 +4,7 @@ jdk:
   - oraclejdk8
   - openjdk8
 
- dist: trusty
+dist: trusty
 
 cache:
   directories:
