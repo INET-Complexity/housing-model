@@ -72,8 +72,9 @@ public class Config {
     double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
     double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
     // Household behaviour parameters: general
-    double HPA_EXPECTATION_FACTOR;              // Weight assigned to current trend when computing expectations
-    public int HPA_YEARS_TO_CHECK;              // Number of years of the HPI record to check when computing the annual HPA
+    double HPA_EXPECTATION_FACTOR;          // Dampening (or multiplier) factor for previous trend when computing future HPI growth expectations
+    double HPA_EXPECTATION_CONST;           // Constant to be added or subtracted from previous trend when computing future HPI growth expectations
+    public int HPA_YEARS_TO_CHECK;          // Number of years of the HPI record to check when computing the annual HPA
     // Household behaviour parameters: sale price reduction
     double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
     double REDUCTION_MU;                    // Mean percentage reduction for prices of houses on the market

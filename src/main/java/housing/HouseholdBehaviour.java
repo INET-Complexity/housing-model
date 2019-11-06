@@ -337,12 +337,14 @@ public class HouseholdBehaviour {
     private double sigma(double x) { return 1.0/(1.0 + Math.exp(-1.0*x)); }
 
 	/**
-     * @return expectation value of HPI in one year's time divided by today's HPI
+     * Expectations of future house price growth are based on previous trend (longTermHPA), times a dampening or
+     * multiplier factor (depending on its value being <1 or >1), plus a constant (which can be positive or negative),
+     * according to the equation HPI(t+DT) = HPI(t) + FACTOR*DT*dHPI/dt + CONST
+     *
+     * @return Expectation of HPI in one year's time divided by today's HPI
      */
 	private double getLongTermHPAExpectation() {
-		// Dampening or multiplier factor, depending on its value being <1 or >1, for the current trend of HPA when
-		// computing expectations as in HPI(t+DT) = HPI(t) + FACTOR*DT*dHPI/dt (double)
-		return(Model.housingMarketStats.getLongTermHPA()*config.HPA_EXPECTATION_FACTOR);
+		return Model.housingMarketStats.getLongTermHPA() * config.HPA_EXPECTATION_FACTOR + config.HPA_EXPECTATION_CONST;
     }
 
     public double getBTLCapGainCoefficient() { return BTLCapGainCoefficient; }
