@@ -441,7 +441,7 @@ public class Household implements IHouseOwner {
      ********************************************************/
     private void bidForAHome() {
         // Find household's desired housing expenditure
-        double price = behaviour.getDesiredPurchasePrice(monthlyGrossEmploymentIncome);
+        double price = behaviour.getDesiredPurchasePrice(annualGrossEmploymentIncome);
         // Cap this expenditure to the maximum mortgage available to the household
         price = Math.min(price, Model.bank.getMaxMortgage(this, true));
         // Record the bid on householdStats for counting the number of bids above exponential moving average sale price

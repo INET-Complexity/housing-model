@@ -87,9 +87,11 @@ public class Config {
     double SALE_WEIGHT_MONTHS_ON_MARKET;    // Weight of the months-on-market effect
     double SALE_EPSILON;                    // Standard deviation of the noise
     // Household behaviour parameters: buyer's desired expenditure
-    double BUY_SCALE;                       // Scale, number of annual salaries the buyer is willing to spend for buying a house
-    double BUY_WEIGHT_HPA;                  // Weight given to house price appreciation when deciding how much to spend for buying a house
-    double BUY_EPSILON;                     // Standard deviation of the noise
+    double BUY_SCALE;                       // Scale, number of annual salaries (raised to the BUY_EXPONENT power) the buyer is willing to spend
+    double BUY_EXPONENT;                    // Exponent to which the annual gross employment income of the household is raised when computing its budget
+    double BUY_WEIGHT_HPA;                  // Weight given to house price appreciation when deciding how much to spend
+    double BUY_MU;                          // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
+    double BUY_SIGMA;                       // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
     // Household behaviour parameters: demand rent
     double RENT_MARKUP;                         // Markup over average rent demanded for houses of the same quality
     double RENT_EQ_MONTHS_ON_MARKET;            // Number of months on the market in an equilibrium situation

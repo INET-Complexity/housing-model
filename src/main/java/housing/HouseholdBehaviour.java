@@ -84,19 +84,15 @@ public class HouseholdBehaviour {
 	/**
      * Desired purchase price used to decide whether to buy a house and how much to bid for it
      *
-	 * @param monthlyGrossEmploymentIncome Monthly gross employment income of the household
+	 * @param annualGrossEmploymentIncome Annual gross employment income of the household
 	 */
-	double getDesiredPurchasePrice(double monthlyGrossEmploymentIncome) {
-	    // TODO: This product is generally so small that it barely has any impact on the results, need to rethink if
-        // TODO: it is necessary and if this small value makes any sense
-        double HPAFactor = config.BUY_WEIGHT_HPA*getLongTermHPAExpectation();
-        // TODO: The capping of this factor intends to avoid negative and too large desired prices, the 0.9 is a
-        // TODO: purely artificial fudge parameter. This formula should be reviewed and changed!
-        if (HPAFactor > 0.9) HPAFactor = 0.9;
-        // TODO: Note that wealth is not used here, but only monthlyGrossEmploymentIncome
-		return config.BUY_SCALE*config.constants.MONTHS_IN_YEAR*monthlyGrossEmploymentIncome
-				*Math.exp(config.BUY_EPSILON*prng.nextGaussian())
-                /(1.0 - HPAFactor);
+	double getDesiredPurchasePrice(double annualGrossEmploymentIncome) {
+        // Note the capping of the HPA factor to a arbitrary maximum level (0.9) to avoid dividing by zero as well as
+        // unrealistically large desired budgets
+        double HPAFactor = Math.min(config.BUY_WEIGHT_HPA*getLongTermHPAExpectation(), 0.9);
+		return config.BUY_SCALE * Math.pow(annualGrossEmploymentIncome, config.BUY_EXPONENT)
+				* Math.exp(config.BUY_MU + config.BUY_SIGMA*prng.nextGaussian())
+                / (1.0 - HPAFactor);
 	}
 
 	/**
