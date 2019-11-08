@@ -81,7 +81,7 @@ public class Model {
         demographics = new Demographics(prng);
         construction = new Construction(prng);
         centralBank = new CentralBank();
-        bank = new Bank();
+        bank = new Bank(centralBank);
         households = new ArrayList<>(config.TARGET_POPULATION*2);
         houseSaleMarket = new HouseSaleMarket(prng);
         houseRentalMarket = new HouseRentalMarket(prng);

@@ -17,18 +17,17 @@ public class Bank {
 
 	// General fields
 	private Config	                    config = Model.config; // Passes the Model's configuration parameters object to a private field
+    private CentralBank                 centralBank; // Connection to the central bank to ask for policy
 
     // Bank fields
     public HashSet<MortgageAgreement>	mortgages; // all unpaid mortgage contracts supplied by the bank
     public double		                interestSpread; // current mortgage interest spread above base rate (monthly rate*12)
     private double                      monthlyPaymentFactor; // Monthly payment as a fraction of the principal for non-BTL mortgages
     private double                      monthlyPaymentFactorBTL; // Monthly payment as a fraction of the principal for BTL (interest-only) mortgages
-    private double		                baseRate;
 
     // Credit supply strategy fields
     private double		                supplyTarget; // target supply of mortgage lending (pounds)
     private double		                supplyVal; // monthly supply of mortgage loans (pounds)
-    private double		                dDemand_dInterest; // rate of change of demand with interest rate (pounds)
     private int                         nOOMortgagesOverLTI; // Number of mortgages for owner-occupying that go over the LTI cap this time step
     private int                         nOOMortgages; // Total number of mortgages for owner-occupying
 
@@ -45,9 +44,9 @@ public class Bank {
     //----- Constructors -----//
     //------------------------//
 
-	public Bank() {
+	public Bank(CentralBank centralBank) {
+	    this.centralBank = centralBank;
 		mortgages = new HashSet<>();
-		init();
 	}
 
     //-------------------//
@@ -56,11 +55,7 @@ public class Bank {
 
 	void init() {
 		mortgages.clear();
-		baseRate = config.BANK_INITIAL_BASE_RATE;
-		// TODO: Is this (dDemand_dInterest) a parameter? Shouldn't it depend somehow on other variables of the model?
-		dDemand_dInterest = 10*1e10;
-        // TODO: Is this (0.02) a parameter? Does it affect results in any significant way or is it just a dummy initialisation?
-        setMortgageInterestRate(0.02);
+        setMortgageInterestRate(config.BANK_INITIAL_RATE);
 		resetMonthlyCounters();
         // Setup initial LTV internal policy thresholds
         firstTimeBuyerLTVLimit = config.BANK_MAX_FTB_LTV;
@@ -73,6 +68,8 @@ public class Bank {
 	
 	/**
 	 * Redo all necessary monthly calculations and reset counters.
+     *
+     * @param totalPopulation Current population in the model, needed to scale the target amount of credit
 	 */
 	public void step(int totalPopulation) {
 		supplyTarget = config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation;
@@ -95,22 +92,23 @@ public class Bank {
      * current demand and the target supply
 	 */
 	private double recalculateInterestRate() {
-		double rate = getMortgageInterestRate() + 0.5*(supplyVal - supplyTarget)/dDemand_dInterest;
-		if (rate < baseRate) rate = baseRate;
+	    // TODO: Need to decide whether to keep and calibrate the 1/2 factor or to get rid of it
+		double rate = getMortgageInterestRate() + 0.5*(supplyVal - supplyTarget)/config.BANK_D_DEMAND_D_INTEREST;
+		if (rate < centralBank.getBaseRate()) rate = centralBank.getBaseRate();
 		return rate;
 	}
 	
 	/**
 	 * Get the interest rate on mortgages.
 	 */
-	public double getMortgageInterestRate() { return baseRate + interestSpread; }
+	public double getMortgageInterestRate() { return centralBank.getBaseRate() + interestSpread; }
 	
 
 	/**
 	 * Set the interest rate on mortgages
 	 */
 	private void setMortgageInterestRate(double rate) {
-		interestSpread = rate - baseRate;
+		interestSpread = rate - centralBank.getBaseRate();
         recalculateMonthlyPaymentFactor();
 	}
 
@@ -154,7 +152,7 @@ public class Bank {
             if(isHome) {
                 ++nOOMortgages;
                 if(approval.principal/h.getAnnualGrossEmploymentIncome() >
-                        Model.centralBank.getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)) {
+                        centralBank.getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)) {
                     ++nOOMortgagesOverLTI;
 				}
 			}
@@ -195,7 +193,7 @@ public class Bank {
 		} else {
 			// --- BTL ICR constraint
 			icr_principal = Model.rentalMarketStats.getExpAvFlowYield()*housePrice
-                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
+                    /(centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
 			approval.principal = Math.min(approval.principal, icr_principal);
 		}
 		
@@ -255,7 +253,7 @@ public class Bank {
 		} else {
 		    // Interest-Cover-Ratio constraint
 			icr_max_price = max_downpayment/(1.0 - Model.rentalMarketStats.getExpAvFlowYield()
-                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+                    /(centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
 			if (icr_max_price < 0.0) icr_max_price = Double.POSITIVE_INFINITY; // When rental yield is larger than interest rate times ICR, then ICR does never constrain
             max_price = Math.min(max_price,  icr_max_price);
         }
@@ -318,9 +316,9 @@ public class Bank {
         // If the fraction of non-BTL mortgages already underwritten over the Central Bank LTI limit exceeds a certain
         // maximum (regulated also by the Central Bank)...
         if ((nOOMortgagesOverLTI + 1.0)/(nOOMortgages + 1.0) >
-                Model.centralBank.getMaxFractionOOMortgagesOverLTILimit()) {
+                centralBank.getMaxFractionOOMortgagesOverLTILimit()) {
             // ... then compare the Central Bank LTI (soft) limit and that of the private bank (hard) and choose the smallest
-            limit = Math.min(limit, Model.centralBank.getLoanToIncomeLimit(isFirstTimeBuyer, isHome));
+            limit = Math.min(limit, centralBank.getLoanToIncomeLimit(isFirstTimeBuyer, isHome));
         }
 		return limit;
     }
