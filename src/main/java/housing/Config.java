@@ -80,7 +80,6 @@ public class Config {
     double REDUCTION_MU;                    // Mean percentage reduction for prices of houses on the market
     double REDUCTION_SIGMA;                 // Standard deviation of percentage reductions for prices of houses on the market
     // Household behaviour parameters: consumption
-    double CONSUMPTION_FRACTION;            // Fraction of monthly budget for consumption (monthly budget = bank balance - minimum desired bank balance)
     double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
     // Household behaviour parameters: initial sale price
     double SALE_MARKUP;                     // Initial markup over average price of same quality houses

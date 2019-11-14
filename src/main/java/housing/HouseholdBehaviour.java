@@ -69,14 +69,19 @@ public class HouseholdBehaviour {
 
 	/**
 	 * Compute the monthly non-essential or optional consumption by a household. It is calibrated so that the output
-     * wealth distribution fits the ONS wealth data for Great Britain.
+     * wealth distribution fits the Wealth and Assets Survey wealth distribution as a function of income. Subtracting a
+     * monthly disposable income from the target bank balance sets this as the distance from which the household starts
+     * relaxing its saving behaviour and thus allowing for some non-essential consumption in such a way that its bank
+     * balance will exponentially approach the target
 	 *
 	 * @param bankBalance Household's liquid wealth
      * @param annualGrossTotalIncome Household's annual gross total income
+     * @param monthlyDisposableIncome Household's monthly disposable income (gross employment income + rental income
+     *                                - taxes - essential consumption - housing expenses)
 	 */
-	double getDesiredConsumption(double bankBalance, double annualGrossTotalIncome) {
-		return config.CONSUMPTION_FRACTION*Math.max(bankBalance
-                - data.Wealth.getDesiredBankBalance(annualGrossTotalIncome, propensityToSave), 0.0);
+	double getDesiredConsumption(double bankBalance, double annualGrossTotalIncome, double monthlyDisposableIncome) {
+		return 0.5*Math.max(bankBalance - data.Wealth.getDesiredBankBalance(annualGrossTotalIncome, propensityToSave)
+                + monthlyDisposableIncome, 0.0);
 	}
 
     //----- Owner-Occupier behaviour -----//
