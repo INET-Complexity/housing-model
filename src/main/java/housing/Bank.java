@@ -55,7 +55,7 @@ public class Bank {
 
 	void init() {
 		mortgages.clear();
-        setMortgageInterestRate(config.BANK_INITIAL_RATE);
+        setMortgageInterestRate(config.BANK_INITIAL_RATE); // Central Bank must already by initiated at this point!
 		resetMonthlyCounters();
         // Setup initial LTV internal policy thresholds
         firstTimeBuyerLTVLimit = config.BANK_MAX_FTB_LTV;
