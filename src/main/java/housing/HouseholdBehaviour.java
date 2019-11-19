@@ -106,14 +106,14 @@ public class HouseholdBehaviour {
 
 	/**
      * Initial sale price of a house to be listed. This is modelled as the exponentially moving average sale price of
-     * houses of the same quality times a mark-up which is drawn from a real distribution of logarithmic mark-ups, i.e.,
-     * a distribution with logarithmic mark-up bins due to the use of logarithmic prices for computing the distribution.
+     * houses of the same quality times a mark-up which is drawn from a real distribution of mark-ups, calibrated using
+     * a combination of Zoopla and HPI data.
      *
 	 * @param quality Quality of the house to be sold
 	 * @param principal Amount of principal left on any mortgage on this house
 	 */
 	double getInitialSalePrice(int quality, double principal) {
-        return Math.max(Math.exp(markUpPdf.nextDouble(prng)) * housingMarketStats.getExpAvSalePriceForQuality(quality),
+        return Math.max(markUpPdf.nextDouble(prng) * housingMarketStats.getExpAvSalePriceForQuality(quality),
                 principal);
 	}
 
