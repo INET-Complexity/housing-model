@@ -3,9 +3,11 @@ package housing;
 import org.apache.commons.math3.distribution.LogNormalDistribution;
 import org.apache.commons.math3.random.MersenneTwister;
 
+import collectors.HousingMarketStats;
 import collectors.RentalMarketStats;
 
 import utilities.BinnedDataDouble;
+import utilities.Pdf;
 
 /**************************************************************************************************
  * Class to implement the behavioural decisions made by households
@@ -21,7 +23,9 @@ public class HouseholdBehaviour {
 
     private static Config                   config = Model.config; // Passes the Model's configuration parameters object to a private static field
     private static MersenneTwister	        prng = Model.prng; // Passes the Model's random number generator to a private static field
+    private static HousingMarketStats       housingMarketStats = Model.housingMarketStats; // Passes the Model's housing market stats object to a private static field
     private static RentalMarketStats        rentalMarketStats = Model.rentalMarketStats; // Passes the Model's rental market stats object to a private static field
+    private static Pdf markUpPdf = new Pdf(config.DATA_INITIAL_SALE_MARKUP_DIST); // Read initial sale price mark-up distribution from file
     private static LogNormalDistribution    downpaymentDistFTB = new LogNormalDistribution(prng,
             config.DOWNPAYMENT_FTB_SCALE, config.DOWNPAYMENT_FTB_SHAPE); // Size distribution for downpayments of first-time-buyers
     private static LogNormalDistribution    downpaymentDistOO = new LogNormalDistribution(prng,
@@ -101,18 +105,16 @@ public class HouseholdBehaviour {
 	}
 
 	/**
-     * Initial sale price of a house to be listed
+     * Initial sale price of a house to be listed. This is modelled as the exponentially moving average sale price of
+     * houses of the same quality times a mark-up which is drawn from a real distribution of logarithmic mark-ups, i.e.,
+     * a distribution with logarithmic mark-up bins due to the use of logarithmic prices for computing the distribution.
      *
-	 * @param quality Quality of the house ot be sold
+	 * @param quality Quality of the house to be sold
 	 * @param principal Amount of principal left on any mortgage on this house
 	 */
 	double getInitialSalePrice(int quality, double principal) {
-        double exponent = config.SALE_MARKUP
-                + Math.log(Model.housingMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
-                - config.SALE_WEIGHT_MONTHS_ON_MARKET
-                * Math.log(Model.housingMarketStats.getExpAvMonthsOnMarketForQuality(quality) + 1.0)
-                + config.SALE_EPSILON*prng.nextGaussian();
-        return Math.max(Math.exp(exponent), principal);
+        return Math.max(Math.exp(markUpPdf.nextDouble(prng)) * housingMarketStats.getExpAvSalePriceForQuality(quality),
+                principal);
 	}
 
 	/**
@@ -140,13 +142,13 @@ public class HouseholdBehaviour {
 		if (me.isFirstTimeBuyer()) {
 		    // Since the function of the HPI is to move the down payments distribution upwards or downwards to
             // accommodate current price levels, and the distribution is itself aggregate, we use the aggregate HPI
-			downpayment = Model.housingMarketStats.getHPI()*downpaymentDistFTB.inverseCumulativeProbability(Math.max(0.0,
+			downpayment = housingMarketStats.getHPI()*downpaymentDistFTB.inverseCumulativeProbability(Math.max(0.0,
                     (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		} else if (isPropertyInvestor()) {
 			downpayment = housePrice*(Math.max(0.0,
 					config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON * prng.nextGaussian()));
 		} else {
-			downpayment = Model.housingMarketStats.getHPI()*downpaymentDistOO.inverseCumulativeProbability(Math.max(0.0,
+			downpayment = housingMarketStats.getHPI()*downpaymentDistOO.inverseCumulativeProbability(Math.max(0.0,
                     (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
 		}
 		if (downpayment > me.getBankBalance()) downpayment = me.getBankBalance();
@@ -161,7 +163,7 @@ public class HouseholdBehaviour {
 	 * Decide how much to drop the list-price of a house if
 	 * it has been on the market for (another) month and hasn't
 	 * sold. Calibrated against Zoopla dataset in Bank of England
-	 * 
+	 *
 	 * @param sale The HouseOfferRecord of the house that is on the market.
 	 ********************************************************/
 	double rethinkHouseSalePrice(HouseOfferRecord sale) {
@@ -175,7 +177,7 @@ public class HouseholdBehaviour {
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Renter behaviour
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	/*** renters or OO after selling home decide whether to rent or buy
 	 * N.B. even though the HH may not decide to rent a house of the
 	 * same quality as they would buy, the cash value of the difference in quality
@@ -186,7 +188,7 @@ public class HouseholdBehaviour {
         if(isPropertyInvestor()) return(true);
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
                 decideDownPayment(me, purchasePrice), true);
-        int newHouseQuality = Model.housingMarketStats.getMaxQualityForPrice(purchasePrice);
+        int newHouseQuality = housingMarketStats.getMaxQualityForPrice(purchasePrice);
         if (newHouseQuality < 0) return false; // can't afford a house anyway
         double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR
 				- purchasePrice*getLongTermHPAExpectation();
@@ -207,13 +209,13 @@ public class HouseholdBehaviour {
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Property investor behaviour
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	
+
 	/**
 	 * Decide whether to sell or not an investment property. Investor households with only one investment property do
      * never sell it. A sale is never attempted when the house is occupied by a tenant. Households with at least two
      * investment properties will calculate the expected yield of the property in question based on two contributions:
      * rental yield and capital gain (with their corresponding weights which depend on the type of investor)
-	 * 
+	 *
 	 * @param h The house in question
 	 * @param me The investor household
 	 * @return True if investor me decides to sell investment property h
@@ -230,12 +232,13 @@ public class HouseholdBehaviour {
         // ...find the mortgage agreement for this property
         MortgageAgreement mortgage = me.mortgageFor(h);
         // ...find its current (fair market value) sale price
-        double currentMarketPrice = Model.housingMarketStats.getExpAvSalePriceForQuality(h.getQuality());
+        double currentMarketPrice = housingMarketStats.getExpAvSalePriceForQuality(h.getQuality());
         // ...find equity, or assets minus liabilities
         double equity = Math.max(0.01, currentMarketPrice - mortgage.principal); // The 0.01 prevents possible divisions by zero later on
         // ...find the leverage on that mortgage (Assets divided by equity, or return on equity)
 		double leverage = currentMarketPrice / equity;
-        // ...find the expected rental yield of this property as its current rental price (under current average occupancy) divided by its current (fair market value) sale price
+        // ...find the expected rental yield of this property as its current rental price (under current average
+        // occupancy) divided by its current (fair market value) sale price
         double currentRentalYield = h.getRentalRecord().getPrice() * config.constants.MONTHS_IN_YEAR
                 * rentalMarketStats.getAvOccupancyForQuality(h.getQuality()) / currentMarketPrice;
         // ...find the mortgage rate (pounds paid a year per pound of equity)
@@ -273,7 +276,7 @@ public class HouseholdBehaviour {
         // ...find maximum price (maximum mortgage) the household could pay
         double maxPrice = Model.bank.getMaxMortgage(me, false);
         // ...never buy if that maximum price is below the average price for the lowest quality
-        if (maxPrice < Model.housingMarketStats.getExpAvSalePriceForQuality(0)) { return false; }
+        if (maxPrice < housingMarketStats.getExpAvSalePriceForQuality(0)) { return false; }
 
         // Find the expected equity yield rate for a hypothetical house maximising the leverage available to the
         // household and assuming an average rental yield (over all qualities). This is found as a weighted mix of both
@@ -316,7 +319,7 @@ public class HouseholdBehaviour {
 		double result = Math.exp(exponent);
         // TODO: The following contains a clamp for rent prices to be at least 12*RENT_MAX_AMORTIZATION_PERIOD times
         // TODO: below sale prices, thus setting also a minimum rental yield
-//		double minAcceptable = Model.housingMarketStats.getExpAvSalePriceForQuality(quality)
+//		double minAcceptable = housingMarketStats.getExpAvSalePriceForQuality(quality)
 //                /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
 //		if (result < minAcceptable) result = minAcceptable;
 		return result;
@@ -345,7 +348,7 @@ public class HouseholdBehaviour {
      * @return Expectation of HPI in one year's time divided by today's HPI
      */
 	private double getLongTermHPAExpectation() {
-		return Model.housingMarketStats.getLongTermHPA() * config.HPA_EXPECTATION_FACTOR + config.HPA_EXPECTATION_CONST;
+		return housingMarketStats.getLongTermHPA() * config.HPA_EXPECTATION_FACTOR + config.HPA_EXPECTATION_CONST;
     }
 
     public double getBTLCapGainCoefficient() { return BTLCapGainCoefficient; }
