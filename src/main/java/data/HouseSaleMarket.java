@@ -22,9 +22,12 @@ public class HouseSaleMarket {
     // In the log-normal distribution, the 1st parameter is the scale (mean of the normally distributed logarithm of the
     // distribution), the 2nd parameter is the shape (standard deviation of the normally distributed natural logarithm
     // of the distribution)
-	private static LogNormalDistribution    priceDistribution = new LogNormalDistribution(config.HOUSE_PRICES_SCALE,
-            config.HOUSE_PRICES_SHAPE);
-	private static double []                referencePrices = setupReferencePrices();
+	private static LogNormalDistribution    housePriceDistribution =
+            new LogNormalDistribution(config.HOUSE_PRICES_SCALE, config.HOUSE_PRICES_SHAPE);
+    private static LogNormalDistribution    rentPriceDistribution =
+            new LogNormalDistribution(config.RENTAL_PRICES_SCALE, config.RENTAL_PRICES_SHAPE);
+	private static double []                referencePrices = setupReferencePrices(housePriceDistribution);
+    private static double []                referenceRentalPrices = setupReferencePrices(rentPriceDistribution);
 
     //-------------------//
     //----- Methods -----//
@@ -36,25 +39,19 @@ public class HouseSaleMarket {
 	public static double [] getReferencePricePerQuality() { return referencePrices; }
 
     /**
-     * @return rentalReferencePrices Array of doubles with the reference rental price for each quality band
+     * @return referenceRentalPrices Array of doubles with the reference rental price for each quality band
      */
-    // TODO: Replace this by actual data on rental prices!!!
-    public static double [] getReferenceRentalPricePerQuality() {
-        double [] rentalReferencePrices = new double[config.N_QUALITY];
-        for (int i = 0; i < config.N_QUALITY; i++) {
-            rentalReferencePrices[i] = referencePrices[i]
-                    /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
-        }
-        return rentalReferencePrices;
-    }
+    public static double [] getReferenceRentalPricePerQuality() { return referenceRentalPrices; }
 
 	/**
-	 * Set up initial reference prices for each house quality
+	 * Given a certain distribution of prices, set up initial reference prices for each quality band
+     *
+     * @param logNormalDist Price distribution to be used for setting up reference prices (whether sale or rental)
      */
-	private static double [] setupReferencePrices() {
+	private static double [] setupReferencePrices(LogNormalDistribution logNormalDist) {
 		double [] result = new double[config.N_QUALITY];
-		for(int q = 0; q < config.N_QUALITY; ++q) {
-			result[q] = priceDistribution.inverseCumulativeProbability((q + 0.5)/config.N_QUALITY);
+		for (int q = 0; q < config.N_QUALITY; ++q) {
+			result[q] = logNormalDist.inverseCumulativeProbability((q + 0.5) / config.N_QUALITY);
 		}
 		return result;
 	}

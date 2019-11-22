@@ -44,11 +44,13 @@ public class Config {
     public int N_QUALITY;                   // Number of quality bands for houses
 
     // Housing market parameters
-    private double DAYS_UNDER_OFFER;               // Time (in days) that a house remains under offer
+    private double DAYS_UNDER_OFFER;            // Time (in days) that a house remains under offer
     double BIDUP;                               // Smallest proportional increase in price that can cause a gazump
     public double MARKET_AVERAGE_PRICE_DECAY;   // Decay constant for the exponential moving average of sale prices
     public double HOUSE_PRICES_SCALE;           // Scale parameter for the log-normal distribution of house prices (logarithm of median house price = mean and median of logarithmic house prices)
     public double HOUSE_PRICES_SHAPE;           // Shape parameter for the log-normal distribution of house prices (standard deviation of logarithmic house prices)
+    public double RENTAL_PRICES_SCALE;          // Scale parameter for the log-normal distribution of house rental prices (logarithm of median house rental price = mean and median of logarithmic house rental prices)
+    public double RENTAL_PRICES_SHAPE;          // Shape parameter for the log-normal distribution of house rental prices (standard deviation of logarithmic house rental prices)
     public double RENT_GROSS_YIELD;             // Profit margin for buy-to-let investors
 
     // Demographic parameters
@@ -82,18 +84,16 @@ public class Config {
     // Household behaviour parameters: consumption
     double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
     // Household behaviour parameters: initial sale price
-    String DATA_INITIAL_SALE_MARKUP_DIST;   // Address for probability distribution of logarithmic sale price mark-ups
+    String DATA_INITIAL_SALE_MARKUP_DIST;   // Address for probability distribution of sale price mark-ups
+    // Household behaviour parameters: initial rent price
+    String DATA_INITIAL_RENT_MARKUP_DIST;   // Address for probability distribution of rent price mark-ups
     // Household behaviour parameters: buyer's desired expenditure
     double BUY_SCALE;                       // Scale, number of annual salaries (raised to the BUY_EXPONENT power) the buyer is willing to spend
     double BUY_EXPONENT;                    // Exponent to which the annual gross employment income of the household is raised when computing its budget
     double BUY_WEIGHT_HPA;                  // Weight given to house price appreciation when deciding how much to spend
     double BUY_MU;                          // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
     double BUY_SIGMA;                       // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
-    // Household behaviour parameters: demand rent
-    double RENT_MARKUP;                         // Markup over average rent demanded for houses of the same quality
-    double RENT_EQ_MONTHS_ON_MARKET;            // Number of months on the market in an equilibrium situation
-    double RENT_EPSILON;                        // Standard deviation of the noise
-    public double RENT_MAX_AMORTIZATION_PERIOD; // Maximum period BTL investors are ready to wait to get back their investment, this determines their minimum demanded rent
+    // Household behaviour parameters: rent reduction
     double RENT_REDUCTION;                      // Percentage reduction of demanded rent for every month the property is in the market, not rented
     // Household behaviour parameters: downpayment
     double DOWNPAYMENT_BANK_BALANCE_FOR_CASH_SALE;  // If bankBalance/housePrice is above this, payment will be made fully in cash

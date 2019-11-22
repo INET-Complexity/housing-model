@@ -324,7 +324,7 @@ public class Household implements IHouseOwner {
                 home = sale.getHouse();
                 sale.getHouse().resident = this;
             } else if (sale.getHouse().resident == null) { // put empty buy-to-let house on rental market
-                Model.houseRentalMarket.offer(sale.getHouse(), behaviour.buyToLetRent(sale.getQuality()),
+                Model.houseRentalMarket.offer(sale.getHouse(), behaviour.getInitialRentPrice(sale.getQuality()),
                         false);
             } else {
                 System.out.println("Strange: Bought a home with a resident");
@@ -380,7 +380,7 @@ public class Household implements IHouseOwner {
         // Remove the old rental contract from the landlord's list of rental contracts
         rentalContracts.remove(h);
         // Put house back on rental market
-        Model.houseRentalMarket.offer(h, behaviour.buyToLetRent(h.getQuality()), false);
+        Model.houseRentalMarket.offer(h, behaviour.getInitialRentPrice(h.getQuality()), false);
     }
 
     /**********************************************************
@@ -579,11 +579,11 @@ public class Household implements IHouseOwner {
                 putHouseForSale(h);
             }
             // ...and put it to rent (temporarily, if trying to sell it, or permanently, if not trying to sell it)
-            Model.houseRentalMarket.offer(h, behaviour.buyToLetRent(h.getQuality()), false);
+            Model.houseRentalMarket.offer(h, behaviour.getInitialRentPrice(h.getQuality()), false);
         // If being an owner-occupier, put inherited house for sale and also for rent temporarily
         } else {
             putHouseForSale(h);
-            Model.houseRentalMarket.offer(h, behaviour.buyToLetRent(h.getQuality()), false);
+            Model.houseRentalMarket.offer(h, behaviour.getInitialRentPrice(h.getQuality()), false);
         }
     }
 

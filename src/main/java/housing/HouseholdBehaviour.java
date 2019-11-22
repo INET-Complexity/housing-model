@@ -25,7 +25,8 @@ public class HouseholdBehaviour {
     private static MersenneTwister	        prng = Model.prng; // Passes the Model's random number generator to a private static field
     private static HousingMarketStats       housingMarketStats = Model.housingMarketStats; // Passes the Model's housing market stats object to a private static field
     private static RentalMarketStats        rentalMarketStats = Model.rentalMarketStats; // Passes the Model's rental market stats object to a private static field
-    private static Pdf markUpPdf = new Pdf(config.DATA_INITIAL_SALE_MARKUP_DIST); // Read initial sale price mark-up distribution from file
+    private static Pdf                      saleMarkUpPdf = new Pdf(config.DATA_INITIAL_SALE_MARKUP_DIST); // Read initial sale price mark-up distribution from file
+    private static Pdf                      rentMarkUpPdf = new Pdf(config.DATA_INITIAL_RENT_MARKUP_DIST); // Read initial rent price mark-up distribution from file
     private static LogNormalDistribution    downpaymentDistFTB = new LogNormalDistribution(prng,
             config.DOWNPAYMENT_FTB_SCALE, config.DOWNPAYMENT_FTB_SHAPE); // Size distribution for downpayments of first-time-buyers
     private static LogNormalDistribution    downpaymentDistOO = new LogNormalDistribution(prng,
@@ -113,9 +114,20 @@ public class HouseholdBehaviour {
 	 * @param principal Amount of principal left on any mortgage on this house
 	 */
 	double getInitialSalePrice(int quality, double principal) {
-        return Math.max(markUpPdf.nextDouble(prng) * housingMarketStats.getExpAvSalePriceForQuality(quality),
+        return Math.max(saleMarkUpPdf.nextDouble(prng) * housingMarketStats.getExpAvSalePriceForQuality(quality),
                 principal);
 	}
+
+    /**
+     * Initial rent price of a house to be listed on the rental market. This is modelled as the exponentially moving
+     * average rent price of houses of the same quality times a mark-up which is drawn from a real distribution of
+     * rental mark-ups, calibrated using a combination of Zoopla and HPI data.
+     *
+     * @param quality Quality of the house to be rented out
+     */
+    double getInitialRentPrice(int quality) {
+        return rentMarkUpPdf.nextDouble(prng) * rentalMarketStats.getExpAvSalePriceForQuality(quality);
+    }
 
 	/**
      * This method implements a household's decision to sell their owner-occupied property. On average, households sell
@@ -301,29 +313,6 @@ public class HouseholdBehaviour {
         // Return true or false as a random draw from the computed probability
         return prng.nextDouble() < pBuy;
     }
-
-	/**
-	 * How much rent does an investor decide to charge on a buy-to-let house? To make a decision, the household will
-     * check current exponential average rent prices for houses of the same quality, and the current exponential average
-     * time on market for houses of the same quality.
-     *
-	 * @param quality The quality of the house
-	 */
-	double buyToLetRent(int quality) {
-		// TODO: What? Where does this equation come from?
-		final double beta = config.RENT_MARKUP/Math.log(config.RENT_EQ_MONTHS_ON_MARKET); // Weight of months-on-market effect
-		double exponent = config.RENT_MARKUP
-                + Math.log(Model.rentalMarketStats.getExpAvSalePriceForQuality(quality) + 1.0)
-                - beta*Math.log(Model.rentalMarketStats.getExpAvMonthsOnMarketForQuality(quality) + 1.0)
-                + config.RENT_EPSILON * prng.nextGaussian();
-		double result = Math.exp(exponent);
-        // TODO: The following contains a clamp for rent prices to be at least 12*RENT_MAX_AMORTIZATION_PERIOD times
-        // TODO: below sale prices, thus setting also a minimum rental yield
-//		double minAcceptable = housingMarketStats.getExpAvSalePriceForQuality(quality)
-//                /(config.RENT_MAX_AMORTIZATION_PERIOD*config.constants.MONTHS_IN_YEAR);
-//		if (result < minAcceptable) result = minAcceptable;
-		return result;
-	}
 
 	/**
 	 * Update the demanded rent for a property
