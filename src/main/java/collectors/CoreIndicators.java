@@ -74,32 +74,30 @@ public class CoreIndicators {
         return 100.0*Model.creditSupply.getTotalOOCredit()/Model.householdStats.getOwnerOccupierAnnualisedTotalIncome();
     }
 
-	// Number of mortgage approvals per month (scaled for 26.5 million households)
+	// Number of mortgage approvals per month, scaled to UK actual number of households (note integer division)
 	int getMortgageApprovals() {
-		return (int)(Model.creditSupply.getnApprovedMortgages()*config.getUKHouseholds()
-                /Model.households.size());
+		return Model.creditSupply.getnApprovedMortgages() * config.getUKHouseholds() / Model.households.size();
 	}
 
-    // Number of houses bought/sold per month (scaled for 26.5 million households)
+    // Number of houses bought/sold per month, scaled to UK actual number of households (note integer division)
 	int getHousingTransactions() {
-		return (int)(Model.housingMarketStats.getnSales()*config.getUKHouseholds()
-                /Model.households.size());
+		return Model.housingMarketStats.getnSales() * config.getUKHouseholds() / Model.households.size();
 	}
 
-	// Number of advances to first-time-buyers (scaled for 26.5 million households)
+	// Number of advances to first-time-buyers, scaled to UK actual number of households (note integer division)
 	int getAdvancesToFTBs() {
-		return (int)(Model.creditSupply.getnFTBMortgages()*config.getUKHouseholds()
-                /Model.households.size());
+		return Model.creditSupply.getnFTBMortgages() * config.getUKHouseholds() / Model.households.size();
 	}
 
-    // Number of advances to buy-to-let purchasers (scaled for 26.5 million households)
+    // Number of advances to buy-to-let purchasers, scaled to UK actual number of households (note integer division)
 	int getAdvancesToBTL() {
-		return (int)(Model.creditSupply.getnBTLMortgages()*config.getUKHouseholds()
-                /Model.households.size());
+		return Model.creditSupply.getnBTLMortgages() * config.getUKHouseholds() / Model.households.size();
 	}
 
-	// Number of advances to home-movers (scaled for 26.5 million households)
-	int getAdvancesToHomeMovers() { return(getMortgageApprovals() - getAdvancesToFTBs() - getAdvancesToBTL()); }
+	// Number of advances to home-movers, scaled to UK actual number of households
+	int getAdvancesToHomeMovers() {
+	    return getMortgageApprovals() - getAdvancesToFTBs() - getAdvancesToBTL();
+	}
 
     // House price to household disposable income ratio
     // TODO: ATTENTION ---> Gross total income is used here, not disposable income! Post-tax income should be used!

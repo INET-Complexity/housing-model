@@ -32,7 +32,7 @@ public class Construction implements IHouseOwner{
     //----- Methods -----//
     //-------------------//
 
-	public void init() {
+	void init() {
         housingStock = 0;
 		onMarket.clear();
 	}
@@ -47,9 +47,9 @@ public class Construction implements IHouseOwner{
         // Then, compute target housing stock dependent on current and target population
         int targetStock;
         if(Model.households.size() < config.TARGET_POPULATION) {
-            targetStock = (int)(Model.households.size()*config.CONSTRUCTION_HOUSES_PER_HOUSEHOLD);
+            targetStock = (int)(Model.households.size()*config.derivedParams.UK_HOUSES_PER_HOUSEHOLD);
         } else {
-            targetStock = (int)(config.TARGET_POPULATION*config.CONSTRUCTION_HOUSES_PER_HOUSEHOLD);
+            targetStock = (int)(config.TARGET_POPULATION*config.derivedParams.UK_HOUSES_PER_HOUSEHOLD);
         }
         // ...compute the shortfall of houses
         int shortFall = targetStock - housingStock;

@@ -94,7 +94,7 @@ public class Config {
     double BUY_MU;                          // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
     double BUY_SIGMA;                       // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
     // Household behaviour parameters: rent reduction
-    double RENT_REDUCTION;                      // Percentage reduction of demanded rent for every month the property is in the market, not rented
+    double RENT_REDUCTION;                  // Percentage reduction of demanded rent for every month the property is in the market, not rented
     // Household behaviour parameters: downpayment
     double DOWNPAYMENT_BANK_BALANCE_FOR_CASH_SALE;  // If bankBalance/housePrice is above this, payment will be made fully in cash
     double DOWNPAYMENT_FTB_SCALE;                   // Scale parameter for the log-normal distribution of downpayments by first-time-buyers
@@ -105,7 +105,7 @@ public class Config {
     double DOWNPAYMENT_BTL_MEAN;                    // Average downpayment, as percentage of house price, by but-to-let investors
     double DOWNPAYMENT_BTL_EPSILON;                 // Standard deviation of the noise
     // Household behaviour parameters: selling decision
-    private double HOLD_PERIOD;                 // Average period, in years, for which owner-occupiers hold their houses
+    private double HOLD_PERIOD;             // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: BTL buy/sell choice
     double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield
     double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimun bank balance, as a percentage of the desired bank balance, to buy new properties
@@ -131,8 +131,9 @@ public class Config {
     double CENTRAL_BANK_BTL_STRESSED_INTEREST;  // Interest rate under stressed condition for BTL investors when calculating interest coverage ratios (ICR)
     double CENTRAL_BANK_MAX_ICR;                // Interest coverage ratio (ICR) limit imposed by the central bank
 
-    // Construction sector parameters
-    double CONSTRUCTION_HOUSES_PER_HOUSEHOLD;   // Target ratio of houses per household
+    // Construction parameters
+    private int UK_HOUSEHOLDS;              // Number of households in the UK, used to compute core indicators and the ratio of houses per household
+    private int UK_DWELLINGS;               // Number of dwellings in the UK, used to compute the ratio of houses per household
 
     // Government parameters
     double GOVERNMENT_GENERAL_PERSONAL_ALLOWANCE;           // General personal allowance to be deducted when computing taxable income
@@ -140,9 +141,6 @@ public class Config {
     public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;        // Minimum monthly earnings for a married couple from income support
     public String DATA_TAX_RATES;                           // Address for tax bands and rates data
     public String DATA_NATIONAL_INSURANCE_RATES;            // Address for national insurance bands and rates data
-
-    // Collectors parameters
-    private double UK_HOUSEHOLDS;                   // Approximate number of households in UK, used to scale up results for core indicators
 
     /** Construction of objects to contain derived parameters and constants **/
 
@@ -170,6 +168,8 @@ public class Config {
         int N_PAYMENTS;                 // Number of monthly repayments (mortgage duration in months)
         // House rental market parameters
         public double K;                // Decay factor for exponential moving average of gross yield from rentals
+        // Construction parameters
+        double UK_HOUSES_PER_HOUSEHOLD; // Target ratio of houses per household
         // Collectors parameters
         double AFFORDABILITY_DECAY; 	// Decay constant for the exponential moving average of affordability
 
@@ -211,7 +211,7 @@ public class Config {
     //----- Methods -----//
     //-------------------//
 
-    public double getUKHouseholds() { return UK_HOUSEHOLDS; }
+    public int getUKHouseholds() { return UK_HOUSEHOLDS; }
 
     /**
      * Method to read configuration parameters from a configuration (.properties) file
@@ -338,6 +338,8 @@ public class Config {
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
         // House rental market parameters
         derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen? Also, they're not reported in the paper!
+        // Construction parameters
+        derivedParams.UK_HOUSES_PER_HOUSEHOLD = (double)UK_DWELLINGS / UK_HOUSEHOLDS; // Target ratio of houses per household
         // Collectors parameters
         derivedParams.AFFORDABILITY_DECAY = Math.exp(-1.0/100.0);
     }
