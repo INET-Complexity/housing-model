@@ -102,8 +102,8 @@ public class Config {
     double DOWNPAYMENT_OO_SCALE;                    // Scale parameter for the log-normal distribution of downpayments by owner-occupiers
     double DOWNPAYMENT_OO_SHAPE;                    // Shape parameter for the log-normal distribution of downpayments by owner-occupiers
     double DOWNPAYMENT_MIN_INCOME;                  // Minimum income percentile to consider any downpayment, below this level, downpayment is set to 0
-    double DOWNPAYMENT_BTL_MEAN;                    // Average downpayment, as percentage of house price, by but-to-let investors
-    double DOWNPAYMENT_BTL_EPSILON;                 // Standard deviation of the noise
+    double DOWNPAYMENT_BTL_MEAN;                    // Average down-payment, as a percentage of house price, for but-to-let investors
+    double DOWNPAYMENT_BTL_EPSILON;                 // Standard deviation of the noise for down-payments by buy-to-let investors
     // Household behaviour parameters: selling decision
     private double HOLD_PERIOD;             // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: BTL buy/sell choice
