@@ -158,7 +158,6 @@ public class Config {
         // Housing market parameters
         public int HPI_RECORD_LENGTH;   // Number of months to record HPI (to compute price growth at different time scales)
         double MONTHS_UNDER_OFFER;      // Time (in months) that a house remains under offer
-        double T;                       // Characteristic number of data-points over which to average market statistics
         public double E;                // Decay constant for averaging months on market (in transactions)
         public double G;                // Decay constant for averageListPrice averaging (in transactions)
         double HOUSE_PRICES_MEAN;       // Mean of reference house prices (scale + shape**2/2)
@@ -170,10 +169,6 @@ public class Config {
         public double K;                // Decay factor for exponential moving average of gross yield from rentals
         // Construction parameters
         double UK_HOUSES_PER_HOUSEHOLD; // Target ratio of houses per household
-        // Collectors parameters
-        double AFFORDABILITY_DECAY; 	// Decay constant for the exponential moving average of affordability
-
-        public double getAffordabilityDecay() { return AFFORDABILITY_DECAY; }
 
         public double getE() { return E; }
 
@@ -203,9 +198,7 @@ public class Config {
     /**
      * Constructor with full initialization, used only for the original Model Config instance
      */
-    public Config (String configFileName) {
-        getConfigValues(configFileName);
-    }
+    public Config (String configFileName) { getConfigValues(configFileName); }
 
     //-------------------//
     //----- Methods -----//
@@ -328,9 +321,8 @@ public class Config {
         // Housing market parameters
         derivedParams.HPI_RECORD_LENGTH = HPA_YEARS_TO_CHECK*constants.MONTHS_IN_YEAR + 3;  // Plus three months in a quarter
         derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/constants.DAYS_IN_MONTH;
-        derivedParams.T = 0.02*TARGET_POPULATION;                   // TODO: Clarify where does this 0.2 come from, and provide explanation for this formula
-        derivedParams.E = Math.exp(-1.0/derivedParams.T);           // TODO: Provide explanation for this formula
-        derivedParams.G = Math.exp(-N_QUALITY/derivedParams.T);     // TODO: Provide explanation for this formula
+        derivedParams.E = Math.exp(-1.0 / (0.02 * TARGET_POPULATION));          // TODO: Clarify where does this 0.2 come from, provide explanation for this formula
+        derivedParams.G = Math.exp(-N_QUALITY / (0.02 * TARGET_POPULATION));    // TODO: Clarify where does this 0.2 come from, provide explanation for this formula
         derivedParams.HOUSE_PRICES_MEAN = Math.exp(HOUSE_PRICES_SCALE + HOUSE_PRICES_SHAPE*HOUSE_PRICES_SHAPE/2.0); // Mean of a log-normal distribution
         // Household behaviour parameters: general
         derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*constants.MONTHS_IN_YEAR);
@@ -340,8 +332,6 @@ public class Config {
         derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen? Also, they're not reported in the paper!
         // Construction parameters
         derivedParams.UK_HOUSES_PER_HOUSEHOLD = (double)UK_DWELLINGS / UK_HOUSEHOLDS; // Target ratio of houses per household
-        // Collectors parameters
-        derivedParams.AFFORDABILITY_DECAY = Math.exp(-1.0/100.0);
     }
 
     /**

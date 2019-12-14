@@ -1,6 +1,5 @@
 package collectors;
 
-import housing.Config;
 import housing.Model;
 import housing.Household;
 import housing.MortgageAgreement;
@@ -18,7 +17,6 @@ public class CreditSupply {
     //----- Fields -----//
     //------------------//
 
-    private Config config = Model.config;       // Passes the Model's configuration parameters object to a private field
     private DescriptiveStatistics oo_lti;
     private DescriptiveStatistics oo_ltv;
     private DescriptiveStatistics btl_ltv;
@@ -28,7 +26,6 @@ public class CreditSupply {
     private double totalBTLCredit = 0.0;        // Buy to let mortgage credit
     private double totalOOCredit = 0.0;         // Owner-occupier mortgage credit
     private double netCreditGrowth;             // Rate of change of credit per month as percentage
-    private double affordability = 0.0;         // Affordability coefficient
     private int mortgageCounter;                // Counter for total number of new mortgages
     private int nApprovedMortgages;             // total number of new mortgages
     private int ftbCounter;                     // Counter for total number of new first time buyer mortgages
@@ -89,10 +86,6 @@ public class CreditSupply {
 	public void recordLoan(Household h, MortgageAgreement approval) {
 		double housePrice;
 		housePrice = approval.principal + approval.downPayment;
-		// TODO: Check with Arzu, Marc if monthly gross income used here should include total income or just employment income (as of now)
-		affordability = config.derivedParams.getAffordabilityDecay()*affordability +
-				(1.0-config.derivedParams.getAffordabilityDecay())*approval.monthlyPayment/
-						(h.getMonthlyGrossEmploymentIncome());
 		if(approval.isBuyToLet) {
 			btl_ltv.addValue(100.0*approval.principal/housePrice);
 			double icr = Model.rentalMarketStats.getExpAvFlowYield()*approval.purchasePrice/
