@@ -38,10 +38,15 @@ public class BinnedData<D> extends ArrayList<D> {
 	public double getBinWidth() { return binWidth; }
 
     /**
-     * Returns the frequency/density/probability of the bin at which the value val falls
+     * Returns the frequency/density/probability of the bin at which the value val falls, with security to ensure values
+     * below the minimum bin edge return the minimum bin and values above the maximum bin return the maximum bin
      */
-	public D getBinAt(double val) { return get((int)((val - firstBinMin)/binWidth)); }
-	
+    public D getBinAt(double val) {
+        if (val < firstBinMin) return get(0);
+        else if (val > getSupportUpperBound()) return get(size() - 1);
+        else return get((int)((val - firstBinMin)/binWidth));
+    }
+
 	public void setBinWidth(double width) { binWidth = width; }
 	
 	public void setFirstBinMin(double min) { firstBinMin = min; }
