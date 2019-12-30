@@ -70,6 +70,7 @@ public class Config {
     // Household behaviour parameters: rent
     public int TENANCY_LENGTH_AVERAGE;      // Average number of months a tenant will stay in a rented house
     int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
+    String DATA_RENT_BID_FRACTION;          // Proportion of income households bid on the rental market, per income bin
     double BID_RENT_AS_FRACTION_OF_INCOME;  // Proportion of income households bid on the rental market
     double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
     double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
