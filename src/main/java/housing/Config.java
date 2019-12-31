@@ -139,7 +139,7 @@ public class Config {
     // Government parameters
     double GOVERNMENT_GENERAL_PERSONAL_ALLOWANCE;           // General personal allowance to be deducted when computing taxable income
     double GOVERNMENT_INCOME_LIMIT_FOR_PERSONAL_ALLOWANCE;  // Limit of income above which personal allowance starts to decrease £1 for every £2 of income above this limit
-    public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;        // Minimum monthly earnings for a married couple from income support
+    public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;        // Income support for a couple, both over 18 years old (Jobseeker's allowance)
     public String DATA_TAX_RATES;                           // Address for tax bands and rates data
     public String DATA_NATIONAL_INSURANCE_RATES;            // Address for national insurance bands and rates data
 
