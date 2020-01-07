@@ -82,8 +82,8 @@ public class RentalMarketStats extends HousingMarketStats {
 		for (int q = 0; q < config.N_QUALITY; q++) {
 			// ... average fraction of time that a house of a given quality is occupied, based on average tenancy length
 			// and exponential moving average of months that houses of this quality spend on the rental market
-			avOccupancyPerQuality[q] = config.TENANCY_LENGTH_AVERAGE/(config.TENANCY_LENGTH_AVERAGE
-					+ getExpAvMonthsOnMarketForQuality(q));
+			avOccupancyPerQuality[q] = config.derivedParams.TENANCY_LENGTH_AVERAGE /
+                    (config.derivedParams.TENANCY_LENGTH_AVERAGE + getExpAvMonthsOnMarketForQuality(q));
 			// ... average flow gross rental yield per quality band (stick to previous value if no sales)
 			if (housingMarketStats.getExpAvSalePriceForQuality(q) > 0) {
 				avFlowYieldPerQuality[q] = getExpAvSalePriceForQuality(q)*config.constants.MONTHS_IN_YEAR

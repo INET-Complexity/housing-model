@@ -422,8 +422,8 @@ public class Household implements IHouseOwner {
         // Create a new rental agreement with the agreed price and with a random length between a minimum and a maximum
         RentalAgreement rent = new RentalAgreement();
         rent.monthlyPayment = sale.getPrice();
-        rent.nPayments = config.TENANCY_LENGTH_AVERAGE + prng.nextInt(2*config.TENANCY_LENGTH_EPSILON + 1)
-                - config.TENANCY_LENGTH_EPSILON;
+        rent.nPayments = config.TENANCY_LENGTH_MIN
+                + prng.nextInt(config.TENANCY_LENGTH_MAX - config.TENANCY_LENGTH_MIN + 1);
         // Add the rental agreement to the house payments object of the tenant household
         housePayments.put(sale.getHouse(), rent);
         // Set the house as the tenant's home and the tenant as the house's resident

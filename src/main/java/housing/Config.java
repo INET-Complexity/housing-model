@@ -68,8 +68,8 @@ public class Config {
     double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
     double P_FUNDAMENTALIST; 			    // Probability that a BTL investor is a fundamentalist versus a trend-follower
     // Household behaviour parameters: rent
-    public int TENANCY_LENGTH_AVERAGE;      // Average number of months a tenant will stay in a rented house
-    int TENANCY_LENGTH_EPSILON;             // Standard deviation of the noise in determining the tenancy length
+    int TENANCY_LENGTH_MIN;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
+    int TENANCY_LENGTH_MAX;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
     String DATA_RENT_BID_FRACTION;          // Proportion of income households bid on the rental market, per income bin
     double BID_RENT_AS_FRACTION_OF_INCOME;  // Proportion of income households bid on the rental market
     double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
@@ -164,6 +164,8 @@ public class Config {
         double HOUSE_PRICES_MEAN;       // Mean of reference house prices (scale + shape**2/2)
         // Household behaviour parameters: general
         double MONTHLY_P_SELL;          // Monthly probability for owner-occupiers to sell their houses
+        // Household behaviour parameters: rent
+        public double TENANCY_LENGTH_AVERAGE;  // Average number of months a tenant will stay in a rented house
         // Bank parameters
         int N_PAYMENTS;                 // Number of monthly repayments (mortgage duration in months)
         // House rental market parameters
@@ -327,6 +329,8 @@ public class Config {
         derivedParams.HOUSE_PRICES_MEAN = Math.exp(HOUSE_PRICES_SCALE + HOUSE_PRICES_SHAPE*HOUSE_PRICES_SHAPE/2.0); // Mean of a log-normal distribution
         // Household behaviour parameters: general
         derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*constants.MONTHS_IN_YEAR);
+        // Household behaviour parameters: rent
+        derivedParams.TENANCY_LENGTH_AVERAGE = (TENANCY_LENGTH_MIN + TENANCY_LENGTH_MAX) / 2.0;
         // Bank parameters
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
         // House rental market parameters
