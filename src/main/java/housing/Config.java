@@ -78,10 +78,6 @@ public class Config {
     double HPA_EXPECTATION_FACTOR;          // Dampening (or multiplier) factor for previous trend when computing future HPI growth expectations
     double HPA_EXPECTATION_CONST;           // Constant to be added or subtracted from previous trend when computing future HPI growth expectations
     public int HPA_YEARS_TO_CHECK;          // Number of years of the HPI record to check when computing the annual HPA
-    // Household behaviour parameters: sale price reduction
-    double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
-    double REDUCTION_MU;                    // Mean percentage reduction for prices of houses on the market
-    double REDUCTION_SIGMA;                 // Standard deviation of percentage reductions for prices of houses on the market
     // Household behaviour parameters: consumption
     double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
     // Household behaviour parameters: initial sale price
@@ -94,8 +90,14 @@ public class Config {
     double BUY_WEIGHT_HPA;                  // Weight given to house price appreciation when deciding how much to spend
     double BUY_MU;                          // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
     double BUY_SIGMA;                       // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
+    // Household behaviour parameters: sale price reduction
+    double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
+    double REDUCTION_MU;                    // Mean percentage log-reduction for prices of houses on the market
+    double REDUCTION_SIGMA;                 // Standard deviation of percentage log-reductions for prices of houses on the market
     // Household behaviour parameters: rent reduction
-    double RENT_REDUCTION;                  // Percentage reduction of demanded rent for every month the property is in the market, not rented
+    double P_RENT_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
+    double RENT_REDUCTION_MU;               // Mean percentage log-reduction for prices of houses on the market
+    double RENT_REDUCTION_SIGMA;            // Standard deviation of percentage log-reductions for prices of houses on the market
     // Household behaviour parameters: downpayment
     double DOWNPAYMENT_BANK_BALANCE_FOR_CASH_SALE;  // If bankBalance/housePrice is above this, payment will be made fully in cash
     double DOWNPAYMENT_FTB_SCALE;                   // Scale parameter for the log-normal distribution of downpayments by first-time-buyers

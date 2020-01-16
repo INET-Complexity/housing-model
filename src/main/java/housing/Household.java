@@ -257,7 +257,7 @@ public class Household implements IHouseOwner {
         HouseOfferRecord forRent = house.getRentalRecord();
         if (forRent != null && Model.getTime() > forRent.gettInitialListing()) {
             // ...then update its price
-            double newPrice = behaviour.rethinkBuyToLetRent(forRent);
+            double newPrice = behaviour.rethinkHouseRentPrice(forRent);
             Model.houseRentalMarket.updateOffer(forRent, newPrice);
         }        
     }

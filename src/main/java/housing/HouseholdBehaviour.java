@@ -112,7 +112,7 @@ public class HouseholdBehaviour {
      * @param monthlyGrossEmploymentIncome Monthly gross employment income of the household
      */
     double getDesiredRentPrice(double monthlyGrossEmploymentIncome) {
-        // Use rental bid fraction from data,tought capped for coherence with essential consumption fraction
+        // Use rental bid fraction from data, though capped for coherence with essential consumption fraction
         double fraction = Math.min(rentBidFraction.getBinAt(monthlyGrossEmploymentIncome),
                 (1 - config.ESSENTIAL_CONSUMPTION_FRACTION));
         return fraction * monthlyGrossEmploymentIncome;
@@ -178,25 +178,6 @@ public class HouseholdBehaviour {
 		}
 		if (downpayment > me.getBankBalance()) downpayment = me.getBankBalance();
 		return downpayment;
-	}
-
-    ///////////////////////////////////////////////////////////
-	///////////////////////// REVISED /////////////////////////
-    ///////////////////////////////////////////////////////////
-
-	/********************************************************
-	 * Decide how much to drop the list-price of a house if
-	 * it has been on the market for (another) month and hasn't
-	 * sold. Calibrated against Zoopla dataset in Bank of England
-	 *
-	 * @param sale The HouseOfferRecord of the house that is on the market.
-	 ********************************************************/
-	double rethinkHouseSalePrice(HouseOfferRecord sale) {
-		if(prng.nextDouble() < config.P_SALE_PRICE_REDUCE) {
-			double logReduction = config.REDUCTION_MU + (prng.nextGaussian()*config.REDUCTION_SIGMA);
-			return(sale.getPrice()*(1.0 - Math.exp(logReduction)/100.0));
-		}
-		return(sale.getPrice());
 	}
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
@@ -319,13 +300,33 @@ public class HouseholdBehaviour {
         return prng.nextDouble() < pBuy;
     }
 
-	/**
-	 * Update the demanded rent for a property
-	 *
-	 * @param sale the HouseOfferRecord of the property for rent
-	 * @return the new rent
+    /**
+     * Decide whether and how much to drop the list-price of a house for sale if it has been on the market for (another)
+     * month and hasn't got sold
+     *
+     * @param sale The HouseOfferRecord of the house that is on the sale market
      */
-	double rethinkBuyToLetRent(HouseOfferRecord sale) { return (1.0 - config.RENT_REDUCTION)*sale.getPrice(); }
+    double rethinkHouseSalePrice(HouseOfferRecord sale) {
+        if (prng.nextDouble() < config.P_SALE_PRICE_REDUCE) {
+            double logReduction = config.REDUCTION_MU + (prng.nextGaussian() * config.REDUCTION_SIGMA);
+            return sale.getPrice() * (1.0 - Math.exp(logReduction) / 100.0);
+        }
+        return sale.getPrice();
+    }
+
+	/**
+	 * Decide whether and how much to drop the list-price of a house for rent if it has been on the market for (another)
+     * month and hasn't got sold
+	 *
+	 * @param sale The HouseOfferRecord of the house that is on the rental market
+     */
+    double rethinkHouseRentPrice(HouseOfferRecord sale) {
+        if (prng.nextDouble() < config.P_RENT_PRICE_REDUCE) {
+            double logReduction = config.RENT_REDUCTION_MU + (prng.nextGaussian() * config.RENT_REDUCTION_SIGMA);
+            return sale.getPrice() * (1.0 - Math.exp(logReduction) / 100.0);
+        }
+        return sale.getPrice();
+    }
 
     /**
      * Logistic function, sometimes called sigma function, 1/1+e^(-x)
