@@ -110,7 +110,8 @@ public class Recorder {
                     + "Rental AvMonthsOnMarket, Rental ExpAvMonthsOnMarket, Rental nBuyers, Rental nSellers, "
                     + "Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
-                    + "nRegisteredMortgages, interestRate");
+                    + "nRegisteredMortgages, nNewFTBMortgages, nNewFTBMortgagesToBTL, nNewHMMortgages, "
+                    + "nNewBTLMortgages, newFTBCredit, newHMCredit, newBTLCredit, newTotalCredit, interestRate");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -223,6 +224,14 @@ public class Recorder {
                 Model.rentalMarketStats.getExpAvFlowYield() + ", " +
                 // Credit data
                 Model.creditSupply.getnRegisteredMortgages() + ", " +
+                Model.creditSupply.getnFTBMortgages() + ", " +
+                Model.creditSupply.getnFTBMortgagesToBTL() + ", " +
+                Model.creditSupply.getnHMMortgages() + ", " +
+                Model.creditSupply.getnBTLMortgages() + ", " +
+                Model.creditSupply.getNewCreditToFTB() + ", " +
+                Model.creditSupply.getNewCreditToHM() + ", " +
+                Model.creditSupply.getNewCreditToBTL() + ", " +
+                Model.creditSupply.getNewCreditTotal() + ", " +
                 Model.creditSupply.getInterestRate());
 
         // Write quality band prices to file

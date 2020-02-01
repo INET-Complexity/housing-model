@@ -30,8 +30,16 @@ public class CreditSupply {
     private int nApprovedMortgages;             // total number of new mortgages
     private int ftbCounter;                     // Counter for total number of new first time buyer mortgages
     private int nFTBMortgages;                  // Total number of new first time buyer mortgages
+    private int ftbbtlCounter;                  // Counter for the total number of new first time buyer mortgages to households with the BTL gene
+    private int nFTBMortgagesToBTL;             // Total number of new first time buyer mortgages to households with the BTL gene
     private int btlCounter;                     // Counter for total number of new buy to let mortgages
     private int nBTLMortgages;                  // Total number of new buy to let mortgages
+    private double newCreditToHMCounter;        // Counter for total amount (principals) of new home mover mortgages
+    private double newCreditToHM;               // Total amount (principals) of new home mover mortgages
+    private double newCreditToFTBCounter;       // Counter for total amount (principals) of new first time buyer mortgages
+    private double newCreditToFTB;              // Total amount (principals) of new first time buyer mortgages
+    private double newCreditToBTLCounter;       // Counter for total amount (principals) of new buy-to-let mortgages
+    private double newCreditToBTL;              // Total amount (principals) of new buy-to-let mortgages
 
     //------------------------//
     //----- Constructors -----//
@@ -40,7 +48,11 @@ public class CreditSupply {
 	public CreditSupply() {
 		mortgageCounter = 0;
 		ftbCounter = 0;
-		btlCounter = 0;
+        ftbbtlCounter = 0;
+        btlCounter = 0;
+        newCreditToHMCounter = 0.0;
+        newCreditToFTBCounter = 0.0;
+        newCreditToBTLCounter = 0.0;
 		// TODO: This limit in the number of events taken into account to build statistics is not explained in the paper
         // TODO: (affects oo_lti, oo_ltv, btl_ltv, btl_icr, downpayments)
 		setArchiveLength(10000);
@@ -72,11 +84,19 @@ public class CreditSupply {
         }
         nApprovedMortgages = mortgageCounter;
         nFTBMortgages = ftbCounter;
+        nFTBMortgagesToBTL = ftbbtlCounter;
         nBTLMortgages = btlCounter;
         mortgageCounter = 0;
         ftbCounter = 0;
         btlCounter = 0;
-	}
+        ftbbtlCounter = 0;
+        newCreditToFTB = newCreditToFTBCounter;
+        newCreditToHM = newCreditToHMCounter;
+        newCreditToBTL = newCreditToBTLCounter;
+        newCreditToFTBCounter = 0.0;
+        newCreditToHMCounter = 0.0;
+        newCreditToBTLCounter = 0.0;
+    }
 
 	/**
 	 * Record information for a newly issued mortgage
@@ -86,7 +106,7 @@ public class CreditSupply {
 	public void recordLoan(Household h, MortgageAgreement approval) {
 		double housePrice;
 		housePrice = approval.principal + approval.downPayment;
-		if(approval.isBuyToLet) {
+		if (approval.isBuyToLet) {
 			btl_ltv.addValue(100.0*approval.principal/housePrice);
 			double icr = Model.rentalMarketStats.getExpAvFlowYield()*approval.purchasePrice/
 					(approval.principal*Model.centralBank.getInterestCoverRatioStressedRate(false));
@@ -97,8 +117,18 @@ public class CreditSupply {
 		}
 		downpayments.addValue(approval.downPayment);
 		mortgageCounter += 1;
-		if(approval.isFirstTimeBuyer) ftbCounter += 1;
-		if(approval.isBuyToLet) btlCounter += 1;
+		if (approval.isFirstTimeBuyer) {
+		    ftbCounter += 1;
+		    newCreditToFTBCounter += approval.principal;
+		    if (h.behaviour.isPropertyInvestor()) {
+		        ftbbtlCounter += 1;
+            }
+        } else if (approval.isBuyToLet) {
+		    btlCounter += 1;
+		    newCreditToBTLCounter += approval.principal;
+        } else {
+            newCreditToHMCounter += approval.principal;
+        }
 	}
 
 	private void setArchiveLength(int archiveLength) {
@@ -125,6 +155,10 @@ public class CreditSupply {
 
     int getnFTBMortgages() { return nFTBMortgages; }
 
+    int getnFTBMortgagesToBTL() { return nFTBMortgagesToBTL; }
+
+    int getnHMMortgages() { return nApprovedMortgages - nFTBMortgages - nBTLMortgages; }
+
     int getnBTLMortgages() { return nBTLMortgages; }
 
     double getTotalBTLCredit() { return totalBTLCredit; }
@@ -132,4 +166,12 @@ public class CreditSupply {
     double getTotalOOCredit() { return totalOOCredit; }
 
     double getNetCreditGrowth() { return netCreditGrowth; }
+
+    double getNewCreditToFTB() { return newCreditToFTB; }
+
+    double getNewCreditToHM() { return newCreditToHM; }
+
+    double getNewCreditToBTL() { return newCreditToBTL; }
+
+    double getNewCreditTotal() { return newCreditToFTB + newCreditToHM + newCreditToBTL; }
 }
