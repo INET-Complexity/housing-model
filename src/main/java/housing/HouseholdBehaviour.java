@@ -167,14 +167,14 @@ public class HouseholdBehaviour {
 		if (me.isFirstTimeBuyer()) {
 		    // Since the function of the HPI is to move the down payments distribution upwards or downwards to
             // accommodate current price levels, and the distribution is itself aggregate, we use the aggregate HPI
-			downpayment = housingMarketStats.getHPI()*downpaymentDistFTB.inverseCumulativeProbability(Math.max(0.0,
-                    (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
+			downpayment = housingMarketStats.getHPI()
+                    * downpaymentDistFTB.inverseCumulativeProbability(me.incomePercentile);
 		} else if (isPropertyInvestor()) {
 			downpayment = housePrice*(Math.max(0.0,
 					config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON * prng.nextGaussian()));
 		} else {
-			downpayment = housingMarketStats.getHPI()*downpaymentDistOO.inverseCumulativeProbability(Math.max(0.0,
-                    (me.incomePercentile - config.DOWNPAYMENT_MIN_INCOME)/(1 - config.DOWNPAYMENT_MIN_INCOME)));
+			downpayment = housingMarketStats.getHPI()
+                    * downpaymentDistOO.inverseCumulativeProbability(me.incomePercentile);
 		}
 		if (downpayment > me.getBankBalance()) downpayment = me.getBankBalance();
 		return downpayment;
