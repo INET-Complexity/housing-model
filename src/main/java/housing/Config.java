@@ -80,6 +80,7 @@ public class Config {
     public int HPA_YEARS_TO_CHECK;          // Number of years of the HPI record to check when computing the annual HPA
     // Household behaviour parameters: consumption
     double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
+    double MAXIMUM_CONSUMPTION_FRACTION;    // Maximum monthly consumption as a fraction of the household's gross annual income
     // Household behaviour parameters: initial sale price
     String DATA_INITIAL_SALE_MARKUP_DIST;   // Address for probability distribution of sale price mark-ups
     // Household behaviour parameters: initial rent price

@@ -86,9 +86,12 @@ public class Household implements IHouseOwner {
         // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
         double monthlyDisposableIncome = getMonthlyDisposableIncome();
         bankBalance += monthlyDisposableIncome;
-        // Consume according to gross annual income and capped by current bank balance (after disposable income has been added)
+        // Consume according to gross annual income, capped by current bank balance (after disposable income has been
+        // added) and by a maximum fraction of the gross annual income that can be consumed a month
         double desiredConsumption = behaviour.getDesiredConsumption(bankBalance, getAnnualGrossTotalIncome(),
                 monthlyDisposableIncome);
+        desiredConsumption = Math.min(desiredConsumption,
+                getAnnualGrossTotalIncome()*config.MAXIMUM_CONSUMPTION_FRACTION);
         bankBalance -= desiredConsumption;
         // Compute saving rate
         savingRate = (monthlyDisposableIncome - desiredConsumption)/getMonthlyGrossTotalIncome();
