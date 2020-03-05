@@ -70,8 +70,6 @@ public class Config {
     // Household behaviour parameters: rent
     int TENANCY_LENGTH_MIN;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
     int TENANCY_LENGTH_MAX;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
-    String DATA_RENT_BID_FRACTION;          // Proportion of income households bid on the rental market, per income bin
-    double BID_RENT_AS_FRACTION_OF_INCOME;  // Proportion of income households bid on the rental market
     double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
     double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
     // Household behaviour parameters: general
@@ -91,6 +89,11 @@ public class Config {
     double BUY_WEIGHT_HPA;                  // Weight given to house price appreciation when deciding how much to spend
     double BUY_MU;                          // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
     double BUY_SIGMA;                       // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
+    // Household behaviour parameters: renter's desired expenditure
+    double DESIRED_RENT_SCALE;              // Scale, number of annual salaries (raised to the DESIRED_RENT_EXPONENT power) the household is willing to spend on rent
+    double DESIRED_RENT_EXPONENT;           // Exponent to which the annual gross employment income of the household is raised when computing its rental budget
+    double DESIRED_RENT_MU;                 // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise for the desired rental budget
+    double DESIRED_RENT_SIGMA;              // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise for the desired rental budget
     // Household behaviour parameters: sale price reduction
     double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
     double REDUCTION_MU;                    // Mean percentage log-reduction for prices of houses on the market

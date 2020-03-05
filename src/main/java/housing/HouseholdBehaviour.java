@@ -32,7 +32,6 @@ public class HouseholdBehaviour {
     private static LogNormalDistribution    downpaymentDistOO = new LogNormalDistribution(prng,
             config.DOWNPAYMENT_OO_SCALE, config.DOWNPAYMENT_OO_SHAPE); // Size distribution for downpayments of owner-occupiers
     private static BinnedDataDouble         BTLProbability = new BinnedDataDouble(config.DATA_BTL_PROBABILITY);
-	private static BinnedDataDouble         rentBidFraction = new BinnedDataDouble(config.DATA_RENT_BID_FRACTION); // Read rental bid fraction (of income) distribution from file
     private boolean                         BTLInvestor;
     private double                          BTLCapGainCoefficient; // Sensitivity of BTL investors to capital gain, 0.0 cares only about rental yield, 1.0 cares only about cap gain
     private double                          propensityToSave;
@@ -109,13 +108,15 @@ public class HouseholdBehaviour {
     /**
      * Desired rental price used to bid on the rental market.
      *
-     * @param monthlyGrossEmploymentIncome Monthly gross employment income of the household
+     * @param annualGrossEmploymentIncome Annual gross employment income of the household
      */
-    double getDesiredRentPrice(double monthlyGrossEmploymentIncome) {
-        // Use rental bid fraction from data, though capped for coherence with essential consumption fraction
-        double fraction = Math.min(rentBidFraction.getBinAt(monthlyGrossEmploymentIncome),
-                (1 - config.ESSENTIAL_CONSUMPTION_FRACTION));
-        return fraction * monthlyGrossEmploymentIncome;
+    double getDesiredRentPrice(double annualGrossEmploymentIncome, double monthlyNetTotalIncome) {
+        double desiredRentalPrice = config.DESIRED_RENT_SCALE
+                * Math.pow(annualGrossEmploymentIncome, config.DESIRED_RENT_EXPONENT)
+                * Math.exp(config.DESIRED_RENT_MU + config.DESIRED_RENT_SIGMA * prng.nextGaussian());
+        // Note the capping of rental bids to the available net income after essential consumption
+        return Math.min(desiredRentalPrice, monthlyNetTotalIncome
+                - config.ESSENTIAL_CONSUMPTION_FRACTION * config.GOVERNMENT_MONTHLY_INCOME_SUPPORT);
     }
 
 	/**

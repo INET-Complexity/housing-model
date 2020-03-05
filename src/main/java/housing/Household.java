@@ -456,8 +456,8 @@ public class Household implements IHouseOwner {
             Model.houseSaleMarket.bid(this, price, false);
         } else {
             // ... if renting, bid in the house rental market for the desired rent price
-            Model.houseRentalMarket.bid(this, behaviour.getDesiredRentPrice(monthlyGrossEmploymentIncome),
-                    false);
+            Model.houseRentalMarket.bid(this, behaviour.getDesiredRentPrice(annualGrossEmploymentIncome,
+                    getMonthlyNetTotalIncome()), false);
         }
     }
 
