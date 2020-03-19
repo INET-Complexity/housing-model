@@ -92,18 +92,38 @@ public class HouseholdBehaviour {
     //----- Owner-Occupier behaviour -----//
 
 	/**
-     * Desired purchase price used to decide whether to buy a house and how much to bid for it
+     * Desired purchase price used to decide whether to buy a house and how much to bid for it. This desired purchase
+     * price is assumed to be a non-linear function of the household's annual gross employment income
      *
 	 * @param annualGrossEmploymentIncome Annual gross employment income of the household
 	 */
 	double getDesiredPurchasePrice(double annualGrossEmploymentIncome) {
-        // Note the capping of the HPA factor to an arbitrary maximum level (0.9) to avoid dividing by zero as well as
-        // unrealistically large desired budgets
-        double HPAFactor = Math.min(config.BUY_WEIGHT_HPA*getLongTermHPAExpectation(), 0.9);
 		return config.BUY_SCALE * Math.pow(annualGrossEmploymentIncome, config.BUY_EXPONENT)
-				* Math.exp(config.BUY_MU + config.BUY_SIGMA*prng.nextGaussian())
-                / (1.0 - HPAFactor);
+				* Math.exp(config.BUY_MU + config.BUY_SIGMA*prng.nextGaussian());
 	}
+
+    /**
+     * TODO: Decision needed between this and previous specification. If this chose, 0.05 to be moved to config file
+     * Alternative specification of the desired purchase price used to decide whether to buy a house and how much to bid
+     * for it. This specification assumes an accounting relation between housing costs (including mortgage expenses,
+     * taxes and maintenance costs, capital gains and foregone interests at the risk-free rate) and a non-linear
+     * function of the household's annual gross employment income
+     *
+     * @param annualGrossEmploymentIncome Annual gross employment income of the household
+     * @param LTV Loan to value ratio targeted by the household
+     */
+    double getAltDesiredPurchasePrice(double annualGrossEmploymentIncome, double LTV) {
+        double r = Model.bank.getMortgageInterestRate();
+        double denominator = 0.05
+                + LTV * r / (1 - Math.pow((1 + r / config.constants.MONTHS_IN_YEAR), -config.derivedParams.N_PAYMENTS))
+                + (1.0 - LTV) * Model.centralBank.getBaseRate()
+                - config.BUY_WEIGHT_HPA*getLongTermHPAExpectation();
+        // Denominator capped to arbitrary minimum to avoid dividing by zero, unrealistically large desired budgets and
+        // negative values
+        denominator = Math.max(denominator, 0.001);
+        return config.BUY_SCALE * Math.pow(annualGrossEmploymentIncome, config.BUY_EXPONENT)
+                * Math.exp(config.BUY_MU + config.BUY_SIGMA*prng.nextGaussian()) / denominator;
+    }
 
     /**
      * Desired rental price used to bid on the rental market.
@@ -180,6 +200,29 @@ public class HouseholdBehaviour {
 		if (downpayment > me.getBankBalance()) downpayment = me.getBankBalance();
 		return downpayment;
 	}
+
+    /**
+     * TODO: If getAltDesiredPurchasePrice() is used, then this initial decision on target LTV is also needed
+     * TODO: In that case, all hard-coded parameters need to be moved to config file
+     * Decide the household's target loan-to-value ratio in order to then decide on a desired purchase price
+     *
+     * @param me the household
+     */
+    double decideLTV(Household me) {
+        if (me.isFirstTimeBuyer()) {
+            return (0.0002826 * me.getAnnualGrossEmploymentIncome()
+                    - 0.00000000128 * Math.pow(me.getAnnualGrossEmploymentIncome(), 2)
+                    - 0.5791559 * me.getAge()
+                    + 83.92332) / 100.0;
+        } else if (isPropertyInvestor()) {
+            return Math.max(0.0, config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON * prng.nextGaussian());
+        } else {
+            return (0.0002175 * me.getAnnualGrossEmploymentIncome()
+                    - 0.000000000834 * Math.pow(me.getAnnualGrossEmploymentIncome(), 2)
+                    - 0.9625552 * me.getAge()
+                    + 93.82513) / 100.0;
+        }
+    }
 
 	///////////////////////////////////////////////////////////////////////////////////////////////
 	// Renter behaviour
