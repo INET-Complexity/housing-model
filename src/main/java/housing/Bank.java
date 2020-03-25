@@ -175,8 +175,6 @@ public class Bank {
 		double r = getMortgageInterestRate()/config.constants.MONTHS_IN_YEAR; // monthly interest rate
 		double lti_principal, affordable_principal, icr_principal;
         double liquidWealth = h.getBankBalance(); // No home equity needs to be added here: home-movers always sell their homes before trying to buy new ones
-		
-		if(isHome) liquidWealth += h.getHomeEquity();
 
 		// --- LTV constraint
 		approval.principal = housePrice*getLoanToValueLimit(h.isFirstTimeBuyer(), isHome);
