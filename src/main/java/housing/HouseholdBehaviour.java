@@ -316,7 +316,7 @@ public class HouseholdBehaviour {
         if (me.getBankBalance() < data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(),
                 me.behaviour.getPropensityToSave())*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
         // ...find maximum price (maximum mortgage) the household could pay
-        double maxPrice = Model.bank.getMaxMortgage(me, false);
+        double maxPrice = Model.bank.getMaxMortgagePrice(me, false);
         // ...never buy if that maximum price is below the average price for the lowest quality
         if (maxPrice < housingMarketStats.getExpAvSalePriceForQuality(0)) { return false; }
 

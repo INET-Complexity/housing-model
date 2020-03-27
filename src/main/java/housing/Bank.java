@@ -161,60 +161,91 @@ public class Bank {
 	}
 
 	/**
-	 * Method to request a mortgage approval but not actually sign a mortgage contract. This is useful if you want to
-     * explore the details of the mortgage contract before deciding whether to actually go ahead and sign it.
+	 * Method to request a mortgage approval but not actually sign a mortgage contract, i.e., the returned
+     * MortgageAgreement object is not added to the Bank's list of mortgages nor entered into CreditSupply statistics.
+     * This is useful for households to explore the details of the best available mortgage contract before deciding
+     * whether to actually go ahead and sign it.
 	 *
      * @param h The household requesting the mortgage
      * @param housePrice The price of the house that household h wants to buy
-     * @param isHome True if household h plans to live in the house (non-BTL mortgage)
+     * @param isHome True if household h plans to live in the house (non-BTL mortgage), False otherwise
      * @return The MortgageApproval object, or NULL if the mortgage is declined
 	 */
-	MortgageAgreement requestApproval(Household h, double housePrice, double desiredDownPayment,
-                                      boolean isHome) {
+	MortgageAgreement requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+	    // Create a MortgageAgreement object to store and return the new mortgage data
 		MortgageAgreement approval = new MortgageAgreement(h, !isHome);
-		double r = getMortgageInterestRate()/config.constants.MONTHS_IN_YEAR; // monthly interest rate
-		double lti_principal, affordable_principal, icr_principal;
-        double liquidWealth = h.getBankBalance(); // No home equity needs to be added here: home-movers always sell their homes before trying to buy new ones
 
-		// --- LTV constraint
-		approval.principal = housePrice*getLoanToValueLimit(h.isFirstTimeBuyer(), isHome);
+        /*
+         * Constraints for all mortgages
+         */
 
-		if(isHome) {
-			// --- affordability constraint TODO: affordability for BTL?
-			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF
-                    * h.getMonthlyNetEmploymentIncome()) / getMonthlyPaymentFactor(isHome);
+		// Loan-To-Value (LTV) constraint: it sets a maximum value for the ratio of the principal divided by the house
+        // price
+		approval.principal = housePrice * getLoanToValueLimit(h.isFirstTimeBuyer(), isHome);
+
+		/*
+		 * Constraints specific to non-BTL mortgages
+		 */
+
+		if (isHome) {
+			// Affordability constraint: it sets a maximum value for the monthly mortgage payment divided by the
+            // household's monthly net employment income
+			double affordable_principal = config.CENTRAL_BANK_AFFORDABILITY_COEFF * h.getMonthlyNetEmploymentIncome()
+                    / getMonthlyPaymentFactor(true);
 			approval.principal = Math.min(approval.principal, affordable_principal);
-
-			// --- lti constraint
-			lti_principal = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome);
+			// Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
+            // annual gross employment income
+			double lti_principal = h.getAnnualGrossEmploymentIncome() * getLoanToIncomeLimit(h.isFirstTimeBuyer(),
+                    true);
 			approval.principal = Math.min(approval.principal, lti_principal);
+
+        /*
+         * Constraints specific to BTL mortgages
+         */
+
 		} else {
-			// --- BTL ICR constraint
-			icr_principal = Model.rentalMarketStats.getExpAvFlowYield()*housePrice
-                    /(centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
+            // Interest Coverage Ratio (ICR) constraint: it sets a minimum value for the expected annual rental income
+            // divided by the annual interest expenses
+			double icr_principal = Model.rentalMarketStats.getExpAvFlowYield() * housePrice
+                    / (centralBank.getInterestCoverRatioLimit(false) * getMortgageInterestRate());
 			approval.principal = Math.min(approval.principal, icr_principal);
 		}
-		
-		approval.downPayment = housePrice - approval.principal;
 
-        if(liquidWealth < approval.downPayment) {
-			System.out.println("Failed down-payment constraint: bank balance = " + liquidWealth + " downpayment = "
-                    + approval.downPayment);
-			System.exit(0);
-		}
-		// --- allow larger downpayments
-		if(desiredDownPayment < 0.0) desiredDownPayment = 0.0;
-		if(desiredDownPayment > liquidWealth) desiredDownPayment = liquidWealth;
-		if(desiredDownPayment > housePrice) desiredDownPayment = housePrice;
-		if(desiredDownPayment > approval.downPayment) {
+        /*
+         * Compute the down-payment
+         */
+
+        // Start by assuming the minimum possible down-payment, i.e., that resulting from the above maximisation of the
+        // principal available to the household, given its chosen house price
+        approval.downPayment = housePrice - approval.principal;
+        // Determine the liquid wealth of the household, with no home equity added, as home-movers always sell their
+        // homes before bidding for new ones
+        double liquidWealth = h.getBankBalance();
+		// Ensure desired down-payment is between zero and the house price, capped also by the household's liquid wealth
+		if (desiredDownPayment < 0.0) desiredDownPayment = 0.0;
+		if (desiredDownPayment > housePrice) desiredDownPayment = housePrice;
+        if (desiredDownPayment > liquidWealth) desiredDownPayment = liquidWealth;
+		// If the desired down-payment is larger than the initially assumed minimum possible down-payment, then set the
+        // down-payment to the desired value and update the principal accordingly
+		if (desiredDownPayment > approval.downPayment) {
 			approval.downPayment = desiredDownPayment;
 			approval.principal = housePrice - desiredDownPayment;
 		}
-		
-		approval.monthlyPayment = approval.principal* getMonthlyPaymentFactor(isHome);
+
+        /*
+         * Set the rest of the variables of the MortgageAgreement object
+         */
+
+		approval.monthlyPayment = approval.principal * getMonthlyPaymentFactor(isHome);
 		approval.nPayments = config.derivedParams.N_PAYMENTS;
-		approval.monthlyInterestRate = r;
+		approval.monthlyInterestRate = getMortgageInterestRate() / config.constants.MONTHS_IN_YEAR;
 		approval.purchasePrice = approval.principal + approval.downPayment;
+		// Throw error and stop program if requested mortgage has down-payment larger than household's liquid wealth
+        if (approval.downPayment > liquidWealth) {
+            System.out.println("Error at Bank.requestApproval(), down-payment larger than household's bank balance: "
+                    + "downpayment = " + approval.downPayment + ", bank balance = " + liquidWealth);
+            System.exit(0);
+        }
 
 		return approval;
 	}
@@ -224,15 +255,17 @@ public class Bank {
      * for.
 	 * 
 	 * @param h The household applying for the mortgage
-     * @param isHome True if household h plans to live in the house (non-BTL mortgage)
-	 * @return The maximum house price that this mortgage-lender is willing to approve a mortgage for
+     * @param isHome True if household h plans to live in the house (non-BTL mortgage), False otherwise
+	 * @return A double with the maximum house price that this mortgage-lender is willing to approve a mortgage for
 	 */
-	double getMaxMortgage(Household h, boolean isHome) {
+	double getMaxMortgagePrice(Household h, boolean isHome) {
 		double max_price;
-		double affordability_max_price; // Affordability (disposable income) constraint for maximum house price
-		double lti_max_price; // Loan to income constraint for maximum house price
-		double icr_max_price; // Interest cover ratio constraint for maximum house price
-		double liquidWealth = h.getBankBalance(); // No home equity needs to be added here: households always sell their homes before trying to buy new ones
+		double affordable_max_price;
+		double lti_max_price;
+		double icr_max_price;
+        // Determine the liquid wealth of the household, with no home equity added, as home-movers always sell their
+        // homes before bidding for new ones
+		double liquidWealth = h.getBankBalance();
         double max_downpayment = liquidWealth - 0.01; // Maximum down-payment the household could make, where 1 cent is subtracted to avoid rounding errors
 
         // LTV constraint: maximum house price the household could pay with the maximum mortgage the bank could provide
@@ -240,18 +273,18 @@ public class Bank {
 		max_price = max_downpayment/(1.0 - getLoanToValueLimit(h.isFirstTimeBuyer(), isHome));
 
 		if(isHome) { // No LTI nor affordability constraints for BTL investors
-			// Affordability constraint
-            affordability_max_price = max_downpayment + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF
+			// Affordability constraint // Affordability (disposable income) constraint for maximum house price
+            affordable_max_price = max_downpayment + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF
                     * h.getMonthlyNetEmploymentIncome())/getMonthlyPaymentFactor(isHome);
-			max_price = Math.min(max_price, affordability_max_price);
-            // Loan-To-Income constraint
+			max_price = Math.min(max_price, affordable_max_price);
+            // Loan-To-Income constraint // Loan to income constraint for maximum house price
 			lti_max_price = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)
                     + max_downpayment;
 			max_price = Math.min(max_price, lti_max_price);
 		} else {
-		    // Interest-Cover-Ratio constraint
+		    // Interest Coverage Ratio constraint, setting a minimum annual rental income divided by annual interest expenses // Interest cover ratio constraint for maximum house price
 			icr_max_price = max_downpayment/(1.0 - Model.rentalMarketStats.getExpAvFlowYield()
-                    /(centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+                    /(centralBank.getInterestCoverRatioLimit(isHome)*getMortgageInterestRate()));
 			if (icr_max_price < 0.0) icr_max_price = Double.POSITIVE_INFINITY; // When rental yield is larger than interest rate times ICR, then ICR does never constrain
             max_price = Math.min(max_price,  icr_max_price);
         }

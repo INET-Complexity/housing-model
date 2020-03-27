@@ -28,7 +28,6 @@ public class CentralBank {
 
     // ICR policy thresholds
     private double      interestCoverRatioLimit; // Ratio of expected rental yield over interest monthly payment under stressed interest conditions
-    private double      interestCoverRatioStressedRate; // Stressed interest rate used for Interest-Cover-Ratio assessments
 
     //-------------------//
     //----- Methods -----//
@@ -43,7 +42,6 @@ public class CentralBank {
         maxFractionOOMortgagesOverLTILimit = config.CENTRAL_BANK_FRACTION_OVER_MAX_LTI;
         // Set initial ICR policy thresholds
         interestCoverRatioLimit = config.CENTRAL_BANK_MAX_ICR;
-        interestCoverRatioStressedRate = config.CENTRAL_BANK_BTL_STRESSED_INTEREST;
     }
 
 	/**
@@ -103,19 +101,6 @@ public class CentralBank {
             return interestCoverRatioLimit;
         } else {
             System.out.println("Strange: Interest-Cover-Ratio limit is being imposed on an owner-occupying buyer!");
-            return 0.0; // Dummy return statement
-        }
-    }
-
-    /**
-     * Get the stressed interest rate for the Interest-Cover-Ratio assessment for a particular household
-     */
-    public double getInterestCoverRatioStressedRate(boolean isHome) {
-        if (!isHome) {
-            return interestCoverRatioStressedRate;
-        } else {
-            System.out.println("Strange: Interest-Cover-Ratio rate is being used for assessing an owner-occupying" +
-                    "buyer!");
             return 0.0; // Dummy return statement
         }
     }

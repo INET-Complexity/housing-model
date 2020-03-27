@@ -108,9 +108,9 @@ public class CreditSupply {
 		housePrice = approval.principal + approval.downPayment;
 		if (approval.isBuyToLet) {
 			btl_ltv.addValue(100.0*approval.principal/housePrice);
-			double icr = Model.rentalMarketStats.getExpAvFlowYield()*approval.purchasePrice/
-					(approval.principal*Model.centralBank.getInterestCoverRatioStressedRate(false));
-			btl_icr.addValue(icr);
+			// Interest Coverage Ratio: Expected annual rental income divided by annual interest expenses
+            btl_icr.addValue(Model.rentalMarketStats.getExpAvFlowYield() * approval.purchasePrice /
+                    (approval.principal * Model.bank.getMortgageInterestRate()));
 		} else {
 			oo_ltv.addValue(100.0*approval.principal/housePrice);
 			oo_lti.addValue(approval.principal/h.getAnnualGrossEmploymentIncome());

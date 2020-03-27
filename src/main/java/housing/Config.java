@@ -121,21 +121,19 @@ public class Config {
     double BANK_INITIAL_RATE;               // Private bank initial interest rate
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
     double BANK_D_DEMAND_D_INTEREST;        // Rate of change of the demand for credit in response to a change in the interest rate (in pounds per point)
-    double BANK_MAX_FTB_LTV;                // Maximum LTV ratio that the private bank would allow for first-time-buyers
-    double BANK_MAX_OO_LTV;                 // Maximum LTV ratio that the private bank would allow for owner-occupiers
-    double BANK_MAX_BTL_LTV;                // Maximum LTV ratio that the private bank would allow for BTL investors
-    double BANK_MAX_FTB_LTI;                // Maximum LTI ratio that the private bank would allow for first-time-buyers (private bank's hard limit)
-    double BANK_MAX_OO_LTI;                 // Maximum LTI ratio that the private bank would allow for owner-occupiers (private bank's hard limit)
-
+    double BANK_MAX_FTB_LTV;                // Internal private bank policy: Maximum LTV ratio for first-time-buyers
+    double BANK_MAX_OO_LTV;                 // Internal private bank policy: Maximum LTV ratio for owner-occupiers
+    double BANK_MAX_BTL_LTV;                // Internal private bank policy: Maximum LTV ratio for BTL investors
+    double BANK_MAX_FTB_LTI;                // Internal private bank policy: Maximum LTI ratio for first-time-buyers
+    double BANK_MAX_OO_LTI;                 // Internal private bank policy: Maximum LTI ratio for owner-occupiers
 
     // Central bank parameters
     double CENTRAL_BANK_INITIAL_BASE_RATE;      // Central Bank initial base rate
-    double CENTRAL_BANK_MAX_FTB_LTI;		    // Maximum LTI ratio that the bank would allow for first-time-buyers when not regulated
-    double CENTRAL_BANK_MAX_OO_LTI;		        // Maximum LTI ratio that the bank would allow for owner-occupiers when not regulated
-    double CENTRAL_BANK_FRACTION_OVER_MAX_LTI;  // Maximum fraction of mortgages that the bank can give over the LTI ratio limit
-    double CENTRAL_BANK_AFFORDABILITY_COEFF;    // Maximum fraction of the household's income to be spent on mortgage repayments under stressed conditions
-    double CENTRAL_BANK_BTL_STRESSED_INTEREST;  // Interest rate under stressed condition for BTL investors when calculating interest coverage ratios (ICR)
-    double CENTRAL_BANK_MAX_ICR;                // Interest coverage ratio (ICR) limit imposed by the central bank
+    double CENTRAL_BANK_MAX_FTB_LTI;		    // Mandatory Central Bank policy: Maximum LTI ratio for first-time-buyers
+    double CENTRAL_BANK_MAX_OO_LTI;		        // Mandatory Central Bank policy: Maximum LTI ratio for owner-occupiers
+    double CENTRAL_BANK_FRACTION_OVER_MAX_LTI;  // Mandatory Central Bank policy: Maximum fraction of mortgages over the LTI ratio limits
+    double CENTRAL_BANK_AFFORDABILITY_COEFF;    // Mandatory Central Bank policy: Maximum fraction of the household's income to be spent on mortgage repayments under stressed conditions
+    double CENTRAL_BANK_MAX_ICR;                // Mandatory Central Bank policy: Interest Coverage Ratio (ICR), minimum ratio between (expected) annual rental income and annual interest payments
 
     // Construction parameters
     private int UK_HOUSEHOLDS;              // Number of households in the UK, used to compute core indicators and the ratio of houses per household

@@ -135,7 +135,7 @@ public class Household implements IHouseOwner {
             }            
         } else if (behaviour.isPropertyInvestor()) { // Only BTL investors who already own a home enter here
             // BTL investors always bid the price corresponding to the maximum mortgage they could get
-            double price = Model.bank.getMaxMortgage(this, false);
+            double price = Model.bank.getMaxMortgagePrice(this, false);
             Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
             if (behaviour.decideToBuyInvestmentProperty(this)) {
                 Model.houseSaleMarket.bid(this, price, true);
@@ -448,7 +448,7 @@ public class Household implements IHouseOwner {
         double price = behaviour.getDesiredPurchasePrice(annualGrossEmploymentIncome);
 //        double price = behaviour.getAltDesiredPurchasePrice(annualGrossEmploymentIncome, behaviour.decideLTV(this));
         // Cap this expenditure to the maximum mortgage available to the household
-        price = Math.min(price, Model.bank.getMaxMortgage(this, true));
+        price = Math.min(price, Model.bank.getMaxMortgagePrice(this, true));
         // Record the bid on householdStats for counting the number of bids above exponential moving average sale price
         Model.householdStats.countNonBTLBidsAboveExpAvSalePrice(price);
         // Compare costs to decide whether to buy or rent...
