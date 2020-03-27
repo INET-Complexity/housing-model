@@ -75,22 +75,21 @@ public class HouseSaleMarket extends HousingMarket {
         // Then continue with the normal HousingMarket clearMarket mechanism
         super.clearMarket();
     }
-	
+
+    /**
+     * This method overrides the main getBestOffer method so as to consider buy-to-let households bidding for the
+     * highest yield house being offered for a price up to that of their bid (offerPrice <= bidPrice)
+     *
+     * @param bid HouseBidderRecord with the highest possible price the buyer is ready to pay
+     * @return HouseOfferRecord of the best offer available, null if the household cannot afford any offer
+     */
 	@Override
 	protected HouseOfferRecord getBestOffer(HouseBidderRecord bid) {
-        if (bid.isBTLBid()) { // BTL bidder (yield driven)
-			HouseOfferRecord bestOffer = (HouseOfferRecord)offersPY.peek(bid);
-			if (bestOffer != null) {
-					double minDownpayment = bestOffer.getPrice()*(1.0
-                            - Model.rentalMarketStats.getExpAvFlowYield()
-                            /(Model.centralBank.getInterestCoverRatioLimit(false)
-                            *config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
-					if (bid.getBidder().getBankBalance() >= minDownpayment) {
-						return bestOffer;
-					}
-			}
-			return null;
-		} else { // must be OO buyer (quality driven)
+	    // BTL bids are yield-driven, thus use the offersPY priority queue
+        if (bid.isBTLBid()) {
+            return (HouseOfferRecord)offersPY.peek(bid);
+        // Non-BTL bids are quality-driven, thus use the main (offersPQ) priority queue
+		} else {
 			return super.getBestOffer(bid);
 		}
 	}

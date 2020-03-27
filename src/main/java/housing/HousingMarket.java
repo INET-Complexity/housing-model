@@ -244,7 +244,8 @@ public abstract class HousingMarket {
     /**
      * Get the highest quality house being offered for a price up to that of the bid (OfferPrice <= bidPrice)
      *
-     * @param bid The highest possible price the buyer is ready to pay
+     * @param bid HouseBidderRecord with the highest possible price the buyer is ready to pay
+     * @return HouseOfferRecord of the best offer available, null if the household cannot afford any offer
      */
     protected HouseOfferRecord getBestOffer(HouseBidderRecord bid) { return (HouseOfferRecord)offersPQ.peek(bid); }
 
