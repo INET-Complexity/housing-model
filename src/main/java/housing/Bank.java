@@ -20,14 +20,14 @@ public class Bank {
     private CentralBank                 centralBank; // Connection to the central bank to ask for policy
 
     // Bank fields
-    public HashSet<MortgageAgreement>   mortgages; // all unpaid mortgage contracts supplied by the bank
-    public double                       interestSpread; // current mortgage interest spread above base rate (monthly rate*12)
+    public HashSet<MortgageAgreement>   mortgages; // All unpaid mortgage contracts supplied by the bank
+    public double                       interestSpread; // Current mortgage interest spread above base rate (monthly rate*12)
     private double                      monthlyPaymentFactor; // Monthly payment as a fraction of the principal for non-BTL mortgages
     private double                      monthlyPaymentFactorBTL; // Monthly payment as a fraction of the principal for BTL (interest-only) mortgages
 
     // Credit supply strategy fields
-    private double                      supplyTarget; // target supply of mortgage lending (pounds)
-    private double                      supplyVal; // monthly supply of mortgage loans (pounds)
+    private double                      supplyTarget; // Target supply of mortgage lending (pounds)
+    private double                      supplyVal; // Monthly supply of mortgage loans (pounds)
     private int                         nOOMortgagesOverLTI; // Number of mortgages for owner-occupying that go over the LTI cap this time step
     private int                         nOOMortgages; // Total number of mortgages for owner-occupying
 
@@ -55,7 +55,7 @@ public class Bank {
 
     void init() {
         mortgages.clear();
-        setMortgageInterestRate(config.BANK_INITIAL_RATE); // Central Bank must already by initiated at this point!
+        setMortgageInterestRate(config.BANK_INITIAL_RATE); // Central Bank must already be initiated at this point!
         resetMonthlyCounters();
         // Setup initial LTV internal policy thresholds
         firstTimeBuyerLTVLimit = config.BANK_MAX_FTB_LTV;
@@ -158,7 +158,7 @@ public class Bank {
             if (isHome) {
                 ++nOOMortgages;
                 if (approval.principal > h.getAnnualGrossEmploymentIncome()
-                        * centralBank.getLoanToIncomeLimit(h.isFirstTimeBuyer(), true)) {
+                        * centralBank.getLoanToIncomeLimit(h.isFirstTimeBuyer())) {
                     ++nOOMortgagesOverLTI;
                 }
             }
@@ -201,8 +201,7 @@ public class Bank {
             approval.principal = Math.min(approval.principal, affordable_principal);
             // Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
             // annual gross employment income
-            double lti_principal = h.getAnnualGrossEmploymentIncome() * getLoanToIncomeLimit(h.isFirstTimeBuyer(),
-                    true);
+            double lti_principal = h.getAnnualGrossEmploymentIncome() * getLoanToIncomeLimit(h.isFirstTimeBuyer());
             approval.principal = Math.min(approval.principal, lti_principal);
 
         /*
@@ -213,7 +212,7 @@ public class Bank {
             // Interest Coverage Ratio (ICR) constraint: it sets a minimum value for the expected annual rental income
             // divided by the annual interest expenses
             double icr_principal = Model.rentalMarketStats.getExpAvFlowYield() * housePrice
-                    / (centralBank.getInterestCoverRatioLimit(false) * getMortgageInterestRate());
+                    / (centralBank.getInterestCoverRatioLimit() * getMortgageInterestRate());
             approval.principal = Math.min(approval.principal, icr_principal);
         }
 
@@ -292,7 +291,7 @@ public class Bank {
             // Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
             // annual gross employment income
             double lti_max_price = max_downpayment + h.getAnnualGrossEmploymentIncome()
-                    * getLoanToIncomeLimit(h.isFirstTimeBuyer(), true);
+                    * getLoanToIncomeLimit(h.isFirstTimeBuyer());
             max_price = Math.min(max_price, lti_max_price);
 
         /*
@@ -303,7 +302,7 @@ public class Bank {
             // Interest Coverage Ratio (ICR) constraint: it sets a minimum value for the expected annual rental income
             // divided by the annual interest expenses
             double icr_max_price = max_downpayment / (1.0 - Model.rentalMarketStats.getExpAvFlowYield()
-                    / (centralBank.getInterestCoverRatioLimit(false) * getMortgageInterestRate()));
+                    / (centralBank.getInterestCoverRatioLimit() * getMortgageInterestRate()));
             // When the rental yield is larger than the interest rate times the ICR, then the ICR does never constrain
             if (icr_max_price < 0.0) icr_max_price = Double.POSITIVE_INFINITY;
             max_price = Math.min(max_price,  icr_max_price);
@@ -347,29 +346,21 @@ public class Bank {
      * (mortgages for owner-occupying) to go over it (and thus it is considered here a soft limit).
      *
      * @param isFirstTimeBuyer true if the household is a first-time buyer
-     * @param isHome True if the mortgage is to buy a home for the household (non-BTL mortgage)
      * @return The Loan-To-Income ratio limit applicable to the given household
      */
-    private double getLoanToIncomeLimit(boolean isFirstTimeBuyer, boolean isHome) {
+    private double getLoanToIncomeLimit(boolean isFirstTimeBuyer) {
         double limit;
         // First compute the private bank self-imposed (hard) limit, which applies always
-        if (isHome) {
-            if (isFirstTimeBuyer) {
-                limit = firstTimeBuyerLTILimit;
-            } else {
-                limit = ownerOccupierLTILimit;
-            }
+        if (isFirstTimeBuyer) {
+            limit = firstTimeBuyerLTILimit;
         } else {
-            System.out.println("Strange: The bank is trying to impose a Loan-To-Income limit on a Buy-To-Let" +
-                    "investor!");
-            limit = 0.0; // Dummy limit value
+            limit = ownerOccupierLTILimit;
         }
         // If the fraction of non-BTL mortgages already underwritten over the Central Bank LTI limit exceeds a certain
         // maximum (regulated also by the Central Bank)...
-        if ((nOOMortgagesOverLTI + 1.0)/(nOOMortgages + 1.0) >
-                centralBank.getMaxFractionOOMortgagesOverLTILimit()) {
+        if ((nOOMortgagesOverLTI + 1.0)/(nOOMortgages + 1.0) > centralBank.getMaxFractionOverLTILimit()) {
             // ... then compare the Central Bank LTI (soft) limit and that of the private bank (hard) and choose the smallest
-            limit = Math.min(limit, centralBank.getLoanToIncomeLimit(isFirstTimeBuyer, isHome));
+            limit = Math.min(limit, centralBank.getLoanToIncomeLimit(isFirstTimeBuyer));
         }
         return limit;
     }
