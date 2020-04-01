@@ -16,18 +16,28 @@ public class CentralBank {
     //------------------//
 
     // General fields
-    private Config      config = Model.config;	// Passes the Model's configuration parameters object to a private field
+    private Config      config = Model.config;      // Passes the Model's configuration parameters object to a private field
 
     // Monetary policy
     private double      baseRate;
 
+    // LTV internal policy thresholds
+    private double      firstTimeBuyerHardMaxLTV;   // Loan-To-Value hard maximum for first-time buyer mortgages
+    private double      homeMoverHardMaxLTV;        // Loan-To-Value hard maximum for home mover mortgages
+    private double      buyToLetHardMaxLTV;         // Loan-To-Value hard maximum for buy-to-let mortgages
+
     // LTI policy thresholds
-    private double      firstTimeBuyerLTILimit; // Loan-To-Income limit for first-time buyer mortgages
-    private double      homeMoverLTILimit; // Loan-To-Income upper limit for home mover mortgages
-    private double      maxFractionOverLTILimit; // Fraction of owner-occupier mortgages allowed to exceed their Loan-To-Income limit (whether the FTB or the HM one)
+    private double      firstTimeBuyerSoftMaxLTI;               // Loan-To-Income soft maximum for first-time buyer mortgages
+    private double      firstTimeBuyerMaxFracOverSoftMaxLTI;    // Maximum fraction of first-time buyer mortgages allowed to exceed their LTI soft maximum
+    private double      homeMoverSoftMaxLTI;                    // Loan-To-Income soft maximum for home mover mortgages
+    private double      homeMoverMaxFracOverSoftMaxLTI;         // Maximum fraction of home mover mortgages allowed to exceed their LTI soft maximum
+    private int         monthsToCheckLTI;                       // Months to check for moving average of fraction of mortgages over their LTI soft limit
+
+    // Affordability policy thresholds
+    private double      hardMaxAffordability;       // Affordability hard maximum (monthly mortgage payment / household's monthly net employment income)
 
     // ICR policy thresholds
-    private double      interestCoverRatioLimit; // Ratio of expected rental yield over interest monthly payment under stressed interest conditions
+    private double      hardMinICR;                 // ICR hard minimum for the ratio of expected rental yield over interest monthly payment
 
     //-------------------//
     //----- Methods -----//
@@ -36,12 +46,20 @@ public class CentralBank {
     void init() {
         // Set initial monetary policy
         baseRate = config.CENTRAL_BANK_INITIAL_BASE_RATE;
-        // Set initial LTI policy thresholds
-        firstTimeBuyerLTILimit = config.CENTRAL_BANK_MAX_FTB_LTI;
-        homeMoverLTILimit = config.CENTRAL_BANK_MAX_OO_LTI;
-        maxFractionOverLTILimit = config.CENTRAL_BANK_FRACTION_OVER_MAX_LTI;
-        // Set initial ICR policy thresholds
-        interestCoverRatioLimit = config.CENTRAL_BANK_MAX_ICR;
+        // Set initial LTV mandatory policy thresholds
+        firstTimeBuyerHardMaxLTV = config.CENTRAL_BANK_LTV_HARD_MAX_FTB;
+        homeMoverHardMaxLTV = config.CENTRAL_BANK_LTV_HARD_MAX_HM;
+        buyToLetHardMaxLTV = config.CENTRAL_BANK_LTV_HARD_MAX_BTL;
+        // Set initial LTI mandatory policy thresholds
+        firstTimeBuyerSoftMaxLTI = config.CENTRAL_BANK_LTI_SOFT_MAX_FTB;
+        firstTimeBuyerMaxFracOverSoftMaxLTI = config.CENTRAL_BANK_LTI_MAX_FRAC_OVER_SOFT_MAX_FTB;
+        homeMoverSoftMaxLTI = config.CENTRAL_BANK_LTI_SOFT_MAX_HM;
+        homeMoverMaxFracOverSoftMaxLTI = config.CENTRAL_BANK_LTI_MAX_FRAC_OVER_SOFT_MAX_HM;
+        monthsToCheckLTI = config.CENTRAL_BANK_LTI_MONTHS_TO_CHECK;
+        // Set initial affordability mandatory policy thresholds
+        hardMaxAffordability = config.CENTRAL_BANK_AFFORDABILITY_HARD_MAX;
+        // Set initial ICR mandatory policy thresholds
+        hardMinICR = config.CENTRAL_BANK_ICR_HARD_MIN;
     }
 
     /**
@@ -67,30 +85,31 @@ public class CentralBank {
 
     //----- Getter/setter methods -----//
 
-    /**
-     * Get the Loan-To-Income ratio limit applicable to a given household. Note that Loan-To-Income constraints apply
-     * only to non-BTL applicants. The private bank always imposes its own limit. Apart from this, it also imposes the
-     * Central Bank regulated limit, which allows for a certain fraction of residential loans (mortgages for
-     * owner-occupying) to go over it
-     *
-     * @param isFirstTimeBuyer True if the household is first-time buyer
-     * @return Loan-To-Income ratio limit applicable to the household
-     */
-    double getLoanToIncomeLimit(boolean isFirstTimeBuyer) {
-        if (isFirstTimeBuyer) {
-            return firstTimeBuyerLTILimit;
-        } else {
-            return homeMoverLTILimit;
-        }
-    }
+    double getFirstTimeBuyerHardMaxLTV() { return firstTimeBuyerHardMaxLTV; }
+
+    double getHomeMoverHardMaxLTV() { return homeMoverHardMaxLTV; }
+
+    double getBuyToLetHardMaxLTV() { return buyToLetHardMaxLTV; }
+
+    double getFirstTimeBuyerSoftMaxLTI() { return firstTimeBuyerSoftMaxLTI; }
+
+    double getHomeMoverSoftMaxLTI() { return homeMoverSoftMaxLTI; }
 
     /**
-     * Get the maximum fraction of mortgages to owner-occupying households that can go over their Loan-To-Income limit,
-     * whether they are subject to the first-time buyer or the home mover specific limit
+     * Get the maximum fraction of mortgages to first-time buyers that can go over their Loan-To-Income soft limit.
      */
-    double getMaxFractionOverLTILimit() { return maxFractionOverLTILimit; }
+    double getFirstTimeBuyerMaxFracOverSoftMaxLTI() { return firstTimeBuyerMaxFracOverSoftMaxLTI; }
 
-    double getInterestCoverRatioLimit() { return interestCoverRatioLimit; }
+    /**
+     * Get the maximum fraction of mortgages to home movers that can go over their Loan-To-Income soft limit.
+     */
+    double getHomeMoverMaxFracOverSoftMaxLTI() { return homeMoverMaxFracOverSoftMaxLTI; }
+
+    int getMonthsToCheckLTI() { return monthsToCheckLTI; }
+
+    double getHardMaxAffordability() { return hardMaxAffordability; }
+
+    double getHardMinICR() { return hardMinICR; }
 
     double getBaseRate() { return baseRate; }
 

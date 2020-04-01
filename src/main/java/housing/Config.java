@@ -25,12 +25,12 @@ public class Config {
 
     // General model control parameters
     int SEED;                                           // Seed for the random number generator
-    int N_STEPS;				                        // Simulation duration in time steps
-    int N_SIMS; 					                    // Number of simulations to run (monte-carlo)
+    int N_STEPS;                                        // Simulation duration in time steps
+    int N_SIMS;                                         // Number of simulations to run (monte-carlo)
     public int TIME_TO_START_RECORDING_TRANSACTIONS;    // Time step to start recording transactions (to avoid too large files)
-    public boolean recordTransactions;			        // True to write data for each transaction
-    boolean recordNBidUpFrequency;			            // True to write the frequency of the number of bid-ups
-    boolean recordCoreIndicators;		                // True to write time series for each core indicator
+    public boolean recordTransactions;                  // True to write data for each transaction
+    boolean recordNBidUpFrequency;                      // True to write the frequency of the number of bid-ups
+    boolean recordCoreIndicators;                       // True to write time series for each core indicator
     boolean recordQualityBandPrice;                     // True to write time series of prices for each quality band to a single file per run
     public boolean recordEmploymentIncome;              // True to write individual household monthly gross employment income data
     public boolean recordRentalIncome;                  // True to write individual household monthly gross rental income data (after market clearing)
@@ -41,7 +41,7 @@ public class Config {
     public boolean recordSavingRate;                    // True to write individual household saving rate data [1 - (taxExpenses + housing expenses(except deposits) + essentialConsumption + nonEssentialConsumption)/monthlyGrossTotalIncome]
 
     // House parameters
-    public int N_QUALITY;                   // Number of quality bands for houses
+    public int N_QUALITY;                       // Number of quality bands for houses
 
     // Housing market parameters
     private double DAYS_UNDER_OFFER;            // Time (in days) that a house remains under offer
@@ -65,8 +65,8 @@ public class Config {
     String DATA_BTL_PROBABILITY;            // Probability of being a buy-to-let investor per income percentile bin
     double BTL_PROBABILITY_MULTIPLIER;      // # Multiplier for the probability of being a buy-to-let investor
     double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
-    double TREND_CAP_GAIN_COEFF;			// Weight that trend-followers put on cap gain
-    double P_FUNDAMENTALIST; 			    // Probability that a BTL investor is a fundamentalist versus a trend-follower
+    double TREND_CAP_GAIN_COEFF;            // Weight that trend-followers put on cap gain
+    double P_FUNDAMENTALIST;                // Probability that a BTL investor is a fundamentalist versus a trend-follower
     // Household behaviour parameters: rent
     int TENANCY_LENGTH_MIN;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
     int TENANCY_LENGTH_MAX;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
@@ -114,26 +114,33 @@ public class Config {
     private double HOLD_PERIOD;             // Average period, in years, for which owner-occupiers hold their houses
     // Household behaviour parameters: BTL buy/sell choice
     double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield
-    double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimun bank balance, as a percentage of the desired bank balance, to buy new properties
+    double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimum bank balance, as a percentage of the desired bank balance, to buy new properties
 
     // Bank parameters
     private int MORTGAGE_DURATION_YEARS;    // Mortgage duration in years
     double BANK_INITIAL_RATE;               // Private bank initial interest rate
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
     double BANK_D_DEMAND_D_INTEREST;        // Rate of change of the demand for credit in response to a change in the interest rate (in pounds per point)
-    double BANK_MAX_FTB_LTV;                // Internal private bank policy: Maximum LTV ratio for first-time-buyers
-    double BANK_MAX_OO_LTV;                 // Internal private bank policy: Maximum LTV ratio for owner-occupiers
-    double BANK_MAX_BTL_LTV;                // Internal private bank policy: Maximum LTV ratio for BTL investors
-    double BANK_MAX_FTB_LTI;                // Internal private bank policy: Maximum LTI ratio for first-time-buyers
-    double BANK_MAX_OO_LTI;                 // Internal private bank policy: Maximum LTI ratio for owner-occupiers
+    double BANK_LTV_HARD_MAX_FTB;           // Internal private bank policy: Hard maximum LTV ratio for first-time buyers
+    double BANK_LTV_HARD_MAX_HM;            // Internal private bank policy: Hard maximum LTV ratio for home movers
+    double BANK_LTV_HARD_MAX_BTL;           // Internal private bank policy: Hard maximum LTV ratio for BTL investors
+    double BANK_LTI_HARD_MAX_FTB;           // Internal private bank policy: Hard maximum LTI ratio for first-time-buyers
+    double BANK_LTI_HARD_MAX_HM;            // Internal private bank policy: Hard maximum LTI ratio for home movers
+    double BANK_AFFORDABILITY_HARD_MAX;     // Internal private bank policy: Hard maximum fraction of household's income to be spent on mortgage repayments
+    double BANK_ICR_HARD_MIN;               // Internal private bank policy: Hard minimum ratio between (expected) annual rental income and annual interest payments
 
     // Central bank parameters
-    double CENTRAL_BANK_INITIAL_BASE_RATE;      // Central Bank initial base rate
-    double CENTRAL_BANK_MAX_FTB_LTI;		    // Mandatory Central Bank policy: Maximum LTI ratio for first-time-buyers
-    double CENTRAL_BANK_MAX_OO_LTI;		        // Mandatory Central Bank policy: Maximum LTI ratio for owner-occupiers
-    double CENTRAL_BANK_FRACTION_OVER_MAX_LTI;  // Mandatory Central Bank policy: Maximum fraction of mortgages over the LTI ratio limits
-    double CENTRAL_BANK_AFFORDABILITY_COEFF;    // Mandatory Central Bank policy: Maximum fraction of the household's income to be spent on mortgage repayments under stressed conditions
-    double CENTRAL_BANK_MAX_ICR;                // Mandatory Central Bank policy: Interest Coverage Ratio (ICR), minimum ratio between (expected) annual rental income and annual interest payments
+    double CENTRAL_BANK_INITIAL_BASE_RATE;              // Central Bank initial base rate
+    double CENTRAL_BANK_LTV_HARD_MAX_FTB;               // Mandatory Central Bank policy: Hard maximum LTV ratio for first-time buyers
+    double CENTRAL_BANK_LTV_HARD_MAX_HM;                // Mandatory Central Bank policy: Hard maximum LTV ratio for home movers
+    double CENTRAL_BANK_LTV_HARD_MAX_BTL;               // Mandatory Central Bank policy: Hard maximum LTV ratio for BTL investors
+    double CENTRAL_BANK_LTI_SOFT_MAX_FTB;               // Mandatory Central Bank policy: Soft maximum LTI ratio for first-time buyers
+    double CENTRAL_BANK_LTI_SOFT_MAX_HM;                // Mandatory Central Bank policy: Soft maximum LTI ratio for home movers
+    double CENTRAL_BANK_LTI_MAX_FRAC_OVER_SOFT_MAX_FTB; // Mandatory Central Bank policy: Maximum fraction of mortgages allowed to go over their LTI soft limit
+    double CENTRAL_BANK_LTI_MAX_FRAC_OVER_SOFT_MAX_HM;  // Mandatory Central Bank policy: Maximum fraction of mortgages allowed to go over their LTI soft limit
+    int CENTRAL_BANK_LTI_MONTHS_TO_CHECK;               // Mandatory Central Bank policy: Months to check for moving average of fraction of mortgages over their LTI soft limit
+    double CENTRAL_BANK_AFFORDABILITY_HARD_MAX;         // Mandatory Central Bank policy: Hard maximum fraction of household's income to be spent on mortgage repayments
+    double CENTRAL_BANK_ICR_HARD_MIN;                   // Mandatory Central Bank policy: Hard minimum ratio between (expected) annual rental income and annual interest payments
 
     // Construction parameters
     private int UK_HOUSEHOLDS;              // Number of households in the UK, used to compute core indicators and the ratio of houses per household
