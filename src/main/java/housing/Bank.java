@@ -433,33 +433,63 @@ public class Bank {
      * @return The Loan-To-Income ratio limit currently applicable to this type of household
      */
     private double getLoanToIncomeLimit(boolean isFirstTimeBuyer) {
-        // For first-time buyers...
-        if (isFirstTimeBuyer) {
-            // ...if this mortgage could bring the fraction of mortgages underwritten over the Central Bank LTI soft
-            // limit to exceed the maximum fraction established by the Central Bank...
-            if ((double)(nFTBMortOverSoftMaxLTI_Acc + nFTBMortOverSoftMaxLTI_New + 1)
-                    / (nFTBMortgages_Acc + nFTBMortgages_New + 1)
+
+        // If the maximum fractions of mortgages over their soft LTI limits allowed by the Central Bank for FTBs and HMs
+        // are the same, then the quota is shared by FTBs and HMs, instead of having separate quotas
+        if (centralBank.getFirstTimeBuyerMaxFracOverSoftMaxLTI() == centralBank.getHomeMoverMaxFracOverSoftMaxLTI()) {
+            // If this mortgage could bring the fraction of mortgages (FTB + HM) underwritten over the Central Bank LTI
+            // soft limit to exceed the maximum fraction established by the Central Bank (same for FTB and HM)...
+            if ((double)(nFTBMortOverSoftMaxLTI_Acc + nFTBMortOverSoftMaxLTI_New
+                    + nHMMortOverSoftMaxLTI_Acc + nHMMortOverSoftMaxLTI_New + 1)
+                    / (nFTBMortgages_Acc + nFTBMortgages_New
+                    + nHMMortgages_Acc + nHMMortgages_New + 1)
                     > centralBank.getFirstTimeBuyerMaxFracOverSoftMaxLTI()) {
-                // ... then use the minimum between the Central Bank soft limit and the private bank hard limit
-                return Math.min(firstTimeBuyerHardMaxLTI, centralBank.getFirstTimeBuyerSoftMaxLTI());
+                // ... then use the minimum between the Central Bank soft limit and the private bank hard limit, for
+                // either first-time buyers or home movers
+                if (isFirstTimeBuyer) {
+                    return Math.min(firstTimeBuyerHardMaxLTI, centralBank.getFirstTimeBuyerSoftMaxLTI());
+                } else {
+                    return Math.min(homeMoverHardMaxLTI, centralBank.getHomeMoverSoftMaxLTI());
+                }
             // ...otherwise...
             } else {
-                // ...simply use the private bank self-imposed hard maximum
-                return firstTimeBuyerHardMaxLTI;
+                // ...simply use the private bank self-imposed hard maximum, for either first-time buyers or home movers
+                if (isFirstTimeBuyer) {
+                    return firstTimeBuyerHardMaxLTI;
+                } else {
+                    return homeMoverHardMaxLTI;
+                }
             }
-        // For home movers...
+        // Otherwise, FTBs and HMs keep separate quotas for mortgages over their respective LTI limits
         } else {
-            // ...if this mortgage could bring the fraction of mortgages underwritten over the Central Bank LTI soft
-            // limit to exceed the maximum fraction established by the Central Bank...
-            if ((double)(nHMMortOverSoftMaxLTI_Acc + nHMMortOverSoftMaxLTI_New + 1)
-                    / (nHMMortgages_Acc + nHMMortgages_New + 1)
-                    > centralBank.getHomeMoverMaxFracOverSoftMaxLTI()) {
-                // ... then use the minimum between the Central Bank soft limit and the private bank hard limit
-                return Math.min(homeMoverHardMaxLTI, centralBank.getHomeMoverSoftMaxLTI());
-                // ...otherwise...
+            // For first-time buyers...
+            if (isFirstTimeBuyer) {
+                // ...if this mortgage could bring the fraction of mortgages underwritten over the Central Bank LTI soft
+                // limit to exceed the maximum fraction established by the Central Bank...
+                if ((double) (nFTBMortOverSoftMaxLTI_Acc + nFTBMortOverSoftMaxLTI_New + 1)
+                        / (nFTBMortgages_Acc + nFTBMortgages_New + 1)
+                        > centralBank.getFirstTimeBuyerMaxFracOverSoftMaxLTI()) {
+                    // ... then use the minimum between the Central Bank soft limit and the private bank hard limit
+                    return Math.min(firstTimeBuyerHardMaxLTI, centralBank.getFirstTimeBuyerSoftMaxLTI());
+                    // ...otherwise...
+                } else {
+                    // ...simply use the private bank self-imposed hard maximum
+                    return firstTimeBuyerHardMaxLTI;
+                }
+                // For home movers...
             } else {
-                // ...simply use the private bank self-imposed hard maximum
-                return homeMoverHardMaxLTI;
+                // ...if this mortgage could bring the fraction of mortgages underwritten over the Central Bank LTI soft
+                // limit to exceed the maximum fraction established by the Central Bank...
+                if ((double) (nHMMortOverSoftMaxLTI_Acc + nHMMortOverSoftMaxLTI_New + 1)
+                        / (nHMMortgages_Acc + nHMMortgages_New + 1)
+                        > centralBank.getHomeMoverMaxFracOverSoftMaxLTI()) {
+                    // ... then use the minimum between the Central Bank soft limit and the private bank hard limit
+                    return Math.min(homeMoverHardMaxLTI, centralBank.getHomeMoverSoftMaxLTI());
+                    // ...otherwise...
+                } else {
+                    // ...simply use the private bank self-imposed hard maximum
+                    return homeMoverHardMaxLTI;
+                }
             }
         }
     }
