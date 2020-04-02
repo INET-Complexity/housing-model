@@ -308,32 +308,18 @@ public class Household implements IHouseOwner {
         }
         MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(),
                 behaviour.decideDownPayment(this,sale.getPrice()), home == null);
-        if(mortgage == null) {
-            // TODO: need to either provide a way for house sales to fall through or to ensure that pre-approvals are always satisfiable
-            System.out.println("Can't afford to buy house: strange");
-            System.out.println("Bank balance is "+bankBalance);
-            System.out.println("Annual income is "+ monthlyGrossEmploymentIncome *config.constants.MONTHS_IN_YEAR);
-            if(isRenting()) System.out.println("Is renting");
-            if(isHomeowner()) System.out.println("Is homeowner");
-            if(isInSocialHousing()) System.out.println("Is homeless");
-            if(isFirstTimeBuyer()) System.out.println("Is firsttimebuyer");
-            if(behaviour.isPropertyInvestor()) System.out.println("Is investor");
-            System.out.println("House owner = "+ sale.getHouse().owner);
-            System.out.println("me = "+this);
+        bankBalance -= mortgage.downPayment;
+        housePayments.put(sale.getHouse(), mortgage);
+        if (home == null) { // move in to house
+            home = sale.getHouse();
+            sale.getHouse().resident = this;
+        } else if (sale.getHouse().resident == null) { // put empty buy-to-let house on rental market
+            Model.houseRentalMarket.offer(sale.getHouse(), behaviour.getInitialRentPrice(sale.getQuality()),
+                    false);
         } else {
-            bankBalance -= mortgage.downPayment;
-            housePayments.put(sale.getHouse(), mortgage);
-            if (home == null) { // move in to house
-                home = sale.getHouse();
-                sale.getHouse().resident = this;
-            } else if (sale.getHouse().resident == null) { // put empty buy-to-let house on rental market
-                Model.houseRentalMarket.offer(sale.getHouse(), behaviour.getInitialRentPrice(sale.getQuality()),
-                        false);
-            } else {
-                System.out.println("Strange: Bought a home with a resident");
-            }
-            isFirstTimeBuyer = false;
+            System.out.println("Strange: Bought a home with a resident");
         }
+        isFirstTimeBuyer = false;
     }
 
     /********************************************************
