@@ -311,10 +311,6 @@ public class HouseholdBehaviour {
         // Fast decisions...
         // ...always decide to buy if owning no investment property yet (i.e., if owning only one property, a home)
         if (me.getNProperties() < 2) { return true ; }
-        // ...never buy (keep on saving) if bank balance is below the household's desired bank balance
-        // TODO: This mechanism and its parameter are not declared in the article! Any reference for the value of the parameter?
-        if (me.getBankBalance() < data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(),
-                me.behaviour.getPropensityToSave())*config.BTL_CHOICE_MIN_BANK_BALANCE) { return false; }
         // ...find maximum price (maximum mortgage) the household could pay
         double maxPrice = Model.bank.getMaxMortgagePrice(me, false);
         // ...never buy if that maximum price is below the average price for the lowest quality

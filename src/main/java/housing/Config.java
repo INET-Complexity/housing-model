@@ -67,6 +67,7 @@ public class Config {
     double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
     double TREND_CAP_GAIN_COEFF;            // Weight that trend-followers put on cap gain
     double P_FUNDAMENTALIST;                // Probability that a BTL investor is a fundamentalist versus a trend-follower
+    double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield when deciding whether buy/sell a BTL property
     // Household behaviour parameters: rent
     int TENANCY_LENGTH_MIN;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
     int TENANCY_LENGTH_MAX;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
@@ -112,9 +113,6 @@ public class Config {
     double DOWNPAYMENT_BTL_EPSILON;                 // Standard deviation of the noise for down-payments by buy-to-let investors
     // Household behaviour parameters: selling decision
     private double HOLD_PERIOD;             // Average period, in years, for which owner-occupiers hold their houses
-    // Household behaviour parameters: BTL buy/sell choice
-    double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield
-    double BTL_CHOICE_MIN_BANK_BALANCE;     // Minimum bank balance, as a percentage of the desired bank balance, to buy new properties
 
     // Bank parameters
     private int MORTGAGE_DURATION_YEARS;    // Mortgage duration in years
