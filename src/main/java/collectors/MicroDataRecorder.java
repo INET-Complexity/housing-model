@@ -144,43 +144,43 @@ public class MicroDataRecorder {
 
     void recordEmploymentIncome(int time, double monthlyGrossEmploymentIncome) {
         if (time % 100 == 0) {
-            outfileEmploymentIncome.print(", " + monthlyGrossEmploymentIncome);
+            outfileEmploymentIncome.format(", %.2f", monthlyGrossEmploymentIncome);
         }
     }
 
     void recordRentalIncome(int time, double monthlyGrossRentalIncome) {
         if (time % 100 == 0) {
-            outfileRentalIncome.print(", " + monthlyGrossRentalIncome);
+            outfileRentalIncome.format(", %.2f", monthlyGrossRentalIncome);
         }
     }
 
 	void recordBankBalance(int time, double bankBalance) {
         if (time % 100 == 0) {
-            outfileBankBalance.print(", " + bankBalance);
+            outfileBankBalance.format(", %.2f", bankBalance);
         }
 	}
 
     void recordHousingWealth(int time, double housingWealth) {
         if (time % 100 == 0) {
-            outfileHousingWealth.print(", " + housingWealth);
+            outfileHousingWealth.format(", %2f", housingWealth);
         }
     }
 
     void recordNHousesOwned(int time, int nHousesOwned) {
         if (time % 100 == 0) {
-            outfileNHousesOwned.print(", " + nHousesOwned);
+            outfileNHousesOwned.format(", %d", nHousesOwned);
         }
     }
 
     void recordAge(int time, double age) {
         if (time % 100 == 0) {
-            outfileAge.print(", " + age);
+            outfileAge.format(", %.2f", age);
         }
     }
 
     void recordSavingRate(int time, double savingRate) {
         if (time % 100 == 0) {
-            outfileSavingRate.print(", " + savingRate);
+            outfileSavingRate.format(", %.4f", savingRate);
         }
     }
 

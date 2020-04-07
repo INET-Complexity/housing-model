@@ -5,6 +5,7 @@ import housing.*;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
 
 public class TransactionRecorder {
 
@@ -35,7 +36,7 @@ public class TransactionRecorder {
         if (recordTransations) {
             try {
                 outfileTransactions = new PrintWriter(outputFolder + "Transactions-run" + nRun + ".csv", "UTF-8");
-                outfileTransactions.println("Model time, "
+                outfileTransactions.print("Model time, "
                         + "transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, "
                         + "transactionPrice, buyerId, buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, "
                         + "buyerMonthlyGrossEmploymentIncome, buyerPostPurchaseBankBalance, buyerCapGainCoeff, "
@@ -65,58 +66,57 @@ public class TransactionRecorder {
                     HousingMarket market) {
         if (config.recordTransactions) {
             if (Model.getTime() >= config.TIME_TO_START_RECORDING_TRANSACTIONS) {
-                outfileTransactions.print(Model.getTime() + ", ");
+                outfileTransactions.format("%n%d, ", Model.getTime());
                 if (market instanceof HouseSaleMarket) {
                     outfileTransactions.print("sale, ");
                 } else {
                     outfileTransactions.print("rental, ");
                 }
-                outfileTransactions.print(
-                        sale.getHouse().id + ", " +
-                                sale.getHouse().getQuality() + ", " +
-                                sale.getInitialListedPrice() + ", " +
-                                sale.gettInitialListing() + ", " +
-                                sale.getPrice() + ", " +
-                                purchase.getBidder().id + ", " +
-                                purchase.getBidder().getAge() + ", " +
-                                purchase.getBidder().behaviour.isPropertyInvestor() + ", " +
-                                purchase.getBidder().getMonthlyGrossTotalIncome() + ", " +
-                                purchase.getBidder().getMonthlyGrossEmploymentIncome() + ", " +
-                                purchase.getBidder().getBankBalance() + ", " +
-                                purchase.getBidder().behaviour.getBTLCapGainCoefficient() + ", ");
+                outfileTransactions.format("%d, %d, %.2f, %d, %.2f, %d, %.2f, %b, %.2f, %.2f, %.2f, %.2f, ",
+                        sale.getHouse().id,
+                        sale.getHouse().getQuality(),
+                        sale.getInitialListedPrice(),
+                        sale.gettInitialListing(),
+                        sale.getPrice(),
+                        purchase.getBidder().id,
+                        purchase.getBidder().getAge(),
+                        purchase.getBidder().behaviour.isPropertyInvestor(),
+                        purchase.getBidder().getMonthlyGrossTotalIncome(),
+                        purchase.getBidder().getMonthlyGrossEmploymentIncome(),
+                        purchase.getBidder().getBankBalance(),
+                        purchase.getBidder().behaviour.getBTLCapGainCoefficient());
                 if (mortgage != null) {
-                    outfileTransactions.print(
-                            mortgage.downPayment + ", " +
-                                    mortgage.principal + ", " +
-                                    mortgage.isFirstTimeBuyer + ", " +
-                                    mortgage.isBuyToLet + ", ");
+                    outfileTransactions.format("%.2f, %.2f, %b, %b, ",
+                            mortgage.downPayment,
+                            mortgage.principal,
+                            mortgage.isFirstTimeBuyer,
+                            mortgage.isBuyToLet);
                 } else {
                     outfileTransactions.print("-1, -1, false, false, ");
                 }
                 if (sale.getHouse().owner instanceof Household) {
                     Household seller = (Household) sale.getHouse().owner;
-                    outfileTransactions.println(
-                            seller.id + ", " +
-                                    seller.getAge() + ", " +
-                                    seller.behaviour.isPropertyInvestor() + ", " +
-                                    seller.getMonthlyGrossTotalIncome() + ", " +
-                                    seller.getMonthlyGrossEmploymentIncome() + ", " +
-                                    seller.getBankBalance() + ", " +
-                                    seller.behaviour.getBTLCapGainCoefficient());
+                    outfileTransactions.format("%d, %.2f, %b, %.2f, %.2f, %.2f, %.2f",
+                            seller.id,
+                            seller.getAge(),
+                            seller.behaviour.isPropertyInvestor(),
+                            seller.getMonthlyGrossTotalIncome(),
+                            seller.getMonthlyGrossEmploymentIncome(),
+                            seller.getBankBalance(),
+                            seller.behaviour.getBTLCapGainCoefficient());
                 } else {
                     // must be construction sector
-                    outfileTransactions.println("-1, 0, false, 0, 0, 0, 0");
+                    outfileTransactions.print("-1, 0, false, 0, 0, 0, 0");
                 }
             }
         }
 	}
 
     public void recordNBidUpFrequency(int time, int[] nBidUpFrequency) {
-        outfileNBidUpFrequency.println("");
-        outfileNBidUpFrequency.print(time);
-        for (int value: nBidUpFrequency) {
-            outfileNBidUpFrequency.print(", " + value);
-        }
+        outfileNBidUpFrequency.format("%n%d, %s", time,
+                Arrays.toString(nBidUpFrequency)
+                        .replace("[", "")
+                        .replace("]", ""));
     }
 
 	public void finishRun(boolean recordTransations, boolean recordNBidUpFrequency) {
