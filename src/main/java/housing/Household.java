@@ -563,6 +563,7 @@ public class Household implements IHouseOwner {
             }
             home = h;
             h.resident = this;
+            isFirstTimeBuyer = false; // Households inheriting a home cannot be considered fist-time buyers anymore
         // If owning a home and having the BTL gene...
         } else if(behaviour.isPropertyInvestor()) {
             // ...decide whether to sell the inherited house
