@@ -197,14 +197,19 @@ public class HousingMarketStats {
     //----- During-market-clearing methods -----//
 
     /**
-     * This method updates the values of several counters every time a buyer and a seller are matched and the
-     * transaction is completed. Note that only counter variables can be modified within this method
+     * Update the values of several counters every time a buyer/renter and a seller/landlord are matched and the
+     * transaction is completed. Note that only counter variables can be modified within this method.
      *
-     * @param purchase The HouseBidderRecord of the buyer
-     * @param sale The HouseOfferRecord of the house being sold
+     * @param purchase The HouseBidderRecord with information on the bidder
+     * @param sale HouseOfferRecord with information on the seller/landlord and the offered property
      */
-    // TODO: Need to think if this method and recordTransaction can be joined in a single method!
-    public void recordSale(HouseBidderRecord purchase, HouseOfferRecord sale) {
+    public void recordTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
+        sumMonthsOnMarketCount += Model.getTime() - sale.gettInitialListing();
+        sumMonthsOnMarketPerQualityCount[sale.getQuality()] += Model.getTime() - sale.gettInitialListing();
+        sumSalePricePerQualityCount[sale.getQuality()] += sale.getPrice();
+        nSalesPerQualityCount[sale.getQuality()]++;
+        sumSoldReferencePriceCount += referencePricePerQuality[sale.getQuality()];
+        sumSoldPriceCount += sale.getPrice();
         salesCount += 1;
         MortgageAgreement mortgage = purchase.getBidder().mortgageFor(sale.getHouse());
         if(mortgage != null) {
@@ -214,23 +219,7 @@ public class HousingMarketStats {
                 btlSalesCount += 1;
             }
         }
-        // TODO: Attention, calls to Model class should be avoided: need to pass transactionRecorder as constructor arg
         Model.transactionRecorder.recordSale(purchase, sale, mortgage, market);
-    }
-
-    /**
-     * This method updates the values of several counters every time a buyer and a seller are matched and the
-     * transaction is completed. Note that only counter variables can be modified within this method
-     *
-     * @param sale The HouseOfferRecord of the house being sold
-     */
-    public void recordTransaction(HouseOfferRecord sale) {
-        sumMonthsOnMarketCount += Model.getTime() - sale.gettInitialListing();
-        sumMonthsOnMarketPerQualityCount[sale.getQuality()] += Model.getTime() - sale.gettInitialListing();
-        sumSalePricePerQualityCount[sale.getQuality()] += sale.getPrice();
-        nSalesPerQualityCount[sale.getQuality()]++;
-        sumSoldReferencePriceCount += referencePricePerQuality[sale.getQuality()];
-        sumSoldPriceCount += sale.getPrice();
     }
 
     //----- Post-market-clearing methods -----//

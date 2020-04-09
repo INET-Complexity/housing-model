@@ -1,68 +1,89 @@
 package housing;
 
 import java.util.Iterator;
-
 import org.apache.commons.math3.random.MersenneTwister;
 import utilities.PriorityQueue2D;
 
-/*******************************************************
- * Class that represents market for houses for-sale.
- * 
+/**************************************************************************************************
+ * Class to represent the sales market
+ *
  * @author daniel, Adrian Carro
  *
- *****************************************************/
+ *************************************************************************************************/
 public class HouseSaleMarket extends HousingMarket {
 
-	private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
+    //------------------//
+    //----- Fields -----//
+    //------------------//
+
     private PriorityQueue2D<HousingMarketRecord>    offersPY;
 
-	HouseSaleMarket(MersenneTwister prng) {
-		super(prng);
-		offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
-	}
-	
-	@Override
-	public void init() {
-		super.init();
-		offersPY.clear();
-	}
-		
-	/**
-	 * This method deals with doing all the stuff necessary whenever a house gets sold.
-	 */
-	public void completeTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
-        Household buyer = purchase.getBidder();
-        if(buyer == sale.getHouse().owner) System.out.println("Strange: Trying to buy a house I already own!");
-        // TODO: Revise if it makes sense to have recordTransaction as a separate method from recordSale
-		Model.housingMarketStats.recordTransaction(sale);
-		sale.getHouse().saleRecord = null;
-		sale.getHouse().owner.completeHouseSale(sale);
-		buyer.completeHousePurchase(sale);
-        Model.housingMarketStats.recordSale(purchase, sale);
-		sale.getHouse().owner = buyer;
-	}
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
 
-	@Override
-	public HouseOfferRecord offer(House house, double price, boolean BTLOffer) {
+    HouseSaleMarket(MersenneTwister prng) {
+        super(prng);
+        offersPY = new PriorityQueue2D<>(new HousingMarketRecord.PYComparator());
+    }
+
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
+
+    @Override
+    public void init() {
+        super.init();
+        offersPY.clear();
+    }
+
+    /**
+     * Deal with everything necessary whenever a house gets sold, such as deleting the saleRecord, signaling both the
+     * seller and the buyer to complete everything on their respective sides, adding relevant data to statistics and
+     * (possibly) writing it to a file and, finally, changing the house ownership. Note that any recording of
+     * information takes place after the transaction has occurred, and thus after the exchange of contracts and money,
+     * though before the official change of ownership.
+     *
+     * @param purchase HouseBidderRecord with information on the bidder
+     * @param sale HouseOfferRecord with information on the seller and the offered property
+     */
+    public void completeTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
+        sale.getHouse().saleRecord = null;
+        // This affects: seller's bank balance, seller's housePayments, HouseRentalMarket offers, seller's home, house's
+        // renter, seller's rental income
+        sale.getHouse().owner.completeHouseSale(sale);
+        // This affects: buyer's home resident, buyer's home owner rental income, buyer's bank balance, mortgage,
+        // buyer's housePayments, buyer's home, house's resident, HouseRentalMarket offers, and buyer's isFirstTimeBuyer
+        purchase.getBidder().completeHousePurchase(sale);
+        // This uses: house's id and quality; mortgage's type, downpayment and principal; sale's initial listing price,
+        // initial listing time and final price; buyer's id, age, BTL gene, income, rental income, bank balance, and
+        // capital gains coefficient; and seller's id, age, BTL gene, income, rental income, bank balance and capital
+        // gains coefficient
+        Model.housingMarketStats.recordTransaction(purchase, sale);
+        sale.getHouse().owner = purchase.getBidder();
+    }
+
+    @Override
+    public HouseOfferRecord offer(House house, double price, boolean BTLOffer) {
         HouseOfferRecord hsr = super.offer(house, price, BTLOffer);
         offersPY.add(hsr);
         house.putForSale(hsr);
         return(hsr);
-	}
-	
-	@Override
-	public void removeOffer(HouseOfferRecord hsr) {
-		super.removeOffer(hsr);
-		offersPY.remove(hsr);
-		hsr.getHouse().resetSaleRecord();
-	}
-	
-	@Override
-	public void updateOffer(HouseOfferRecord hsr, double newPrice) {
-		offersPY.remove(hsr);
-		super.updateOffer(hsr, newPrice);
-		offersPY.add(hsr);
-	}
+    }
+
+    @Override
+    public void removeOffer(HouseOfferRecord hsr) {
+        super.removeOffer(hsr);
+        offersPY.remove(hsr);
+        hsr.getHouse().resetSaleRecord();
+    }
+
+    @Override
+    public void updateOffer(HouseOfferRecord hsr, double newPrice) {
+        offersPY.remove(hsr);
+        super.updateOffer(hsr, newPrice);
+        offersPY.add(hsr);
+    }
 
     /**
      * This method overrides the main simulation step in order to sort the price-yield priorities.
@@ -83,16 +104,16 @@ public class HouseSaleMarket extends HousingMarket {
      * @param bid HouseBidderRecord with the highest possible price the buyer is ready to pay
      * @return HouseOfferRecord of the best offer available, null if the household cannot afford any offer
      */
-	@Override
-	protected HouseOfferRecord getBestOffer(HouseBidderRecord bid) {
-	    // BTL bids are yield-driven, thus use the offersPY priority queue
+    @Override
+    protected HouseOfferRecord getBestOffer(HouseBidderRecord bid) {
+        // BTL bids are yield-driven, thus use the offersPY priority queue
         if (bid.isBTLBid()) {
             return (HouseOfferRecord)offersPY.peek(bid);
         // Non-BTL bids are quality-driven, thus use the main (offersPQ) priority queue
-		} else {
-			return super.getBestOffer(bid);
-		}
-	}
+        } else {
+            return super.getBestOffer(bid);
+        }
+    }
 
     /**
      * Overrides corresponding method at HousingMarket in order to remove successfully matched and cleared offers from
@@ -101,7 +122,7 @@ public class HouseSaleMarket extends HousingMarket {
      * @param record Iterator over the HousingMarketRecord objects contained in offersPQ
      * @param offer Offer to remove from queues
      */
-	@Override
+    @Override
     void removeOfferFromQueues(Iterator<HousingMarketRecord> record, HouseOfferRecord offer) {
         record.remove();
         offersPY.remove(offer);
