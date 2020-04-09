@@ -219,7 +219,7 @@ public class HousingMarketStats {
                 btlSalesCount += 1;
             }
         }
-        Model.transactionRecorder.recordSale(purchase, sale, mortgage, market);
+        Model.transactionRecorder.recordTransaction(purchase, sale, mortgage, market);
     }
 
     //----- Post-market-clearing methods -----//

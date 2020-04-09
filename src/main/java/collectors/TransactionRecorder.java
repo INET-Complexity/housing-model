@@ -13,13 +13,11 @@ public class TransactionRecorder {
     //----- Fields -----//
     //------------------//
 
-    private String outputFolder;
-
-    private PrintWriter outfileTransactions;
-    private PrintWriter outfileNBidUpFrequency;
-
-
-    private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
+    private Config          config = Model.config;      // Passes the Model's configuration parameters object to a private field
+    private String          outputFolder;
+    private PrintWriter     outfileSaleTransactions;
+    private PrintWriter     outfileRentalTransactions;
+    private PrintWriter     outfileNBidUpFrequency;
 
     //------------------------//
     //----- Constructors -----//
@@ -35,14 +33,27 @@ public class TransactionRecorder {
         // Try opening output files and write first row header with column names
         if (recordTransations) {
             try {
-                outfileTransactions = new PrintWriter(outputFolder + "Transactions-run" + nRun + ".csv", "UTF-8");
-                outfileTransactions.print("Model time, "
-                        + "transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, "
-                        + "transactionPrice, buyerId, buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, "
-                        + "buyerMonthlyGrossEmploymentIncome, buyerPostPurchaseBankBalance, buyerCapGainCoeff, "
-                        + "mortgageDownpayment, mortgagePrincipal, firstTimeBuyerMortgage, buyToLetMortgage, sellerId, "
-                        + "sellerAge, sellerHasBTLGene, sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
+                outfileSaleTransactions = new PrintWriter(outputFolder + "SaleTransactions-run" + nRun + ".csv",
+                        "UTF-8");
+                outfileSaleTransactions.print("modelTime, "
+                        + "houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, buyerId,"
+                        + "buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, buyerMonthlyGrossEmploymentIncome, "
+                        + "buyerPostPurchaseBankBalance, buyerCapGainCoeff, mortgageDownpayment, mortgagePrincipal, "
+                        + "firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, sellerHasBTLGene, "
+                        + "sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
                         + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            try {
+                outfileRentalTransactions = new PrintWriter(outputFolder + "RentalTransactions-run" + nRun + ".csv",
+                        "UTF-8");
+                outfileRentalTransactions.print("modelTime, "
+                        + "houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, buyerId, "
+                        + "buyerAge, buyerMonthlyGrossTotalIncome, buyerMonthlyGrossEmploymentIncome, "
+                        + "buyerPostPurchaseBankBalance, sellerId, sellerAge, sellerHasBTLGene, "
+                        + "sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
+                        + "sellerPostPurchaseBankBalance");
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -61,56 +72,76 @@ public class TransactionRecorder {
             }
         }
     }
-	
-	void recordSale(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage,
-                    HousingMarket market) {
-        if (config.recordTransactions) {
-            if (Model.getTime() >= config.TIME_TO_START_RECORDING_TRANSACTIONS) {
-                outfileTransactions.format("%n%d, ", Model.getTime());
-                if (market instanceof HouseSaleMarket) {
-                    outfileTransactions.print("sale, ");
-                } else {
-                    outfileTransactions.print("rental, ");
-                }
-                outfileTransactions.format("%d, %d, %.2f, %d, %.2f, %d, %.2f, %b, %.2f, %.2f, %.2f, %.2f, ",
-                        sale.getHouse().id,
-                        sale.getHouse().getQuality(),
-                        sale.getInitialListedPrice(),
-                        sale.gettInitialListing(),
-                        sale.getPrice(),
-                        purchase.getBidder().id,
-                        purchase.getBidder().getAge(),
-                        purchase.getBidder().behaviour.isPropertyInvestor(),
-                        purchase.getBidder().getMonthlyGrossTotalIncome(),
-                        purchase.getBidder().getMonthlyGrossEmploymentIncome(),
-                        purchase.getBidder().getBankBalance(),
-                        purchase.getBidder().behaviour.getBTLCapGainCoefficient());
-                if (mortgage != null) {
-                    outfileTransactions.format("%.2f, %.2f, %b, %b, ",
-                            mortgage.downPayment,
-                            mortgage.principal,
-                            mortgage.isFirstTimeBuyer,
-                            mortgage.isBuyToLet);
-                } else {
-                    outfileTransactions.print("-1, -1, false, false, ");
-                }
-                if (sale.getHouse().owner instanceof Household) {
-                    Household seller = (Household) sale.getHouse().owner;
-                    outfileTransactions.format("%d, %.2f, %b, %.2f, %.2f, %.2f, %.2f",
-                            seller.id,
-                            seller.getAge(),
-                            seller.behaviour.isPropertyInvestor(),
-                            seller.getMonthlyGrossTotalIncome(),
-                            seller.getMonthlyGrossEmploymentIncome(),
-                            seller.getBankBalance(),
-                            seller.behaviour.getBTLCapGainCoefficient());
-                } else {
-                    // must be construction sector
-                    outfileTransactions.print("-1, 0, false, 0, 0, 0, 0");
-                }
+
+    void recordTransaction(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage,
+                           HousingMarket market) {
+        if (config.recordTransactions && (Model.getTime() >= config.TIME_TO_START_RECORDING_TRANSACTIONS)) {
+            if (market instanceof HouseSaleMarket) {
+                recordSaleTransaction(purchase, sale, mortgage);
+            } else {
+                recordRentalTransaction(purchase, sale);
             }
         }
-	}
+    }
+
+    private void recordSaleTransaction(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage) {
+        outfileSaleTransactions.format("%n%d, ", Model.getTime());
+        outfileSaleTransactions.format("%d, %d, %.2f, %d, %.2f, %d, %.2f, %b, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, "
+                        + "%b, %b, ",
+                sale.getHouse().id,
+                sale.getHouse().getQuality(),
+                sale.getInitialListedPrice(),
+                sale.gettInitialListing(),
+                sale.getPrice(),
+                purchase.getBidder().id,
+                purchase.getBidder().getAge(),
+                purchase.getBidder().behaviour.isPropertyInvestor(),
+                purchase.getBidder().getMonthlyGrossTotalIncome(),
+                purchase.getBidder().getMonthlyGrossEmploymentIncome(),
+                purchase.getBidder().getBankBalance(),
+                purchase.getBidder().behaviour.getBTLCapGainCoefficient(),
+                mortgage.downPayment,
+                mortgage.principal,
+                mortgage.isFirstTimeBuyer,
+                mortgage.isBuyToLet);
+        if (sale.getHouse().owner instanceof Household) {
+            Household seller = (Household) sale.getHouse().owner;
+            outfileSaleTransactions.format("%d, %.2f, %b, %.2f, %.2f, %.2f, %.2f",
+                    seller.id,
+                    seller.getAge(),
+                    seller.behaviour.isPropertyInvestor(),
+                    seller.getMonthlyGrossTotalIncome(),
+                    seller.getMonthlyGrossEmploymentIncome(),
+                    seller.getBankBalance(),
+                    seller.behaviour.getBTLCapGainCoefficient());
+        } else {
+            // must be construction sector
+            outfileSaleTransactions.print("-1, -1, false, -1, -1, -1, -1");
+        }
+    }
+
+    private void recordRentalTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
+        Household seller = (Household) sale.getHouse().owner;
+        outfileRentalTransactions.format("%n%d, ", Model.getTime());
+        outfileRentalTransactions.format("%d, %d, %.2f, %d, %.2f, %d, %.2f, %.2f, %.2f, %.2f, %d, %.2f, %b, %.2f, "
+                        + "%.2f, %.2f",
+                sale.getHouse().id,
+                sale.getHouse().getQuality(),
+                sale.getInitialListedPrice(),
+                sale.gettInitialListing(),
+                sale.getPrice(),
+                purchase.getBidder().id,
+                purchase.getBidder().getAge(),
+                purchase.getBidder().getMonthlyGrossTotalIncome(),
+                purchase.getBidder().getMonthlyGrossEmploymentIncome(),
+                purchase.getBidder().getBankBalance(),
+                seller.id,
+                seller.getAge(),
+                seller.behaviour.isPropertyInvestor(),
+                seller.getMonthlyGrossTotalIncome(),
+                seller.getMonthlyGrossEmploymentIncome(),
+                seller.getBankBalance());
+    }
 
     public void recordNBidUpFrequency(int time, int[] nBidUpFrequency) {
         outfileNBidUpFrequency.format("%n%d, %s", time,
@@ -119,9 +150,10 @@ public class TransactionRecorder {
                         .replace("]", ""));
     }
 
-	public void finishRun(boolean recordTransations, boolean recordNBidUpFrequency) {
+    public void finishRun(boolean recordTransations, boolean recordNBidUpFrequency) {
         if (recordTransations) {
-            outfileTransactions.close();
+            outfileSaleTransactions.close();
+            outfileRentalTransactions.close();
         }
         if (recordNBidUpFrequency) {
             outfileNBidUpFrequency.close();
