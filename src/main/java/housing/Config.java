@@ -28,6 +28,7 @@ public class Config {
     int N_STEPS;                                        // Simulation duration in time steps
     int N_SIMS;                                         // Number of simulations to run (monte-carlo)
     public int TIME_TO_START_RECORDING_TRANSACTIONS;    // Time step to start recording transactions (to avoid too large files)
+    int ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS;        // Size, in months, of the rolling window used to compute averages of core indicators
     public boolean recordTransactions;                  // True to write data for each transaction
     boolean recordNBidUpFrequency;                      // True to write the frequency of the number of bid-ups
     boolean recordCoreIndicators;                       // True to write time series for each core indicator

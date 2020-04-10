@@ -42,9 +42,9 @@ public class Model {
 
     public static Config                config;
     public static MersenneTwister       prng;
-    public static Construction		    construction;
-    public static CentralBank		    centralBank;
-    public static Bank 				    bank;
+    public static Construction          construction;
+    public static CentralBank           centralBank;
+    public static Bank                  bank;
     public static HouseSaleMarket       houseSaleMarket;
     public static HouseRentalMarket     houseRentalMarket;
     public static ArrayList<Household>  households;
@@ -55,12 +55,12 @@ public class Model {
     public static RentalMarketStats     rentalMarketStats;
     public static TransactionRecorder   transactionRecorder;
     public static MicroDataRecorder     microDataRecorder;
-    public static int	                nSimulation; // To keep track of the simulation number
-    public static int	                t; // To keep track of time (in months)
+    public static int                   nSimulation; // To keep track of the simulation number
+    public static int                   t; // To keep track of time (in months)
 
-    static Government		            government;
+    static Government                   government;
 
-    private static Demographics		    demographics;
+    private static Demographics         demographics;
     private static Recorder             recorder;
     private static String               configFileName;
     private static String               outputFolder;
@@ -82,14 +82,15 @@ public class Model {
         construction = new Construction(prng);
         centralBank = new CentralBank();
         bank = new Bank(centralBank);
-        households = new ArrayList<>(config.TARGET_POPULATION*2);
+        households = new ArrayList<>((int)(config.TARGET_POPULATION * 1.2)); // This accounts for fluctuations 20% over the target
         houseSaleMarket = new HouseSaleMarket(prng);
         houseRentalMarket = new HouseRentalMarket(prng);
 
         recorder = new collectors.Recorder(outputFolder);
         transactionRecorder = new TransactionRecorder(outputFolder);
         microDataRecorder = new MicroDataRecorder(outputFolder);
-        creditSupply = new collectors.CreditSupply();
+        creditSupply = new collectors.CreditSupply(config.TARGET_POPULATION,
+                config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS);
         coreIndicators = new collectors.CoreIndicators();
         householdStats = new collectors.HouseholdStats();
         housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket);
@@ -102,11 +103,11 @@ public class Model {
     //----- Methods -----//
     //-------------------//
 
-	public static void main(String[] args) {
+    public static void main(String[] args) {
 
         long start = System.nanoTime();
 
-	    // Handle input arguments from command line
+        // Handle input arguments from command line
         handleInputArguments(args);
 
         // Create an instance of Model in order to initialise it (reading config file)
@@ -116,7 +117,7 @@ public class Model {
         recorder.openMultiRunFiles(config.recordCoreIndicators);
 
         // Perform config.N_SIMS simulations
-		for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
+        for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
 
             // For each simulation, open files for writing single-run results
             recorder.openSingleRunFiles(nSimulation, true, config.N_QUALITY);
@@ -126,11 +127,11 @@ public class Model {
                     config.recordRentalIncome, config.recordBankBalance, config.recordHousingWealth,
                     config.recordNHousesOwned, config.recordAge, config.recordSavingRate);
 
-		    // For each simulation, initialise both houseSaleMarket and houseRentalMarket variables (including HPI)
+            // For each simulation, initialise both houseSaleMarket and houseRentalMarket variables (including HPI)
             init();
 
             // For each simulation, run config.N_STEPS time steps
-			for (t = 0; t <= config.N_STEPS; t += 1) {
+            for (t = 0; t <= config.N_STEPS; t += 1) {
 
                 // Steps model and stores sale and rental markets bid and offer prices, and their averages, into their
                 // respective variables
@@ -145,13 +146,13 @@ public class Model {
                 }
             }
 
-			// Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
+            // Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
             recorder.finishRun(config.recordCoreIndicators, config.recordQualityBandPrice);
             transactionRecorder.finishRun(config.recordTransactions, config.recordNBidUpFrequency);
             microDataRecorder.finishRun(config.recordEmploymentIncome, config.recordRentalIncome,
                     config.recordBankBalance, config.recordHousingWealth, config.recordNHousesOwned, config.recordAge,
                     config.recordSavingRate);
-		}
+        }
 
         // After the last simulation, clean up
         recorder.finish(config.recordCoreIndicators);
@@ -160,49 +161,52 @@ public class Model {
         System.out.println("Computing time: " + (double)elapsedTime/1_000_000_000);
 
         //Stop the program when finished
-		System.exit(0);
-	}
+        System.exit(0);
+    }
 
-	private static void init() {
-		construction.init();
-		houseSaleMarket.init();
-		houseRentalMarket.init();
+    private static void init() {
+        construction.init();
+        houseSaleMarket.init();
+        houseRentalMarket.init();
         centralBank.init();
         bank.init();
         housingMarketStats.init();
         rentalMarketStats.init();
         householdStats.init();
+        creditSupply.init();
         households.clear();
-	}
+    }
 
-	private static void modelStep() {
+    private static void modelStep() {
         // Update population with births and deaths
         demographics.step();
         // Update number of houses
         construction.step();
         // Updates regional households consumption, housing decisions, and corresponding regional bids and offers
-		for(Household h : households) h.step();
-        // Stores sale market bid and offer prices and averages before bids are matched by clearing the market
+        for(Household h : households) h.step();
+        // Reset counters to store credit supply statistics
+        creditSupply.preClearingResetCounters(t);
+        // Store sale market bid and offer prices and averages before bids are matched by clearing the market
         housingMarketStats.preClearingRecord();
-        // Clears sale market and updates the HPI
+        // Clear sale market and updates the HPI
         houseSaleMarket.clearMarket();
-        // Computes and stores several housing market statistics after bids are matched by clearing the market (such as HPI, HPA)
+        // Compute and store several housing market statistics after bids are matched by clearing the market (such as HPI, HPA)
         housingMarketStats.postClearingRecord();
-        // Stores rental market bid and offer prices and averages before bids are matched by clearing the market
+        // Store rental market bid and offer prices and averages before bids are matched by clearing the market
         rentalMarketStats.preClearingRecord();
         // Clears rental market
         houseRentalMarket.clearMarket();
-        // Computes and stores several rental market statistics after bids are matched by clearing the market (such as HPI, HPA)
+        // Compute and store several rental market statistics after bids are matched by clearing the market (such as HPI, HPA)
         rentalMarketStats.postClearingRecord();
-        // Stores household statistics after both regional markets have been cleared
+        // Store household statistics after both regional markets have been cleared
         householdStats.record();
         // Update credit supply statistics
-        creditSupply.step();
-		// Update bank and interest rate for new mortgages
-		bank.step(Model.households.size());
+        creditSupply.postClearingRecord();
+        // Update bank and interest rate for new mortgages
+        bank.step(Model.households.size());
         // Update central bank policies (currently empty!)
-		centralBank.step(coreIndicators);
-	}
+        centralBank.step(coreIndicators);
+    }
 
     /**
      * This method handles command line input arguments to
@@ -211,7 +215,7 @@ public class Model {
      *
      * @param args String with the command line arguments
      */
-	private static void handleInputArguments(String[] args) {
+    private static void handleInputArguments(String[] args) {
 
         // Create Options object
         Options options = new Options();
@@ -306,15 +310,13 @@ public class Model {
         }
     }
 
-	/**
-	 * @return Simulated time in months
-	 */
-	static public int getTime() { return t; }
+    /**
+     * @return Simulated time in months
+     */
+    static public int getTime() { return t; }
 
     /**
      * @return Current month of the simulation
      */
-	static public int getMonth() { return t%12 + 1; }
-
-    public MersenneTwister getPrng() { return prng; }
+    static public int getMonth() { return t%12 + 1; }
 }
