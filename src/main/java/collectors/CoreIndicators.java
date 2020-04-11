@@ -30,16 +30,22 @@ public class CoreIndicators {
 
     /**
      * 1.a - LTI and LTV ratios on new residential mortgages: Owner-occupier mortgage LTV ratio (mean above the median)
+     *
+     * Median and mean are computed over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS
      */
     double getOwnerOccupierLTVMeanAboveMedian() {  return 100.0 * getMeanAboveMedian(Model.creditSupply.getOO_ltv()); }
 
     /**
      * 1.b - LTI and LTV ratios on new residential mortgages: Owner-occupier mortgage LTI ratio (mean above the median)
+     *
+     * Median and mean are computed over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS
      */
     double getOwnerOccupierLTIMeanAboveMedian() { return getMeanAboveMedian(Model.creditSupply.getOO_lti()); }
 
     /**
      * 1.c - LTI and LTV ratios on new residential mortgages: Buy-to-let mortgage LTV ratio (mean)
+     *
+     * Mean is computed over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS
      */
     double getBuyToLetLTVMean() {
         return 100.0 * getMeanOfSums(Model.creditSupply.getBTL_ltv_sums(), Model.creditSupply.getnBTLMortgagesArray());
@@ -53,6 +59,34 @@ public class CoreIndicators {
      * stock of credit twelve months ago divided by the stock of credit twelve months ago.
      */
     double getHouseholdCreditGrowth() { return 100.0 * Model.creditSupply.getNetCreditGrowth(); }
+
+    /**
+     * 3.a - Household debt to income ratio: Household mortgage debt to income ratio
+     *
+     * Total stock of mortgage credit (i.e., sum of principals lent for owner-occupying and buy-to-let investing) as a
+     * percentage of the annualised net total income (i.e., 12 times the current monthly net total income, thus
+     * including employment and rental income) of the whole household sector (i.e., buy-to-let investors,
+     * owner-occupiers, renters and homeless households).
+     */
+    double getMortgageDebtToIncome() {
+        return 100.0 * (Model.creditSupply.getTotalBTLCredit() + Model.creditSupply.getTotalOOCredit())
+                / (Model.householdStats.getOwnerOccupierAnnualisedNetTotalIncome()
+                + Model.householdStats.getActiveBTLAnnualisedNetTotalIncome()
+                + Model.householdStats.getRentingAnnualisedNetTotalIncome()
+                + Model.householdStats.getHomelessAnnualisedNetTotalIncome());
+    }
+
+    /**
+     * 3.b - Household debt to income ratio: Owner-occupying household mortgage debt to income ratio
+     *
+     * Total stock of owner-occupying mortgage credit as a percentage of the annualised net total income (i.e., 12 times
+     * the current monthly net total income, which is equal to employment income for owner-occupiers) of owner-occupying
+     * households.
+     */
+    double getOOMortgageDebtToIncome() {
+        return 100.0 * Model.creditSupply.getTotalOOCredit()
+                / Model.householdStats.getOwnerOccupierAnnualisedNetTotalIncome();
+    }
 
     /**
      * Compute the mean above the median of an ArrayList of ArrayList of Doubles by combining all ArrayLists into a
@@ -98,18 +132,7 @@ public class CoreIndicators {
         }
     }
 
-    // Household mortgage debt to income ratio (%)
-    double getDebtToIncome() {
-        return 100.0*(Model.creditSupply.getTotalBTLCredit() + Model.creditSupply.getTotalOOCredit())
-                /(Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()
-                + Model.householdStats.getActiveBTLAnnualisedTotalIncome()
-                + Model.householdStats.getNonOwnerAnnualisedTotalIncome());
-    }
-
-    // Household debt to income ratio (owner-occupier mortgages only) (%)
-    double getOODebtToIncome() {
-        return 100.0*Model.creditSupply.getTotalOOCredit()/Model.householdStats.getOwnerOccupierAnnualisedTotalIncome();
-    }
+    // ----------------- TODO: Still to check from here on
 
     // Number of mortgage approvals per month, scaled to UK actual number of households (note integer division)
     int getMortgageApprovals() {
@@ -142,8 +165,8 @@ public class CoreIndicators {
                 *(Model.households.size()
                 - Model.householdStats.getnRenting()
                 - Model.householdStats.getnHomeless())
-                /(Model.householdStats.getOwnerOccupierAnnualisedTotalIncome()
-                + Model.householdStats.getActiveBTLAnnualisedTotalIncome()));
+                /(Model.householdStats.getOwnerOccupierAnnualisedNetTotalIncome()
+                + Model.householdStats.getActiveBTLAnnualisedNetTotalIncome()));
         // TODO: Finally, for security, population count should be made with nActiveBTL and nOwnerOccupier
     }
 

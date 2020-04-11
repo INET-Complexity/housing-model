@@ -153,8 +153,8 @@ public class Recorder {
             ooLTI.format("%.4f", Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
             btlLTV.format("%.4f", Model.coreIndicators.getBuyToLetLTVMean());
             creditGrowth.format("%.4f", Model.coreIndicators.getHouseholdCreditGrowth());
-            debtToIncome.format("%.4f", Model.coreIndicators.getDebtToIncome());
-            ooDebtToIncome.format("%.4f", Model.coreIndicators.getOODebtToIncome());
+            debtToIncome.format("%.4f", Model.coreIndicators.getMortgageDebtToIncome());
+            ooDebtToIncome.format("%.4f", Model.coreIndicators.getOOMortgageDebtToIncome());
             mortgageApprovals.format("%d", Model.coreIndicators.getMortgageApprovals());
             housingTransactions.format("%d", Model.coreIndicators.getHousingTransactions());
             advancesToFTBs.format("%d", Model.coreIndicators.getAdvancesToFTBs());

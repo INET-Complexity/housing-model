@@ -166,7 +166,7 @@ public class Household implements IHouseOwner {
      * Subtracts the monthly aliquot part of all due taxes from the monthly gross total income. Note that only income
      * tax on employment and rental income and national insurance contributions are implemented (no capital gains tax)!
      */
-    private double getMonthlyNetTotalIncome() {
+    public double getMonthlyNetTotalIncome() {
         return getMonthlyGrossTotalIncome()
                 - (Model.government.incomeTaxDue(getAnnualGrossTotalIncome() - getAnnualFinanceCosts())  // Income tax (with finance costs tax relief)
                 + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions

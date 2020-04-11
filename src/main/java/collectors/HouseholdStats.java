@@ -12,32 +12,32 @@ import java.util.Map;
  *************************************************************************************************/
 public class HouseholdStats {
 
-	//------------------//
-	//----- Fields -----//
-	//------------------//
+    //------------------//
+    //----- Fields -----//
+    //------------------//
 
-	// General fields
-	private Config  config = Model.config; // Passes the Model's configuration parameters object to a private field
+    // General fields
+    private Config  config = Model.config; // Passes the Model's configuration parameters object to a private field
 
-	// Fields for counting numbers of the different types of households and household conditions
-	private int     nBTL; // Number of buy-to-let (BTL) households, i.e., households with the BTL gene (includes both active and inactive)
-	private int     nActiveBTL; // Number of BTL households with, at least, one BTL property
-	private int     nBTLOwnerOccupier; // Number of BTL households owning their home but without any BTL property
-	private int     nBTLHomeless; // Number of homeless BTL households
+    // Fields for counting numbers of the different types of households and household conditions
+    private int     nBTL; // Number of buy-to-let (BTL) households, i.e., households with the BTL gene (includes both active and inactive)
+    private int     nActiveBTL; // Number of BTL households with, at least, one BTL property
+    private int     nBTLOwnerOccupier; // Number of BTL households owning their home but without any BTL property
+    private int     nBTLHomeless; // Number of homeless BTL households
     private int     nBTLBankruptcies; // Number of BTL households going bankrupt in a given time step
-	private int     nNonBTLOwnerOccupier; // Number of non-BTL households owning their home
-	private int     nRenting; // Number of (by definition, non-BTL) households renting their home
-	private int     nNonBTLHomeless; // Number of homeless non-BTL households
+    private int     nNonBTLOwnerOccupier; // Number of non-BTL households owning their home
+    private int     nRenting; // Number of (by definition, non-BTL) households renting their home
+    private int     nNonBTLHomeless; // Number of homeless non-BTL households
     private int     nNonBTLBankruptcies; // Number of non-BTL households going bankrupt in a given time step
 
-	// Fields for summing annualised total incomes
-	private double  activeBTLAnnualisedTotalIncome;
-	private double  ownerOccupierAnnualisedTotalIncome;
-	private double  rentingAnnualisedTotalIncome;
-	private double  homelessAnnualisedTotalIncome;
+    // Fields for summing annualised net total incomes
+    private double  activeBTLAnnualisedNetTotalIncome;
+    private double  ownerOccupierAnnualisedNetTotalIncome;
+    private double  rentingAnnualisedNetTotalIncome;
+    private double  homelessAnnualisedNetTotalIncome;
 
-	// Other fields
-	private double  sumStockYield; // Sum of stock gross rental yields of all currently occupied rental properties
+    // Other fields
+    private double  sumStockYield; // Sum of stock gross rental yields of all currently occupied rental properties
     private int     nNonBTLBidsAboveExpAvSalePrice; // Number of normal (non-BTL) bids with desired housing expenditure above the exponential moving average sale price
     private int     nBTLBidsAboveExpAvSalePrice; // Number of BTL bids with desired housing expenditure above the exponential moving average sale price
     private int     nNonBTLBidsAboveExpAvSalePriceCounter; // Counter for the number of normal (non-BTL) bids with desired housing expenditure above the exp. mov. av. sale price
@@ -48,25 +48,9 @@ public class HouseholdStats {
     //-------------------//
 
     /**
-     * Sets initial values for all relevant variables to enforce a controlled first measure for statistics
+     * Set initial values for variables for which a controlled first measure per run is needed
      */
     public void init() {
-        nBTL = 0;
-        nActiveBTL = 0;
-        nBTLOwnerOccupier = 0;
-        nBTLHomeless = 0;
-        nBTLBankruptcies = 0;
-        nNonBTLOwnerOccupier = 0;
-        nRenting = 0;
-        nNonBTLHomeless = 0;
-        nNonBTLBankruptcies = 0;
-        activeBTLAnnualisedTotalIncome = 0.0;
-        ownerOccupierAnnualisedTotalIncome = 0.0;
-        rentingAnnualisedTotalIncome = 0.0;
-        homelessAnnualisedTotalIncome = 0.0;
-        sumStockYield = 0.0;
-        nNonBTLBidsAboveExpAvSalePrice = 0;
-        nBTLBidsAboveExpAvSalePrice = 0;
         nNonBTLBidsAboveExpAvSalePriceCounter = 0;
         nBTLBidsAboveExpAvSalePriceCounter = 0;
     }
@@ -82,10 +66,10 @@ public class HouseholdStats {
         nRenting = 0;
         nNonBTLHomeless = 0;
         nNonBTLBankruptcies = 0;
-        activeBTLAnnualisedTotalIncome = 0.0;
-        ownerOccupierAnnualisedTotalIncome = 0.0;
-        rentingAnnualisedTotalIncome = 0.0;
-        homelessAnnualisedTotalIncome = 0.0;
+        activeBTLAnnualisedNetTotalIncome = 0.0;
+        ownerOccupierAnnualisedNetTotalIncome = 0.0;
+        rentingAnnualisedNetTotalIncome = 0.0;
+        homelessAnnualisedNetTotalIncome = 0.0;
         sumStockYield = 0.0;
         // Time stamp householdStats microDataRecorders
         Model.microDataRecorder.timeStampSingleRunSingleVariableFiles(Model.getTime(), config.recordEmploymentIncome,
@@ -99,26 +83,26 @@ public class HouseholdStats {
                 // Active BTL investors
                 if (h.getNProperties() > 1) {
                     ++nActiveBTL;
-                    activeBTLAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
+                    activeBTLAnnualisedNetTotalIncome += h.getMonthlyNetTotalIncome();
                 // Inactive BTL investors who own their house
                 } else if (h.getNProperties() == 1) {
                     ++nBTLOwnerOccupier;
-                    ownerOccupierAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
+                    ownerOccupierAnnualisedNetTotalIncome += h.getMonthlyNetTotalIncome();
                 // Inactive BTL investors in social housing
                 } else {
                     ++nBTLHomeless;
-                    homelessAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
+                    homelessAnnualisedNetTotalIncome += h.getMonthlyNetTotalIncome();
                 }
             } else {
                 if (h.isBankrupt()) nNonBTLBankruptcies += 1;
                 // Non-BTL investors who own their house
                 if (h.isHomeowner()) {
                     ++nNonBTLOwnerOccupier;
-                    ownerOccupierAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
+                    ownerOccupierAnnualisedNetTotalIncome += h.getMonthlyNetTotalIncome();
                     // Non-BTL investors renting
                 } else if (h.isRenting()) {
                     ++nRenting;
-                    rentingAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
+                    rentingAnnualisedNetTotalIncome += h.getMonthlyNetTotalIncome();
                     if (Model.housingMarketStats.getExpAvSalePriceForQuality(h.getHome().getQuality()) > 0) {
                         sumStockYield += h.getHousePayments().get(h.getHome()).monthlyPayment
                                 *config.constants.MONTHS_IN_YEAR
@@ -127,7 +111,7 @@ public class HouseholdStats {
                     // Non-BTL investors in social housing
                 } else if (h.isInSocialHousing()) {
                     ++nNonBTLHomeless;
-                    homelessAnnualisedTotalIncome += h.getMonthlyGrossTotalIncome();
+                    homelessAnnualisedNetTotalIncome += h.getMonthlyNetTotalIncome();
                 }
             }
             // Record household micro-data
@@ -165,10 +149,10 @@ public class HouseholdStats {
             }
         }
         // Annualise monthly income data
-        activeBTLAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
-        ownerOccupierAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
-        rentingAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
-        homelessAnnualisedTotalIncome *= config.constants.MONTHS_IN_YEAR;
+        activeBTLAnnualisedNetTotalIncome *= config.constants.MONTHS_IN_YEAR;
+        ownerOccupierAnnualisedNetTotalIncome *= config.constants.MONTHS_IN_YEAR;
+        rentingAnnualisedNetTotalIncome *= config.constants.MONTHS_IN_YEAR;
+        homelessAnnualisedNetTotalIncome *= config.constants.MONTHS_IN_YEAR;
         // Pass number of bidders above the exponential moving average sale price to persistent variable and
         // re-initialise to zero the counter
         nNonBTLBidsAboveExpAvSalePrice = nNonBTLBidsAboveExpAvSalePriceCounter;
@@ -214,16 +198,12 @@ public class HouseholdStats {
     int getnNonOwner() { return nRenting + getnHomeless(); }
 
     // Getters for annualised income variables
-    double getActiveBTLAnnualisedTotalIncome() { return activeBTLAnnualisedTotalIncome; }
-    double getOwnerOccupierAnnualisedTotalIncome() { return ownerOccupierAnnualisedTotalIncome; }
-    double getRentingAnnualisedTotalIncome() { return rentingAnnualisedTotalIncome; }
-    double getHomelessAnnualisedTotalIncome() { return homelessAnnualisedTotalIncome; }
-    double getNonOwnerAnnualisedTotalIncome() {
-        return rentingAnnualisedTotalIncome + homelessAnnualisedTotalIncome;
-    }
+    double getActiveBTLAnnualisedNetTotalIncome() { return activeBTLAnnualisedNetTotalIncome; }
+    double getOwnerOccupierAnnualisedNetTotalIncome() { return ownerOccupierAnnualisedNetTotalIncome; }
+    double getRentingAnnualisedNetTotalIncome() { return rentingAnnualisedNetTotalIncome; }
+    double getHomelessAnnualisedNetTotalIncome() { return homelessAnnualisedNetTotalIncome; }
 
     // Getters for yield variables
-    double getSumStockYield() { return sumStockYield; }
     double getAvStockYield() {
         if(nRenting > 0) {
             return sumStockYield/nRenting;
