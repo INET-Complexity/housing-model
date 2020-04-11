@@ -147,7 +147,8 @@ public class Model {
             }
 
             // Finish each simulation within the recorders (closing single-run files, changing line in multi-run files)
-            recorder.finishRun(config.recordCoreIndicators, config.recordQualityBandPrice);
+            recorder.finishRun(config.recordCoreIndicators, config.recordQualityBandPrice,
+                    nSimulation == config.N_SIMS);
             transactionRecorder.finishRun(config.recordTransactions, config.recordNBidUpFrequency);
             microDataRecorder.finishRun(config.recordEmploymentIncome, config.recordRentalIncome,
                     config.recordBankBalance, config.recordHousingWealth, config.recordNHousesOwned, config.recordAge,

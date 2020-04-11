@@ -244,8 +244,8 @@ public class Recorder {
         }
     }
 
-    public void finishRun(boolean recordCoreIndicators, boolean recordQualityBandPrice) {
-        if (recordCoreIndicators) {
+    public void finishRun(boolean recordCoreIndicators, boolean recordQualityBandPrice, boolean lastRun) {
+        if (recordCoreIndicators && !lastRun) {
             ooLTI.println("");
             btlLTV.println("");
             creditGrowth.println("");

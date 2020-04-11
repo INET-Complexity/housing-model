@@ -7,10 +7,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 /**************************************************************************************************
- * Class to collect the information contained in the Bank of England "Core Indicators" set for LTV
- * and LTI limits, as set out in the Bank of England's draft policy statement "The Financial policy
- * committee's power over housing tools" (Feb 2015). See Table A for a list of these indicators and
- * notes on their definition.
+ * Class to collect the information on the "Core Indicators" as defined by the Bank of England at
+ * the draft policy statement "The Financial policy committee's power over housing tools" from
+ * February 2015 (see Table A for a list of these indicators and notes on their definition). Note
+ * that some of these methods are just wrappers around methods contained in other classes with the
+ * purpose of storing here a coherent set of core indicator getters
  *
  * @author danial, Adrian Carro
  *
@@ -27,16 +28,31 @@ public class CoreIndicators {
     //----- Methods -----//
     //-------------------//
 
-    //----- Getter/setter methods -----//
+    /**
+     * 1.a - LTI and LTV ratios on new residential mortgages: Owner-occupier mortgage LTV ratio (mean above the median)
+     */
+    double getOwnerOccupierLTVMeanAboveMedian() {  return 100.0 * getMeanAboveMedian(Model.creditSupply.getOO_ltv()); }
 
-    // Note that some of these methods are just wrappers around methods contained in other classes with the purpose of
-    // storing here a coherent set of core indicators getters
-
-    // Owner-occupier mortgage LTI ratio (mean above the median)
+    /**
+     * 1.b - LTI and LTV ratios on new residential mortgages: Owner-occupier mortgage LTI ratio (mean above the median)
+     */
     double getOwnerOccupierLTIMeanAboveMedian() { return getMeanAboveMedian(Model.creditSupply.getOO_lti()); }
 
-    // Owner-occupier mortage LTV ratio (mean above the median)
-    double getOwnerOccupierLTVMeanAboveMedian() {  return getMeanAboveMedian(Model.creditSupply.getOO_ltv()); }
+    /**
+     * 1.c - LTI and LTV ratios on new residential mortgages: Buy-to-let mortgage LTV ratio (mean)
+     */
+    double getBuyToLetLTVMean() {
+        return 100.0 * getMeanOfSums(Model.creditSupply.getBTL_ltv_sums(), Model.creditSupply.getnBTLMortgagesArray());
+    }
+
+    /**
+     * 2 - Household credit growth
+     *
+     * Defined as the twelve-month nominal growth rate of credit, that is, as the twelve-month cumulative net flow of
+     * credit divided by the stock in the initial quarter, or, in other words, as the current stock of credit minus the
+     * stock of credit twelve months ago divided by the stock of credit twelve months ago.
+     */
+    double getHouseholdCreditGrowth() { return 100.0 * Model.creditSupply.getNetCreditGrowth(); }
 
     /**
      * Compute the mean above the median of an ArrayList of ArrayList of Doubles by combining all ArrayLists into a
@@ -68,26 +84,19 @@ public class CoreIndicators {
         }
     }
 
-    // Buy-to-let loan-to-value ratio (mean)
-    double getBuyToLetLTVMean() {
-        int totalSize =  0;
+    private double getMeanOfSums(double[] sumsArray, int[] nElementsArray) {
+        int nElements =  0;
         double sum = 0.0;
-        for (ArrayList<Double> arrayList : Model.creditSupply.getBTL_ltv()) {
-            totalSize += arrayList.size();
-            for (double element : arrayList) {
-                sum += element;
-            }
+        for (int i = 0; i < sumsArray.length; i++) {
+            nElements += nElementsArray[i];
+            sum += sumsArray[i];
         }
-        if (totalSize > 0) {
-            return sum/totalSize;
+        if (nElements > 0) {
+            return sum/nElements;
         } else {
             return Double.NaN;
         }
     }
-
-    // Annualised household credit growth (credit growth: rate of change of credit, current month new credit divided by
-    //  new credit in previous step)
-    double getHouseholdCreditGrowth() { return Model.creditSupply.getNetCreditGrowth()*12.0*100.0; }
 
     // Household mortgage debt to income ratio (%)
     double getDebtToIncome() {
