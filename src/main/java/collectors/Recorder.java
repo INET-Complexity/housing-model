@@ -109,7 +109,7 @@ public class Recorder {
                     + "Rental AvMonthsOnMarket, Rental ExpAvMonthsOnMarket, Rental nBuyers, Rental nSellers, "
                     + "Rental nSales, Rental ExpAvFlowYield, "
                     // Credit data
-                    + "nRegisteredMortgages, nNewFTBMortgages, nNewFTBMortgagesToBTL, nNewHMMortgages, "
+                    + "nStockMortgages, nNewFTBMortgages, nNewFTBMortgagesToBTL, nNewHMMortgages, "
                     + "nNewBTLMortgages, newFTBCredit, newHMCredit, newBTLCredit, newTotalCredit, interestRate");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
@@ -157,9 +157,9 @@ public class Recorder {
             ooDebtToIncome.format("%.4f", Model.coreIndicators.getOOMortgageDebtToIncome());
             mortgageApprovals.format("%d", Model.coreIndicators.getMortgageApprovals());
             housingTransactions.format("%d", Model.coreIndicators.getHousingTransactions());
-            advancesToFTBs.format("%d", Model.coreIndicators.getAdvancesToFTBs());
+            advancesToFTBs.format("%d", Model.coreIndicators.getAdvancesToFTB());
             advancesToBTL.format("%d", Model.coreIndicators.getAdvancesToBTL());
-            advancesToHomeMovers.format("%d", Model.coreIndicators.getAdvancesToHomeMovers());
+            advancesToHomeMovers.format("%d", Model.coreIndicators.getAdvancesToHM());
             priceToIncome.format("%.4f", Model.coreIndicators.getPriceToIncome());
             rentalYield.format("%.4f", Model.coreIndicators.getAvStockYield());
             housePriceGrowth.format("%.4f", Model.coreIndicators.getQoQHousePriceGrowth());
@@ -224,11 +224,11 @@ public class Recorder {
                 Model.rentalMarketStats.getnSales(),
                 Model.rentalMarketStats.getExpAvFlowYield(),
                 // Credit data
-                Model.creditSupply.getnRegisteredMortgages(),
-                Model.creditSupply.getnFTBMortgages(),
-                Model.creditSupply.getnFTBMortgagesToBTL(),
-                Model.creditSupply.getnHMMortgages(),
-                Model.creditSupply.getnBTLMortgages(),
+                Model.creditSupply.getnStockMortgages(),
+                Model.creditSupply.getnNewFTBMortgages(),
+                Model.creditSupply.getnNewFTBMortgagesToBTL(),
+                Model.creditSupply.getnNewHMMortgages(),
+                Model.creditSupply.getnNewBTLMortgages(),
                 Model.creditSupply.getNewCreditToFTB(),
                 Model.creditSupply.getNewCreditToHM(),
                 Model.creditSupply.getNewCreditToBTL(),

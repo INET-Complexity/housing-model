@@ -29,10 +29,10 @@ public class CreditSupply {
     private double                          totalBTLCredit;             // Buy to let mortgage credit
     private double                          totalOOCredit;              // Owner-occupier mortgage credit
     private double                          netCreditGrowth;            // Rate of change of credit per month as percentage
-    private int[]                           nApprovedMortgagesArray;    // total number of new mortgages stored on a rolling basis
-    private int                             nFTBMortgages;              // Total number of new first time buyer mortgages
-    private int                             nFTBMortgagesToBTL;         // Total number of new first time buyer mortgages to households with the BTL gene
-    private int[]                           nBTLMortgagesArray;         // Total number of new buy-to-let mortgages stored on a rolling basis
+    private int[]                           nNewMortgagesArray;         // total number of new mortgages stored on a rolling basis
+    private int[]                           nNewFTBMortgagesArray;      // Total number of new first time buyer mortgages stored on a rolling basis
+    private int[]                           nNewBTLMortgagesArray;      // Total number of new buy-to-let mortgages stored on a rolling basis
+    private int                             nNewFTBMortgagesToBTL;      // Total number of new first time buyer mortgages to households with the BTL gene
     private double                          newCreditToHM;              // Total amount (principals) of new home mover mortgages
     private double                          newCreditToFTB;             // Total amount (principals) of new first time buyer mortgages
     private double                          newCreditToBTL;             // Total amount (principals) of new buy-to-let mortgages
@@ -51,8 +51,9 @@ public class CreditSupply {
             oo_lti.add(new ArrayList<>((int)(targetPopulation * 0.05)));
         }
         btl_ltv_sums = new double[this.rollingWindow];
-        nApprovedMortgagesArray = new int[this.rollingWindow];
-        nBTLMortgagesArray = new int[this.rollingWindow];
+        nNewMortgagesArray = new int[this.rollingWindow];
+        nNewFTBMortgagesArray = new int[this.rollingWindow];
+        nNewBTLMortgagesArray = new int[this.rollingWindow];
         totalCreditStock = new double[12]; // For 12 months, a year
     }
 
@@ -65,8 +66,9 @@ public class CreditSupply {
             oo_ltv.get(i).clear();
             oo_lti.get(i).clear();
             btl_ltv_sums[i] = 0.0;
-            nApprovedMortgagesArray[i] = 0;
-            nBTLMortgagesArray[i] = 0;
+            nNewMortgagesArray[i] = 0;
+            nNewFTBMortgagesArray[i] = 0;
+            nNewBTLMortgagesArray[i] = 0;
         }
         totalBTLCredit = 0.0;
         totalOOCredit = 0.0;
@@ -78,16 +80,16 @@ public class CreditSupply {
     public void preClearingResetCounters(int currentTime) {
         this.currentTime = currentTime;
         currentIndex = this.currentTime % rollingWindow;
-        nApprovedMortgagesArray[currentIndex] = 0;
-        nFTBMortgages = 0;
-        nFTBMortgagesToBTL = 0;
+        nNewMortgagesArray[currentIndex] = 0;
+        nNewFTBMortgagesArray[currentIndex] = 0;
+        nNewBTLMortgagesArray[currentIndex] = 0;
+        nNewFTBMortgagesToBTL = 0;
         newCreditToHM = 0.0;
         newCreditToFTB = 0.0;
         newCreditToBTL = 0.0;
         oo_ltv.get(currentIndex).clear();
         oo_lti.get(currentIndex).clear();
         btl_ltv_sums[currentIndex] = 0.0;
-        nBTLMortgagesArray[currentIndex] = 0;
     }
 
     /**
@@ -123,19 +125,19 @@ public class CreditSupply {
      * @param approval Mortgage agreement
      */
     public void recordLoan(Household h, MortgageAgreement approval) {
-        nApprovedMortgagesArray[currentIndex] += 1;
+        nNewMortgagesArray[currentIndex] += 1;
         if (approval.isFirstTimeBuyer) {
-            nFTBMortgages += 1;
+            nNewFTBMortgagesArray[currentIndex] += 1;
             newCreditToFTB += approval.principal;
             oo_ltv.get(currentIndex).add(approval.principal / (approval.principal + approval.downPayment));
             oo_lti.get(currentIndex).add(approval.principal / h.getAnnualGrossEmploymentIncome());
             if (h.behaviour.isPropertyInvestor()) {
-                nFTBMortgagesToBTL += 1;
+                nNewFTBMortgagesToBTL += 1;
             }
         } else if (approval.isBuyToLet) {
             newCreditToBTL += approval.principal;
             btl_ltv_sums[currentIndex] += approval.principal / (approval.principal + approval.downPayment);
-            nBTLMortgagesArray[currentIndex] += 1;
+            nNewBTLMortgagesArray[currentIndex] += 1;
         } else {
             newCreditToHM += approval.principal;
             oo_ltv.get(currentIndex).add(approval.principal / (approval.principal + approval.downPayment));
@@ -153,21 +155,25 @@ public class CreditSupply {
 
     double getInterestRate() { return interestRate; }
 
-    int getnRegisteredMortgages() { return Model.bank.mortgages.size(); }
+    int getnStockMortgages() { return Model.bank.mortgages.size(); }
 
-    int getnApprovedMortgages() { return nApprovedMortgagesArray[currentIndex]; }
+    int[] getnNewMortgagesArray() { return nNewMortgagesArray; }
 
-    int[] getnApprovedMortgagesArray() { return nApprovedMortgagesArray; }
+    int getnNewFTBMortgages() { return nNewFTBMortgagesArray[currentIndex]; }
 
-    int getnFTBMortgages() { return nFTBMortgages; }
+    int[] getnNewFTBMortgagesArray() { return nNewFTBMortgagesArray; }
 
-    int getnFTBMortgagesToBTL() { return nFTBMortgagesToBTL; }
+    int getnNewFTBMortgagesToBTL() { return nNewFTBMortgagesToBTL; }
 
-    int getnHMMortgages() { return nApprovedMortgagesArray[currentIndex] - nFTBMortgages - nBTLMortgagesArray[currentIndex]; }
+    int getnNewHMMortgages() {
+        return nNewMortgagesArray[currentIndex]
+                - nNewFTBMortgagesArray[currentIndex]
+                - nNewBTLMortgagesArray[currentIndex];
+    }
 
-    int getnBTLMortgages() { return nBTLMortgagesArray[currentIndex]; }
+    int getnNewBTLMortgages() { return nNewBTLMortgagesArray[currentIndex]; }
 
-    int[] getnBTLMortgagesArray() { return nBTLMortgagesArray; }
+    int[] getnNewBTLMortgagesArray() { return nNewBTLMortgagesArray; }
 
     double getTotalBTLCredit() { return totalBTLCredit; }
 

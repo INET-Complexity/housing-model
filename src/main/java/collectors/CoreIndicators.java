@@ -50,7 +50,7 @@ public class CoreIndicators {
      * Mean is computed over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS
      */
     double getBuyToLetLTVMean() {
-        return 100.0 * getMeanOfSums(Model.creditSupply.getBTL_ltv_sums(), Model.creditSupply.getnBTLMortgagesArray());
+        return 100.0 * getMeanOfSums(Model.creditSupply.getBTL_ltv_sums(), Model.creditSupply.getnNewBTLMortgagesArray());
     }
 
     /**
@@ -100,7 +100,7 @@ public class CoreIndicators {
      * number of households in the UK and converted back into an integer.
      */
     int getMortgageApprovals() {
-        return (int) (getMean(Model.creditSupply.getnApprovedMortgagesArray()) * config.getUKHouseholds()
+        return (int) (getMean(Model.creditSupply.getnNewMortgagesArray()) * config.getUKHouseholds()
                 / Model.households.size());
     }
 
@@ -114,6 +114,38 @@ public class CoreIndicators {
         return (int) (getMean(Model.housingMarketStats.getnSalesArray()) * config.getUKHouseholds()
                 / Model.households.size());
     }
+
+    /**
+     * 5.b - Housing transactions: Number of advances to first-time buyers per month
+     *
+     * This number is computed as a mean over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS.
+     * The number is then scaled to the actual number of households in the UK and converted back into an integer.
+     */
+    int getAdvancesToFTB() {
+        return (int) (getMean(Model.creditSupply.getnNewFTBMortgagesArray()) * config.getUKHouseholds()
+                / Model.households.size());
+    }
+
+    /**
+     * 5.c - Housing transactions: Number of advances to buy-to-let investors per month
+     *
+     * This number is computed as a mean over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS.
+     * The number is then scaled to the actual number of households in the UK and converted back into an integer.
+     */
+    int getAdvancesToBTL() {
+        return (int) (getMean(Model.creditSupply.getnNewBTLMortgagesArray()) * config.getUKHouseholds()
+                / Model.households.size());
+    }
+
+    /**
+     * 5.d - Housing transactions: Number of advances to home movers per month
+     *
+     * This number is computed as the total number of new mortgages minus the number of new mortgages to first-time
+     * buyers and buy-to-let investors, all of them computed above as averages over a rolling window of size
+     * config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS. The number is then scaled to the actual number of households in
+     * the UK and converted back into an integer.
+     */
+    int getAdvancesToHM() { return getMortgageApprovals() - getAdvancesToFTB() - getAdvancesToBTL(); }
 
     //---------------------------------------- Utilities ----------------------------------------//
 
@@ -174,19 +206,6 @@ public class CoreIndicators {
     }
 
     // ----------------- TODO: Still to check from here on
-
-    // Number of advances to first-time-buyers, scaled to UK actual number of households (note integer division)
-    int getAdvancesToFTBs() {
-        return Model.creditSupply.getnFTBMortgages() * config.getUKHouseholds() / Model.households.size();
-    }
-
-    // Number of advances to buy-to-let purchasers, scaled to UK actual number of households (note integer division)
-    int getAdvancesToBTL() {
-        return Model.creditSupply.getnBTLMortgages() * config.getUKHouseholds() / Model.households.size();
-    }
-
-    // Number of advances to home-movers, scaled to UK actual number of households
-    int getAdvancesToHomeMovers() { return getMortgageApprovals() - getAdvancesToFTBs() - getAdvancesToBTL(); }
 
     // House price to household disposable income ratio
     // TODO: ATTENTION ---> Gross total income is used here, not disposable income! Post-tax income should be used!
