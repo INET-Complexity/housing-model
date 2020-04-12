@@ -93,8 +93,10 @@ public class Model {
                 config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS);
         coreIndicators = new collectors.CoreIndicators();
         householdStats = new collectors.HouseholdStats();
-        housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket);
-        rentalMarketStats = new collectors.RentalMarketStats(housingMarketStats, houseRentalMarket);
+        housingMarketStats = new collectors.HousingMarketStats(houseSaleMarket,
+                config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS);
+        rentalMarketStats = new collectors.RentalMarketStats(housingMarketStats, houseRentalMarket,
+                config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS);
 
         nSimulation = 0;
     }
@@ -188,13 +190,13 @@ public class Model {
         // Reset counters to store credit supply statistics
         creditSupply.preClearingResetCounters(t);
         // Store sale market bid and offer prices and averages before bids are matched by clearing the market
-        housingMarketStats.preClearingRecord();
+        housingMarketStats.preClearingRecord(t);
         // Clear sale market and updates the HPI
         houseSaleMarket.clearMarket();
         // Compute and store several housing market statistics after bids are matched by clearing the market (such as HPI, HPA)
         housingMarketStats.postClearingRecord();
         // Store rental market bid and offer prices and averages before bids are matched by clearing the market
-        rentalMarketStats.preClearingRecord();
+        rentalMarketStats.preClearingRecord(t);
         // Clears rental market
         houseRentalMarket.clearMarket();
         // Compute and store several rental market statistics after bids are matched by clearing the market (such as HPI, HPA)

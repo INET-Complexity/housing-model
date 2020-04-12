@@ -19,8 +19,11 @@ public class HousingMarketStats {
 	//------------------//
 
 	// General fields
-	private HousingMarket           market; // Declared HousingMarket so that it can accommodate both sale and rental markets
-	private Config                  config = Model.config; // Passes the Model's configuration parameters object to a private field
+	private HousingMarket           market;                 // Declared HousingMarket so that it can accommodate both sale and rental markets
+	private Config                  config = Model.config;  // Passes the Model's configuration parameters object to a private field
+    private int                     rollingWindow;          // Size of the window to compute rolling averages of core indicators
+    private int                     currentTime;            // Local copy of the current time so as to avoid repeated calls to Model
+    private int                     currentIndex;           // Local copy of the (current time % rolling window) so as to avoid repeated calls to Model
 
 	// Variables computed at initialisation
 	double []                       referencePricePerQuality;
@@ -37,7 +40,6 @@ public class HousingMarketStats {
 	private double []               bidPrices;
 
 	// Variables computed during market clearing, counters
-	private int                     salesCount; // Dummy variable to count sales
 	private int                     ftbSalesCount; // Dummy variable to count sales to first-time buyers
 	private int                     btlSalesCount; // Dummy variable to count sales to buy-to-let investors
 	private double                  sumSoldReferencePriceCount; // Dummy counter
@@ -48,7 +50,7 @@ public class HousingMarketStats {
 	private int []                  nSalesPerQualityCount; // Dummy counter
 
 	// Variables computed after market clearing to keep the previous values during the clearing
-	private int                     nSales; // Number of sales
+	private int[]                   nSalesArray; // Number of sales stored on a rolling basis
 	private int	                    nFTBSales; // Number of sales to first-time buyers
 	private int	                    nBTLSales; // Number of sales to buy-to-let investors
 	private int 	                nUnsoldNewBuild; // Accumulated number of new built properties still unsold after market clearing
@@ -79,12 +81,14 @@ public class HousingMarketStats {
 	 * @param market Reference to the sale or rental market of the region, depending on being called as a constructor
 	 *               for this class or as part of the construction of a RegionalRentalMarketStats
 	 */
-	public HousingMarketStats(HousingMarket market) {
+	public HousingMarketStats(HousingMarket market, int rollingWindow) {
 		this.market = market;
+		this.rollingWindow = rollingWindow;
 		referencePricePerQuality = new double[config.N_QUALITY];
 		System.arraycopy(data.HouseSaleMarket.getReferencePricePerQuality(), 0, referencePricePerQuality, 0,
 				config.N_QUALITY); // Copies reference prices from data/HouseSaleMarket into referencePricePerQuality
 		HPIRecord = new DescriptiveStatistics(config.derivedParams.HPI_RECORD_LENGTH);
+        nSalesArray = new int[this.rollingWindow];
 	}
 
     //-------------------//
@@ -107,7 +111,9 @@ public class HousingMarketStats {
         bidPrices = new double[nBuyers];
 
         // Set zero initial value for persistent variables whose count is computed during market clearing
-        nSales = 0;
+        for (int i = 0; i < rollingWindow; i++) {
+            nSalesArray[i] = 0;
+        }
         nFTBSales = 0;
         nBTLSales = 0;
         sumSoldReferencePrice = 0;
@@ -136,9 +142,12 @@ public class HousingMarketStats {
     /**
      * Computes pre-clearing statistics and resets counters to zero
      */
-    public void preClearingRecord() {
+    public void preClearingRecord(int currentTime) {
+        // TODO: Check if current time can be made into a local variable
+        this.currentTime = currentTime;
+        currentIndex = this.currentTime % rollingWindow;
         // Re-initialise to zero variables to be computed later on, during market clearing, counters
-        salesCount = 0;
+        nSalesArray[currentIndex] = 0;
         ftbSalesCount = 0;
         btlSalesCount = 0;
         sumSoldReferencePriceCount = 0;
@@ -210,7 +219,7 @@ public class HousingMarketStats {
         nSalesPerQualityCount[sale.getQuality()]++;
         sumSoldReferencePriceCount += referencePricePerQuality[sale.getQuality()];
         sumSoldPriceCount += sale.getPrice();
-        salesCount += 1;
+        nSalesArray[currentIndex] += 1;
         MortgageAgreement mortgage = purchase.getBidder().mortgageFor(sale.getHouse());
         if(mortgage != null) {
             if(mortgage.isFirstTimeBuyer) {
@@ -231,7 +240,6 @@ public class HousingMarketStats {
      */
     public void postClearingRecord() {
         // Pass count value obtained during market clearing to persistent variables
-        nSales = salesCount;
         nFTBSales = ftbSalesCount;
         nBTLSales = btlSalesCount;
         sumSoldReferencePrice = sumSoldReferencePriceCount;
@@ -242,11 +250,11 @@ public class HousingMarketStats {
         System.arraycopy(sumSalePricePerQualityCount, 0, sumSalePricePerQuality, 0, config.N_QUALITY);
         // Compute the rest of variables after market clearing...
         // ... exponential averages of months in the market and prices per quality band (only if there have been sales)
-        if (nSales > 0) {
+        if (nSalesArray[currentIndex] > 0) {
             expAvMonthsOnMarket = config.derivedParams.E*expAvMonthsOnMarket
-                    + (1.0 - config.derivedParams.E)*sumMonthsOnMarket/nSales;
+                    + (1.0 - config.derivedParams.E)*sumMonthsOnMarket/nSalesArray[currentIndex];
             expAvSalePrice = config.derivedParams.G*expAvSalePrice
-                    + (1.0 - config.derivedParams.G)*sumSoldPrice/nSales;
+                    + (1.0 - config.derivedParams.G)*sumSoldPrice/nSalesArray[currentIndex];
         }
         for (int q = 0; q < config.N_QUALITY; q++) {
             if (nSalesPerQuality[q] > 0) {
@@ -257,7 +265,7 @@ public class HousingMarketStats {
             }
         }
         // ... current house price index (only if there have been sales)
-        if(nSales > 0) {
+        if(nSalesArray[currentIndex] > 0) {
             housePriceIndex = sumSoldPrice/sumSoldReferencePrice;
         }
         // ... HPIRecord with the new house price index value
@@ -330,24 +338,16 @@ public class HousingMarketStats {
     int getnNewSellers() { return nNewSellers; }
     int getnBTLSellers() { return nBTLSellers; }
     int getnUnsoldNewBuild() { return nUnsoldNewBuild; }
-    double getSumBidPrices() { return sumBidPrices; }
-    double getSumOfferPrices() { return sumOfferPrices; }
     double [] getOfferPrices() { return offerPrices; }
     double [] getBidPrices() { return bidPrices; }
 
     // Getters for variables computed after market clearing to keep the previous values during the clearing
-    int getnSales() { return nSales; }
+    int getnSales() { return nSalesArray[currentIndex]; }
+    int[] getnSalesArray() { return nSalesArray; }
     int getnFTBSales() { return nFTBSales; }
     int getnBTLSales() { return nBTLSales; }
-    double getSumSoldReferencePrice() { return sumSoldReferencePrice; }
-    double getSumSoldPrice() { return sumSoldPrice; }
-    double getSumMonthsOnMarket() { return sumMonthsOnMarket; }
-    public double [] getSumMonthsOnMarketPerQuality() { return sumMonthsOnMarketPerQuality; }
-    public double getSumMonthsOnMarketForQuality(int quality) { return sumMonthsOnMarketPerQuality[quality]; }
     public double [] getExpAvMonthsOnMarketPerQuality() { return expAvMonthsOnMarketPerQuality; }
     public double getExpAvMonthsOnMarketForQuality(int quality) { return expAvMonthsOnMarketPerQuality[quality]; }
-    public double [] getSumSalePricePerQuality() { return sumSalePricePerQuality; }
-    double getSumSalePriceForQuality(int quality) { return sumSalePricePerQuality[quality]; }
     public int [] getnSalesPerQuality() { return nSalesPerQuality; }
     int getnSalesForQuality(int quality) { return nSalesPerQuality[quality]; }
 
@@ -377,8 +377,8 @@ public class HousingMarketStats {
         }
     }
     double getAvSalePrice() {
-        if (nSales > 0) {
-            return sumSoldPrice/nSales;
+        if (nSalesArray[currentIndex] > 0) {
+            return sumSoldPrice/nSalesArray[currentIndex];
         } else {
             return 0.0;
         }
@@ -388,13 +388,13 @@ public class HousingMarketStats {
     // Number of monthly sales that are to buy-to-let investors
     int getnSalesToBTL() { return nBTLSales; }
     double getAvMonthsOnMarket() {
-        if (nSales > 0) {
-            return sumMonthsOnMarket/nSales;
+        if (nSalesArray[currentIndex] > 0) {
+            return sumMonthsOnMarket/nSalesArray[currentIndex];
         } else {
             return 0.0;
         }
     }
-    public double [] getAvSalePricePerQuality() {
+    double [] getAvSalePricePerQuality() {
         double [] avSalePricePerQuality;
         avSalePricePerQuality = new double[config.N_QUALITY];
         for (int q = 0; q < config.N_QUALITY; q++) {

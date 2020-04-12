@@ -28,6 +28,8 @@ public class CoreIndicators {
     //----- Methods -----//
     //-------------------//
 
+    //----------------------- Lender and household balance sheet stretch ------------------------//
+
     /**
      * 1.a - LTI and LTV ratios on new residential mortgages: Owner-occupier mortgage LTV ratio (mean above the median)
      *
@@ -88,6 +90,33 @@ public class CoreIndicators {
                 / Model.householdStats.getOwnerOccupierAnnualisedNetTotalIncome();
     }
 
+    //----------------------------- Conditions and terms in markets -----------------------------//
+
+    /**
+     * 4 - Mortgage approvals
+     *
+     * Number of new loans secured on dwellings approved for house purchase. This number is computed as a mean over a
+     * rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS. The number is then scaled to the actual
+     * number of households in the UK and converted back into an integer.
+     */
+    int getMortgageApprovals() {
+        return (int) (getMean(Model.creditSupply.getnApprovedMortgagesArray()) * config.getUKHouseholds()
+                / Model.households.size());
+    }
+
+    /**
+     * 5.a - Housing transactions: Total number of houses bought/sold per month
+     *
+     * This number is computed as a mean over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS.
+     * The number is then scaled to the actual number of households in the UK and converted back into an integer.
+     */
+    int getHousingTransactions() {
+        return (int) (getMean(Model.housingMarketStats.getnSalesArray()) * config.getUKHouseholds()
+                / Model.households.size());
+    }
+
+    //---------------------------------------- Utilities ----------------------------------------//
+
     /**
      * Compute the mean above the median of an ArrayList of ArrayList of Doubles by combining all ArrayLists into a
      * single one, ordering it, finding the mid-point and finding the mean for values at or above this mid-point.
@@ -126,23 +155,25 @@ public class CoreIndicators {
             sum += sumsArray[i];
         }
         if (nElements > 0) {
-            return sum/nElements;
+            return sum / nElements;
+        } else {
+            return Double.NaN;
+        }
+    }
+
+    private double getMean(int[] array) {
+        int sum =  0;
+        for (int element : array) {
+            sum += element;
+        }
+        if (array.length > 0) {
+            return sum / array.length;
         } else {
             return Double.NaN;
         }
     }
 
     // ----------------- TODO: Still to check from here on
-
-    // Number of mortgage approvals per month, scaled to UK actual number of households (note integer division)
-    int getMortgageApprovals() {
-        return Model.creditSupply.getnApprovedMortgages() * config.getUKHouseholds() / Model.households.size();
-    }
-
-    // Number of houses bought/sold per month, scaled to UK actual number of households (note integer division)
-    int getHousingTransactions() {
-        return Model.housingMarketStats.getnSales() * config.getUKHouseholds() / Model.households.size();
-    }
 
     // Number of advances to first-time-buyers, scaled to UK actual number of households (note integer division)
     int getAdvancesToFTBs() {

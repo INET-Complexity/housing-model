@@ -18,24 +18,24 @@ public class CreditSupply {
     //----- Fields -----//
     //------------------//
 
-    private int                             rollingWindow;          // Size of the window to compute rolling averages for LTV and LTI
-    private int                             currentTime;            // Local copy of the current time so as to avoid repeated calls to Model
-    private int                             currentIndex;           // Local copy of the (current time % rolling window) so as to avoid repeated calls to Model
-    private ArrayList<ArrayList<Double>>    oo_ltv;                 // LTV values of individual OO (FTB + HM) mortgage stored on a rolling basis
-    private ArrayList<ArrayList<Double>>    oo_lti;                 // LTI values of individual OO (FTB + HM) mortgage stored on a rolling basis
-    private double[]                        btl_ltv_sums;           // Sum of monthly LTV values of BTL mortgage stored on a rolling basis
-    private double                          interestRate;           // To record interest rate and give it to recorder object for file writing
-    private double[]                        totalCreditStock;       // Total stock of mortgage credit stored on an annual rolling basis
-    private double                          totalBTLCredit;         // Buy to let mortgage credit
-    private double                          totalOOCredit;          // Owner-occupier mortgage credit
-    private double                          netCreditGrowth;        // Rate of change of credit per month as percentage
-    private int                             nApprovedMortgages;     // total number of new mortgages
-    private int                             nFTBMortgages;          // Total number of new first time buyer mortgages
-    private int                             nFTBMortgagesToBTL;     // Total number of new first time buyer mortgages to households with the BTL gene
-    private int[]                           nBTLMortgagesArray;     // Total number of new buy-to-let mortgages stored on a rolling basis
-    private double                          newCreditToHM;          // Total amount (principals) of new home mover mortgages
-    private double                          newCreditToFTB;         // Total amount (principals) of new first time buyer mortgages
-    private double                          newCreditToBTL;         // Total amount (principals) of new buy-to-let mortgages
+    private int                             rollingWindow;              // Size of the window to compute rolling averages of core indicators
+    private int                             currentTime;                // Local copy of the current time so as to avoid repeated calls to Model
+    private int                             currentIndex;               // Local copy of the (current time % rolling window) so as to avoid repeated calls to Model
+    private ArrayList<ArrayList<Double>>    oo_ltv;                     // LTV values of individual OO (FTB + HM) mortgage stored on a rolling basis
+    private ArrayList<ArrayList<Double>>    oo_lti;                     // LTI values of individual OO (FTB + HM) mortgage stored on a rolling basis
+    private double[]                        btl_ltv_sums;               // Sum of monthly LTV values of BTL mortgage stored on a rolling basis
+    private double                          interestRate;               // To record interest rate and give it to recorder object for file writing
+    private double[]                        totalCreditStock;           // Total stock of mortgage credit stored on an annual rolling basis
+    private double                          totalBTLCredit;             // Buy to let mortgage credit
+    private double                          totalOOCredit;              // Owner-occupier mortgage credit
+    private double                          netCreditGrowth;            // Rate of change of credit per month as percentage
+    private int[]                           nApprovedMortgagesArray;    // total number of new mortgages stored on a rolling basis
+    private int                             nFTBMortgages;              // Total number of new first time buyer mortgages
+    private int                             nFTBMortgagesToBTL;         // Total number of new first time buyer mortgages to households with the BTL gene
+    private int[]                           nBTLMortgagesArray;         // Total number of new buy-to-let mortgages stored on a rolling basis
+    private double                          newCreditToHM;              // Total amount (principals) of new home mover mortgages
+    private double                          newCreditToFTB;             // Total amount (principals) of new first time buyer mortgages
+    private double                          newCreditToBTL;             // Total amount (principals) of new buy-to-let mortgages
 
     //------------------------//
     //----- Constructors -----//
@@ -51,6 +51,7 @@ public class CreditSupply {
             oo_lti.add(new ArrayList<>((int)(targetPopulation * 0.05)));
         }
         btl_ltv_sums = new double[this.rollingWindow];
+        nApprovedMortgagesArray = new int[this.rollingWindow];
         nBTLMortgagesArray = new int[this.rollingWindow];
         totalCreditStock = new double[12]; // For 12 months, a year
     }
@@ -64,6 +65,7 @@ public class CreditSupply {
             oo_ltv.get(i).clear();
             oo_lti.get(i).clear();
             btl_ltv_sums[i] = 0.0;
+            nApprovedMortgagesArray[i] = 0;
             nBTLMortgagesArray[i] = 0;
         }
         totalBTLCredit = 0.0;
@@ -76,7 +78,7 @@ public class CreditSupply {
     public void preClearingResetCounters(int currentTime) {
         this.currentTime = currentTime;
         currentIndex = this.currentTime % rollingWindow;
-        nApprovedMortgages = 0;
+        nApprovedMortgagesArray[currentIndex] = 0;
         nFTBMortgages = 0;
         nFTBMortgagesToBTL = 0;
         newCreditToHM = 0.0;
@@ -121,7 +123,7 @@ public class CreditSupply {
      * @param approval Mortgage agreement
      */
     public void recordLoan(Household h, MortgageAgreement approval) {
-        nApprovedMortgages += 1;
+        nApprovedMortgagesArray[currentIndex] += 1;
         if (approval.isFirstTimeBuyer) {
             nFTBMortgages += 1;
             newCreditToFTB += approval.principal;
@@ -153,13 +155,15 @@ public class CreditSupply {
 
     int getnRegisteredMortgages() { return Model.bank.mortgages.size(); }
 
-    int getnApprovedMortgages() { return nApprovedMortgages; }
+    int getnApprovedMortgages() { return nApprovedMortgagesArray[currentIndex]; }
+
+    int[] getnApprovedMortgagesArray() { return nApprovedMortgagesArray; }
 
     int getnFTBMortgages() { return nFTBMortgages; }
 
     int getnFTBMortgagesToBTL() { return nFTBMortgagesToBTL; }
 
-    int getnHMMortgages() { return nApprovedMortgages - nFTBMortgages - nBTLMortgagesArray[currentIndex]; }
+    int getnHMMortgages() { return nApprovedMortgagesArray[currentIndex] - nFTBMortgages - nBTLMortgagesArray[currentIndex]; }
 
     int getnBTLMortgages() { return nBTLMortgagesArray[currentIndex]; }
 
