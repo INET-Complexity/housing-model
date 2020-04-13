@@ -166,28 +166,23 @@ public class Config {
      */
     public class DerivedParams {
         // Housing market parameters
-        public int HPI_RECORD_LENGTH;   // Number of months to record HPI (to compute price growth at different time scales)
-        double MONTHS_UNDER_OFFER;      // Time (in months) that a house remains under offer
-        public double E;                // Decay constant for averaging months on market (in transactions)
-        public double G;                // Decay constant for averageListPrice averaging (in transactions)
-        double HOUSE_PRICES_MEAN;       // Mean of reference house prices (scale + shape**2/2)
+        public int HPI_RECORD_LENGTH;       // Number of months to record HPI (to compute price growth at different time scales)
+        double MONTHS_UNDER_OFFER;          // Time (in months) that a house remains under offer
+        public double E;                    // Decay constant for averaging months on market (in transactions)
+        public double G;                    // Decay constant for averageListPrice averaging (in transactions)
+        public double HOUSE_PRICES_MEAN;    // Mean of reference house prices (scale + shape**2/2)
         // Household behaviour parameters: general
-        double MONTHLY_P_SELL;          // Monthly probability for owner-occupiers to sell their houses
+        double MONTHLY_P_SELL;              // Monthly probability for owner-occupiers to sell their houses
         // Household behaviour parameters: rent
         public double TENANCY_LENGTH_AVERAGE;  // Average number of months a tenant will stay in a rented house
         // Bank parameters
-        int N_PAYMENTS;                 // Number of monthly repayments (mortgage duration in months)
+        int N_PAYMENTS;                     // Number of monthly repayments (mortgage duration in months)
         // House rental market parameters
-        public double K;                // Decay factor for exponential moving average of gross yield from rentals
+        public double K;                    // Decay factor for exponential moving average of gross yield from rentals
         // Construction parameters
-        double UK_HOUSES_PER_HOUSEHOLD; // Target ratio of houses per household
-
-        public double getE() { return E; }
+        double UK_HOUSES_PER_HOUSEHOLD;     // Target ratio of houses per household
 
         public int getHPIRecordLength() { return HPI_RECORD_LENGTH; }
-
-        public double getHousePricesMean() { return HOUSE_PRICES_MEAN; }
-
     }
 
     /**

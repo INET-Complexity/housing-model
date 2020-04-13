@@ -319,7 +319,7 @@ public class HousingMarketStats {
         double oldHPI = HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 4)
                 + HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 5)
                 + HPIRecord.getElement(config.derivedParams.getHPIRecordLength() - 6);
-        return(100.0*(HPI - oldHPI)/oldHPI);
+        return 100.0 * (HPI - oldHPI) / oldHPI;
     }
 
     //----- Getter/setter methods -----//

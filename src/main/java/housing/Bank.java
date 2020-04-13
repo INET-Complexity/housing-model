@@ -23,7 +23,7 @@ public class Bank {
 
     // Bank fields
     public HashSet<MortgageAgreement>   mortgages;                  // All unpaid mortgage contracts supplied by the bank
-    public double                       interestSpread;             // Current mortgage interest spread above base rate (monthly rate*12)
+    private double                      interestSpread;             // Current mortgage interest spread above base rate (monthly rate*12)
     private double                      monthlyPaymentFactor;       // Monthly payment as a fraction of the principal for non-BTL mortgages
     private double                      monthlyPaymentFactorBTL;    // Monthly payment as a fraction of the principal for BTL (interest-only) mortgages
 
@@ -527,8 +527,7 @@ public class Bank {
     /**
      * Get the most constraining Interest Coverage Ratio limit, between the private and the central bank policies
      */
-    private double getHardMinICR() {
-        return Math.max(hardMinICR, centralBank.getHardMinICR());
-    }
+    private double getHardMinICR() { return Math.max(hardMinICR, centralBank.getHardMinICR()); }
 
+    public double getInterestSpread() { return interestSpread; }
 }

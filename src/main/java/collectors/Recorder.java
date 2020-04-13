@@ -161,8 +161,8 @@ public class Recorder {
             advancesToBTL.format("%d", Model.coreIndicators.getAdvancesToBTL());
             advancesToHomeMovers.format("%d", Model.coreIndicators.getAdvancesToHM());
             priceToIncome.format("%.4f", Model.coreIndicators.getPriceToIncome());
-            rentalYield.format("%.4f", Model.coreIndicators.getAvStockYield());
-            housePriceGrowth.format("%.4f", Model.coreIndicators.getQoQHousePriceGrowth());
+            rentalYield.format("%.4f", Model.coreIndicators.getAvStockRentalYield());
+            housePriceGrowth.format("%.4f", Model.coreIndicators.getHousePriceGrowth());
             interestRateSpread.format("%.4f", Model.coreIndicators.getInterestRateSpread());
         }
 

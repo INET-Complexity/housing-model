@@ -10,8 +10,8 @@ import java.util.Collections;
  * Class to collect the information on the "Core Indicators" as defined by the Bank of England at
  * the draft policy statement "The Financial policy committee's power over housing tools" from
  * February 2015 (see Table A for a list of these indicators and notes on their definition). Note
- * that some of these methods are just wrappers around methods contained in other classes with the
- * purpose of storing here a coherent set of core indicator getters
+ * that most flow variables are averaged over a given rolling window, while stock variables are
+ * computed for the current month only.
  *
  * @author danial, Adrian Carro
  *
@@ -147,6 +147,48 @@ public class CoreIndicators {
      */
     int getAdvancesToHM() { return getMortgageApprovals() - getAdvancesToFTB() - getAdvancesToBTL(); }
 
+    /**
+     * 6 - House price growth
+     *
+     * This number is computed as the quarter on quarter house price index (HPI) growth, that is, as the percentage
+     * change of the HPI three months on three months earlier.
+     */
+    double getHousePriceGrowth() { return Model.housingMarketStats.getQoQHousePriceGrowth(); }
+
+    /**
+     * 7 - House price to household disposable income ratio
+     *
+     * Ratio between the average house price and the average household income. Regarding the average house price, in
+     * order to avoid market composition effects, we use the current house price index (HPI) multiplied by the initial
+     * average house price (derived from data), rather than directly the current average house price. Regarding the
+     * average household income, we use the annualised net total income, averaged over the whole household sector, that
+     * is, over active buy-to-let investors, owner-occupying households, renters and homeless households.
+     */
+    double getPriceToIncome() {
+        return Model.housingMarketStats.getHPI() * config.derivedParams.HOUSE_PRICES_MEAN * Model.households.size()
+                / (Model.householdStats.getActiveBTLAnnualisedNetTotalIncome()
+                + Model.householdStats.getOwnerOccupierAnnualisedNetTotalIncome()
+                + Model.householdStats.getRentingAnnualisedNetTotalIncome()
+                + Model.householdStats.getHomelessAnnualisedNetTotalIncome());
+    }
+
+    /**
+     * 8 - Rental yield
+     *
+     * Ratio between the annual rental income generated from a rented property and the current mark-to-market value of
+     * this property, averaged over all currently occupied rental properties.
+     */
+    double getAvStockRentalYield() { return 100.0 * Model.householdStats.getAvStockYield(); }
+
+    /**
+     * 9 - Spreads on new residential mortgage lending: All residential mortgages
+     *
+     * Since all mortgages in the model, regardless of whether they are repayment or interest-only mortgages and
+     * regardless of the LTV ratio, are, at every time step, offered at the same interest rate, we use here simply the
+     * interest rate spread currently offered by the private bank.
+     */
+    double getInterestRateSpread() { return 100.0 * Model.bank.getInterestSpread(); }
+
     //---------------------------------------- Utilities ----------------------------------------//
 
     /**
@@ -204,29 +246,4 @@ public class CoreIndicators {
             return Double.NaN;
         }
     }
-
-    // ----------------- TODO: Still to check from here on
-
-    // House price to household disposable income ratio
-    // TODO: ATTENTION ---> Gross total income is used here, not disposable income! Post-tax income should be used!
-    double getPriceToIncome() {
-        // TODO: Also, why to use HPI*HPIReference? Why not average house price?
-        return(Model.housingMarketStats.getHPI()*config.derivedParams.getHousePricesMean()
-                *(Model.households.size()
-                - Model.householdStats.getnRenting()
-                - Model.householdStats.getnHomeless())
-                /(Model.householdStats.getOwnerOccupierAnnualisedNetTotalIncome()
-                + Model.householdStats.getActiveBTLAnnualisedNetTotalIncome()));
-        // TODO: Finally, for security, population count should be made with nActiveBTL and nOwnerOccupier
-    }
-
-    // Wrapper around the HouseHoldStats method, which computes the average stock gross rental yield for all currently
-    // occupied rental properties (%)
-    double getAvStockYield() { return 100.0*Model.householdStats.getAvStockYield(); }
-
-    // Wrapper around the HousingMarketStats method, which computes the quarter on quarter appreciation in HPI
-    double getQoQHousePriceGrowth() { return Model.housingMarketStats.getQoQHousePriceGrowth(); }
-
-    // Spread between mortgage-lender interest rate and bank base-rate (%)
-    double getInterestRateSpread() { return 100.0*Model.bank.interestSpread; }
 }
