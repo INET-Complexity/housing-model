@@ -23,6 +23,7 @@ public class Recorder {
     private PrintWriter outfile;
     private PrintWriter qualityBandPriceFile;
 
+    private PrintWriter ooLTV;
     private PrintWriter ooLTI;
     private PrintWriter btlLTV;
     private PrintWriter creditGrowth;
@@ -30,12 +31,12 @@ public class Recorder {
     private PrintWriter ooDebtToIncome;
     private PrintWriter mortgageApprovals;
     private PrintWriter housingTransactions;
-    private PrintWriter advancesToFTBs;
+    private PrintWriter advancesToFTB;
     private PrintWriter advancesToBTL;
-    private PrintWriter advancesToHomeMovers;
+    private PrintWriter advancesToHM;
+    private PrintWriter housePriceGrowth;
     private PrintWriter priceToIncome;
     private PrintWriter rentalYield;
-    private PrintWriter housePriceGrowth;
     private PrintWriter interestRateSpread;
 
     //------------------------//
@@ -53,6 +54,8 @@ public class Recorder {
         if(recordCoreIndicators) {
             // ...try opening necessary files
             try {
+                ooLTV = new PrintWriter(outputFolder + "coreIndicator-ooLTV.csv",
+                        "UTF-8");
                 ooLTI = new PrintWriter(outputFolder + "coreIndicator-ooLTI.csv",
                         "UTF-8");
                 btlLTV = new PrintWriter(outputFolder + "coreIndicator-btlLTV.csv",
@@ -67,17 +70,17 @@ public class Recorder {
                         "UTF-8");
                 housingTransactions = new PrintWriter(outputFolder + "coreIndicator-housingTransactions.csv",
                         "UTF-8");
-                advancesToFTBs = new PrintWriter(outputFolder + "coreIndicator-advancesToFTB.csv",
+                advancesToFTB = new PrintWriter(outputFolder + "coreIndicator-advancesToFTB.csv",
                         "UTF-8");
                 advancesToBTL = new PrintWriter(outputFolder + "coreIndicator-advancesToBTL.csv",
                         "UTF-8");
-                advancesToHomeMovers = new PrintWriter(outputFolder + "coreIndicator-advancesToMovers.csv",
+                advancesToHM = new PrintWriter(outputFolder + "coreIndicator-advancesToHM.csv",
+                        "UTF-8");
+                housePriceGrowth = new PrintWriter(outputFolder + "coreIndicator-housePriceGrowth.csv",
                         "UTF-8");
                 priceToIncome = new PrintWriter(outputFolder + "coreIndicator-priceToIncome.csv",
                         "UTF-8");
                 rentalYield = new PrintWriter(outputFolder + "coreIndicator-rentalYield.csv",
-                        "UTF-8");
-                housePriceGrowth = new PrintWriter(outputFolder + "coreIndicator-housePriceGrowth.csv",
                         "UTF-8");
                 interestRateSpread = new PrintWriter(outputFolder + "coreIndicator-interestRateSpread.csv",
                         "UTF-8");
@@ -134,6 +137,7 @@ public class Recorder {
             // If not at the first point in time...
             if (time > 0) {
                 // ...write value separation for core indicators (except for time 0)
+                ooLTV.print(", ");
                 ooLTI.print(", ");
                 btlLTV.print(", ");
                 creditGrowth.print(", ");
@@ -141,15 +145,16 @@ public class Recorder {
                 ooDebtToIncome.print(", ");
                 mortgageApprovals.print(", ");
                 housingTransactions.print(", ");
-                advancesToFTBs.print(", ");
+                advancesToFTB.print(", ");
                 advancesToBTL.print(", ");
-                advancesToHomeMovers.print(", ");
+                advancesToHM.print(", ");
+                housePriceGrowth.print(", ");
                 priceToIncome.print(", ");
                 rentalYield.print(", ");
-                housePriceGrowth.print(", ");
                 interestRateSpread.print(", ");
             }
             // Write core indicators results
+            ooLTV.format("%.4f", Model.coreIndicators.getOwnerOccupierLTVMeanAboveMedian());
             ooLTI.format("%.4f", Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
             btlLTV.format("%.4f", Model.coreIndicators.getBuyToLetLTVMean());
             creditGrowth.format("%.4f", Model.coreIndicators.getHouseholdCreditGrowth());
@@ -157,12 +162,12 @@ public class Recorder {
             ooDebtToIncome.format("%.4f", Model.coreIndicators.getOOMortgageDebtToIncome());
             mortgageApprovals.format("%d", Model.coreIndicators.getMortgageApprovals());
             housingTransactions.format("%d", Model.coreIndicators.getHousingTransactions());
-            advancesToFTBs.format("%d", Model.coreIndicators.getAdvancesToFTB());
+            advancesToFTB.format("%d", Model.coreIndicators.getAdvancesToFTB());
             advancesToBTL.format("%d", Model.coreIndicators.getAdvancesToBTL());
-            advancesToHomeMovers.format("%d", Model.coreIndicators.getAdvancesToHM());
+            advancesToHM.format("%d", Model.coreIndicators.getAdvancesToHM());
+            housePriceGrowth.format("%.4f", Model.coreIndicators.getHousePriceGrowth());
             priceToIncome.format("%.4f", Model.coreIndicators.getPriceToIncome());
             rentalYield.format("%.4f", Model.coreIndicators.getAvStockRentalYield());
-            housePriceGrowth.format("%.4f", Model.coreIndicators.getHousePriceGrowth());
             interestRateSpread.format("%.4f", Model.coreIndicators.getInterestRateSpread());
         }
 
@@ -246,6 +251,7 @@ public class Recorder {
 
     public void finishRun(boolean recordCoreIndicators, boolean recordQualityBandPrice, boolean lastRun) {
         if (recordCoreIndicators && !lastRun) {
+            ooLTV.println("");
             ooLTI.println("");
             btlLTV.println("");
             creditGrowth.println("");
@@ -253,12 +259,12 @@ public class Recorder {
             ooDebtToIncome.println("");
             mortgageApprovals.println("");
             housingTransactions.println("");
-            advancesToFTBs.println("");
+            advancesToFTB.println("");
             advancesToBTL.println("");
-            advancesToHomeMovers.println("");
+            advancesToHM.println("");
+            housePriceGrowth.println("");
             priceToIncome.println("");
             rentalYield.println("");
-            housePriceGrowth.println("");
             interestRateSpread.println("");
         }
         outfile.close();
@@ -269,6 +275,7 @@ public class Recorder {
 
     public void finish(boolean recordCoreIndicators) {
         if (recordCoreIndicators) {
+            ooLTV.close();
             ooLTI.close();
             btlLTV.close();
             creditGrowth.close();
@@ -276,12 +283,12 @@ public class Recorder {
             ooDebtToIncome.close();
             mortgageApprovals.close();
             housingTransactions.close();
-            advancesToFTBs.close();
+            advancesToFTB.close();
             advancesToBTL.close();
-            advancesToHomeMovers.close();
+            advancesToHM.close();
+            housePriceGrowth.close();
             priceToIncome.close();
             rentalYield.close();
-            housePriceGrowth.close();
             interestRateSpread.close();
         }
     }

@@ -35,7 +35,7 @@ public class CoreIndicators {
      *
      * Median and mean are computed over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS
      */
-    double getOwnerOccupierLTVMeanAboveMedian() {  return 100.0 * getMeanAboveMedian(Model.creditSupply.getOO_ltv()); }
+    double getOwnerOccupierLTVMeanAboveMedian() { return 100.0 * getMeanAboveMedian(Model.creditSupply.getOO_ltv()); }
 
     /**
      * 1.b - LTI and LTV ratios on new residential mortgages: Owner-occupier mortgage LTI ratio (mean above the median)
@@ -50,7 +50,8 @@ public class CoreIndicators {
      * Mean is computed over a rolling window of size config.ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS
      */
     double getBuyToLetLTVMean() {
-        return 100.0 * getMeanOfSums(Model.creditSupply.getBTL_ltv_sums(), Model.creditSupply.getnNewBTLMortgagesArray());
+        return 100.0 * getMeanOfSums(Model.creditSupply.getBTL_ltv_sums(),
+                Model.creditSupply.getnNewBTLMortgagesArray());
     }
 
     /**
@@ -202,7 +203,6 @@ public class CoreIndicators {
         // Combine all ArrayLists (all months) into a single one
         ArrayList<Double> combined = new ArrayList<>();
         for (ArrayList<Double> arrayList : arrayListOfArrayLists) {
-            arrayList.clear();
             combined.addAll(arrayList);
         }
         // Order this combined ArrayList so that its mid-point is the median
