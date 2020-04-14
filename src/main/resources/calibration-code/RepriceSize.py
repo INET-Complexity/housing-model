@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Defines several classes to study the reprice or price decrease behaviour of households trying to sell their houses. It
-uses Zoopla data
+Class to study the size of the price change per price update for properties on the market (rental and sales depending on
+user choice), based on Zoopla data. Taking into account only negative total price changes (i.e., where the last price of
+the listing is smaller than its initial price), this code prints to a file the mean per month price change and its
+standard deviation.
 
 @author: daniel, Adrian Carro
 """
 
-import Datasets as ds
 import numpy as np
 from datetime import datetime
-import matplotlib.pyplot as plt
+import time
 import scipy.stats as stats
 import math
+import pandas as pd
 
 
 class DiscountDistribution:
@@ -33,22 +35,22 @@ class DiscountDistribution:
         pass
 
     # Record one listing with no change of price between start and end months
-    def record_no_change(self, start, end):
-        if end >= self.x_size:
-            end = self.x_size - 1
-        for month in range(start, end + 1):
+    def record_no_change(self, _start, _end):
+        if _end >= self.x_size:
+            _end = self.x_size - 1
+        for month in range(_start, _end + 1):
             self.countNoChange[month] += 1
             self.countTotal[month] += 1
 
     # Record one listing  with a drop in price between -90% and -0.2% at month
-    def record_change(self, start, month, percent):
+    def record_change(self, _start, month, percent):
         if -90 < percent < -0.2:
-            self.record_no_change(start, month - 1)  # Record the listing as no change before month
+            self.record_no_change(_start, month - 1)  # Record the listing as no change before month
             if month < self.x_size:  # Only record the change if month is within the sample
                 self.countTotal[month] += 1
                 self.changesByMonth[month].append(math.log(math.fabs(percent)))
         else:
-            self.record_no_change(start, month)
+            self.record_no_change(_start, month)
 
     # Probability that price will not change in a given month (given that the property is still on the market)
     def probability_no_change(self):
@@ -90,14 +92,6 @@ class PropertyRecord:
         return previous_days_on_market, new_days_on_market, reduction
 
 
-def plot_probability(mat):
-    """Plot a matrix mat as a colour plot, used for plotting a pdf"""
-    plt.figure(figsize=(10, 10))
-    im = plt.imshow(mat, origin='low', cmap=plt.get_cmap("jet"))
-    plt.colorbar(im, orientation='horizontal')
-    plt.show()
-
-
 def calculate_price_changes(filtered_zoopla_data):
     """Compute and return the discount distribution"""
     distribution = DiscountDistribution()
@@ -123,43 +117,51 @@ def calculate_price_changes(filtered_zoopla_data):
     return distribution
 
 
-# Read and filter data from Zoopla
-data = ds.ZooplaMatchedDaily()
-chunk = data.read(200000)
-filtered_chunk = chunk[(chunk["MARKET"] == "SALE") & (chunk["PRICE"] > 0)][["LISTING ID", "DAY", "PRICE"]]
+market = "RENT"  # Must be "RENT" or "SALE"
+root = r""  # ADD HERE PATH TO ZOOPLA DATA FOLDER
+
+start = time.time()
+# Read data, filtering according to the following columns
+# - MARKET: Indicates if the listing is SALE or RENT
+# - CREATED: Listing creation date
+# - INITIAL PRICE: First asking price stipulated on the listing
+# - LATEST SOLD: Latest date that the listing had a status of SOLD
+# - PRICE: Latest asking price stipulated on the listing
+chunk_size = 10000
+filtered_data = pd.DataFrame()
+for chunk in pd.read_csv(root + r"\New Zoopla\A Raw Listings (daily).csv", chunksize=chunk_size,
+                         usecols=["MARKET", "LISTING ID", "DAY", "PRICE"],
+                         dtype={"MARKET": str, "LISTING ID": str, "DAY": str, "PRICE": str},
+                         engine="c"):
+    # Keep only chose market listings
+    chunk = chunk[chunk["MARKET"] == market]
+    # Keep only listings with non-null values in the required columns
+    chunk = chunk[(np.invert(pd.isnull(chunk["LISTING ID"])) & np.invert(pd.isnull(chunk["DAY"]))
+                   & np.invert(pd.isnull(chunk["PRICE"])))]
+    # Convert float columns to this type
+    chunk = chunk.astype({"PRICE": float})
+    # Keep only listings with an initial and a final price greater than zero
+    chunk = chunk[chunk["PRICE"].values > 0]
+    # Add filtered chunk to total filtered_data data frame
+    filtered_data = pd.concat([filtered_data, chunk])
+end = time.time()
+print("Finished reading and processing in {} seconds".format(end - start))
 
 # Compute probability distribution of price discounts
-dist = calculate_price_changes(filtered_chunk)
+dist = calculate_price_changes(filtered_data)
 
-# Plot probability of no change per month on market
-print "Average probability of no change per month"
-print dist.probability_no_change().sum() / dist.probability_no_change().size
-print "Probability of no change per month"
-print dist.probability_no_change()
-plt.figure()
-plt.plot(dist.probability_no_change())
-plt.xlabel("Months on market")
-plt.ylabel("Probability of no price change")
-
-# Plot average price discount per month on market
+# Compute average price discount per month on market
 mean, sd = stats.norm.fit(dist.list_all_changes())
-monthlyMeans = [stats.norm.fit(dist.changesByMonth[i])[0] for i in range(dist.x_size)]
-print "Best mean and standard deviation of percentage change per month given change"
-print mean, sd
-print "Monthly Means"
-print monthlyMeans
-plt.figure()
-plt.plot(monthlyMeans)
-plt.xlabel("Months on market")
-plt.ylabel("Percent discount")
+monthlyMeans = [stats.norm.fit(dist.changesByMonth[i])[0] if len(dist.changesByMonth[i]) > 0 else 0
+                for i in range(dist.x_size)]
 
-# Plot probability distribution of price discounts (independent of month on market)
-curve = [stats.norm.pdf(i * 0.05, mean, sd) for i in range(-35, 100)]
-plt.figure()
-plt.hist(dist.list_all_changes(), bins=50, density=True, label="Data")
-plt.plot([i * 0.05 for i in range(-35, 100)], curve, label="Normal fit")
-plt.xlabel("Percent discount")
-plt.ylabel("Probability")
-plt.legend()
-
-plt.show()
+# Print to files
+with open(market[0] + market[1:].lower() + "RepriceSize.csv", "w") as f:
+    f.write("Average probability of no change per month\n")
+    f.write(str(dist.probability_no_change().sum() / dist.probability_no_change().size))
+    f.write("\nProbability of no change per month\n")
+    f.write(str(dist.probability_no_change()))
+    f.write("\nBest mean and standard deviation of percentage change per month given change\n")
+    f.write("{}, {}".format(mean, sd))
+    f.write("\nMonthly Means\n")
+    f.write(str(monthlyMeans))
