@@ -181,7 +181,7 @@ public class Household implements IHouseOwner {
      * (ignoring any rental income). Note that only income tax on employment income and national insurance contributions
      * are implemented (no capital gains tax)!
      */
-    double getMonthlyNetEmploymentIncome() {
+    public double getMonthlyNetEmploymentIncome() {
         return getMonthlyGrossEmploymentIncome()
                 - (Model.government.incomeTaxDue(annualGrossEmploymentIncome)  // Income tax
                 + Model.government.class1NICsDue(annualGrossEmploymentIncome))  // National insurance contributions

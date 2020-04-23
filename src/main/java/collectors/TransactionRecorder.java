@@ -38,10 +38,10 @@ public class TransactionRecorder {
                 outfileSaleTransactions.print("modelTime, "
                         + "houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, buyerId,"
                         + "buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, buyerMonthlyGrossEmploymentIncome, "
-                        + "buyerPostPurchaseBankBalance, buyerCapGainCoeff, mortgageDownpayment, mortgagePrincipal, "
-                        + "firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, sellerHasBTLGene, "
-                        + "sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
-                        + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
+                        + "buyerMonthlyNetEmploymentIncome, buyerPostPurchaseBankBalance, buyerCapGainCoeff, "
+                        + "mortgageDownpayment, mortgagePrincipal, mortgageMonthlyPayment, firstTimeBuyerMortgage, "
+                        + "buyToLetMortgage, sellerId, sellerAge, sellerHasBTLGene, sellerMonthlyGrossTotalIncome, "
+                        + "sellerMonthlyGrossEmploymentIncome, sellerPostPurchaseBankBalance, sellerCapGainCoeff");
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -87,7 +87,7 @@ public class TransactionRecorder {
     private void recordSaleTransaction(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage) {
         outfileSaleTransactions.format("%n%d, ", Model.getTime());
         outfileSaleTransactions.format("%d, %d, %.2f, %d, %.2f, %d, %.2f, %b, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, "
-                        + "%b, %b, ",
+                        + "%.2f, %.2f, %b, %b, ",
                 sale.getHouse().id,
                 sale.getHouse().getQuality(),
                 sale.getInitialListedPrice(),
@@ -98,10 +98,12 @@ public class TransactionRecorder {
                 purchase.getBidder().behaviour.isPropertyInvestor(),
                 purchase.getBidder().getMonthlyGrossTotalIncome(),
                 purchase.getBidder().getMonthlyGrossEmploymentIncome(),
+                purchase.getBidder().getMonthlyNetEmploymentIncome(),
                 purchase.getBidder().getBankBalance(),
                 purchase.getBidder().behaviour.getBTLCapGainCoefficient(),
                 mortgage.downPayment,
                 mortgage.principal,
+                mortgage.monthlyPayment,
                 mortgage.isFirstTimeBuyer,
                 mortgage.isBuyToLet);
         if (sale.getHouse().owner instanceof Household) {
