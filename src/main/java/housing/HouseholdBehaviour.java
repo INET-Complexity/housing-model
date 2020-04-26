@@ -242,7 +242,7 @@ public class HouseholdBehaviour {
         if (newHouseQuality < 0) return false; // can't afford a house anyway
         double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR
                 - purchasePrice*getLongTermHPAExpectation();
-        double costOfRent = Model.rentalMarketStats.getExpAvSalePriceForQuality(newHouseQuality)
+        double costOfRent = rentalMarketStats.getExpAvSalePriceForQuality(newHouseQuality)
                 *config.constants.MONTHS_IN_YEAR;
         return prng.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
                 + config.PSYCHOLOGICAL_COST_OF_RENTING) - costOfHouse));
@@ -326,7 +326,7 @@ public class HouseholdBehaviour {
         // ...find the leverage on that mortgage (Assets divided by equity, or return on equity)
         double leverage = mortgage.purchasePrice/equity;
         // ...find the expected rental yield as an (exponential) average over all house qualities
-        double rentalYield = Model.rentalMarketStats.getExpAvFlowYield();
+        double rentalYield = rentalMarketStats.getExpAvFlowYield();
         // ...find the mortgage rate (pounds paid a year per pound of equity)
         double mortgageRate = mortgage.nextPayment()*config.constants.MONTHS_IN_YEAR/equity;
         // ...finally, find expected equity yield, or yield on equity
