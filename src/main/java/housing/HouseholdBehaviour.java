@@ -228,22 +228,40 @@ public class HouseholdBehaviour {
     // Renter behaviour
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
-    /*** renters or OO after selling home decide whether to rent or buy
-     * N.B. even though the HH may not decide to rent a house of the
-     * same quality as they would buy, the cash value of the difference in quality
-     *  is assumed to be the difference in rental price between the two qualities.
-     *  @return true if we should buy a house, false if we should rent
+    /**
+     * Rules for households currently in social housing or at the end of their rental contracts to decide whether to
+     * try to rent or buy. Note that households in social housing could be potential first-time buyers (whether BTL or
+     * non-BTL households), ex-renters unable to find a new tenancy or buy a house in previous time steps or home movers
+     * (ex-owner-occupiers). This decision is based on first checking the maximum quality the household could afford on
+     * the ownership market and then comparing the annual costs of this purchase with the annual costs of renting a
+     * house of the same quality. While the household may later on decide to rent a house of a different quality than
+     * the one they could buy, thus assuming higher or lower costs, it is assumed that the difference in costs is equal
+     * to the quality difference in terms of cash (i.e., monetised), such that there is indifference between these
+     * options and the decision between buying and renting would remain the same.
+     *
+     * @return True if the household decides to buy a house, False if the household decides to rent
      */
     boolean decideRentOrPurchase(Household me, double purchasePrice) {
+        // By definition, BTL households never rent
         if(isPropertyInvestor()) return(true);
+        // First, find the maximum quality the household could afford in the ownership market
+        int newHouseQuality = housingMarketStats.getMaxQualityForPrice(purchasePrice);
+        // Then, force renting if the household cannot afford even the minimum quality...
+        if (newHouseQuality < 0) return false;
+        // ...and cap the purchase price to the average price of the maximum quality, so as to prevent unreasonable
+        // mortgage costs when comparing to the equivalent rental option
+        if (newHouseQuality == config.N_QUALITY - 1) {
+            purchasePrice = housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY - 1);
+        }
+        // Find out potential mortgage characteristics...
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
                 decideDownPayment(me, purchasePrice), true);
-        int newHouseQuality = housingMarketStats.getMaxQualityForPrice(purchasePrice);
-        if (newHouseQuality < 0) return false; // can't afford a house anyway
-        double costOfHouse = mortgageApproval.monthlyPayment*config.constants.MONTHS_IN_YEAR
+        // ...compute both purchase and rental annual costs...
+        double costOfHouse = mortgageApproval.monthlyPayment * config.constants.MONTHS_IN_YEAR
                 - purchasePrice*getLongTermHPAExpectation();
         double costOfRent = rentalMarketStats.getExpAvSalePriceForQuality(newHouseQuality)
                 *config.constants.MONTHS_IN_YEAR;
+        // ...and, finally, compare these costs by building a sigma-shaped probability to buy
         return prng.nextDouble() < sigma(config.SENSITIVITY_RENT_OR_PURCHASE*(costOfRent*(1.0
                 + config.PSYCHOLOGICAL_COST_OF_RENTING) - costOfHouse));
     }
@@ -298,14 +316,15 @@ public class HouseholdBehaviour {
 
     /**
      * Decide whether to buy or not a new investment property. Investor households with no investment properties always
-     * attempt to buy one. If the household's bank balance is below its desired bank balance, then no attempt to buy is
-     * made. If the resources available to the household (maximum mortgage) are below the average price for the lowest
-     * quality houses, then no attempt to buy is made. Households with at least one investment property will calculate
-     * the expected yield of a new property based on two contributions: rental yield and capital gain (with their
-     * corresponding weights which depend on the type of investor)
+     * attempt to buy one. If the resources available to the household (maximum mortgage) are below the average price
+     * for the lowest quality houses, then no attempt to buy is made. Note that there is no capping of desired bid
+     * prices to the average price of the maximum quality band, since this would not affect the decision in any case.
+     * Households with at least one investment property will calculate the expected yield of a new property based on two
+     * contributions: rental yield and capital gain (with their corresponding weights which depend on the type of
+     * investor).
      *
      * @param me The investor household
-     * @return True if investor me decides to try to buy a new investment property
+     * @return True if investor me decides to try to buy a new investment property, False otherwise
      */
     boolean decideToBuyInvestmentProperty(Household me) {
         // Fast decisions...
@@ -349,7 +368,9 @@ public class HouseholdBehaviour {
     double rethinkHouseSalePrice(HouseOfferRecord sale) {
         if (prng.nextDouble() < config.P_SALE_PRICE_REDUCE) {
             double logReduction = config.REDUCTION_MU + (prng.nextGaussian() * config.REDUCTION_SIGMA);
-            return sale.getPrice() * (1.0 - Math.exp(logReduction) / 100.0);
+            // This prevents negative and too small new prices. While the limit of 0.5 is ad-hoc, being the probability
+            // of larger decreases smaller than 1%, it should not affect the results in any significant way
+            return sale.getPrice() * Math.max(1.0 - Math.exp(logReduction) / 100.0, 0.5);
         }
         return sale.getPrice();
     }
@@ -363,7 +384,9 @@ public class HouseholdBehaviour {
     double rethinkHouseRentPrice(HouseOfferRecord sale) {
         if (prng.nextDouble() < config.P_RENT_PRICE_REDUCE) {
             double logReduction = config.RENT_REDUCTION_MU + (prng.nextGaussian() * config.RENT_REDUCTION_SIGMA);
-            return sale.getPrice() * (1.0 - Math.exp(logReduction) / 100.0);
+            // This prevents negative and too small new prices. While the limit of 0.5 is ad-hoc, being the probability
+            // of larger decreases smaller than 1%, it should not affect the results in any significant way
+            return sale.getPrice() * Math.max(1.0 - Math.exp(logReduction) / 100.0, 0.5);
         }
         return sale.getPrice();
     }
