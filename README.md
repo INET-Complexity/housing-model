@@ -10,5 +10,5 @@ bank regulation policy.
 
 The model incorporates owner-occupiers, renters, buy-to-let investors, a housing market, a rental market, banks, a
 central bank and a government. A more detailed description of the model can be found at this
-[Bank of England Working Paper](http://www.bankofengland.co.uk/research/Pages/workingpapers/2016/swp619.aspx) and at the
+[Bank of England Working Paper](https://www.inet.ox.ac.uk/files/swp619.pdf) and at the
 ModelDescriptionFeb16.pdf file.
