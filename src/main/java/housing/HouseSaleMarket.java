@@ -54,7 +54,7 @@ public class HouseSaleMarket extends HousingMarket {
         sale.getHouse().owner.completeHouseSale(sale);
         // This affects: buyer's home resident, buyer's home owner rental income, buyer's bank balance, mortgage,
         // buyer's housePayments, buyer's home, house's resident, HouseRentalMarket offers, and buyer's isFirstTimeBuyer
-        purchase.getBidder().completeHousePurchase(sale);
+        purchase.getBidder().completeHousePurchase(sale, purchase.getDesiredDownPayment());
         // This uses: house's id and quality; mortgage's type, downpayment and principal; sale's initial listing price,
         // initial listing time and final price; buyer's id, age, BTL gene, income, rental income, bank balance, and
         // capital gains coefficient; and seller's id, age, BTL gene, income, rental income, bank balance and capital

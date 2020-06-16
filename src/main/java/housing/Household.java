@@ -118,8 +118,12 @@ public class Household implements IHouseOwner {
             // ...otherwise, if the household is not the owner nor the resident, then it is an old debt due to
             // the household's inability to pay the remaining principal off after selling a property...
             } else if (h.resident != this) {
+                System.out.println("Unpaid debt for house not currently owned at t=" + Model.getTime() + " by BTL "
+                        + behaviour.isPropertyInvestor());
+                // ...always try to pay off this type of debt
                 MortgageAgreement mortgage = (MortgageAgreement) payment;
-                // ...remove this type of houses from payments as soon as the household pays the debt off
+                bankBalance -= mortgage.payoff(bankBalance);
+                // ...and remove it from the payments object as soon as the household manages to do so
                 if ((payment.nPayments == 0) & (mortgage.principal == 0.0)) {
                     paymentIt.remove();
                 }
@@ -138,7 +142,8 @@ public class Household implements IHouseOwner {
             double price = Model.bank.getMaxMortgagePrice(this, false);
             Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
             if (behaviour.decideToBuyInvestmentProperty(this)) {
-                Model.houseSaleMarket.bid(this, price, true);
+                double desiredDownPayment = behaviour.decideDownPayment(this, price);
+                Model.houseSaleMarket.bid(this, price, true, desiredDownPayment);
             }
         } else if (!isHomeowner()){
             System.out.println("Strange: this household is not a type I recognize");
@@ -297,7 +302,7 @@ public class Household implements IHouseOwner {
      * Pay for house,
      * Put house on rental market if buy-to-let and no tenant.
      ********************************************************/
-    void completeHousePurchase(HouseOfferRecord sale) {
+    void completeHousePurchase(HouseOfferRecord sale, double desiredDownPayment) {
         if(isRenting()) { // give immediate notice to landlord and move out
             if(sale.getHouse().resident != null) System.out.println("Strange: my new house has someone in it!");
             if(home == sale.getHouse()) {
@@ -307,7 +312,7 @@ public class Household implements IHouseOwner {
             }
         }
         MortgageAgreement mortgage = Model.bank.requestLoan(this, sale.getPrice(),
-                behaviour.decideDownPayment(this,sale.getPrice()), home == null);
+                desiredDownPayment, home == null);
         bankBalance -= mortgage.downPayment;
         housePayments.put(sale.getHouse(), mortgage);
         if (home == null) { // move in to house
@@ -438,13 +443,14 @@ public class Household implements IHouseOwner {
         // Record the bid on householdStats for counting the number of bids above exponential moving average sale price
         Model.householdStats.countNonBTLBidsAboveExpAvSalePrice(price);
         // Compare costs to decide whether to buy or rent...
-        if (behaviour.decideRentOrPurchase(this, price)) {
+        double desiredDownPayment = behaviour.decideDownPayment(this, price);
+        if (behaviour.decideRentOrPurchase(this, price, desiredDownPayment)) {
             // ... if buying, bid in the house sale market for the capped desired price
-            Model.houseSaleMarket.bid(this, price, false);
+            Model.houseSaleMarket.bid(this, price, false, desiredDownPayment);
         } else {
             // ... if renting, bid in the house rental market for the desired rent price
             Model.houseRentalMarket.bid(this, behaviour.getDesiredRentPrice(annualGrossEmploymentIncome,
-                    getMonthlyNetTotalIncome()), false);
+                    getMonthlyNetTotalIncome()), false, 0.0);
         }
     }
 

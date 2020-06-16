@@ -241,7 +241,7 @@ public class HouseholdBehaviour {
      *
      * @return True if the household decides to buy a house, False if the household decides to rent
      */
-    boolean decideRentOrPurchase(Household me, double purchasePrice) {
+    boolean decideRentOrPurchase(Household me, double purchasePrice, double desiredDownPayment) {
         // By definition, BTL households never rent
         if(isPropertyInvestor()) return(true);
         // First, find the maximum quality the household could afford in the ownership market
@@ -255,7 +255,7 @@ public class HouseholdBehaviour {
         }
         // Find out potential mortgage characteristics...
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
-                decideDownPayment(me, purchasePrice), true);
+                desiredDownPayment, true);
         // ...compute both purchase and rental annual costs...
         double costOfHouse = mortgageApproval.monthlyPayment * config.constants.MONTHS_IN_YEAR
                 - purchasePrice*getLongTermHPAExpectation();
