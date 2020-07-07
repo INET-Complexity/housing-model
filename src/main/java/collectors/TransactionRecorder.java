@@ -40,6 +40,7 @@ public class TransactionRecorder {
                         + "buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, buyerMonthlyGrossEmploymentIncome, "
                         + "buyerMonthlyNetEmploymentIncome, desiredPurchasePrice, buyerPostPurchaseBankBalance, "
                         + "buyerCapGainCoeff, mortgageDownpayment, mortgagePrincipal, mortgageMonthlyPayment, "
+                        + "annualInterestRate, ICR, maturity, "
                         + "firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, sellerHasBTLGene, "
                         + "sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
                         + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
@@ -86,9 +87,16 @@ public class TransactionRecorder {
     }
 
     private void recordSaleTransaction(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage) {
+        double ICR;
+        if (mortgage.principal > 0.0 && mortgage.isBuyToLet) {
+            ICR = Model.rentalMarketStats.getExpAvFlowYield() * sale.getPrice() /
+                    (mortgage.principal * mortgage.getAnnualInterestRate());
+        } else {
+            ICR = Double.NaN;
+        }
         outfileSaleTransactions.format("%n%d, ", Model.getTime());
         outfileSaleTransactions.format("%d, %d, %.2f, %d, %.2f, %d, %.2f, %b, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, "
-                        + "%.2f, %.2f, %.2f, %b, %b, ",
+                        + "%.2f, %.2f, %.2f, %.4f, %.2f, %d, %b, %b, ",
                 sale.getHouse().id,
                 sale.getHouse().getQuality(),
                 sale.getInitialListedPrice(),
@@ -107,6 +115,9 @@ public class TransactionRecorder {
                 mortgage.downPayment,
                 mortgage.principal,
                 mortgage.monthlyPayment,
+                mortgage.getAnnualInterestRate(),
+                ICR,
+                mortgage.getMaturity(),
                 mortgage.isFirstTimeBuyer,
                 mortgage.isBuyToLet);
         if (sale.getHouse().owner instanceof Household) {

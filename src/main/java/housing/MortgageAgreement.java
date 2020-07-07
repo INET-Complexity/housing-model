@@ -87,4 +87,8 @@ public class MortgageAgreement extends PaymentAgreement {
      * @return The amount that was actually paid off
      */
     double payoff() { return payoff(principal); }
+
+    public double getAnnualInterestRate() { return monthlyInterestRate * 12.0; }
+
+    public int getMaturity() { return nPayments; }
 }
