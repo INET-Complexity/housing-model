@@ -10,15 +10,18 @@ public class MicroDataRecorder {
     //----- Fields -----//
     //------------------//
 
-    private String outputFolder;
+    private String          outputFolder;
 
-    private PrintWriter outfileEmploymentIncome;
-    private PrintWriter outfileRentalIncome;
-    private PrintWriter outfileBankBalance;
-    private PrintWriter outfileHousingWealth;
-    private PrintWriter outfileNHousesOwned;
-    private PrintWriter outfileAge;
-    private PrintWriter outfileSavingRate;
+    private PrintWriter     outfileEmploymentIncome;
+    private PrintWriter     outfileRentalIncome;
+    private PrintWriter     outfileBankBalance;
+    private PrintWriter     outfileHousingWealth;
+    private PrintWriter     outfileNHousesOwned;
+    private PrintWriter     outfileAge;
+    private PrintWriter     outfileSavingRate;
+
+    private int             timeToStartMicroPrinting = 996;
+    private int             freqOfMicroPrinting = 12;
 
     //------------------------//
     //----- Constructors -----//
@@ -96,45 +99,45 @@ public class MicroDataRecorder {
                                                boolean recordBankBalance, boolean recordHousingWealth,
                                                boolean recordNHousesOwned, boolean recordAge,
                                                boolean recordSavingRate) {
-        if (time % 100 == 0) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             if (recordEmploymentIncome) {
-                if (time != 0) {
+                if (time != timeToStartMicroPrinting) {
                     outfileEmploymentIncome.println("");
                 }
                 outfileEmploymentIncome.print(time);
             }
             if (recordRentalIncome) {
-                if (time != 0) {
+                if (time != timeToStartMicroPrinting) {
                     outfileRentalIncome.println("");
                 }
                 outfileRentalIncome.print(time);
             }
             if (recordBankBalance) {
-                if (time != 0) {
+                if (time != timeToStartMicroPrinting) {
                     outfileBankBalance.println("");
                 }
                 outfileBankBalance.print(time);
             }
             if (recordHousingWealth) {
-                if (time != 0) {
+                if (time != timeToStartMicroPrinting) {
                     outfileHousingWealth.println("");
                 }
                 outfileHousingWealth.print(time);
             }
             if (recordNHousesOwned) {
-                if (time != 0) {
+                if (time != timeToStartMicroPrinting) {
                     outfileNHousesOwned.println("");
                 }
                 outfileNHousesOwned.print(time);
             }
             if (recordAge) {
-                if (time != 0) {
+                if (time != timeToStartMicroPrinting) {
                     outfileAge.println("");
                 }
                 outfileAge.print(time);
             }
             if (recordSavingRate) {
-                if (time != 0) {
+                if (time != timeToStartMicroPrinting) {
                     outfileSavingRate.println("");
                 }
                 outfileSavingRate.print(time);
@@ -143,48 +146,48 @@ public class MicroDataRecorder {
     }
 
     void recordEmploymentIncome(int time, double monthlyGrossEmploymentIncome) {
-        if (time % 100 == 0) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             outfileEmploymentIncome.format(", %.2f", monthlyGrossEmploymentIncome);
         }
     }
 
     void recordRentalIncome(int time, double monthlyGrossRentalIncome) {
-        if (time % 100 == 0) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             outfileRentalIncome.format(", %.2f", monthlyGrossRentalIncome);
         }
     }
 
-	void recordBankBalance(int time, double bankBalance) {
-        if (time % 100 == 0) {
+    void recordBankBalance(int time, double bankBalance) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             outfileBankBalance.format(", %.2f", bankBalance);
         }
-	}
+    }
 
     void recordHousingWealth(int time, double housingWealth) {
-        if (time % 100 == 0) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             outfileHousingWealth.format(", %2f", housingWealth);
         }
     }
 
     void recordNHousesOwned(int time, int nHousesOwned) {
-        if (time % 100 == 0) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             outfileNHousesOwned.format(", %d", nHousesOwned);
         }
     }
 
     void recordAge(int time, double age) {
-        if (time % 100 == 0) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             outfileAge.format(", %.2f", age);
         }
     }
 
     void recordSavingRate(int time, double savingRate) {
-        if (time % 100 == 0) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             outfileSavingRate.format(", %.4f", savingRate);
         }
     }
 
-	public void finishRun(boolean recordEmploymentIncome, boolean recordRentalIncome, boolean recordBankBalance,
+    public void finishRun(boolean recordEmploymentIncome, boolean recordRentalIncome, boolean recordBankBalance,
                           boolean recordHousingWealth, boolean recordNHousesOwned, boolean recordAge,
                           boolean recordSavingRate) {
         if (recordEmploymentIncome) {
@@ -208,5 +211,5 @@ public class MicroDataRecorder {
         if (recordSavingRate) {
             outfileSavingRate.close();
         }
-	}
+    }
 }
