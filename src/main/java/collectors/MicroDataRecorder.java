@@ -12,6 +12,7 @@ public class MicroDataRecorder {
 
     private String          outputFolder;
 
+    private PrintWriter     outfileHouseholdID;
     private PrintWriter     outfileEmploymentIncome;
     private PrintWriter     outfileRentalIncome;
     private PrintWriter     outfileBankBalance;
@@ -33,10 +34,18 @@ public class MicroDataRecorder {
     //----- Methods -----//
     //-------------------//
 
-    public void openSingleRunSingleVariableFiles(int nRun, boolean recordEmploymentIncome, boolean recordRentalIncome,
-                                                 boolean recordBankBalance, boolean recordHousingWealth,
-                                                 boolean recordNHousesOwned, boolean recordAge,
-                                                 boolean recordSavingRate) {
+    public void openSingleRunSingleVariableFiles(int nRun, boolean recordHouseholdID, boolean recordEmploymentIncome,
+                                                 boolean recordRentalIncome, boolean recordBankBalance,
+                                                 boolean recordHousingWealth, boolean recordNHousesOwned,
+                                                 boolean recordAge, boolean recordSavingRate) {
+        if (recordHouseholdID) {
+            try {
+                outfileHouseholdID = new PrintWriter(outputFolder + "HouseholdID-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
         if (recordEmploymentIncome) {
             try {
                 outfileEmploymentIncome = new PrintWriter(outputFolder + "MonthlyGrossEmploymentIncome-run" + nRun
@@ -95,11 +104,17 @@ public class MicroDataRecorder {
         }
     }
 
-    void timeStampSingleRunSingleVariableFiles(int time, boolean recordEmploymentIncome, boolean recordRentalIncome,
-                                               boolean recordBankBalance, boolean recordHousingWealth,
-                                               boolean recordNHousesOwned, boolean recordAge,
-                                               boolean recordSavingRate) {
+    void timeStampSingleRunSingleVariableFiles(int time, boolean recordHouseholdID, boolean recordEmploymentIncome,
+                                               boolean recordRentalIncome, boolean recordBankBalance,
+                                               boolean recordHousingWealth, boolean recordNHousesOwned,
+                                               boolean recordAge, boolean recordSavingRate) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            if (recordHouseholdID) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileHouseholdID.println("");
+                }
+                outfileHouseholdID.print(time);
+            }
             if (recordEmploymentIncome) {
                 if (time != timeToStartMicroPrinting) {
                     outfileEmploymentIncome.println("");
@@ -145,6 +160,12 @@ public class MicroDataRecorder {
         }
     }
 
+    void recordHouseholdID(int time, int householdID) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileHouseholdID.format(", %d", householdID);
+        }
+    }
+
     void recordEmploymentIncome(int time, double monthlyGrossEmploymentIncome) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
             outfileEmploymentIncome.format(", %.2f", monthlyGrossEmploymentIncome);
@@ -187,9 +208,12 @@ public class MicroDataRecorder {
         }
     }
 
-    public void finishRun(boolean recordEmploymentIncome, boolean recordRentalIncome, boolean recordBankBalance,
-                          boolean recordHousingWealth, boolean recordNHousesOwned, boolean recordAge,
-                          boolean recordSavingRate) {
+    public void finishRun(boolean recordHouseholdID, boolean recordEmploymentIncome, boolean recordRentalIncome,
+                          boolean recordBankBalance, boolean recordHousingWealth, boolean recordNHousesOwned,
+                          boolean recordAge, boolean recordSavingRate) {
+        if (recordHouseholdID) {
+            outfileHouseholdID.close();
+        }
         if (recordEmploymentIncome) {
             outfileEmploymentIncome.close();
         }

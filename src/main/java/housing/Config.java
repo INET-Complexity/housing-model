@@ -33,6 +33,7 @@ public class Config {
     boolean recordNBidUpFrequency;                      // True to write the frequency of the number of bid-ups
     boolean recordCoreIndicators;                       // True to write time series for each core indicator
     boolean recordQualityBandPrice;                     // True to write time series of prices for each quality band to a single file per run
+    public boolean recordHouseholdID;                   // True to write individual household ID so as to identify households across time steps
     public boolean recordEmploymentIncome;              // True to write individual household monthly gross employment income data
     public boolean recordRentalIncome;                  // True to write individual household monthly gross rental income data (after market clearing)
     public boolean recordBankBalance;                   // True to write individual household liquid wealth (bank balance) data (after market clearing)
