@@ -108,8 +108,7 @@ public class TransactionRecorder {
                 purchase.getBidder().getMonthlyGrossTotalIncome(),
                 purchase.getBidder().getMonthlyGrossEmploymentIncome(),
                 purchase.getBidder().getMonthlyNetEmploymentIncome(),
-                purchase.getBidder().behaviour.getDesiredPurchasePrice(
-                        purchase.getBidder().getAnnualGrossEmploymentIncome()),
+                purchase.getBidder().getDesiredPurchasePrice(),
                 purchase.getBidder().getBankBalance(),
                 purchase.getBidder().behaviour.getBTLCapGainCoefficient(),
                 mortgage.downPayment,

@@ -26,6 +26,7 @@ public class Household implements IHouseOwner {
     public int                  id; // Only used for identifying households within the class TransactionRecorder
     private double              annualGrossEmploymentIncome;
     private double              monthlyGrossEmploymentIncome;
+    private double              desiredPurchasePrice;
     public HouseholdBehaviour   behaviour; // Behavioural plugin
 
     double                      incomePercentile; // Fixed for the whole lifetime of the household
@@ -83,6 +84,9 @@ public class Household implements IHouseOwner {
         // Update annual and monthly gross employment income
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
+        // Update desired purchase price
+        desiredPurchasePrice = behaviour.updateDesiredPurchasePrice(annualGrossEmploymentIncome);
+        // desiredPurchasePrice = behaviour.getAltDesiredPurchasePrice(annualGrossEmploymentIncome, behaviour.decideLTV(this));
         // Add monthly disposable income (net total income minus essential consumption and housing expenses) to bank balance
         double monthlyDisposableIncome = getMonthlyDisposableIncome();
         bankBalance += monthlyDisposableIncome;
@@ -435,16 +439,13 @@ public class Household implements IHouseOwner {
      * owning. 
      ********************************************************/
     private void bidForAHome() {
-        // Find household's desired housing expenditure
-        double price = behaviour.getDesiredPurchasePrice(annualGrossEmploymentIncome);
-//        double price = behaviour.getAltDesiredPurchasePrice(annualGrossEmploymentIncome, behaviour.decideLTV(this));
-        // Cap this expenditure to the maximum mortgage available to the household
-        price = Math.min(price, Model.bank.getMaxMortgagePrice(this, true));
+        // Find household's desired housing expenditure, capped to the maximum mortgage available to the household
+        double price = Math.min(getDesiredPurchasePrice(), Model.bank.getMaxMortgagePrice(this, true));
         // Record the bid on householdStats for counting the number of bids above exponential moving average sale price
         Model.householdStats.countNonBTLBidsAboveExpAvSalePrice(price);
         // Compare costs to decide whether to buy or rent...
         double desiredDownPayment = behaviour.decideDownPayment(this, price);
-        if (behaviour.decideRentOrPurchase(this, price, desiredDownPayment)) {
+        if (behaviour.decideRentOrPurchase(this, price, desiredDownPayment, getDesiredPurchasePrice())) {
             // ... if buying, bid in the house sale market for the capped desired price
             Model.houseSaleMarket.bid(this, price, false, desiredDownPayment);
         } else {
@@ -673,4 +674,6 @@ public class Household implements IHouseOwner {
     }
 
     public double getSavingRate() { return savingRate; }
+
+    public double getDesiredPurchasePrice() { return desiredPurchasePrice; }
 }

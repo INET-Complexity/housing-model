@@ -97,7 +97,7 @@ public class HouseholdBehaviour {
      *
      * @param annualGrossEmploymentIncome Annual gross employment income of the household
      */
-    public double getDesiredPurchasePrice(double annualGrossEmploymentIncome) {
+    double updateDesiredPurchasePrice(double annualGrossEmploymentIncome) {
         return config.BUY_SCALE * Math.pow(annualGrossEmploymentIncome, config.BUY_EXPONENT)
                 * Math.exp(config.BUY_MU + config.BUY_SIGMA*prng.nextGaussian());
     }
@@ -241,7 +241,7 @@ public class HouseholdBehaviour {
      *
      * @return True if the household decides to buy a house, False if the household decides to rent
      */
-    boolean decideRentOrPurchase(Household me, double purchasePrice, double desiredDownPayment) {
+    boolean decideRentOrPurchase(Household me, double purchasePrice, double desiredDownPayment, double desiredPrice) {
         // By definition, BTL households never rent
         if(isPropertyInvestor()) return(true);
         // First, find the maximum quality the household could afford in the ownership market
