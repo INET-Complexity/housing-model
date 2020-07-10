@@ -117,7 +117,8 @@ public class Config {
     private double HOLD_PERIOD;             // Average period, in years, for which owner-occupiers hold their houses
 
     // Bank parameters
-    private int MORTGAGE_DURATION_YEARS;    // Mortgage duration in years
+    int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
+    int BANK_AGE_LIMIT;                     // Maximum age to get a mortgage, non-BTL mortgages need to have been fully repaid by this age
     double BANK_INITIAL_RATE;               // Private bank initial interest rate
     double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
     double BANK_D_DEMAND_D_INTEREST;        // Rate of change of the demand for credit in response to a change in the interest rate (in pounds per point)

@@ -24,8 +24,6 @@ public class Bank {
     // Bank fields
     public HashSet<MortgageAgreement>   mortgages;                  // All unpaid mortgage contracts supplied by the bank
     private double                      interestSpread;             // Current mortgage interest spread above base rate (monthly rate*12)
-    private double                      monthlyPaymentFactor;       // Monthly payment as a fraction of the principal for non-BTL mortgages
-    private double                      monthlyPaymentFactorBTL;    // Monthly payment as a fraction of the principal for BTL (interest-only) mortgages
 
     // LTI tracking fields
     private int                 nFTBMortOverSoftMaxLTI_New;     // Number of new mortgages to first-time buyers over the soft maximum LTI underwritten this month
@@ -177,27 +175,51 @@ public class Bank {
      */
     private void setMortgageInterestRate(double rate) {
         interestSpread = rate - centralBank.getBaseRate();
-        recalculateMonthlyPaymentFactor();
-    }
-
-    /**
-     * Compute the monthly payment factor, i.e., the monthly payment on a mortgage as a fraction of the mortgage
-     * principal, for both BTL (interest-only) and non-BTL mortgages.
-     */
-    private void recalculateMonthlyPaymentFactor() {
-        double r = getMortgageInterestRate() / config.constants.MONTHS_IN_YEAR;
-        monthlyPaymentFactor = r / (1.0 - Math.pow(1.0 + r, -config.derivedParams.N_PAYMENTS));
-        monthlyPaymentFactorBTL = r;
     }
 
     /**
      * Get the monthly payment factor, i.e., the monthly payment on a mortgage as a fraction of the mortgage principal.
+     * This takes into account age-based restrictions for non-BTL mortgages via the number of payments.
      */
-    private double getMonthlyPaymentFactor(boolean isHome) {
+    private double getMonthlyPaymentFactor(boolean isHome, double age) {
+        double r = getMortgageInterestRate() / config.constants.MONTHS_IN_YEAR;
+        // For non-BTL purchases, compute payment factor to pay off the principal in the agreed number of payments,
+        // coherent with any mortgage length age-based restrictions
         if (isHome) {
-            return monthlyPaymentFactor; // Monthly payment factor to pay off the principal in N_PAYMENTS
+            if (getNPayments(true, age) > 0) {
+                return r / (1.0 - Math.pow(1.0 + r, -getNPayments(true, age)));
+            } else {
+                throw new RuntimeException("Trying to find monthly payment factor for a zero payments mortgage");
+            }
+        // For BTL purchases, compute interest-only payment factor (age-based restrictions applied elsewhere)
         } else {
-            return monthlyPaymentFactorBTL; // Monthly payment factor for interest-only mortgages
+            return r;
+        }
+    }
+
+    /**
+     * Compute the number of payments, taking into account differentiated age-based restrictions for BTL and non-BTL
+     * bids. In particular, BTL mortgages always have full maturity, but they can only be approved before the household
+     * reaches the age limit. On the contrary, non-BTL mortgages start seeing their maturities reduced before the age
+     * limit, in such a way that the full amount is repaid by the time the household reaches this limit.
+     */
+    private int getNPayments(boolean isHome, double age) {
+        // For non-BTL purchases, any mortgage principal must be repaid when the household turns 65
+        if (isHome) {
+            if (age <= config.BANK_AGE_LIMIT - config.MORTGAGE_DURATION_YEARS) {
+                return config.MORTGAGE_DURATION_YEARS * config.constants.MONTHS_IN_YEAR;
+            } else if (age <= config.BANK_AGE_LIMIT) {
+                return (int) ((config.BANK_AGE_LIMIT - age) * config.constants.MONTHS_IN_YEAR);
+            } else {
+                return 0;
+            }
+        // For BTL purchases, a mortgage can only be approved before the household turns 65
+        } else {
+            if (age <= config.BANK_AGE_LIMIT) {
+                return config.MORTGAGE_DURATION_YEARS * config.constants.MONTHS_IN_YEAR;
+            } else {
+                return 0;
+            }
         }
     }
 
@@ -266,31 +288,39 @@ public class Bank {
         // price
         approval.principal = housePrice * getLoanToValueLimit(h.isFirstTimeBuyer(), isHome);
 
-        /*
-         * Constraints specific to non-BTL mortgages
-         */
+        if (getNPayments(isHome, h.getAge()) > 0) {
 
-        if (isHome) {
-            // Affordability constraint: it sets a maximum value for the monthly mortgage payment divided by the
-            // household's monthly net employment income
-            double affordable_principal = getHardMaxAffordability() * h.getMonthlyNetEmploymentIncome()
-                    / getMonthlyPaymentFactor(true);
-            approval.principal = Math.min(approval.principal, affordable_principal);
-            // Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
-            // annual gross employment income
-            double lti_principal = h.getAnnualGrossEmploymentIncome() * getLoanToIncomeLimit(h.isFirstTimeBuyer());
-            approval.principal = Math.min(approval.principal, lti_principal);
+            /*
+             * Constraints specific to non-BTL mortgages
+             */
 
-        /*
-         * Constraints specific to BTL mortgages
-         */
+            if (isHome) {
+                // Affordability constraint: it sets a maximum value for the monthly mortgage payment divided by the
+                // household's monthly net employment income
+                double affordable_principal = getHardMaxAffordability() * h.getMonthlyNetEmploymentIncome()
+                        / getMonthlyPaymentFactor(true, h.getAge());
+                if (getMonthlyPaymentFactor(true, h.getAge()) == 1.0) affordable_principal = 0.0;
+                approval.principal = Math.min(approval.principal, affordable_principal);
+                // Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
+                // annual gross employment income
+                double lti_principal = h.getAnnualGrossEmploymentIncome() * getLoanToIncomeLimit(h.isFirstTimeBuyer());
+                approval.principal = Math.min(approval.principal, lti_principal);
 
+                /*
+                 * Constraints specific to BTL mortgages
+                 */
+
+            } else {
+                // Interest Coverage Ratio (ICR) constraint: it sets a minimum value for the expected annual rental
+                // income divided by the annual interest expenses
+                double icr_principal = Model.rentalMarketStats.getExpAvFlowYield() * housePrice
+                        / (getHardMinICR() * getMortgageInterestRate());
+                approval.principal = Math.min(approval.principal, icr_principal);
+            }
+
+            // If number of payments is zero, then no principal is approved, purchase must be paid outright
         } else {
-            // Interest Coverage Ratio (ICR) constraint: it sets a minimum value for the expected annual rental income
-            // divided by the annual interest expenses
-            double icr_principal = Model.rentalMarketStats.getExpAvFlowYield() * housePrice
-                    / (getHardMinICR() * getMortgageInterestRate());
-            approval.principal = Math.min(approval.principal, icr_principal);
+            approval.principal = 0.0;
         }
 
         /*
@@ -318,8 +348,12 @@ public class Bank {
          * Set the rest of the variables of the MortgageAgreement object
          */
 
-        approval.monthlyPayment = approval.principal * getMonthlyPaymentFactor(isHome);
-        approval.nPayments = config.derivedParams.N_PAYMENTS;
+        if (getNPayments(isHome, h.getAge()) > 0) {
+            approval.monthlyPayment = approval.principal * getMonthlyPaymentFactor(isHome, h.getAge());
+        } else {
+            approval.monthlyPayment = 0.0;
+        }
+        approval.nPayments = getNPayments(isHome, h.getAge());
         approval.monthlyInterestRate = getMortgageInterestRate() / config.constants.MONTHS_IN_YEAR;
         approval.purchasePrice = approval.principal + approval.downPayment;
         // Throw error and stop program if requested mortgage has down-payment larger than household's liquid wealth
@@ -350,6 +384,9 @@ public class Bank {
         // before bidding for new ones
         double max_downpayment = h.getBankBalance() - 0.01;
 
+        // If number of payments is zero, then no principal is approved, purchase must be paid outright
+        if (getNPayments(isHome, h.getAge()) == 0) return max_downpayment;
+
         /*
          * Constraints for all mortgages
          */
@@ -366,7 +403,8 @@ public class Bank {
             // Affordability constraint: it sets a maximum value for the monthly mortgage payment divided by the
             // household's monthly net employment income
             double affordable_max_price = max_downpayment + getHardMaxAffordability()
-                    * h.getMonthlyNetEmploymentIncome() / getMonthlyPaymentFactor(true);
+                    * h.getMonthlyNetEmploymentIncome() / getMonthlyPaymentFactor(true, h.getAge());
+            if (getMonthlyPaymentFactor(true, h.getAge()) == 1.0) affordable_max_price = max_downpayment;
             max_price = Math.min(max_price, affordable_max_price);
             // Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
             // annual gross employment income. The lowest LTI limit is used, since it is impossible to know yet which
@@ -503,7 +541,7 @@ public class Bank {
      * constraining limit is used.
      *
      * @param isFirstTimeBuyer True if the household is a first-time buyer
-     * @return The lowes Loan-To-Income ratio limit potentially applicable to this type of household
+     * @return The lowest Loan-To-Income ratio limit potentially applicable to this type of household
      */
     private double getLoanToIncomeLowestLimit(boolean isFirstTimeBuyer) {
         // For first-time buyers...
