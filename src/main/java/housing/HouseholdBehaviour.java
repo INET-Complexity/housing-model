@@ -188,8 +188,10 @@ public class HouseholdBehaviour {
         if (me.isFirstTimeBuyer()) {
             // Since the function of the HPI is to move the down payments distribution upwards or downwards to
             // accommodate current price levels, and the distribution is itself aggregate, we use the aggregate HPI
-            downpayment = housingMarketStats.getHPI()
-                    * downpaymentDistFTB.inverseCumulativeProbability(me.incomePercentile);
+            downpayment = me.getBankBalance();
+//            TODO: In the future, remove this old FTB down-payment implementation, kept for now as legacy/alternative
+//            downpayment = housingMarketStats.getHPI()
+//                    * downpaymentDistFTB.inverseCumulativeProbability(me.incomePercentile);
         } else if (isPropertyInvestor()) {
             downpayment = housePrice*(Math.max(0.0,
                     config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON * prng.nextGaussian()));
@@ -253,6 +255,11 @@ public class HouseholdBehaviour {
         if (newHouseQuality == config.N_QUALITY - 1) {
             purchasePrice = housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY - 1);
         }
+        // If maximum mortgage price is below desired price (capped by maximum quality price), then rent
+        if (Math.min(desiredPrice, housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY - 1)) >
+                Model.bank.getMaxMortgagePrice(me, true)) {
+            return false;
+        }
         // Find out potential mortgage characteristics...
         MortgageAgreement mortgageApproval = Model.bank.requestApproval(me, purchasePrice,
                 desiredDownPayment, true);
@@ -281,16 +288,21 @@ public class HouseholdBehaviour {
      * @return True if investor me decides to sell investment property h
      */
     boolean decideToSellInvestmentProperty(House h, Household me) {
+        // First find the mortgage agreement for this property
+        MortgageAgreement mortgage = me.mortgageFor(h);
+
         // Fast decisions...
+        // ... from 2 years to maturity, put property for sale whenever bank balance not enough for principal repayment
+        if (mortgage.nPayments <= 24 & mortgage.principal > me.getBankBalance()) {
+            return true;
+        }
         // ...always keep at least one investment property (i.e., at least two properties)
         if (me.getNProperties() < 3) return false;
         // ...don't sell while occupied by tenant
         if (!h.isOnRentalMarket()) return false;
 
         // Find the expected equity yield rate of this property as a weighted mix of both rental yield and capital gain
-        // times the leverage
-        // ...find the mortgage agreement for this property
-        MortgageAgreement mortgage = me.mortgageFor(h);
+        // times the leverage...
         // ...find its current (fair market value) sale price
         double currentMarketPrice = housingMarketStats.getExpAvSalePriceForQuality(h.getQuality());
         // ...find equity, or assets minus liabilities
@@ -330,9 +342,14 @@ public class HouseholdBehaviour {
         // Fast decisions...
         // ...always decide to buy if owning no investment property yet (i.e., if owning only one property, a home)
         if (me.getNProperties() < 2) { return true ; }
-        // ...find maximum price (maximum mortgage) the household could pay
+        // ...otherwise, do not buy if current bank balance below desired level
+        // TODO: Final decision needed on this mechanism and whether to keep it here or as first mechanism
+        if (me.getBankBalance() < data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(), propensityToSave)) {
+            return false;
+        }
+        // ...also, do not buy if the maximum price of the household (corresponding to its maximum mortgage) is below
+        // the average price for the lowest quality
         double maxPrice = Model.bank.getMaxMortgagePrice(me, false);
-        // ...never buy if that maximum price is below the average price for the lowest quality
         if (maxPrice < housingMarketStats.getExpAvSalePriceForQuality(0)) { return false; }
 
         // Find the expected equity yield rate for a hypothetical house maximising the leverage available to the
