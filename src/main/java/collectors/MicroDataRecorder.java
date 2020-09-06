@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import java.util.Locale;
+
 public class MicroDataRecorder {
 
     //------------------//
@@ -162,49 +164,49 @@ public class MicroDataRecorder {
 
     void recordHouseholdID(int time, int householdID) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileHouseholdID.format(", %d", householdID);
+            outfileHouseholdID.format(Locale.ROOT, ", %d", householdID);
         }
     }
 
     void recordEmploymentIncome(int time, double monthlyGrossEmploymentIncome) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileEmploymentIncome.format(", %.2f", monthlyGrossEmploymentIncome);
+            outfileEmploymentIncome.format(Locale.ROOT, ", %.2f", monthlyGrossEmploymentIncome);
         }
     }
 
     void recordRentalIncome(int time, double monthlyGrossRentalIncome) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileRentalIncome.format(", %.2f", monthlyGrossRentalIncome);
+            outfileRentalIncome.format(Locale.ROOT, ", %.2f", monthlyGrossRentalIncome);
         }
     }
 
     void recordBankBalance(int time, double bankBalance) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileBankBalance.format(", %.2f", bankBalance);
+            outfileBankBalance.format(Locale.ROOT, ", %.2f", bankBalance);
         }
     }
 
     void recordHousingWealth(int time, double housingWealth) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileHousingWealth.format(", %2f", housingWealth);
+            outfileHousingWealth.format(Locale.ROOT, ", %2f", housingWealth);
         }
     }
 
     void recordNHousesOwned(int time, int nHousesOwned) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileNHousesOwned.format(", %d", nHousesOwned);
+            outfileNHousesOwned.format(Locale.ROOT, ", %d", nHousesOwned);
         }
     }
 
     void recordAge(int time, double age) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileAge.format(", %.2f", age);
+            outfileAge.format(Locale.ROOT, ", %.2f", age);
         }
     }
 
     void recordSavingRate(int time, double savingRate) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileSavingRate.format(", %.4f", savingRate);
+            outfileSavingRate.format(Locale.ROOT, ", %.4f", savingRate);
         }
     }
 

@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import java.util.Locale;
+
 import housing.Model;
 
 /**************************************************************************************************
@@ -124,7 +126,7 @@ public class Recorder {
                 qualityBandPriceFile = new PrintWriter(outputFolder + "QualityBandPrice-run" + nRun + ".csv", "UTF-8");
                 qualityBandPriceFile.print("Time");
                 for (int i = 0; i < nQualityBands; i++) {
-                    qualityBandPriceFile.format(", Q%d", i);
+                    qualityBandPriceFile.format(Locale.ROOT, ", Q%d", i);
                 }
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -154,25 +156,25 @@ public class Recorder {
                 interestRateSpread.print(", ");
             }
             // Write core indicators results
-            ooLTV.format("%.4f", Model.coreIndicators.getOwnerOccupierLTVMeanAboveMedian());
-            ooLTI.format("%.4f", Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
-            btlLTV.format("%.4f", Model.coreIndicators.getBuyToLetLTVMean());
-            creditGrowth.format("%.4f", Model.coreIndicators.getHouseholdCreditGrowth());
-            debtToIncome.format("%.4f", Model.coreIndicators.getMortgageDebtToIncome());
-            ooDebtToIncome.format("%.4f", Model.coreIndicators.getOOMortgageDebtToIncome());
-            mortgageApprovals.format("%d", Model.coreIndicators.getMortgageApprovals());
-            housingTransactions.format("%d", Model.coreIndicators.getHousingTransactions());
-            advancesToFTB.format("%d", Model.coreIndicators.getAdvancesToFTB());
-            advancesToBTL.format("%d", Model.coreIndicators.getAdvancesToBTL());
-            advancesToHM.format("%d", Model.coreIndicators.getAdvancesToHM());
-            housePriceGrowth.format("%.4f", Model.coreIndicators.getHousePriceGrowth());
-            priceToIncome.format("%.4f", Model.coreIndicators.getPriceToIncome());
-            rentalYield.format("%.4f", Model.coreIndicators.getAvStockRentalYield());
-            interestRateSpread.format("%.4f", Model.coreIndicators.getInterestRateSpread());
+            ooLTV.format(Locale.ROOT, "%.4f", Model.coreIndicators.getOwnerOccupierLTVMeanAboveMedian());
+            ooLTI.format(Locale.ROOT, "%.4f", Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
+            btlLTV.format(Locale.ROOT, "%.4f", Model.coreIndicators.getBuyToLetLTVMean());
+            creditGrowth.format(Locale.ROOT, "%.4f", Model.coreIndicators.getHouseholdCreditGrowth());
+            debtToIncome.format(Locale.ROOT, "%.4f", Model.coreIndicators.getMortgageDebtToIncome());
+            ooDebtToIncome.format(Locale.ROOT, "%.4f", Model.coreIndicators.getOOMortgageDebtToIncome());
+            mortgageApprovals.format(Locale.ROOT, "%d", Model.coreIndicators.getMortgageApprovals());
+            housingTransactions.format(Locale.ROOT, "%d", Model.coreIndicators.getHousingTransactions());
+            advancesToFTB.format(Locale.ROOT, "%d", Model.coreIndicators.getAdvancesToFTB());
+            advancesToBTL.format(Locale.ROOT, "%d", Model.coreIndicators.getAdvancesToBTL());
+            advancesToHM.format(Locale.ROOT, "%d", Model.coreIndicators.getAdvancesToHM());
+            housePriceGrowth.format(Locale.ROOT, "%.4f", Model.coreIndicators.getHousePriceGrowth());
+            priceToIncome.format(Locale.ROOT, "%.4f", Model.coreIndicators.getPriceToIncome());
+            rentalYield.format(Locale.ROOT, "%.4f", Model.coreIndicators.getAvStockRentalYield());
+            interestRateSpread.format(Locale.ROOT, "%.4f", Model.coreIndicators.getInterestRateSpread());
         }
 
         // Write general output results to output file
-        outfile.format("%n%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, " +
+        outfile.format(Locale.ROOT, "%n%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, " +
                         "%d, %d, %d, %d, %.4f, " +
                         "%.4f, %.4e, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, " +
                         "%.4f, %.4e, %.2f, %.2f, %.2f, %.4f, %.4f, %d, %d, %d, %.4f, " +
@@ -242,9 +244,9 @@ public class Recorder {
 
         // Write quality band prices to file
         if (recordQualityBandPrice) {
-            qualityBandPriceFile.format("%n%d", time);
+            qualityBandPriceFile.format(Locale.ROOT, "%n%d", time);
             for (double element : Model.housingMarketStats.getAvSalePricePerQuality()) {
-                qualityBandPriceFile.format(", %.2f", element);
+                qualityBandPriceFile.format(Locale.ROOT, ", %.2f", element);
             }
         }
     }

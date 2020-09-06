@@ -5,7 +5,9 @@ import housing.*;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+
 import java.util.Arrays;
+import java.util.Locale;
 
 public class TransactionRecorder {
 
@@ -94,9 +96,9 @@ public class TransactionRecorder {
         } else {
             ICR = Double.NaN;
         }
-        outfileSaleTransactions.format("%n%d, ", Model.getTime());
-        outfileSaleTransactions.format("%d, %d, %.2f, %d, %.2f, %d, %.2f, %b, %.2f, %.2f, %.2f, %.2f, %.2f, %.2f, "
-                        + "%.2f, %.2f, %.2f, %.4f, %.2f, %d, %b, %b, ",
+        outfileSaleTransactions.format(Locale.ROOT, "%n%d, ", Model.getTime());
+        outfileSaleTransactions.format(Locale.ROOT, "%d, %d, %.2f, %d, %.2f, %d, %.2f, %b, %.2f, %.2f, %.2f, %.2f, "
+                        + "%.2f, %.2f, %.2f, %.2f, %.2f, %.4f, %.2f, %d, %b, %b, ",
                 sale.getHouse().id,
                 sale.getHouse().getQuality(),
                 sale.getInitialListedPrice(),
@@ -121,7 +123,7 @@ public class TransactionRecorder {
                 mortgage.isBuyToLet);
         if (sale.getHouse().owner instanceof Household) {
             Household seller = (Household) sale.getHouse().owner;
-            outfileSaleTransactions.format("%d, %.2f, %b, %.2f, %.2f, %.2f, %.2f",
+            outfileSaleTransactions.format(Locale.ROOT, "%d, %.2f, %b, %.2f, %.2f, %.2f, %.2f",
                     seller.id,
                     seller.getAge(),
                     seller.behaviour.isPropertyInvestor(),
@@ -137,9 +139,9 @@ public class TransactionRecorder {
 
     private void recordRentalTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
         Household seller = (Household) sale.getHouse().owner;
-        outfileRentalTransactions.format("%n%d, ", Model.getTime());
-        outfileRentalTransactions.format("%d, %d, %.2f, %d, %.2f, %d, %.2f, %.2f, %.2f, %.2f, %d, %.2f, %b, %.2f, "
-                        + "%.2f, %.2f",
+        outfileRentalTransactions.format(Locale.ROOT, "%n%d, ", Model.getTime());
+        outfileRentalTransactions.format(Locale.ROOT, "%d, %d, %.2f, %d, %.2f, %d, %.2f, %.2f, %.2f, %.2f, %d, "
+                        + "%.2f, %b, %.2f, %.2f, %.2f",
                 sale.getHouse().id,
                 sale.getHouse().getQuality(),
                 sale.getInitialListedPrice(),
@@ -159,7 +161,7 @@ public class TransactionRecorder {
     }
 
     public void recordNBidUpFrequency(int time, int[] nBidUpFrequency) {
-        outfileNBidUpFrequency.format("%n%d, %s", time,
+        outfileNBidUpFrequency.format(Locale.ROOT, "%n%d, %s", time,
                 Arrays.toString(nBidUpFrequency)
                         .replace("[", "")
                         .replace("]", ""));
