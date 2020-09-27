@@ -96,26 +96,26 @@ public class Recorder {
         // Try opening general output file and write first row header with column names
         try {
             outfile = new PrintWriter(outputFolder + "Output-run" + nRun + ".csv", "UTF-8");
-            outfile.print("Model time, "
+            outfile.print("Model time; "
                     // Number of households of each type
-                    + "nNonBTLHomeless, nBTLHomeless, nHomeless, nRenting, nNonOwner, "
-                    + "nNonBTLOwnerOccupier, nBTLOwnerOccupier, nOwnerOccupier, nActiveBTL, nBTL, nNonBTLBankrupt, "
-                    + "nBTLBankrupt, TotalPopulation, "
+                    + "nNonBTLHomeless; nBTLHomeless; nHomeless; nRenting; nNonOwner; "
+                    + "nNonBTLOwnerOccupier; nBTLOwnerOccupier; nOwnerOccupier; nActiveBTL; nBTL; nNonBTLBankrupt; "
+                    + "nBTLBankrupt; TotalPopulation; "
                     // Numbers of houses of each type
-                    + "HousingStock, nNewBuild, nUnsoldNewBuild, nEmptyHouses, BTLStockFraction, "
+                    + "HousingStock; nNewBuild; nUnsoldNewBuild; nEmptyHouses; BTLStockFraction; "
                     // House sale market data
-                    + "Sale HPI, Sale AnnualHPA, Sale AvBidPrice, Sale AvOfferPrice, Sale AvSalePrice, "
-                    + "Sale ExAvSalePrice, Sale AvMonthsOnMarket, Sale ExpAvMonthsOnMarket, Sale nBuyers, "
-                    + "Sale nBTLBuyers, Sale nSellers, Sale nNewSellers, Sale nBTLSellers, Sale nSales, "
-                    + "Sale nNonBTLBidsAboveExpAvSalePrice, Sale nBTLBidsAboveExpAvSalePrice, Sale nSalesToBTL, "
-                    + "Sale nSalesToFTB, "
+                    + "Sale HPI; Sale AnnualHPA; Sale AvBidPrice; Sale AvOfferPrice; Sale AvSalePrice; "
+                    + "Sale ExAvSalePrice; Sale AvMonthsOnMarket; Sale ExpAvMonthsOnMarket; Sale nBuyers; "
+                    + "Sale nBTLBuyers; Sale nSellers; Sale nNewSellers; Sale nBTLSellers; Sale nSales; "
+                    + "Sale nNonBTLBidsAboveExpAvSalePrice; Sale nBTLBidsAboveExpAvSalePrice; Sale nSalesToBTL; "
+                    + "Sale nSalesToFTB; "
                     // Rental market data
-                    + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
-                    + "Rental AvMonthsOnMarket, Rental ExpAvMonthsOnMarket, Rental nBuyers, Rental nSellers, "
-                    + "Rental nSales, Rental ExpAvFlowYield, "
+                    + "Rental HPI; Rental AnnualHPA; Rental AvBidPrice; Rental AvOfferPrice; Rental AvSalePrice; "
+                    + "Rental AvMonthsOnMarket; Rental ExpAvMonthsOnMarket; Rental nBuyers; Rental nSellers; "
+                    + "Rental nSales; Rental ExpAvFlowYield; "
                     // Credit data
-                    + "nStockMortgages, nNewFTBMortgages, nNewFTBMortgagesToBTL, nNewHMMortgages, "
-                    + "nNewBTLMortgages, newFTBCredit, newHMCredit, newBTLCredit, newTotalCredit, interestRate");
+                    + "nStockMortgages; nNewFTBMortgages; nNewFTBMortgagesToBTL; nNewHMMortgages; "
+                    + "nNewBTLMortgages; newFTBCredit; newHMCredit; newBTLCredit; newTotalCredit; interestRate");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -126,7 +126,7 @@ public class Recorder {
                 qualityBandPriceFile = new PrintWriter(outputFolder + "QualityBandPrice-run" + nRun + ".csv", "UTF-8");
                 qualityBandPriceFile.print("Time");
                 for (int i = 0; i < nQualityBands; i++) {
-                    qualityBandPriceFile.format(Locale.ROOT, ", Q%d", i);
+                    qualityBandPriceFile.format(Locale.ROOT, "; Q%d", i);
                 }
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -139,21 +139,21 @@ public class Recorder {
             // If not at the first point in time...
             if (time > 0) {
                 // ...write value separation for core indicators (except for time 0)
-                ooLTV.print(", ");
-                ooLTI.print(", ");
-                btlLTV.print(", ");
-                creditGrowth.print(", ");
-                debtToIncome.print(", ");
-                ooDebtToIncome.print(", ");
-                mortgageApprovals.print(", ");
-                housingTransactions.print(", ");
-                advancesToFTB.print(", ");
-                advancesToBTL.print(", ");
-                advancesToHM.print(", ");
-                housePriceGrowth.print(", ");
-                priceToIncome.print(", ");
-                rentalYield.print(", ");
-                interestRateSpread.print(", ");
+                ooLTV.print("; ");
+                ooLTI.print("; ");
+                btlLTV.print("; ");
+                creditGrowth.print("; ");
+                debtToIncome.print("; ");
+                ooDebtToIncome.print("; ");
+                mortgageApprovals.print("; ");
+                housingTransactions.print("; ");
+                advancesToFTB.print("; ");
+                advancesToBTL.print("; ");
+                advancesToHM.print("; ");
+                housePriceGrowth.print("; ");
+                priceToIncome.print("; ");
+                rentalYield.print("; ");
+                interestRateSpread.print("; ");
             }
             // Write core indicators results
             ooLTV.format(Locale.ROOT, "%.4f", Model.coreIndicators.getOwnerOccupierLTVMeanAboveMedian());
@@ -174,11 +174,11 @@ public class Recorder {
         }
 
         // Write general output results to output file
-        outfile.format(Locale.ROOT, "%n%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, " +
-                        "%d, %d, %d, %d, %.4f, " +
-                        "%.4f, %.4e, %.2f, %.2f, %.2f, %.2f, %.4f, %.4f, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, " +
-                        "%.4f, %.4e, %.2f, %.2f, %.2f, %.4f, %.4f, %d, %d, %d, %.4f, " +
-                        "%d, %d, %d, %d, %d, %.2f, %.2f, %.2f, %.2f, %.6f", time,
+        outfile.format(Locale.ROOT, "%n%d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; " +
+                        "%d; %d; %d; %d; %.4f; " +
+                        "%.4f; %.4e; %.2f; %.2f; %.2f; %.2f; %.4f; %.4f; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; " +
+                        "%.4f; %.4e; %.2f; %.2f; %.2f; %.4f; %.4f; %d; %d; %d; %.4f; " +
+                        "%d; %d; %d; %d; %d; %.2f; %.2f; %.2f; %.2f; %.6f", time,
                 // Number of households of each type
                 Model.householdStats.getnNonBTLHomeless(),
                 Model.householdStats.getnBTLHomeless(),
@@ -246,7 +246,7 @@ public class Recorder {
         if (recordQualityBandPrice) {
             qualityBandPriceFile.format(Locale.ROOT, "%n%d", time);
             for (double element : Model.housingMarketStats.getAvSalePricePerQuality()) {
-                qualityBandPriceFile.format(Locale.ROOT, ", %.2f", element);
+                qualityBandPriceFile.format(Locale.ROOT, "; %.2f", element);
             }
         }
     }

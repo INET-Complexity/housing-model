@@ -37,26 +37,26 @@ public class TransactionRecorder {
             try {
                 outfileSaleTransactions = new PrintWriter(outputFolder + "SaleTransactions-run" + nRun + ".csv",
                         "UTF-8");
-                outfileSaleTransactions.print("modelTime, "
-                        + "houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, buyerId,"
-                        + "buyerAge, buyerHasBTLGene, buyerMonthlyGrossTotalIncome, buyerMonthlyGrossEmploymentIncome, "
-                        + "buyerMonthlyNetEmploymentIncome, desiredPurchasePrice, buyerPostPurchaseBankBalance, "
-                        + "buyerCapGainCoeff, mortgageDownpayment, mortgagePrincipal, mortgageMonthlyPayment, "
-                        + "annualInterestRate, ICR, maturity, "
-                        + "firstTimeBuyerMortgage, buyToLetMortgage, sellerId, sellerAge, sellerHasBTLGene, "
-                        + "sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
-                        + "sellerPostPurchaseBankBalance, sellerCapGainCoeff");
+                outfileSaleTransactions.print("modelTime; "
+                        + "houseId; houseQuality; initialListedPrice; timeFirstOffered; transactionPrice; buyerId;"
+                        + "buyerAge; buyerHasBTLGene; buyerMonthlyGrossTotalIncome; buyerMonthlyGrossEmploymentIncome; "
+                        + "buyerMonthlyNetEmploymentIncome; desiredPurchasePrice; buyerPostPurchaseBankBalance; "
+                        + "buyerCapGainCoeff; mortgageDownpayment; mortgagePrincipal; mortgageMonthlyPayment; "
+                        + "annualInterestRate; ICR; maturity; "
+                        + "firstTimeBuyerMortgage; buyToLetMortgage; sellerId; sellerAge; sellerHasBTLGene; "
+                        + "sellerMonthlyGrossTotalIncome; sellerMonthlyGrossEmploymentIncome; "
+                        + "sellerPostPurchaseBankBalance; sellerCapGainCoeff");
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
             try {
                 outfileRentalTransactions = new PrintWriter(outputFolder + "RentalTransactions-run" + nRun + ".csv",
                         "UTF-8");
-                outfileRentalTransactions.print("modelTime, "
-                        + "houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, buyerId, "
-                        + "buyerAge, buyerMonthlyGrossTotalIncome, buyerMonthlyGrossEmploymentIncome, "
-                        + "buyerPostPurchaseBankBalance, sellerId, sellerAge, sellerHasBTLGene, "
-                        + "sellerMonthlyGrossTotalIncome, sellerMonthlyGrossEmploymentIncome, "
+                outfileRentalTransactions.print("modelTime; "
+                        + "houseId; houseQuality; initialListedPrice; timeFirstOffered; transactionPrice; buyerId; "
+                        + "buyerAge; buyerMonthlyGrossTotalIncome; buyerMonthlyGrossEmploymentIncome; "
+                        + "buyerPostPurchaseBankBalance; sellerId; sellerAge; sellerHasBTLGene; "
+                        + "sellerMonthlyGrossTotalIncome; sellerMonthlyGrossEmploymentIncome; "
                         + "sellerPostPurchaseBankBalance");
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
@@ -66,11 +66,11 @@ public class TransactionRecorder {
             try {
                 outfileNBidUpFrequency = new PrintWriter(outputFolder + "NBidUpFrequency-run" + nRun
                         + ".csv", "UTF-8");
-                outfileNBidUpFrequency.print("Model time, "
-                        + "F(nBidUps=0), F(nBidUps=1), F(nBidUps=2), F(nBidUps=3), F(nBidUps=4), F(nBidUps=5), "
-                        + "F(nBidUps=6), F(nBidUps=7), F(nBidUps=8), F(nBidUps=9), F(nBidUps=10), F(nBidUps=11), "
-                        + "F(nBidUps=12), F(nBidUps=13), F(nBidUps=14), F(nBidUps=15), F(nBidUps=16), F(nBidUps=17), "
-                        + "F(nBidUps=18), F(nBidUps=19), F(nBidUps=20)");
+                outfileNBidUpFrequency.print("Model time; "
+                        + "F(nBidUps=0); F(nBidUps=1); F(nBidUps=2); F(nBidUps=3); F(nBidUps=4); F(nBidUps=5); "
+                        + "F(nBidUps=6); F(nBidUps=7); F(nBidUps=8); F(nBidUps=9); F(nBidUps=10); F(nBidUps=11); "
+                        + "F(nBidUps=12); F(nBidUps=13); F(nBidUps=14); F(nBidUps=15); F(nBidUps=16); F(nBidUps=17); "
+                        + "F(nBidUps=18); F(nBidUps=19); F(nBidUps=20)");
             } catch (FileNotFoundException | UnsupportedEncodingException e) {
                 e.printStackTrace();
             }
@@ -96,9 +96,9 @@ public class TransactionRecorder {
         } else {
             ICR = Double.NaN;
         }
-        outfileSaleTransactions.format(Locale.ROOT, "%n%d, ", Model.getTime());
-        outfileSaleTransactions.format(Locale.ROOT, "%d, %d, %.2f, %d, %.2f, %d, %.2f, %b, %.2f, %.2f, %.2f, %.2f, "
-                        + "%.2f, %.2f, %.2f, %.2f, %.2f, %.4f, %.2f, %d, %b, %b, ",
+        outfileSaleTransactions.format(Locale.ROOT, "%n%d; ", Model.getTime());
+        outfileSaleTransactions.format(Locale.ROOT, "%d; %d; %.2f; %d; %.2f; %d; %.2f; %b; %.2f; %.2f; %.2f; %.2f; "
+                        + "%.2f; %.2f; %.2f; %.2f; %.2f; %.4f; %.2f; %d; %b; %b; ",
                 sale.getHouse().id,
                 sale.getHouse().getQuality(),
                 sale.getInitialListedPrice(),
@@ -123,7 +123,7 @@ public class TransactionRecorder {
                 mortgage.isBuyToLet);
         if (sale.getHouse().owner instanceof Household) {
             Household seller = (Household) sale.getHouse().owner;
-            outfileSaleTransactions.format(Locale.ROOT, "%d, %.2f, %b, %.2f, %.2f, %.2f, %.2f",
+            outfileSaleTransactions.format(Locale.ROOT, "%d; %.2f; %b; %.2f; %.2f; %.2f; %.2f",
                     seller.id,
                     seller.getAge(),
                     seller.behaviour.isPropertyInvestor(),
@@ -133,15 +133,15 @@ public class TransactionRecorder {
                     seller.behaviour.getBTLCapGainCoefficient());
         } else {
             // must be construction sector
-            outfileSaleTransactions.print("-1, -1, false, -1, -1, -1, -1");
+            outfileSaleTransactions.print("-1; -1; false; -1; -1; -1; -1");
         }
     }
 
     private void recordRentalTransaction(HouseBidderRecord purchase, HouseOfferRecord sale) {
         Household seller = (Household) sale.getHouse().owner;
-        outfileRentalTransactions.format(Locale.ROOT, "%n%d, ", Model.getTime());
-        outfileRentalTransactions.format(Locale.ROOT, "%d, %d, %.2f, %d, %.2f, %d, %.2f, %.2f, %.2f, %.2f, %d, "
-                        + "%.2f, %b, %.2f, %.2f, %.2f",
+        outfileRentalTransactions.format(Locale.ROOT, "%n%d; ", Model.getTime());
+        outfileRentalTransactions.format(Locale.ROOT, "%d; %d; %.2f; %d; %.2f; %d; %.2f; %.2f; %.2f; %.2f; %d; "
+                        + "%.2f; %b; %.2f; %.2f; %.2f",
                 sale.getHouse().id,
                 sale.getHouse().getQuality(),
                 sale.getInitialListedPrice(),
@@ -161,10 +161,11 @@ public class TransactionRecorder {
     }
 
     public void recordNBidUpFrequency(int time, int[] nBidUpFrequency) {
-        outfileNBidUpFrequency.format(Locale.ROOT, "%n%d, %s", time,
+        outfileNBidUpFrequency.format(Locale.ROOT, "%n%d; %s", time,
                 Arrays.toString(nBidUpFrequency)
                         .replace("[", "")
-                        .replace("]", ""));
+                        .replace("]", "")
+                        .replace(",", ";"));
     }
 
     public void finishRun(boolean recordTransations, boolean recordNBidUpFrequency) {
