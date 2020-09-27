@@ -256,6 +256,7 @@ public class HouseholdBehaviour {
             purchasePrice = housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY - 1);
         }
         // If maximum mortgage price is below desired price (capped by maximum quality price), then rent
+        // TODO: Re-check if we're fine with this rule after output calibration
         if (Math.min(desiredPrice, housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY - 1)) >
                 Model.bank.getMaxMortgagePrice(me, true)) {
             return false;
@@ -340,13 +341,13 @@ public class HouseholdBehaviour {
      */
     boolean decideToBuyInvestmentProperty(Household me) {
         // Fast decisions...
-        // ...always decide to buy if owning no investment property yet (i.e., if owning only one property, a home)
-        if (me.getNProperties() < 2) { return true ; }
-        // ...otherwise, do not buy if current bank balance below desired level
-        // TODO: Final decision needed on this mechanism and whether to keep it here or as first mechanism
+        // ...do not buy if current bank balance below desired level
+        // TODO: Review whether to keep this mechanism as well as its particular position (before or after next rule)
         if (me.getBankBalance() < data.Wealth.getDesiredBankBalance(me.getAnnualGrossTotalIncome(), propensityToSave)) {
             return false;
         }
+        // ...otherwise, always decide to buy if owning no investment property yet (i.e., if owning only one property, a home)
+        if (me.getNProperties() < 2) { return true ; }
         // ...also, do not buy if the maximum price of the household (corresponding to its maximum mortgage) is below
         // the average price for the lowest quality
         double maxPrice = Model.bank.getMaxMortgagePrice(me, false);
