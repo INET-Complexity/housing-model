@@ -83,12 +83,15 @@ public class CoreIndicators {
      * 3.b - Household debt to income ratio: Owner-occupying household mortgage debt to income ratio
      *
      * Total stock of owner-occupying mortgage credit as a percentage of the annualised net total income (i.e., 12 times
-     * the current monthly net total income, which is equal to employment income for owner-occupiers) of owner-occupying
-     * households.
+     * the current monthly net total income, thus including employment and rental income) of the whole household sector
+     * (i.e., buy-to-let investors, owner-occupiers, renters and homeless households).
      */
     double getOOMortgageDebtToIncome() {
         return 100.0 * Model.creditSupply.getTotalOOCredit()
-                / Model.householdStats.getOwnerOccupierAnnualisedNetTotalIncome();
+                / (Model.householdStats.getOwnerOccupierAnnualisedNetTotalIncome()
+                + Model.householdStats.getActiveBTLAnnualisedNetTotalIncome()
+                + Model.householdStats.getRentingAnnualisedNetTotalIncome()
+                + Model.householdStats.getHomelessAnnualisedNetTotalIncome());
     }
 
     //----------------------------- Conditions and terms in markets -----------------------------//
