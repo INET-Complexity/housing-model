@@ -22,27 +22,27 @@ public class Construction implements IHouseOwner{
     //----- Constructors -----//
     //------------------------//
 
-	public Construction(MersenneTwister prng) {
-		housingStock = 0;
-		onMarket = new HashSet<>();
-		this.prng = prng;
-	}
+    public Construction(MersenneTwister prng) {
+        housingStock = 0;
+        onMarket = new HashSet<>();
+        this.prng = prng;
+    }
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
 
-	void init() {
+    void init() {
         housingStock = 0;
-		onMarket.clear();
-	}
+        onMarket.clear();
+    }
 
-	public void step() {
+    public void step() {
         // Initialise to zero the number of houses built this month
         nNewBuild = 0;
         // First update prices of properties put on the market on previous time steps and still unsold
         for(House h : onMarket) {
-            Model.houseSaleMarket.updateOffer(h.getSaleRecord(), h.getSaleRecord().getPrice()*0.95);
+            Model.houseSaleMarket.updateOffer(h.getSaleRecord(), h.getSaleRecord().getPrice() * 0.95);
         }
         // Then, compute target housing stock dependent on current and target population
         int targetStock;
@@ -61,32 +61,29 @@ public class Construction implements IHouseOwner{
         // ...and while there is any positive shortfall...
         House newHouse;
         while(shortFall > 0) {
-            // ...create a new house with a random quality and with the construction sector as the owner
-            newHouse = new House((int)(prng.nextDouble()*config.N_QUALITY));
-            newHouse.owner = this;
-            // ...put the house for sale in the house sale market at the reference price for that quality
-            Model.houseSaleMarket.offer(newHouse,
-                    Model.housingMarketStats.getReferencePriceForQuality(newHouse.getQuality()), false);
-            // ...add the house to the portfolio of construction sector properties
-            onMarket.add(newHouse);
+            // ...create a new house with a random quality and give it to a randomly chosen household using the
+            // inheritance mechanism and assuming the reference price for houses of that quality as previous price
+            newHouse = new House((int)(prng.nextDouble() * config.N_QUALITY));
+            Model.households.get(prng.nextInt(Model.households.size())).inheritHouse(
+                    newHouse, Model.housingMarketStats.getReferencePriceForQuality(newHouse.getQuality()));
             // ...and finally increase housing stocks, and decrease shortfall
             ++housingStock;
             --shortFall;
-		}
-	}
+        }
+    }
 
-	@Override
-	public void completeHouseSale(HouseOfferRecord sale) { onMarket.remove(sale.getHouse()); }
+    @Override
+    public void completeHouseSale(HouseOfferRecord sale) { onMarket.remove(sale.getHouse()); }
 
-	@Override
-	public void endOfLettingAgreement(House h, PaymentAgreement p) {
+    @Override
+    public void endOfLettingAgreement(House h, PaymentAgreement p) {
         System.out.println("Strange: a tenant is moving out of a house owned by the construction sector!");
-	}
+    }
 
-	@Override
-	public void completeHouseLet(HouseOfferRecord sale, RentalAgreement rentalAgreement) {
+    @Override
+    public void completeHouseLet(HouseOfferRecord sale, RentalAgreement rentalAgreement) {
         System.out.println("Strange: the construction sector is trying to let a house!");
-	}
+    }
 
     //----- Getter/setter methods -----//
 

@@ -545,7 +545,7 @@ public class Household implements IHouseOwner {
      * 
      * @param h House to inherit
      */
-    private void inheritHouse(House h, double oldPurchasePrice) {
+    void inheritHouse(House h, double oldPurchasePrice) {
         // Create a null (zero payments) mortgage
         MortgageAgreement nullMortgage = new MortgageAgreement(this,false);
         nullMortgage.nPayments = 0;
