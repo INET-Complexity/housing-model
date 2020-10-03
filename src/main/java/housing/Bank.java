@@ -296,8 +296,8 @@ public class Bank {
 
             if (isHome) {
                 // Affordability constraint: it sets a maximum value for the monthly mortgage payment divided by the
-                // household's monthly net employment income
-                double affordable_principal = getHardMaxAffordability() * h.getMonthlyNetEmploymentIncome()
+                // household's monthly gross employment income
+                double affordable_principal = getHardMaxAffordability() * h.getMonthlyGrossEmploymentIncome()
                         / getMonthlyPaymentFactor(true, h.getAge());
                 if (getMonthlyPaymentFactor(true, h.getAge()) == 1.0) affordable_principal = 0.0;
                 approval.principal = Math.min(approval.principal, affordable_principal);
@@ -401,9 +401,9 @@ public class Bank {
 
         if (isHome) {
             // Affordability constraint: it sets a maximum value for the monthly mortgage payment divided by the
-            // household's monthly net employment income
+            // household's monthly gross employment income
             double affordable_max_price = max_downpayment + getHardMaxAffordability()
-                    * h.getMonthlyNetEmploymentIncome() / getMonthlyPaymentFactor(true, h.getAge());
+                    * h.getMonthlyGrossEmploymentIncome() / getMonthlyPaymentFactor(true, h.getAge());
             if (getMonthlyPaymentFactor(true, h.getAge()) == 1.0) affordable_max_price = max_downpayment;
             max_price = Math.min(max_price, affordable_max_price);
             // Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
