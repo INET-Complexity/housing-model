@@ -95,7 +95,8 @@ public class RentalMarketStats extends HousingMarketStats {
             avFlowYield = avFlowYieldCount/getnSales();
         }
         // ... a short and a long term exponential moving average of the average flow gross rental yield
-        expAvFlowYield = expAvFlowYield*config.derivedParams.K + (1.0 - config.derivedParams.K)*avFlowYield;
+        expAvFlowYield = config.derivedParams.SMOOTHING_FACTOR * avFlowYield
+                + (1.0 - config.derivedParams.SMOOTHING_FACTOR) * expAvFlowYield;
     }
 
     //----- Getter/setter methods -----//

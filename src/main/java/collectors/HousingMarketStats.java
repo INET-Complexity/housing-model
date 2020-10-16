@@ -251,17 +251,19 @@ public class HousingMarketStats {
         // Compute the rest of variables after market clearing...
         // ... exponential averages of months in the market and prices per quality band (only if there have been sales)
         if (nSalesArray[currentIndex] > 0) {
-            expAvMonthsOnMarket = config.derivedParams.E*expAvMonthsOnMarket
-                    + (1.0 - config.derivedParams.E)*sumMonthsOnMarket/nSalesArray[currentIndex];
-            expAvSalePrice = config.derivedParams.G*expAvSalePrice
-                    + (1.0 - config.derivedParams.G)*sumSoldPrice/nSalesArray[currentIndex];
+            expAvMonthsOnMarket = config.derivedParams.SMOOTHING_FACTOR * sumMonthsOnMarket / nSalesArray[currentIndex]
+                    + (1.0 - config.derivedParams.SMOOTHING_FACTOR) * expAvMonthsOnMarket;
+            expAvSalePrice = config.derivedParams.SMOOTHING_FACTOR * sumSoldPrice / nSalesArray[currentIndex]
+                    + (1.0 - config.derivedParams.SMOOTHING_FACTOR) * expAvSalePrice;
         }
         for (int q = 0; q < config.N_QUALITY; q++) {
             if (nSalesPerQuality[q] > 0) {
-                expAvSalePricePerQuality[q] = config.derivedParams.G*expAvSalePricePerQuality[q]
-                        + (1.0 - config.derivedParams.G)*sumSalePricePerQuality[q]/nSalesPerQuality[q];
-                expAvMonthsOnMarketPerQuality[q] = config.derivedParams.E*expAvMonthsOnMarketPerQuality[q]
-                        + (1.0 - config.derivedParams.E)*sumMonthsOnMarketPerQuality[q]/nSalesPerQuality[q];
+                expAvSalePricePerQuality[q] = config.derivedParams.SMOOTHING_FACTOR
+                        * sumSalePricePerQuality[q] / nSalesPerQuality[q]
+                        + (1.0 - config.derivedParams.SMOOTHING_FACTOR) * expAvSalePricePerQuality[q];
+                expAvMonthsOnMarketPerQuality[q] = config.derivedParams.SMOOTHING_FACTOR
+                        * sumMonthsOnMarketPerQuality[q] / nSalesPerQuality[q]
+                        + (1.0 - config.derivedParams.SMOOTHING_FACTOR) * expAvMonthsOnMarketPerQuality[q];
             }
         }
         // ... current house price index (only if there have been sales)

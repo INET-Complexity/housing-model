@@ -29,6 +29,7 @@ public class Config {
     int N_SIMS;                                         // Number of simulations to run (monte-carlo)
     public int TIME_TO_START_RECORDING_TRANSACTIONS;    // Time step to start recording transactions (to avoid too large files)
     int ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS;        // Size, in months, of the rolling window used to compute averages of core indicators
+    private double CUMULATIVE_WEIGHT_BEYOND_YEAR;       // Total cumulative weight given to events older than 12 months when computing exponential moving averages
     public boolean recordTransactions;                  // True to write data for each transaction
     boolean recordNBidUpFrequency;                      // True to write the frequency of the number of bid-ups
     boolean recordCoreIndicators;                       // True to write time series for each core indicator
@@ -170,8 +171,7 @@ public class Config {
         // Housing market parameters
         public int HPI_RECORD_LENGTH;       // Number of months to record HPI (to compute price growth at different time scales)
         double MONTHS_UNDER_OFFER;          // Time (in months) that a house remains under offer
-        public double E;                    // Decay constant for averaging months on market (in transactions)
-        public double G;                    // Decay constant for averageListPrice averaging (in transactions)
+        public double SMOOTHING_FACTOR;     // Smoothing factor for exponential moving averaging, i.e., (1 - Exponential Decay Constant)
         public double HOUSE_PRICES_MEAN;    // Mean of reference house prices (scale + shape**2/2)
         // Household behaviour parameters: general
         double MONTHLY_P_SELL;              // Monthly probability for owner-occupiers to sell their houses
@@ -179,8 +179,6 @@ public class Config {
         public double TENANCY_LENGTH_AVERAGE;  // Average number of months a tenant will stay in a rented house
         // Bank parameters
         int N_PAYMENTS;                     // Number of monthly repayments (mortgage duration in months)
-        // House rental market parameters
-        public double K;                    // Decay factor for exponential moving average of gross yield from rentals
         // Construction parameters
         double UK_HOUSES_PER_HOUSEHOLD;     // Target ratio of houses per household
 
@@ -330,8 +328,7 @@ public class Config {
         // Housing market parameters
         derivedParams.HPI_RECORD_LENGTH = HPA_YEARS_TO_CHECK*constants.MONTHS_IN_YEAR + 3;  // Plus three months in a quarter
         derivedParams.MONTHS_UNDER_OFFER = DAYS_UNDER_OFFER/constants.DAYS_IN_MONTH;
-        derivedParams.E = Math.exp(-1.0 / (0.02 * TARGET_POPULATION));          // TODO: Clarify where does this 0.2 come from, provide explanation for this formula
-        derivedParams.G = Math.exp(-N_QUALITY / (0.02 * TARGET_POPULATION));    // TODO: Clarify where does this 0.2 come from, provide explanation for this formula
+        derivedParams.SMOOTHING_FACTOR = 1.0 - Math.pow(CUMULATIVE_WEIGHT_BEYOND_YEAR, 1.0 / constants.MONTHS_IN_YEAR);
         derivedParams.HOUSE_PRICES_MEAN = Math.exp(HOUSE_PRICES_SCALE + HOUSE_PRICES_SHAPE*HOUSE_PRICES_SHAPE/2.0); // Mean of a log-normal distribution
         // Household behaviour parameters: general
         derivedParams.MONTHLY_P_SELL = 1.0/(HOLD_PERIOD*constants.MONTHS_IN_YEAR);
@@ -339,8 +336,6 @@ public class Config {
         derivedParams.TENANCY_LENGTH_AVERAGE = (TENANCY_LENGTH_MIN + TENANCY_LENGTH_MAX) / 2.0;
         // Bank parameters
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
-        // House rental market parameters
-        derivedParams.K = Math.exp(-10000.0/(TARGET_POPULATION*50.0));  // TODO: Are these decay factors well-suited? Any explanation, reasoning behind the numbers chosen? Also, they're not reported in the paper!
         // Construction parameters
         derivedParams.UK_HOUSES_PER_HOUSEHOLD = (double)UK_DWELLINGS / UK_HOUSEHOLDS; // Target ratio of houses per household
     }
