@@ -153,9 +153,13 @@ public abstract class HousingMarket {
             if(nBids > 1) {
                 // ...first bid up the price
                 if(config.BIDUP > 1.0) {
+                    // Bearing in mind the design of the market mechanism, which leads to an unreasonably large number
+                    // of bids per offer as bidders "trickle up" to more expensive offers, we need to take the logarithm
+                    // (base 10) of the model number of bidders to get a realistic one for computing bid-ups
+                    int rescaledNBids = Math.max((int)(Math.log10(nBids)), 1);
                     // Assuming bids a randomly distributed throughout the month, this is the probability of two
                     // consecutive bids having at least a week between them
-                    pSuccessfulBid = Math.pow((1.0 - config.derivedParams.MONTHS_UNDER_OFFER), (nBids - 1));
+                    pSuccessfulBid = Math.pow((1.0 - config.derivedParams.MONTHS_UNDER_OFFER), (rescaledNBids - 1));
                     if (pSuccessfulBid == 0.0) pSuccessfulBid = Float.MIN_VALUE; // Keeping the probability non-zero
                     // Given the previous probability of success (two consecutive bids more than a week apart), find the
                     // number of attempts before a success (number of consecutive bids less than a week apart before two
