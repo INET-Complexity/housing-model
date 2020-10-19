@@ -65,12 +65,14 @@ public class Config {
     public String DATA_WEALTH_GIVEN_INCOME; // Address for conditional probability of liquid wealth given total gross non-rent income
 
     // Household behaviour parameters: buy-to-let
-    String DATA_BTL_PROBABILITY;            // Probability of being a buy-to-let investor per income percentile bin
-    double BTL_PROBABILITY_MULTIPLIER;      // # Multiplier for the probability of being a buy-to-let investor
-    double FUNDAMENTALIST_CAP_GAIN_COEFF;   // Weight that fundamentalists put on cap gain
-    double TREND_CAP_GAIN_COEFF;            // Weight that trend-followers put on cap gain
-    double P_FUNDAMENTALIST;                // Probability that a BTL investor is a fundamentalist versus a trend-follower
-    double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield when deciding whether buy/sell a BTL property
+    String DATA_BTL_PROBABILITY;                // Probability of being a buy-to-let investor per income percentile bin
+    double BTL_PROBABILITY_MULTIPLIER;          // Multiplier for the probability of being a buy-to-let investor
+    double BTL_P_INCOME_DRIVEN;                 // Probability of a BTL investor having a rental-income-driven strategy
+    double BTL_P_CAPITAL_DRIVEN;                // Probability of a BTL investor having a capital-gains-driven strategy
+    double BTL_INCOME_DRIVEN_CAP_GAIN_COEFF;    // Weight that rental-income-driven BTL investors put on capital gains
+    double BTL_CAPITAL_DRIVEN_CAP_GAIN_COEFF;   // Weight that capital-gains-driven BTL investors put on capital gains
+    double BTL_MIX_DRIVEN_CAP_GAIN_COEFF;       // Weight that mix-driven BTL investors put on capital gains
+    double BTL_CHOICE_INTENSITY;                // Shape parameter, or intensity of choice on effective yield when deciding whether buy/sell a BTL property
     // Household behaviour parameters: rent
     int TENANCY_LENGTH_MIN;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
     int TENANCY_LENGTH_MAX;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX

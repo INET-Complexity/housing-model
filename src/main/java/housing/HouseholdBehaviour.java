@@ -42,8 +42,8 @@ public class HouseholdBehaviour {
 
     /**
      * Initialise behavioural variables for a new household: propensity to save, whether the household will have the BTL
-     * investor "gene" (provided its income percentile is above a certain minimum), and whether the household will be a
-     * fundamentalist or a trend follower investor (provided it has received the BTL investor gene)
+     * investor "gene" (given its income percentile), and, if so, the specific attitude of the BTL household towards
+     * investing, that is,whether rental-income-driven, capital-gains-driven or both
      *
      * @param incomePercentile Fixed income percentile for the household (assumed constant over a lifetime)
      */
@@ -55,12 +55,16 @@ public class HouseholdBehaviour {
         // Decide whether the household will have a BTL tendency...
         if (prng.nextDouble() < config.BTL_PROBABILITY_MULTIPLIER*BTLProbability.getBinAt(incomePercentile)) {
             BTLInvestor = true;
-            // ...and, if so, whether it will have a fundamentalist or a trend-following attitude
-            if(prng.nextDouble() < config.P_FUNDAMENTALIST) {
-                BTLCapGainCoefficient = config.FUNDAMENTALIST_CAP_GAIN_COEFF;
+            // ...and, if so, whether it will have a rental-income-driven, capital-gains-driven or mixed strategy
+            double rand = prng.nextDouble();
+            if (rand < config.BTL_P_INCOME_DRIVEN) {
+                BTLCapGainCoefficient = config.BTL_INCOME_DRIVEN_CAP_GAIN_COEFF;
+            } else if (rand < config.BTL_P_INCOME_DRIVEN + config.BTL_P_CAPITAL_DRIVEN) {
+                BTLCapGainCoefficient = config.BTL_CAPITAL_DRIVEN_CAP_GAIN_COEFF;
             } else {
-                BTLCapGainCoefficient = config.TREND_CAP_GAIN_COEFF;
+                BTLCapGainCoefficient = config.BTL_MIX_DRIVEN_CAP_GAIN_COEFF;
             }
+
         } else {
             BTLInvestor = false;
         }
