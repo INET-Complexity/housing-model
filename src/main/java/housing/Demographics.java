@@ -7,22 +7,22 @@ import org.apache.commons.math3.random.MersenneTwister;
 
 public class Demographics {
 
-	//------------------//
-	//----- Fields -----//
-	//------------------//
+    //------------------//
+    //----- Fields -----//
+    //------------------//
 
-	private MersenneTwister     prng;
+    private MersenneTwister     prng;
     private double              firstBinMin = data.Demographics.getMonthlyAgeDistributionMinimum();
     private double              binWidth = data.Demographics.getMonthlyAgeDistributionBinWidth();
-    private int []              householdsPerAgeBand = new int[data.Demographics.getMonthlyAgeDistributionSize()];
-    private int []              birthsAndDeaths = new int[data.Demographics.getMonthlyAgeDistributionSize()];
+    private int []              householdsPerAgeBand = new int[data.Demographics.getMonthlyAgeDistributionSize() + 1];
+    private int []              birthsAndDeaths = new int[data.Demographics.getMonthlyAgeDistributionSize() + 1];
     private double []           deathProbabilities = new double[data.Demographics.getMonthlyAgeDistributionSize() + 1];
 
     //------------------------//
     //----- Constructors -----//
     //------------------------//
 
-	public Demographics(MersenneTwister prng) { this.prng = prng; }
+    public Demographics(MersenneTwister prng) { this.prng = prng; }
 
     //-------------------//
     //----- Methods -----//
@@ -33,7 +33,7 @@ public class Demographics {
      * age bins), the expected number of households per age band is used to compute how many new households are to be
      * added or removed from each age band.
      */
-	public void step() {
+    public void step() {
         // Increase age of households and create a histogram with the number of households in each age band
         updateHouseholdsPerAgeBand();
         // Update the list of births (positive) and deaths (negative) to be implemented
@@ -60,8 +60,8 @@ public class Demographics {
             h.ageOneMonth();
             // Then find the bin at which the age of the household falls...
             int i = (int) ((h.getAge() - firstBinMin) / binWidth);
-            // ...and increase the number of households in that bin by one (ignoring ages beyond the maximum edge)
-            if (i < householdsPerAgeBand.length) householdsPerAgeBand[i]++;
+            // ...and increase the number of households in that bin by one
+            householdsPerAgeBand[i]++;
         }
     }
 
@@ -128,5 +128,5 @@ public class Demographics {
                 deathProbabilities[i] = -(double) birthsAndDeaths[i] / householdsPerAgeBand[i];
             }
         }
-	}
+    }
 }

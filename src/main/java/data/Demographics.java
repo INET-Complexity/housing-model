@@ -134,15 +134,17 @@ public class Demographics {
     }
 
     /**
-     * Compute the expected number of households in each age band given a target population
+     * Compute the expected number of households in each age band given a target population, including a final band with
+     * expected number of households zero by definition
      */
     private static int [] computeExpectedHouseholdsPerAgeBand(BinnedDataDouble ageDistribution,
                                                               int targetPopulation) {
-        int [] expectedHouseholdsPerAgeBand = new int[ageDistribution.size()];
+        int [] expectedHouseholdsPerAgeBand = new int[ageDistribution.size() + 1];
         for (int i = 0; i < ageDistribution.size(); i++) {
             expectedHouseholdsPerAgeBand[i] = (int)Math.round(targetPopulation * ageDistribution.get(i)
                     * ageDistribution.getBinWidth());
         }
+        expectedHouseholdsPerAgeBand[ageDistribution.size()] = 0;
         return expectedHouseholdsPerAgeBand;
     }
 
