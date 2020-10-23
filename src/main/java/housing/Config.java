@@ -43,9 +43,6 @@ public class Config {
     public boolean recordAge;                           // True to write individual household age of the household representative person
     public boolean recordSavingRate;                    // True to write individual household saving rate data [1 - (taxExpenses + housing expenses(except deposits) + essentialConsumption + nonEssentialConsumption)/monthlyGrossTotalIncome]
 
-    // House parameters
-    public int N_QUALITY;                       // Number of quality bands for houses
-
     // Housing market parameters
     private double DAYS_UNDER_OFFER;            // Time (in days) that a house remains under offer
     double BIDUP;                               // Smallest proportional increase in price that can cause a gazump
@@ -57,12 +54,12 @@ public class Config {
     public double RENT_GROSS_YIELD;             // Profit margin for buy-to-let investors
 
     // Demographic parameters
-    public int TARGET_POPULATION;           // Target number of households
-    public String DATA_AGE_DISTRIBUTION;    // Address for data on the age distribution of household representative persons
+    public int TARGET_POPULATION;               // Target number of households
+    public String DATA_AGE_DISTRIBUTION;        // Address for data on the age distribution of household representative persons
 
     // Household parameters
-    public String DATA_INCOME_GIVEN_AGE;    // Address for conditional probability of total gross non-rent income given age
-    public String DATA_WEALTH_GIVEN_INCOME; // Address for conditional probability of liquid wealth given total gross non-rent income
+    public String DATA_INCOME_GIVEN_AGE;        // Address for conditional probability of total gross non-rent income given age
+    public String DATA_WEALTH_GIVEN_INCOME;     // Address for conditional probability of liquid wealth given total gross non-rent income
 
     // Household behaviour parameters: buy-to-let
     String DATA_BTL_PROBABILITY;                // Probability of being a buy-to-let investor per income percentile bin
@@ -170,6 +167,8 @@ public class Config {
      * instead, from these configuration parameters
      */
     public class DerivedParams {
+        // House parameters
+        public int N_QUALITIES;             // Number of quality bands for houses
         // Housing market parameters
         public int HPI_RECORD_LENGTH;       // Number of months to record HPI (to compute price growth at different time scales)
         double MONTHS_UNDER_OFFER;          // Time (in months) that a house remains under offer
@@ -340,6 +339,9 @@ public class Config {
         derivedParams.N_PAYMENTS = MORTGAGE_DURATION_YEARS*constants.MONTHS_IN_YEAR;
         // Construction parameters
         derivedParams.UK_HOUSES_PER_HOUSEHOLD = (double)UK_DWELLINGS / UK_HOUSEHOLDS; // Target ratio of houses per household
+        // House parameters
+        derivedParams.N_QUALITIES = (int)Math.round(TARGET_POPULATION * derivedParams.UK_HOUSES_PER_HOUSEHOLD
+                / (HOLD_PERIOD * constants.MONTHS_IN_YEAR));
     }
 
     /**

@@ -256,13 +256,13 @@ public class HouseholdBehaviour {
         if (newHouseQuality < 0) return false;
         // ...and cap the purchase price to the average price of the maximum quality, so as to prevent unreasonable
         // mortgage costs when comparing to the equivalent rental option
-        if (newHouseQuality == config.N_QUALITY - 1) {
-            purchasePrice = housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY - 1);
+        if (newHouseQuality == config.derivedParams.N_QUALITIES - 1) {
+            purchasePrice = housingMarketStats.getExpAvSalePriceForQuality(config.derivedParams.N_QUALITIES - 1);
         }
         // If maximum mortgage price is below desired price (capped by maximum quality price), then rent
         // TODO: Re-check if we're fine with this rule after output calibration
-        if (Math.min(desiredPrice, housingMarketStats.getExpAvSalePriceForQuality(config.N_QUALITY - 1)) >
-                Model.bank.getMaxMortgagePrice(me, true)) {
+        if (Math.min(desiredPrice, housingMarketStats.getExpAvSalePriceForQuality(config.derivedParams.N_QUALITIES - 1))
+                > Model.bank.getMaxMortgagePrice(me, true)) {
             return false;
         }
         // Find out potential mortgage characteristics...

@@ -39,9 +39,9 @@ public class RentalMarketStats extends HousingMarketStats {
     public RentalMarketStats(HousingMarketStats housingMarketStats, HouseRentalMarket market, int rollingWindow) {
         super(market, rollingWindow);
         this.housingMarketStats = housingMarketStats;
-        referencePricePerQuality = new double[config.N_QUALITY];
+        referencePricePerQuality = new double[config.derivedParams.N_QUALITIES];
         System.arraycopy(data.HouseSaleMarket.getReferenceRentalPricePerQuality(), 0, referencePricePerQuality, 0,
-                config.N_QUALITY); // Copies reference rental prices from data/HouseSaleMarket
+                config.derivedParams.N_QUALITIES); // Copies reference rental prices from data/HouseSaleMarket
     }
 
     //-------------------//
@@ -58,9 +58,9 @@ public class RentalMarketStats extends HousingMarketStats {
     public void init() {
         super.init();
         // Set initial value for all rental specific variables
-        avOccupancyPerQuality = new double[config.N_QUALITY];
+        avOccupancyPerQuality = new double[config.derivedParams.N_QUALITIES];
         Arrays.fill(avOccupancyPerQuality, 1.0);
-        avFlowYieldPerQuality = new double[config.N_QUALITY];
+        avFlowYieldPerQuality = new double[config.derivedParams.N_QUALITIES];
         Arrays.fill(avFlowYieldPerQuality, config.RENT_GROSS_YIELD);
         avFlowYield = config.RENT_GROSS_YIELD;
         expAvFlowYield = config.RENT_GROSS_YIELD;
@@ -77,7 +77,7 @@ public class RentalMarketStats extends HousingMarketStats {
         super.postClearingRecord();
         // Compute the rest of variables after market clearing...
         double avFlowYieldCount = 0; // Dummy counter
-        for (int q = 0; q < config.N_QUALITY; q++) {
+        for (int q = 0; q < config.derivedParams.N_QUALITIES; q++) {
             // ... average fraction of time that a house of a given quality is occupied, based on average tenancy length
             // and exponential moving average of months that houses of this quality spend on the rental market
             avOccupancyPerQuality[q] = config.derivedParams.TENANCY_LENGTH_AVERAGE /

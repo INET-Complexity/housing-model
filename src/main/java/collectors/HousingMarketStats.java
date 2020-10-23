@@ -14,82 +14,81 @@ import java.util.Arrays;
  *************************************************************************************************/
 public class HousingMarketStats {
 
-	//------------------//
-	//----- Fields -----//
-	//------------------//
+    //------------------//
+    //----- Fields -----//
+    //------------------//
 
-	// General fields
-	private HousingMarket           market;                 // Declared HousingMarket so that it can accommodate both sale and rental markets
-	private Config                  config = Model.config;  // Passes the Model's configuration parameters object to a private field
+    // General fields
+    private HousingMarket           market;                 // Declared HousingMarket so that it can accommodate both sale and rental markets
+    private Config                  config = Model.config;  // Passes the Model's configuration parameters object to a private field
     private int                     rollingWindow;          // Size of the window to compute rolling averages of core indicators
-    private int                     currentTime;            // Local copy of the current time so as to avoid repeated calls to Model
     private int                     currentIndex;           // Local copy of the (current time % rolling window) so as to avoid repeated calls to Model
 
-	// Variables computed at initialisation
-	double []                       referencePricePerQuality;
+    // Variables computed at initialisation
+    double []                       referencePricePerQuality;
 
-	// Variables computed before market clearing
-	private int                     nBuyers;
+    // Variables computed before market clearing
+    private int                     nBuyers;
     private int                     nBTLBuyers;
-	private int                     nSellers;
+    private int                     nSellers;
     private int                     nNewSellers;
     private int                     nBTLSellers;
-	private double                  sumBidPrices;
-	private double                  sumOfferPrices;
-	private double []               offerPrices;
-	private double []               bidPrices;
+    private double                  sumBidPrices;
+    private double                  sumOfferPrices;
+    private double []               offerPrices;
+    private double []               bidPrices;
 
-	// Variables computed during market clearing, counters
-	private int                     ftbSalesCount; // Dummy variable to count sales to first-time buyers
-	private int                     btlSalesCount; // Dummy variable to count sales to buy-to-let investors
-	private double                  sumSoldReferencePriceCount; // Dummy counter
-	private double                  sumSoldPriceCount; // Dummy counter
-	private double                  sumMonthsOnMarketCount; // Dummy counter
+    // Variables computed during market clearing, counters
+    private int                     ftbSalesCount; // Dummy variable to count sales to first-time buyers
+    private int                     btlSalesCount; // Dummy variable to count sales to buy-to-let investors
+    private double                  sumSoldReferencePriceCount; // Dummy counter
+    private double                  sumSoldPriceCount; // Dummy counter
+    private double                  sumMonthsOnMarketCount; // Dummy counter
     private double []               sumMonthsOnMarketPerQualityCount; // Dummy counter
-	private double []               sumSalePricePerQualityCount; // Dummy counter
-	private int []                  nSalesPerQualityCount; // Dummy counter
+    private double []               sumSalePricePerQualityCount; // Dummy counter
+    private int []                  nSalesPerQualityCount; // Dummy counter
 
-	// Variables computed after market clearing to keep the previous values during the clearing
-	private int[]                   nSalesArray; // Number of sales stored on a rolling basis
-	private int	                    nFTBSales; // Number of sales to first-time buyers
-	private int	                    nBTLSales; // Number of sales to buy-to-let investors
-	private int 	                nUnsoldNewBuild; // Accumulated number of new built properties still unsold after market clearing
-	private double                  sumSoldReferencePrice; // Sum of reference prices for the qualities of properties sold this month
-	private double                  sumSoldPrice; // Sum of prices of properties sold this month
-	private double                  sumMonthsOnMarket; // Sum of the number of months on the market for properties sold this month
-	private double []               sumSalePricePerQuality; // Sum of the price for each quality band for properties sold this month
-	private int []                  nSalesPerQuality; // Number of sales for each quality band for properties sold this month
+    // Variables computed after market clearing to keep the previous values during the clearing
+    private int []                  nSalesArray; // Number of sales stored on a rolling basis
+    private int                     nFTBSales; // Number of sales to first-time buyers
+    private int                     nBTLSales; // Number of sales to buy-to-let investors
+    private int                     nUnsoldNewBuild; // Accumulated number of new built properties still unsold after market clearing
+    private double                  sumSoldReferencePrice; // Sum of reference prices for the qualities of properties sold this month
+    private double                  sumSoldPrice; // Sum of prices of properties sold this month
+    private double                  sumMonthsOnMarket; // Sum of the number of months on the market for properties sold this month
+    private double []               sumSalePricePerQuality; // Sum of the price for each quality band for properties sold this month
+    private int []                  nSalesPerQuality; // Number of sales for each quality band for properties sold this month
 
-	// Other variables computed after market clearing
-	private double                  expAvMonthsOnMarket; // Exponential moving average of the number of months on the market
+    // Other variables computed after market clearing
+    private double                  expAvMonthsOnMarket; // Exponential moving average of the number of months on the market
     private double []               sumMonthsOnMarketPerQuality; // Sum of the months on market for each quality band for properties sold this month
     private double []               expAvMonthsOnMarketPerQuality; // Exponential moving average of the months on market for each quality band
     private double                  expAvSalePrice; // Exponential moving average of sale prices
-	private double []               expAvSalePricePerQuality; // Exponential moving average of the price for each quality band
-	private double                  housePriceIndex;
-	private DescriptiveStatistics   HPIRecord;
-	private double                  annualHousePriceAppreciation;
-	private double                  longTermHousePriceAppreciation;
+    private double []               expAvSalePricePerQuality; // Exponential moving average of the price for each quality band
+    private double                  housePriceIndex;
+    private DescriptiveStatistics   HPIRecord;
+    private double                  annualHousePriceAppreciation;
+    private double                  longTermHousePriceAppreciation;
 
-	//------------------------//
-	//----- Constructors -----//
-	//------------------------//
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
 
-	/**
-	 * Initialises the regional sale market statistics collector
-	 *
-	 * @param market Reference to the sale or rental market of the region, depending on being called as a constructor
-	 *               for this class or as part of the construction of a RegionalRentalMarketStats
-	 */
-	public HousingMarketStats(HousingMarket market, int rollingWindow) {
-		this.market = market;
-		this.rollingWindow = rollingWindow;
-		referencePricePerQuality = new double[config.N_QUALITY];
-		System.arraycopy(data.HouseSaleMarket.getReferencePricePerQuality(), 0, referencePricePerQuality, 0,
-				config.N_QUALITY); // Copies reference prices from data/HouseSaleMarket into referencePricePerQuality
-		HPIRecord = new DescriptiveStatistics(config.derivedParams.HPI_RECORD_LENGTH);
+    /**
+     * Initialises the regional sale market statistics collector
+     *
+     * @param market Reference to the sale or rental market of the region, depending on being called as a constructor
+     *               for this class or as part of the construction of a RegionalRentalMarketStats
+     */
+    public HousingMarketStats(HousingMarket market, int rollingWindow) {
+        this.market = market;
+        this.rollingWindow = rollingWindow;
+        referencePricePerQuality = new double[config.derivedParams.N_QUALITIES];
+        System.arraycopy(data.HouseSaleMarket.getReferencePricePerQuality(), 0, referencePricePerQuality, 0,
+                config.derivedParams.N_QUALITIES); // Copies reference prices from data/HouseSaleMarket into referencePricePerQuality
+        HPIRecord = new DescriptiveStatistics(config.derivedParams.HPI_RECORD_LENGTH);
         nSalesArray = new int[this.rollingWindow];
-	}
+    }
 
     //-------------------//
     //----- Methods -----//
@@ -119,18 +118,18 @@ public class HousingMarketStats {
         sumSoldReferencePrice = 0;
         sumSoldPrice = 0;
         sumMonthsOnMarket = 0;
-        sumSalePricePerQuality = new double[config.N_QUALITY];
-        nSalesPerQuality = new int[config.N_QUALITY];
+        sumSalePricePerQuality = new double[config.derivedParams.N_QUALITIES];
+        nSalesPerQuality = new int[config.derivedParams.N_QUALITIES];
 
         // Set initial values for other variables computed after market clearing
         expAvMonthsOnMarket = 0.0; // TODO: Make this initialisation explicit in the paper!
-        sumMonthsOnMarketPerQuality = new double[config.N_QUALITY];
-        expAvMonthsOnMarketPerQuality  = new double[config.N_QUALITY];
+        sumMonthsOnMarketPerQuality = new double[config.derivedParams.N_QUALITIES];
+        expAvMonthsOnMarketPerQuality  = new double[config.derivedParams.N_QUALITIES];
         Arrays.fill(expAvMonthsOnMarketPerQuality, 0.0); // TODO: Make this initialisation explicit in the paper!
         expAvSalePrice = getAvReferencePrice(); // TODO: Make this initialisation explicit in the paper!
-        expAvSalePricePerQuality = new double[config.N_QUALITY];
+        expAvSalePricePerQuality = new double[config.derivedParams.N_QUALITIES];
         System.arraycopy(referencePricePerQuality, 0, expAvSalePricePerQuality, 0,
-                config.N_QUALITY); // Exponential averaging of prices is initialised from reference prices
+                config.derivedParams.N_QUALITIES); // Exponential averaging of prices is initialised from reference prices
         housePriceIndex = 1.0;
         for (int i = 0; i < config.derivedParams.HPI_RECORD_LENGTH; ++i) HPIRecord.addValue(1.0);
         annualHousePriceAppreciation = housePriceAppreciation(1);
@@ -143,9 +142,7 @@ public class HousingMarketStats {
      * Computes pre-clearing statistics and resets counters to zero
      */
     public void preClearingRecord(int currentTime) {
-        // TODO: Check if current time can be made into a local variable
-        this.currentTime = currentTime;
-        currentIndex = this.currentTime % rollingWindow;
+        currentIndex = currentTime % rollingWindow;
         // Re-initialise to zero variables to be computed later on, during market clearing, counters
         nSalesArray[currentIndex] = 0;
         ftbSalesCount = 0;
@@ -153,9 +150,9 @@ public class HousingMarketStats {
         sumSoldReferencePriceCount = 0;
         sumSoldPriceCount = 0;
         sumMonthsOnMarketCount = 0;
-        sumMonthsOnMarketPerQualityCount = new double[config.N_QUALITY];
-        sumSalePricePerQualityCount = new double[config.N_QUALITY];
-        nSalesPerQualityCount = new int[config.N_QUALITY];
+        sumMonthsOnMarketPerQualityCount = new double[config.derivedParams.N_QUALITIES];
+        sumSalePricePerQualityCount = new double[config.derivedParams.N_QUALITIES];
+        nSalesPerQualityCount = new int[config.derivedParams.N_QUALITIES];
 
         // Re-initialise to zero variables computed before market clearing
         nBuyers = market.getBids().size();
@@ -245,9 +242,11 @@ public class HousingMarketStats {
         sumSoldReferencePrice = sumSoldReferencePriceCount;
         sumSoldPrice = sumSoldPriceCount;
         sumMonthsOnMarket = sumMonthsOnMarketCount;
-        System.arraycopy(sumMonthsOnMarketPerQualityCount, 0, sumMonthsOnMarketPerQuality, 0, config.N_QUALITY);
-        System.arraycopy(nSalesPerQualityCount, 0, nSalesPerQuality, 0, config.N_QUALITY);
-        System.arraycopy(sumSalePricePerQualityCount, 0, sumSalePricePerQuality, 0, config.N_QUALITY);
+        System.arraycopy(sumMonthsOnMarketPerQualityCount, 0, sumMonthsOnMarketPerQuality, 0,
+                config.derivedParams.N_QUALITIES);
+        System.arraycopy(nSalesPerQualityCount, 0, nSalesPerQuality, 0, config.derivedParams.N_QUALITIES);
+        System.arraycopy(sumSalePricePerQualityCount, 0, sumSalePricePerQuality, 0,
+                config.derivedParams.N_QUALITIES);
         // Compute the rest of variables after market clearing...
         // ... exponential averages of months in the market and prices per quality band (only if there have been sales)
         if (nSalesArray[currentIndex] > 0) {
@@ -256,7 +255,7 @@ public class HousingMarketStats {
             expAvSalePrice = config.derivedParams.SMOOTHING_FACTOR * sumSoldPrice / nSalesArray[currentIndex]
                     + (1.0 - config.derivedParams.SMOOTHING_FACTOR) * expAvSalePrice;
         }
-        for (int q = 0; q < config.N_QUALITY; q++) {
+        for (int q = 0; q < config.derivedParams.N_QUALITIES; q++) {
             if (nSalesPerQuality[q] > 0) {
                 expAvSalePricePerQuality[q] = config.derivedParams.SMOOTHING_FACTOR
                         * sumSalePricePerQuality[q] / nSalesPerQuality[q]
@@ -276,7 +275,7 @@ public class HousingMarketStats {
         annualHousePriceAppreciation = housePriceAppreciation(1);
         longTermHousePriceAppreciation = housePriceAppreciation(config.HPA_YEARS_TO_CHECK);
         // ... relaxation of the price distribution towards the reference price distribution (described in appendix A3)
-        for(int q = 0; q < config.N_QUALITY; q++) {
+        for(int q = 0; q < config.derivedParams.N_QUALITIES; q++) {
             expAvSalePricePerQuality[q] = config.MARKET_AVERAGE_PRICE_DECAY*expAvSalePricePerQuality[q]
                     + (1.0 - config.MARKET_AVERAGE_PRICE_DECAY)*(housePriceIndex*referencePricePerQuality[q]);
         }
@@ -398,8 +397,8 @@ public class HousingMarketStats {
     }
     double [] getAvSalePricePerQuality() {
         double [] avSalePricePerQuality;
-        avSalePricePerQuality = new double[config.N_QUALITY];
-        for (int q = 0; q < config.N_QUALITY; q++) {
+        avSalePricePerQuality = new double[config.derivedParams.N_QUALITIES];
+        for (int q = 0; q < config.derivedParams.N_QUALITIES; q++) {
             if (nSalesPerQuality[q] > 0) {
                 avSalePricePerQuality[q] = sumSalePricePerQuality[q]/nSalesPerQuality[q];
             } else {
@@ -422,7 +421,7 @@ public class HousingMarketStats {
      * @param price Price the buyer is ready to pay
      */
     public int getMaxQualityForPrice(double price) {
-        int q = config.N_QUALITY - 1;
+        int q = config.derivedParams.N_QUALITIES - 1;
         while(q >= 0 && getExpAvSalePriceForQuality(q) > price) --q;
         return q;
     }

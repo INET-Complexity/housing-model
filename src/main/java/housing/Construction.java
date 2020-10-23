@@ -14,7 +14,7 @@ public class Construction implements IHouseOwner{
     private int                         housingStock; // Total number of houses in the whole model
     private int                         nNewBuild; // Number of houses built this month
 
-    private Config	                    config = Model.config; // Passes the Model's configuration parameters object to a private field
+    private Config                      config = Model.config; // Passes the Model's configuration parameters object to a private field
     private MersenneTwister             prng;
     private HashSet<House>              onMarket;
 
@@ -63,7 +63,7 @@ public class Construction implements IHouseOwner{
         while(shortFall > 0) {
             // ...create a new house with a random quality and give it to a randomly chosen household using the
             // inheritance mechanism and assuming the reference price for houses of that quality as previous price
-            newHouse = new House((int)(prng.nextDouble() * config.N_QUALITY));
+            newHouse = new House((int)(prng.nextDouble() * config.derivedParams.N_QUALITIES));
             Model.households.get(prng.nextInt(Model.households.size())).inheritHouse(
                     newHouse, Model.housingMarketStats.getReferencePriceForQuality(newHouse.getQuality()));
             // ...and finally increase housing stocks, and decrease shortfall
