@@ -119,9 +119,9 @@ public class Config {
     // Bank parameters
     int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
     int BANK_AGE_LIMIT;                     // Maximum age to get a mortgage, non-BTL mortgages need to have been fully repaid by this age
-    double BANK_INITIAL_RATE;               // Private bank initial interest rate
-    double BANK_CREDIT_SUPPLY_TARGET;       // Bank's target supply of credit per household per month
-    double BANK_D_DEMAND_D_INTEREST;        // Rate of change of the demand for credit in response to a change in the interest rate (in pounds per point)
+    double BANK_INITIAL_RATE;               // Private bank's initial interest rate
+    double BANK_INITIAL_CREDIT_SUPPLY;      // Private bank's initial supply of credit per household per month
+    double BANK_D_INTEREST_D_DEMAND;        // Rate of change of the interest rate in response to a change in the demand for credit per household per month (in points per pound per household per month)
     double BANK_LTV_HARD_MAX_FTB;           // Internal private bank policy: Hard maximum LTV ratio for first-time buyers
     double BANK_LTV_HARD_MAX_HM;            // Internal private bank policy: Hard maximum LTV ratio for home movers
     double BANK_LTV_HARD_MAX_BTL;           // Internal private bank policy: Hard maximum LTV ratio for BTL investors

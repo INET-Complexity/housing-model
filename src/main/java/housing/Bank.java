@@ -40,8 +40,8 @@ public class Bank {
     private ArrayList<Integer>  nHMMortgages_List;              // List to store the number of new mortgages to HMs for (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
 
     // Credit supply strategy fields
-    private double              supplyTarget;               // Target supply of mortgage lending (pounds)
-    private double              supplyVal;                  // Monthly supply of mortgage lending (pounds)
+    private double              monthlyCreditSupply;        // Monthly supply of mortgage lending (pounds)
+    private double              monthlyCreditSupplyOld;     // Previous value of monthly supply of mortgage lending (pounds)
 
     // LTV internal policy thresholds
     private double              firstTimeBuyerHardMaxLTV;   // Loan-To-Value hard maximum for first-time buyer mortgages
@@ -80,6 +80,7 @@ public class Bank {
         initLTICounters();
         setMortgageInterestRate(config.BANK_INITIAL_RATE); // Central Bank must already be initiated at this point!
         resetMonthlyCounters();
+        monthlyCreditSupplyOld = config.BANK_INITIAL_CREDIT_SUPPLY * config.TARGET_POPULATION;
         // Setup initial LTV internal policy thresholds
         firstTimeBuyerHardMaxLTV = config.BANK_LTV_HARD_MAX_FTB;
         homeMoverHardMaxLTV = config.BANK_LTV_HARD_MAX_HM;
@@ -118,8 +119,7 @@ public class Bank {
      * @param totalPopulation Current population in the model, needed to scale the target amount of credit
      */
     public void step(int totalPopulation) {
-        supplyTarget = config.BANK_CREDIT_SUPPLY_TARGET * totalPopulation;
-        setMortgageInterestRate(recalculateInterestRate());
+        setMortgageInterestRate(recalculateInterestRate(totalPopulation));
         resetMonthlyCounters();
     }
 
@@ -128,7 +128,7 @@ public class Bank {
      */
     private void resetMonthlyCounters() {
         // Reset to zero the monthly credit supply counter
-        supplyVal = 0.0;
+        monthlyCreditSupply = 0.0;
         // Reset moving counter of first-time buyer mortgages over their soft maximum LTI
         nFTBMortOverSoftMaxLTI_Acc -= nFTBMortOverSoftMaxLTI_List.remove(0); // Remove oldest month from list and subtract it from accumulated sum
         nFTBMortOverSoftMaxLTI_Acc += nFTBMortOverSoftMaxLTI_New; // Add most recent month to accumulated sum
@@ -157,9 +157,10 @@ public class Bank {
      * the excess demand for credit over the target level, and aims to bring this excess demand to zero at a speed
      * proportional to the excess.
      */
-    private double recalculateInterestRate() {
-        // TODO: Remove 1/2 factor and invert parameter BANK_D_DEMAND_D_INTEREST to turn division into product
-        double rate = getMortgageInterestRate() + 0.5 * (supplyVal - supplyTarget) / config.BANK_D_DEMAND_D_INTEREST;
+    private double recalculateInterestRate(int totalPopulation) {
+        double rate = getMortgageInterestRate()
+                + config.BANK_D_INTEREST_D_DEMAND * (monthlyCreditSupply - monthlyCreditSupplyOld) / totalPopulation;
+        monthlyCreditSupplyOld = monthlyCreditSupply; // After using the current value of the supply of credit, store it as old value for next month
         if (rate < centralBank.getBaseRate()) rate = centralBank.getBaseRate();
         return rate;
     }
@@ -240,7 +241,7 @@ public class Bank {
             // ...add it to the Bank's HashSet of mortgages
             mortgages.add(approval);
             // ...add the principal to the new supply/demand of credit
-            supplyVal += approval.principal;
+            monthlyCreditSupply += approval.principal;
             // ...update various statistics at CreditSupply
             Model.creditSupply.recordLoan(h, approval);
             // ... count the number of non-BTL mortgages over the soft LTI limit imposed by the Central Bank...
