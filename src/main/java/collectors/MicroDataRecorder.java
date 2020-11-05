@@ -188,7 +188,7 @@ public class MicroDataRecorder {
 
     void recordHousingWealth(int time, double housingWealth) {
         if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
-            outfileHousingWealth.format(Locale.ROOT, "; %2f", housingWealth);
+            outfileHousingWealth.format(Locale.ROOT, "; %.2f", housingWealth);
         }
     }
 
