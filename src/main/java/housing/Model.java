@@ -122,7 +122,7 @@ public class Model {
         for (nSimulation = 1; nSimulation <= config.N_SIMS; nSimulation += 1) {
 
             // For each simulation, open files for writing single-run results
-            recorder.openSingleRunFiles(nSimulation, true, config.derivedParams.N_QUALITIES);
+            recorder.openSingleRunFiles(nSimulation, config.recordQualityBandPrice, config.derivedParams.N_QUALITIES);
             transactionRecorder.openSingleRunFiles(nSimulation, config.recordTransactions,
                     config.recordNBidUpFrequency);
             microDataRecorder.openSingleRunSingleVariableFiles(nSimulation, config.recordHouseholdID,
