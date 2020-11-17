@@ -102,16 +102,16 @@ public class Recorder {
                     + "nNonBTLOwnerOccupier; nBTLOwnerOccupier; nOwnerOccupier; nActiveBTL; nBTL; nNonBTLBankrupt; "
                     + "nBTLBankrupt; TotalPopulation; "
                     // Numbers of houses of each type
-                    + "HousingStock; nNewBuild; nUnsoldNewBuild; nEmptyHouses; BTLStockFraction; "
+                    + "HousingStock; nEmptyHouses; BTLStockFraction; "
                     // House sale market data
                     + "Sale HPI; Sale AnnualHPA; Sale AvBidPrice; Sale AvOfferPrice; Sale AvSalePrice; "
-                    + "Sale ExAvSalePrice; Sale AvMonthsOnMarket; Sale ExpAvMonthsOnMarket; Sale nBuyers; "
+                    + "Sale AvMonthsOnMarket; Sale nBuyers; "
                     + "Sale nBTLBuyers; Sale nSellers; Sale nNewSellers; Sale nBTLSellers; Sale nSales; "
                     + "Sale nNonBTLBidsAboveExpAvSalePrice; Sale nBTLBidsAboveExpAvSalePrice; Sale nSalesToBTL; "
                     + "Sale nSalesToFTB; "
                     // Rental market data
                     + "Rental HPI; Rental AnnualHPA; Rental AvBidPrice; Rental AvOfferPrice; Rental AvSalePrice; "
-                    + "Rental AvMonthsOnMarket; Rental ExpAvMonthsOnMarket; Rental nBuyers; Rental nSellers; "
+                    + "Rental AvMonthsOnMarket; Rental nBuyers; Rental nSellers; "
                     + "Rental nSales; Rental ExpAvFlowYield; "
                     // Credit data
                     + "nStockMortgages; nNewFTBMortgages; nNewFTBMortgagesToBTL; nNewHMMortgages; "
@@ -175,9 +175,9 @@ public class Recorder {
 
         // Write general output results to output file
         outfile.format(Locale.ROOT, "%n%d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; " +
-                        "%d; %d; %d; %d; %.4f; " +
-                        "%.4f; %.4e; %.2f; %.2f; %.2f; %.2f; %.4f; %.4f; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; " +
-                        "%.4f; %.4e; %.2f; %.2f; %.2f; %.4f; %.4f; %d; %d; %d; %.4f; " +
+                        "%d; %d; %.4f; " +
+                        "%.4f; %.4e; %.2f; %.2f; %.2f; %.4f; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; " +
+                        "%.4f; %.4e; %.2f; %.2f; %.2f; %.4f; %d; %d; %d; %.4f; " +
                         "%d; %d; %d; %d; %d; %.2f; %.2f; %.2f; %.2f; %.6f", time,
                 // Number of households of each type
                 Model.householdStats.getnNonBTLHomeless(),
@@ -195,8 +195,6 @@ public class Recorder {
                 Model.households.size(),
                 // Numbers of houses of each type
                 Model.construction.getHousingStock(),
-                Model.construction.getnNewBuild(),
-                Model.housingMarketStats.getnUnsoldNewBuild(),
                 Model.householdStats.getnEmptyHouses(),
                 Model.householdStats.getBTLStockFraction(),
                 // House sale market data
@@ -205,9 +203,7 @@ public class Recorder {
                 Model.housingMarketStats.getAvBidPrice(),
                 Model.housingMarketStats.getAvOfferPrice(),
                 Model.housingMarketStats.getAvSalePrice(),
-                Model.housingMarketStats.getExpAvSalePrice(),
                 Model.housingMarketStats.getAvMonthsOnMarket(),
-                Model.housingMarketStats.getExpAvMonthsOnMarket(),
                 Model.housingMarketStats.getnBuyers(),
                 Model.housingMarketStats.getnBTLBuyers(),
                 Model.housingMarketStats.getnSellers(),
@@ -225,7 +221,6 @@ public class Recorder {
                 Model.rentalMarketStats.getAvOfferPrice(),
                 Model.rentalMarketStats.getAvSalePrice(),
                 Model.rentalMarketStats.getAvMonthsOnMarket(),
-                Model.rentalMarketStats.getExpAvMonthsOnMarket(),
                 Model.rentalMarketStats.getnBuyers(),
                 Model.rentalMarketStats.getnSellers(),
                 Model.rentalMarketStats.getnSales(),
