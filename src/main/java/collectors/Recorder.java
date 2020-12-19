@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import java.util.Locale;
+
 import housing.Model;
 
 /**************************************************************************************************
@@ -21,7 +23,9 @@ public class Recorder {
     private String outputFolder;
 
     private PrintWriter outfile;
+    private PrintWriter qualityBandPriceFile;
 
+    private PrintWriter ooLTV;
     private PrintWriter ooLTI;
     private PrintWriter btlLTV;
     private PrintWriter creditGrowth;
@@ -29,12 +33,12 @@ public class Recorder {
     private PrintWriter ooDebtToIncome;
     private PrintWriter mortgageApprovals;
     private PrintWriter housingTransactions;
-    private PrintWriter advancesToFTBs;
+    private PrintWriter advancesToFTB;
     private PrintWriter advancesToBTL;
-    private PrintWriter advancesToHomeMovers;
+    private PrintWriter advancesToHM;
+    private PrintWriter housePriceGrowth;
     private PrintWriter priceToIncome;
     private PrintWriter rentalYield;
-    private PrintWriter housePriceGrowth;
     private PrintWriter interestRateSpread;
 
     //------------------------//
@@ -52,6 +56,8 @@ public class Recorder {
         if(recordCoreIndicators) {
             // ...try opening necessary files
             try {
+                ooLTV = new PrintWriter(outputFolder + "coreIndicator-ooLTV.csv",
+                        "UTF-8");
                 ooLTI = new PrintWriter(outputFolder + "coreIndicator-ooLTI.csv",
                         "UTF-8");
                 btlLTV = new PrintWriter(outputFolder + "coreIndicator-btlLTV.csv",
@@ -66,17 +72,17 @@ public class Recorder {
                         "UTF-8");
                 housingTransactions = new PrintWriter(outputFolder + "coreIndicator-housingTransactions.csv",
                         "UTF-8");
-                advancesToFTBs = new PrintWriter(outputFolder + "coreIndicator-advancesToFTB.csv",
+                advancesToFTB = new PrintWriter(outputFolder + "coreIndicator-advancesToFTB.csv",
                         "UTF-8");
                 advancesToBTL = new PrintWriter(outputFolder + "coreIndicator-advancesToBTL.csv",
                         "UTF-8");
-                advancesToHomeMovers = new PrintWriter(outputFolder + "coreIndicator-advancesToMovers.csv",
+                advancesToHM = new PrintWriter(outputFolder + "coreIndicator-advancesToHM.csv",
+                        "UTF-8");
+                housePriceGrowth = new PrintWriter(outputFolder + "coreIndicator-housePriceGrowth.csv",
                         "UTF-8");
                 priceToIncome = new PrintWriter(outputFolder + "coreIndicator-priceToIncome.csv",
                         "UTF-8");
                 rentalYield = new PrintWriter(outputFolder + "coreIndicator-rentalYield.csv",
-                        "UTF-8");
-                housePriceGrowth = new PrintWriter(outputFolder + "coreIndicator-housePriceGrowth.csv",
                         "UTF-8");
                 interestRateSpread = new PrintWriter(outputFolder + "coreIndicator-interestRateSpread.csv",
                         "UTF-8");
@@ -86,128 +92,163 @@ public class Recorder {
         }
     }
 
-    public void openSingleRunFiles(int nRun) {
-        // Try opening output files (national and for each region) and write first row header with column names
+    public void openSingleRunFiles(int nRun, boolean recordQualityBandPrice, int nQualityBands) {
+        // Try opening general output file and write first row header with column names
         try {
             outfile = new PrintWriter(outputFolder + "Output-run" + nRun + ".csv", "UTF-8");
-            outfile.println("Model time, "
+            outfile.print("Model time; "
                     // Number of households of each type
-                    + "nNonBTLHomeless, nBTLHomeless, nHomeless, nRenting, nNonOwner, "
-                    + "nNonBTLOwnerOccupier, nBTLOwnerOccupier, nOwnerOccupier, nActiveBTL, nBTL, nNonBTLBankrupt, "
-                    + "nBTLBankrupt, TotalPopulation, "
+                    + "nNonBTLHomeless; nBTLHomeless; nHomeless; nRenting; nNonOwner; "
+                    + "nNonBTLOwnerOccupier; nBTLOwnerOccupier; nOwnerOccupier; nActiveBTL; nBTL; nNonBTLBankrupt; "
+                    + "nBTLBankrupt; TotalPopulation; "
                     // Numbers of houses of each type
-                    + "HousingStock, nNewBuild, nUnsoldNewBuild, nEmptyHouses, BTLStockFraction, "
+                    + "HousingStock; nEmptyHouses; BTLStockFraction; "
                     // House sale market data
-                    + "Sale HPI, Sale AnnualHPA, Sale AvBidPrice, Sale AvOfferPrice, Sale AvSalePrice, "
-                    + "Sale ExAvSalePrice, Sale AvDaysOnMarket, Sale ExpAvDaysOnMarket, Sale nBuyers, Sale nBTLBuyers, "
-                    + "Sale nSellers, Sale nNewSellers, Sale nBTLSellers, Sale nSales, "
-                    + "Sale nNonBTLBidsAboveExpAvSalePrice, Sale nBTLBidsAboveExpAvSalePrice, Sale nSalesToBTL, "
-                    + "Sale nSalesToFTB, "
+                    + "Sale HPI; Sale AnnualHPA; Sale AvBidPrice; Sale AvOfferPrice; Sale AvSalePrice; "
+                    + "Sale AvMonthsOnMarket; Sale nBuyers; "
+                    + "Sale nBTLBuyers; Sale nSellers; Sale nNewSellers; Sale nBTLSellers; Sale nSales; "
+                    + "Sale nNonBTLBidsAboveExpAvSalePrice; Sale nBTLBidsAboveExpAvSalePrice; Sale nSalesToBTL; "
+                    + "Sale nSalesToFTB; "
                     // Rental market data
-                    + "Rental HPI, Rental AnnualHPA, Rental AvBidPrice, Rental AvOfferPrice, Rental AvSalePrice, "
-                    + "Rental AvDaysOnMarket, Rental nBuyers, Rental nSellers, Rental nSales, Rental ExpAvFlowYield, "
+                    + "Rental HPI; Rental AnnualHPA; Rental AvBidPrice; Rental AvOfferPrice; Rental AvSalePrice; "
+                    + "Rental AvMonthsOnMarket; Rental nBuyers; Rental nSellers; "
+                    + "Rental nSales; Rental ExpAvFlowYield; "
                     // Credit data
-                    + "nRegisteredMortgages");
+                    + "nStockMortgages; nNewFTBMortgages; nNewFTBMortgagesToBTL; nNewHMMortgages; "
+                    + "nNewBTLMortgages; newFTBCredit; newHMCredit; newBTLCredit; newTotalCredit; interestRate");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
+        // If recording of quality band prices is active...
+        if(recordQualityBandPrice) {
+            // ...try opening output file and write first row header with column names
+            try {
+                qualityBandPriceFile = new PrintWriter(outputFolder + "QualityBandPrice-run" + nRun + ".csv", "UTF-8");
+                qualityBandPriceFile.print("Time");
+                for (int i = 0; i < nQualityBands; i++) {
+                    qualityBandPriceFile.format(Locale.ROOT, "; Q%d", i);
+                }
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    public void writeTimeStampResults(boolean recordCoreIndicators, int time) {
+    public void writeTimeStampResults(boolean recordCoreIndicators, int time, boolean recordQualityBandPrice) {
         if (recordCoreIndicators) {
             // If not at the first point in time...
             if (time > 0) {
                 // ...write value separation for core indicators (except for time 0)
-                ooLTI.print(", ");
-                btlLTV.print(", ");
-                creditGrowth.print(", ");
-                debtToIncome.print(", ");
-                ooDebtToIncome.print(", ");
-                mortgageApprovals.print(", ");
-                housingTransactions.print(", ");
-                advancesToFTBs.print(", ");
-                advancesToBTL.print(", ");
-                advancesToHomeMovers.print(", ");
-                priceToIncome.print(", ");
-                rentalYield.print(", ");
-                housePriceGrowth.print(", ");
-                interestRateSpread.print(", ");
+                ooLTV.print("; ");
+                ooLTI.print("; ");
+                btlLTV.print("; ");
+                creditGrowth.print("; ");
+                debtToIncome.print("; ");
+                ooDebtToIncome.print("; ");
+                mortgageApprovals.print("; ");
+                housingTransactions.print("; ");
+                advancesToFTB.print("; ");
+                advancesToBTL.print("; ");
+                advancesToHM.print("; ");
+                housePriceGrowth.print("; ");
+                priceToIncome.print("; ");
+                rentalYield.print("; ");
+                interestRateSpread.print("; ");
             }
             // Write core indicators results
-            ooLTI.print(Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
-            btlLTV.print(Model.coreIndicators.getBuyToLetLTVMean());
-            creditGrowth.print(Model.coreIndicators.getHouseholdCreditGrowth());
-            debtToIncome.print(Model.coreIndicators.getDebtToIncome());
-            ooDebtToIncome.print(Model.coreIndicators.getOODebtToIncome());
-            mortgageApprovals.print(Model.coreIndicators.getMortgageApprovals());
-            housingTransactions.print(Model.coreIndicators.getHousingTransactions());
-            advancesToFTBs.print(Model.coreIndicators.getAdvancesToFTBs());
-            advancesToBTL.print(Model.coreIndicators.getAdvancesToBTL());
-            advancesToHomeMovers.print(Model.coreIndicators.getAdvancesToHomeMovers());
-            priceToIncome.print(Model.coreIndicators.getPriceToIncome());
-            rentalYield.print(Model.coreIndicators.getAvStockYield());
-            housePriceGrowth.print(Model.coreIndicators.getQoQHousePriceGrowth());
-            interestRateSpread.print(Model.coreIndicators.getInterestRateSpread());
+            ooLTV.format(Locale.ROOT, "%.4f", Model.coreIndicators.getOwnerOccupierLTVMeanAboveMedian());
+            ooLTI.format(Locale.ROOT, "%.4f", Model.coreIndicators.getOwnerOccupierLTIMeanAboveMedian());
+            btlLTV.format(Locale.ROOT, "%.4f", Model.coreIndicators.getBuyToLetLTVMean());
+            creditGrowth.format(Locale.ROOT, "%.4f", Model.coreIndicators.getHouseholdCreditGrowth());
+            debtToIncome.format(Locale.ROOT, "%.4f", Model.coreIndicators.getMortgageDebtToIncome());
+            ooDebtToIncome.format(Locale.ROOT, "%.4f", Model.coreIndicators.getOOMortgageDebtToIncome());
+            mortgageApprovals.format(Locale.ROOT, "%d", Model.coreIndicators.getMortgageApprovals());
+            housingTransactions.format(Locale.ROOT, "%d", Model.coreIndicators.getHousingTransactions());
+            advancesToFTB.format(Locale.ROOT, "%d", Model.coreIndicators.getAdvancesToFTB());
+            advancesToBTL.format(Locale.ROOT, "%d", Model.coreIndicators.getAdvancesToBTL());
+            advancesToHM.format(Locale.ROOT, "%d", Model.coreIndicators.getAdvancesToHM());
+            housePriceGrowth.format(Locale.ROOT, "%.4f", Model.coreIndicators.getHousePriceGrowth());
+            priceToIncome.format(Locale.ROOT, "%.4f", Model.coreIndicators.getPriceToIncome());
+            rentalYield.format(Locale.ROOT, "%.4f", Model.coreIndicators.getAvStockRentalYield());
+            interestRateSpread.format(Locale.ROOT, "%.4f", Model.coreIndicators.getInterestRateSpread());
         }
 
         // Write general output results to output file
-        outfile.println(time + ", " +
+        outfile.format(Locale.ROOT, "%n%d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; " +
+                        "%d; %d; %.4f; " +
+                        "%.4f; %.4e; %.2f; %.2f; %.2f; %.4f; %d; %d; %d; %d; %d; %d; %d; %d; %d; %d; " +
+                        "%.4f; %.4e; %.2f; %.2f; %.2f; %.4f; %d; %d; %d; %.4f; " +
+                        "%d; %d; %d; %d; %d; %.2f; %.2f; %.2f; %.2f; %.6f", time,
                 // Number of households of each type
-                Model.householdStats.getnNonBTLHomeless() + ", " +
-                Model.householdStats.getnBTLHomeless() + ", " +
-                Model.householdStats.getnHomeless() + ", " +
-                Model.householdStats.getnRenting() + ", " +
-                Model.householdStats.getnNonOwner() + ", " +
-                Model.householdStats.getnNonBTLOwnerOccupier() + ", " +
-                Model.householdStats.getnBTLOwnerOccupier() + ", " +
-                Model.householdStats.getnOwnerOccupier() + ", " +
-                Model.householdStats.getnActiveBTL() + ", " +
-                Model.householdStats.getnBTL() + ", " +
-                Model.householdStats.getnNonBTLBankruptcies() + ", " +
-                Model.householdStats.getnBTLBankruptcies() + ", " +
-                Model.households.size() + ", " +
+                Model.householdStats.getnNonBTLHomeless(),
+                Model.householdStats.getnBTLHomeless(),
+                Model.householdStats.getnHomeless(),
+                Model.householdStats.getnRenting(),
+                Model.householdStats.getnNonOwner(),
+                Model.householdStats.getnNonBTLOwnerOccupier(),
+                Model.householdStats.getnBTLOwnerOccupier(),
+                Model.householdStats.getnOwnerOccupier(),
+                Model.householdStats.getnActiveBTL(),
+                Model.householdStats.getnBTL(),
+                Model.householdStats.getnNonBTLBankruptcies(),
+                Model.householdStats.getnBTLBankruptcies(),
+                Model.households.size(),
                 // Numbers of houses of each type
-                Model.construction.getHousingStock() + ", " +
-                Model.construction.getnNewBuild() + ", " +
-                Model.housingMarketStats.getnUnsoldNewBuild() + ", " +
-                Model.householdStats.getnEmptyHouses() + ", " +
-                Model.householdStats.getBTLStockFraction() + ", " +
+                Model.construction.getHousingStock(),
+                Model.householdStats.getnEmptyHouses(),
+                Model.householdStats.getBTLStockFraction(),
                 // House sale market data
-                Model.housingMarketStats.getHPI() + ", " +
-                Model.housingMarketStats.getAnnualHPA() + ", " +
-                Model.housingMarketStats.getAvBidPrice() + ", " +
-                Model.housingMarketStats.getAvOfferPrice() + ", " +
-                Model.housingMarketStats.getAvSalePrice() + ", " +
-                Model.housingMarketStats.getExpAvSalePrice() + ", " +
-                Model.housingMarketStats.getAvDaysOnMarket() + ", " +
-                Model.housingMarketStats.getExpAvDaysOnMarket() + ", " +
-                Model.housingMarketStats.getnBuyers() + ", " +
-                Model.housingMarketStats.getnBTLBuyers() + ", " +
-                Model.housingMarketStats.getnSellers() + ", " +
-                Model.housingMarketStats.getnNewSellers() + ", " +
-                Model.housingMarketStats.getnBTLSellers() + ", " +
-                Model.housingMarketStats.getnSales() + ", " +
-                Model.householdStats.getnNonBTLBidsAboveExpAvSalePrice() + ", " +
-                Model.householdStats.getnBTLBidsAboveExpAvSalePrice() + ", " +
-                Model.housingMarketStats.getnSalesToBTL() + ", " +
-                Model.housingMarketStats.getnSalesToFTB() + ", " +
+                Model.housingMarketStats.getHPI(),
+                Model.housingMarketStats.getAnnualHPA(),
+                Model.housingMarketStats.getAvBidPrice(),
+                Model.housingMarketStats.getAvOfferPrice(),
+                Model.housingMarketStats.getAvSalePrice(),
+                Model.housingMarketStats.getAvMonthsOnMarket(),
+                Model.housingMarketStats.getnBuyers(),
+                Model.housingMarketStats.getnBTLBuyers(),
+                Model.housingMarketStats.getnSellers(),
+                Model.housingMarketStats.getnNewSellers(),
+                Model.housingMarketStats.getnBTLSellers(),
+                Model.housingMarketStats.getnSales(),
+                Model.householdStats.getnNonBTLBidsAboveExpAvSalePrice(),
+                Model.householdStats.getnBTLBidsAboveExpAvSalePrice(),
+                Model.housingMarketStats.getnSalesToBTL(),
+                Model.housingMarketStats.getnSalesToFTB(),
                 // Rental market data
-                Model.rentalMarketStats.getHPI() + ", " +
-                Model.rentalMarketStats.getAnnualHPA() + ", " +
-                Model.rentalMarketStats.getAvBidPrice() + ", " +
-                Model.rentalMarketStats.getAvOfferPrice() + ", " +
-                Model.rentalMarketStats.getAvSalePrice() + ", " +
-                Model.rentalMarketStats.getAvDaysOnMarket() + ", " +
-                Model.rentalMarketStats.getnBuyers() + ", " +
-                Model.rentalMarketStats.getnSellers() + ", " +
-                Model.rentalMarketStats.getnSales() + ", " +
-                Model.rentalMarketStats.getExpAvFlowYield() + ", " +
+                Model.rentalMarketStats.getHPI(),
+                Model.rentalMarketStats.getAnnualHPA(),
+                Model.rentalMarketStats.getAvBidPrice(),
+                Model.rentalMarketStats.getAvOfferPrice(),
+                Model.rentalMarketStats.getAvSalePrice(),
+                Model.rentalMarketStats.getAvMonthsOnMarket(),
+                Model.rentalMarketStats.getnBuyers(),
+                Model.rentalMarketStats.getnSellers(),
+                Model.rentalMarketStats.getnSales(),
+                Model.rentalMarketStats.getExpAvFlowYield(),
                 // Credit data
-                Model.creditSupply.getnRegisteredMortgages());
+                Model.creditSupply.getnStockMortgages(),
+                Model.creditSupply.getnNewFTBMortgages(),
+                Model.creditSupply.getnNewFTBMortgagesToBTL(),
+                Model.creditSupply.getnNewHMMortgages(),
+                Model.creditSupply.getnNewBTLMortgages(),
+                Model.creditSupply.getNewCreditToFTB(),
+                Model.creditSupply.getNewCreditToHM(),
+                Model.creditSupply.getNewCreditToBTL(),
+                Model.creditSupply.getNewCreditTotal(),
+                Model.creditSupply.getInterestRate());
+
+        // Write quality band prices to file
+        if (recordQualityBandPrice) {
+            qualityBandPriceFile.format(Locale.ROOT, "%n%d", time);
+            for (double element : Model.housingMarketStats.getAvSalePricePerQuality()) {
+                qualityBandPriceFile.format(Locale.ROOT, "; %.2f", element);
+            }
+        }
     }
 
-    public void finishRun(boolean recordCoreIndicators) {
-        if (recordCoreIndicators) {
+    public void finishRun(boolean recordCoreIndicators, boolean recordQualityBandPrice, boolean lastRun) {
+        if (recordCoreIndicators && !lastRun) {
+            ooLTV.println("");
             ooLTI.println("");
             btlLTV.println("");
             creditGrowth.println("");
@@ -215,19 +256,23 @@ public class Recorder {
             ooDebtToIncome.println("");
             mortgageApprovals.println("");
             housingTransactions.println("");
-            advancesToFTBs.println("");
+            advancesToFTB.println("");
             advancesToBTL.println("");
-            advancesToHomeMovers.println("");
+            advancesToHM.println("");
+            housePriceGrowth.println("");
             priceToIncome.println("");
             rentalYield.println("");
-            housePriceGrowth.println("");
             interestRateSpread.println("");
         }
         outfile.close();
+        if (recordQualityBandPrice) {
+            qualityBandPriceFile.close();
+        }
     }
 
     public void finish(boolean recordCoreIndicators) {
         if (recordCoreIndicators) {
+            ooLTV.close();
             ooLTI.close();
             btlLTV.close();
             creditGrowth.close();
@@ -235,12 +280,12 @@ public class Recorder {
             ooDebtToIncome.close();
             mortgageApprovals.close();
             housingTransactions.close();
-            advancesToFTBs.close();
+            advancesToFTB.close();
             advancesToBTL.close();
-            advancesToHomeMovers.close();
+            advancesToHM.close();
+            housePriceGrowth.close();
             priceToIncome.close();
             rentalYield.close();
-            housePriceGrowth.close();
             interestRateSpread.close();
         }
     }

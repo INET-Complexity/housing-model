@@ -1,5 +1,7 @@
 package housing;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 
 /**************************************************************************************************
@@ -15,256 +17,422 @@ public class Bank {
     //----- Fields -----//
     //------------------//
 
-	// General fields
-	private Config	                    config = Model.config; // Passes the Model's configuration parameters object to a private field
+    // General fields
+    private Config              config = Model.config;      // Passes the Model's configuration parameters object to a private field
+    private CentralBank         centralBank;                // Connection to the central bank to ask for policy
 
     // Bank fields
-    public HashSet<MortgageAgreement>	mortgages; // all unpaid mortgage contracts supplied by the bank
-    public double		                interestSpread; // current mortgage interest spread above base rate (monthly rate*12)
-    private double                      monthlyPaymentFactor; // Monthly payment as a fraction of the principal for non-BTL mortgages
-    private double                      monthlyPaymentFactorBTL; // Monthly payment as a fraction of the principal for BTL (interest-only) mortgages
-    private double		                baseRate;
+    public HashSet<MortgageAgreement>   mortgages;                  // All unpaid mortgage contracts supplied by the bank
+    private double                      interestSpread;             // Current mortgage interest spread above base rate (monthly rate*12)
+
+    // LTI tracking fields
+    private int                 nFTBMortOverSoftMaxLTI_New;     // Number of new mortgages to first-time buyers over the soft maximum LTI underwritten this month
+    private int                 nFTBMortOverSoftMaxLTI_Acc;     // Number of mortgages to FTBs over the soft maximum LTI accumulated over (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
+    private ArrayList<Integer>  nFTBMortOverSoftMaxLTI_List;    // List to store the number of new mortgages to FTBs over the soft maximum LTI for (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
+    private int                 nFTBMortgages_New;              // Total number of new mortgages to first-time buyers
+    private int                 nFTBMortgages_Acc;              // Total number of mortgages to FTBs accumulated over (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
+    private ArrayList<Integer>  nFTBMortgages_List;             // List to store the number of new mortgages to FTBs for (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
+    private int                 nHMMortOverSoftMaxLTI_New;      // Number of new mortgages to home movers over the soft maximum LTI
+    private int                 nHMMortOverSoftMaxLTI_Acc;      // Number of mortgages to HMs over the soft maximum LTI accumulated over (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
+    private ArrayList<Integer>  nHMMortOverSoftMaxLTI_List;     // List to store the number of new mortgages to HMs over the soft maximum LTI for (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
+    private int                 nHMMortgages_New;               // Total number of new mortgages to home movers
+    private int                 nHMMortgages_Acc;               // Total number of mortgages to HMs accumulated over (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
+    private ArrayList<Integer>  nHMMortgages_List;              // List to store the number of new mortgages to HMs for (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
 
     // Credit supply strategy fields
-    private double		                supplyTarget; // target supply of mortgage lending (pounds)
-    private double		                supplyVal; // monthly supply of mortgage loans (pounds)
-    private double		                dDemand_dInterest; // rate of change of demand with interest rate (pounds)
-    private int                         nOOMortgagesOverLTI; // Number of mortgages for owner-occupying that go over the LTI cap this time step
-    private int                         nOOMortgages; // Total number of mortgages for owner-occupying
+    private double              monthlyCreditSupply;        // Monthly supply of mortgage lending (pounds)
+    private double              monthlyCreditSupplyOld;     // Previous value of monthly supply of mortgage lending (pounds)
 
     // LTV internal policy thresholds
-    private double                      firstTimeBuyerLTVLimit; // Loan-To-Value upper limit for first-time buyer mortgages
-    private double                      ownerOccupierLTVLimit; // Loan-To-Value upper limit for owner-occupying mortgages
-    private double                      buyToLetLTVLimit; // Loan-To-Value upper limit for buy-to-let mortgages
+    private double              firstTimeBuyerHardMaxLTV;   // Loan-To-Value hard maximum for first-time buyer mortgages
+    private double              homeMoverHardMaxLTV;        // Loan-To-Value hard maximum for home mover mortgages
+    private double              buyToLetHardMaxLTV;         // Loan-To-Value hard maximum for buy-to-let mortgages
 
     // LTI internal policy thresholds
-    private double                      firstTimeBuyerLTILimit; // Loan-To-Income internal upper limit for first-time buyer mortgages
-    private double                      ownerOccupierLTILimit; // Loan-To-Income internal upper limit for owner-occupying mortgages
+    private double              firstTimeBuyerHardMaxLTI;   // Loan-To-Income hard maximum for first-time buyer mortgages
+    private double              homeMoverHardMaxLTI;        // Loan-To-Income hard maximum for home mover mortgages
+
+    // Affordability internal policy thresholds
+    private double              hardMaxAffordability;       // Affordability hard maximum (monthly mortgage payment / household's monthly net employment income)
+
+    // ICR internal policy thresholds
+    private double              hardMinICR;                 // ICR hard minimum for the ratio of expected rental yield over interest monthly payment
 
     //------------------------//
     //----- Constructors -----//
     //------------------------//
 
-	public Bank() {
-		mortgages = new HashSet<>();
-		init();
-	}
+    public Bank(CentralBank centralBank) {
+        this.centralBank = centralBank;
+        mortgages = new HashSet<>();
+        nFTBMortOverSoftMaxLTI_List = new ArrayList<>();
+        nFTBMortgages_List = new ArrayList<>();
+        nHMMortOverSoftMaxLTI_List = new ArrayList<>();
+        nHMMortgages_List = new ArrayList<>();
+    }
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
 
-	void init() {
-		mortgages.clear();
-		baseRate = config.BANK_INITIAL_BASE_RATE;
-		// TODO: Is this (dDemand_dInterest) a parameter? Shouldn't it depend somehow on other variables of the model?
-		dDemand_dInterest = 10*1e10;
-        // TODO: Is this (0.02) a parameter? Does it affect results in any significant way or is it just a dummy initialisation?
-        setMortgageInterestRate(0.02);
-		resetMonthlyCounters();
+    void init() {
+        mortgages.clear();
+        initLTICounters();
+        setMortgageInterestRate(config.BANK_INITIAL_RATE); // Central Bank must already be initiated at this point!
+        resetMonthlyCounters();
+        monthlyCreditSupplyOld = config.BANK_INITIAL_CREDIT_SUPPLY * config.TARGET_POPULATION;
         // Setup initial LTV internal policy thresholds
-        firstTimeBuyerLTVLimit = config.BANK_MAX_FTB_LTV;
-        ownerOccupierLTVLimit= config.BANK_MAX_OO_LTV;
-        buyToLetLTVLimit = config.BANK_MAX_BTL_LTV;
+        firstTimeBuyerHardMaxLTV = config.BANK_LTV_HARD_MAX_FTB;
+        homeMoverHardMaxLTV = config.BANK_LTV_HARD_MAX_HM;
+        buyToLetHardMaxLTV = config.BANK_LTV_HARD_MAX_BTL;
         // Setup initial LTI internal policy thresholds
-        firstTimeBuyerLTILimit = config.BANK_MAX_FTB_LTI;
-        ownerOccupierLTILimit = config.BANK_MAX_OO_LTI;
+        firstTimeBuyerHardMaxLTI = config.BANK_LTI_HARD_MAX_FTB;
+        homeMoverHardMaxLTI = config.BANK_LTI_HARD_MAX_HM;
+        // Set initial affordability internal policy thresholds
+        hardMaxAffordability = config.BANK_AFFORDABILITY_HARD_MAX;
+        // Set initial ICR internal policy thresholds
+        hardMinICR = config.BANK_ICR_HARD_MIN;
     }
-	
-	/**
-	 * Redo all necessary monthly calculations and reset counters.
-	 */
-	public void step(int totalPopulation) {
-		supplyTarget = config.BANK_CREDIT_SUPPLY_TARGET*totalPopulation;
-		setMortgageInterestRate(recalculateInterestRate());
-		resetMonthlyCounters();
-	}
-	
-	/**
-	 *  Reset counters for the next month
-	 */
-	private void resetMonthlyCounters() {
-		supplyVal = 0.0;
-        nOOMortgagesOverLTI = 0;
-        nOOMortgages = 0;
-	}
-	
-	/**
-	 * Calculate the mortgage interest rate for next month based on the rate for this month and the resulting demand.
-     * This assumes a linear relationship between interest rate and demand, and aims to halve the difference between
-     * current demand and the target supply
-	 */
-	private double recalculateInterestRate() {
-		double rate = getMortgageInterestRate() + 0.5*(supplyVal - supplyTarget)/dDemand_dInterest;
-		if (rate < baseRate) rate = baseRate;
-		return rate;
-	}
-	
-	/**
-	 * Get the interest rate on mortgages.
-	 */
-	double getMortgageInterestRate() { return baseRate + interestSpread; }
-	
 
-	/**
-	 * Set the interest rate on mortgages
-	 */
-	private void setMortgageInterestRate(double rate) {
-		interestSpread = rate - baseRate;
-        recalculateMonthlyPaymentFactor();
-	}
+    private void initLTICounters() {
+        nFTBMortOverSoftMaxLTI_New = 0;
+        nFTBMortOverSoftMaxLTI_Acc = 0;
+        nFTBMortOverSoftMaxLTI_List.clear();
+        nFTBMortOverSoftMaxLTI_List.addAll(Collections.nCopies(centralBank.getMonthsToCheckLTI() - 1, 0));
+        nFTBMortgages_New = 0;
+        nFTBMortgages_Acc = 0;
+        nFTBMortgages_List.clear();
+        nFTBMortgages_List.addAll(Collections.nCopies(centralBank.getMonthsToCheckLTI() - 1, 0));
+        nHMMortOverSoftMaxLTI_New = 0;
+        nHMMortOverSoftMaxLTI_Acc = 0;
+        nHMMortOverSoftMaxLTI_List.clear();
+        nHMMortOverSoftMaxLTI_List.addAll(Collections.nCopies(centralBank.getMonthsToCheckLTI() - 1, 0));
+        nHMMortgages_New = 0;
+        nHMMortgages_Acc = 0;
+        nHMMortgages_List.clear();
+        nHMMortgages_List.addAll(Collections.nCopies(centralBank.getMonthsToCheckLTI() - 1, 0));
+    }
 
     /**
-     * Compute the monthly payment factor, i.e., the monthly payment on a mortgage as a fraction of the mortgage
-     * principal for both BTL (interest-only) and non-BTL mortgages.
+     * Redo all necessary monthly calculations and reset counters.
+     *
+     * @param totalPopulation Current population in the model, needed to scale the target amount of credit
      */
-	private void recalculateMonthlyPaymentFactor() {
-		double r = getMortgageInterestRate()/config.constants.MONTHS_IN_YEAR;
-		monthlyPaymentFactor = r/(1.0 - Math.pow(1.0 + r, -config.derivedParams.N_PAYMENTS));
-        monthlyPaymentFactorBTL = r;
-	}
+    public void step(int totalPopulation) {
+        setMortgageInterestRate(recalculateInterestRate(totalPopulation));
+        resetMonthlyCounters();
+    }
 
-	/**
-	 * Get the monthly payment factor, i.e., the monthly payment on a mortgage as a fraction of the mortgage principal.
-	 */
-	private double getMonthlyPaymentFactor(boolean isHome) {
-		if (isHome) {
-			return monthlyPaymentFactor; // Monthly payment factor to pay off the principal in N_PAYMENTS
-		} else {
-			return monthlyPaymentFactorBTL; // Monthly payment factor for interest-only mortgages
-		}
-	}
+    /**
+     *  Reset counters for the next month.
+     */
+    private void resetMonthlyCounters() {
+        // Reset to zero the monthly credit supply counter
+        monthlyCreditSupply = 0.0;
+        // Reset moving counter of first-time buyer mortgages over their soft maximum LTI
+        nFTBMortOverSoftMaxLTI_Acc -= nFTBMortOverSoftMaxLTI_List.remove(0); // Remove oldest month from list and subtract it from accumulated sum
+        nFTBMortOverSoftMaxLTI_Acc += nFTBMortOverSoftMaxLTI_New; // Add most recent month to accumulated sum
+        nFTBMortOverSoftMaxLTI_List.add(nFTBMortOverSoftMaxLTI_New); // Add most recent month to list
+        nFTBMortOverSoftMaxLTI_New = 0; // Reset new mortgages counter to zero for next time step
+        // Reset moving counter of first-time buyer mortgages
+        nFTBMortgages_Acc -= nFTBMortgages_List.remove(0); // Remove oldest month from list and subtract it from accumulated sum
+        nFTBMortgages_Acc += nFTBMortgages_New; // Add most recent month to accumulated sum
+        nFTBMortgages_List.add(nFTBMortgages_New); // Add most recent month to list
+        nFTBMortgages_New = 0; // Reset new mortgages counter to zero for next time step
+        // Reset moving counter of home mover mortgages over their soft maximum LTI
+        nHMMortOverSoftMaxLTI_Acc -= nHMMortOverSoftMaxLTI_List.remove(0); // Remove oldest month from list and subtract it from accumulated sum
+        nHMMortOverSoftMaxLTI_Acc += nHMMortOverSoftMaxLTI_New; // Add most recent month to accumulated sum
+        nHMMortOverSoftMaxLTI_List.add(nHMMortOverSoftMaxLTI_New); // Add most recent month to list
+        nHMMortOverSoftMaxLTI_New = 0; // Reset new mortgages counter to zero for next time step
+        // Reset moving counter of home mover mortgages
+        nHMMortgages_Acc -= nHMMortgages_List.remove(0); // Remove oldest month from list and subtract it from accumulated sum
+        nHMMortgages_Acc += nHMMortgages_New; // Add most recent month to accumulated sum
+        nHMMortgages_List.add(nHMMortgages_New); // Add most recent month to list
+        nHMMortgages_New = 0; // Reset new mortgages counter to zero for next time step
+    }
 
-	/**
-	 * Method to arrange a Mortgage and get a MortgageAgreement object.
-	 * 
-	 * @param h The household requesting the mortgage
-	 * @param housePrice The price of the house that household h wants to buy
-	 * @param isHome True if household h plans to live in the house (non-BTL mortgage)
-	 * @return The MortgageApproval object, or NULL if the mortgage is declined
-	 */
-	MortgageAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome,
-                                  House house) {
-		MortgageAgreement approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
-		if(approval == null) return(null);
-		// --- if all's well, go ahead and arrange mortgage
-		supplyVal += approval.principal;
-		if(approval.principal > 0.0) {
-			mortgages.add(approval);
-			Model.creditSupply.recordLoan(h, approval, house);
-            if(isHome) {
-                ++nOOMortgages;
-                if(approval.principal/h.getAnnualGrossEmploymentIncome() >
-                        Model.centralBank.getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)) {
-                    ++nOOMortgagesOverLTI;
-				}
-			}
-		}
-		return approval;
-	}
+    /**
+     * Calculate the mortgage interest rate for next month based on the rate for this month and the resulting demand for
+     * credit, which in this model is equivalent to supply. This assumes a linear relationship between interest rate and
+     * the excess demand for credit over the target level, and aims to bring this excess demand to zero at a speed
+     * proportional to the excess.
+     */
+    private double recalculateInterestRate(int totalPopulation) {
+        double rate = getMortgageInterestRate()
+                + config.BANK_D_INTEREST_D_DEMAND * (monthlyCreditSupply - monthlyCreditSupplyOld) / totalPopulation;
+        monthlyCreditSupplyOld = monthlyCreditSupply; // After using the current value of the supply of credit, store it as old value for next month
+        if (rate < centralBank.getBaseRate()) rate = centralBank.getBaseRate();
+        return rate;
+    }
 
-	/**
-	 * Method to request a mortgage approval but not actually sign a mortgage contract. This is useful if you want to
-     * explore the details of the mortgage contract before deciding whether to actually go ahead and sign it.
-	 *
+    /**
+     * Get the interest rate on mortgages.
+     */
+    public double getMortgageInterestRate() { return centralBank.getBaseRate() + interestSpread; }
+
+
+    /**
+     * Set the interest rate on mortgages.
+     */
+    private void setMortgageInterestRate(double rate) {
+        interestSpread = rate - centralBank.getBaseRate();
+    }
+
+    /**
+     * Get the monthly payment factor, i.e., the monthly payment on a mortgage as a fraction of the mortgage principal.
+     * This takes into account age-based restrictions for non-BTL mortgages via the number of payments.
+     */
+    private double getMonthlyPaymentFactor(boolean isHome, double age) {
+        double r = getMortgageInterestRate() / config.constants.MONTHS_IN_YEAR;
+        // For non-BTL purchases, compute payment factor to pay off the principal in the agreed number of payments,
+        // coherent with any mortgage length age-based restrictions
+        if (isHome) {
+            if (getNPayments(true, age) > 0) {
+                return r / (1.0 - Math.pow(1.0 + r, -getNPayments(true, age)));
+            } else {
+                throw new RuntimeException("Trying to find monthly payment factor for a zero payments mortgage");
+            }
+        // For BTL purchases, compute interest-only payment factor (age-based restrictions applied elsewhere)
+        } else {
+            return r;
+        }
+    }
+
+    /**
+     * Compute the number of payments, taking into account differentiated age-based restrictions for BTL and non-BTL
+     * bids. In particular, BTL mortgages always have full maturity, but they can only be approved before the household
+     * reaches the age limit. On the contrary, non-BTL mortgages start seeing their maturities reduced before the age
+     * limit, in such a way that the full amount is repaid by the time the household reaches this limit.
+     */
+    private int getNPayments(boolean isHome, double age) {
+        // For non-BTL purchases, any mortgage principal must be repaid when the household turns 65
+        if (isHome) {
+            if (age <= config.BANK_AGE_LIMIT - config.MORTGAGE_DURATION_YEARS) {
+                return config.MORTGAGE_DURATION_YEARS * config.constants.MONTHS_IN_YEAR;
+            } else if (age <= config.BANK_AGE_LIMIT) {
+                return (int) ((config.BANK_AGE_LIMIT - age) * config.constants.MONTHS_IN_YEAR);
+            } else {
+                return 0;
+            }
+        // For BTL purchases, a mortgage can only be approved before the household turns 65
+        } else {
+            if (age <= config.BANK_AGE_LIMIT) {
+                return config.MORTGAGE_DURATION_YEARS * config.constants.MONTHS_IN_YEAR;
+            } else {
+                return 0;
+            }
+        }
+    }
+
+    /**
+     * Arrange a mortgage contract and get a MortgageAgreement object, which is added to the Bank's HashSet of mortgages
+     * and entered into CreditSupply statistics.
+     *
      * @param h The household requesting the mortgage
      * @param housePrice The price of the house that household h wants to buy
      * @param isHome True if household h plans to live in the house (non-BTL mortgage)
-     * @return The MortgageApproval object, or NULL if the mortgage is declined
-	 */
-	MortgageAgreement requestApproval(Household h, double housePrice, double desiredDownPayment,
-                                      boolean isHome) {
-		MortgageAgreement approval = new MortgageAgreement(h, !isHome);
-		double r = getMortgageInterestRate()/config.constants.MONTHS_IN_YEAR; // monthly interest rate
-		double lti_principal, affordable_principal, icr_principal;
-        double liquidWealth = h.getBankBalance(); // No home equity needs to be added here: home-movers always sell their homes before trying to buy new ones
-		
-		if(isHome) liquidWealth += h.getHomeEquity();
+     * @return The MortgageApproval object
+     */
+    MortgageAgreement requestLoan(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+        // Request the mortgage and create the MortgageAgreement object with all the required parameters
+        MortgageAgreement approval = requestApproval(h, housePrice, desiredDownPayment, isHome);
+        // If this is an actual mortgage, i.e., with a non-zero principal...
+        if (approval.principal > 0.0) {
+            // ...add it to the Bank's HashSet of mortgages
+            mortgages.add(approval);
+            // ...add the principal to the new supply/demand of credit
+            monthlyCreditSupply += approval.principal;
+            // ...update various statistics at CreditSupply
+            Model.creditSupply.recordLoan(h, approval);
+            // ... count the number of non-BTL mortgages over the soft LTI limit imposed by the Central Bank...
+            if (isHome) {
+                // ...differentiating between first-time buyers
+                if (h.isFirstTimeBuyer()) {
+                    ++nFTBMortgages_New;
+                    if (approval.principal > h.getAnnualGrossEmploymentIncome()
+                            * centralBank.getFirstTimeBuyerSoftMaxLTI()) {
+                        ++nFTBMortOverSoftMaxLTI_New;
+                    }
+                // ...and home movers
+                } else {
+                    ++nHMMortgages_New;
+                    if (approval.principal > h.getAnnualGrossEmploymentIncome()
+                            * centralBank.getHomeMoverSoftMaxLTI()) {
+                        ++nHMMortOverSoftMaxLTI_New;
+                    }
+                }
+            }
+        }
+        return approval;
+    }
 
-		// --- LTV constraint
-		approval.principal = housePrice*getLoanToValueLimit(h.isFirstTimeBuyer(), isHome);
-
-		if(isHome) {
-			// --- affordability constraint TODO: affordability for BTL?
-			affordable_principal = Math.max(0.0,config.CENTRAL_BANK_AFFORDABILITY_COEFF*h.getMonthlyNetTotalIncome())
-                    / getMonthlyPaymentFactor(isHome);
-			approval.principal = Math.min(approval.principal, affordable_principal);
-
-			// --- lti constraint
-			lti_principal = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome);
-			approval.principal = Math.min(approval.principal, lti_principal);
-		} else {
-			// --- BTL ICR constraint
-			icr_principal = Model.rentalMarketStats.getExpAvFlowYield()*housePrice
-                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST);
-			approval.principal = Math.min(approval.principal, icr_principal);
-		}
-		
-		approval.downPayment = housePrice - approval.principal;
-
-        if(liquidWealth < approval.downPayment) {
-			System.out.println("Failed down-payment constraint: bank balance = " + liquidWealth + " downpayment = "
-                    + approval.downPayment);
-			System.exit(0);
-		}
-		// --- allow larger downpayments
-		if(desiredDownPayment < 0.0) desiredDownPayment = 0.0;
-		if(desiredDownPayment > liquidWealth) desiredDownPayment = liquidWealth;
-		if(desiredDownPayment > housePrice) desiredDownPayment = housePrice;
-		if(desiredDownPayment > approval.downPayment) {
-			approval.downPayment = desiredDownPayment;
-			approval.principal = housePrice - desiredDownPayment;
-		}
-		
-		approval.monthlyPayment = approval.principal* getMonthlyPaymentFactor(isHome);
-		approval.nPayments = config.derivedParams.N_PAYMENTS;
-		approval.monthlyInterestRate = r;
-		approval.purchasePrice = approval.principal + approval.downPayment;
-
-		return approval;
-	}
-
-	/**
-	 * Find, for a given household, the maximum house price that this mortgage-lender is willing to approve a mortgage
-     * for.
-	 * 
-	 * @param h The household applying for the mortgage
+    /**
+     * Request a mortgage approval without actually signing a mortgage contract, i.e., the returned
+     * MortgageAgreement object is not added to the Bank's HashSet of mortgages nor entered into CreditSupply
+     * statistics. This is useful for households to explore the details of the best available mortgage contract before
+     * deciding whether to actually go ahead and sign it.
+     *
+     * @param h The household requesting the mortgage
+     * @param housePrice The price of the house that household h wants to buy
      * @param isHome True if household h plans to live in the house (non-BTL mortgage)
-	 * @return The maximum house price that this mortgage-lender is willing to approve a mortgage for
-	 */
-	double getMaxMortgage(Household h, boolean isHome) {
-		double max_price;
-		double affordability_max_price; // Affordability (disposable income) constraint for maximum house price
-		double lti_max_price; // Loan to income constraint for maximum house price
-		double icr_max_price; // Interest cover ratio constraint for maximum house price
-		double liquidWealth = h.getBankBalance(); // No home equity needs to be added here: households always sell their homes before trying to buy new ones
-        double max_downpayment = liquidWealth - 0.01; // Maximum down-payment the household could make, where 1 cent is subtracted to avoid rounding errors
+     * @return The MortgageApproval object
+     */
+    MortgageAgreement requestApproval(Household h, double housePrice, double desiredDownPayment, boolean isHome) {
+        // Create a MortgageAgreement object to store and return the new mortgage data
+        MortgageAgreement approval = new MortgageAgreement(h, !isHome);
 
-        // LTV constraint: maximum house price the household could pay with the maximum mortgage the bank could provide
-        // to the household given the Loan-To-Value limit and the maximum down-payment the household could make
-		max_price = max_downpayment/(1.0 - getLoanToValueLimit(h.isFirstTimeBuyer(), isHome));
+        /*
+         * Constraints for all mortgages
+         */
 
-		if(isHome) { // No LTI nor affordability constraints for BTL investors
-			// Affordability constraint
-            affordability_max_price = max_downpayment + Math.max(0.0, config.CENTRAL_BANK_AFFORDABILITY_COEFF
-                    *h.getMonthlyNetTotalIncome())/getMonthlyPaymentFactor(isHome);
-			max_price = Math.min(max_price, affordability_max_price);
-            // Loan-To-Income constraint
-			lti_max_price = h.getAnnualGrossEmploymentIncome()*getLoanToIncomeLimit(h.isFirstTimeBuyer(), isHome)
-                    + max_downpayment;
-			max_price = Math.min(max_price, lti_max_price);
-		} else {
-		    // Interest-Cover-Ratio constraint
-			icr_max_price = max_downpayment/(1.0 - Model.rentalMarketStats.getExpAvFlowYield()
-                    /(Model.centralBank.getInterestCoverRatioLimit(isHome)*config.CENTRAL_BANK_BTL_STRESSED_INTEREST));
+        // Loan-To-Value (LTV) constraint: it sets a maximum value for the ratio of the principal divided by the house
+        // price
+        approval.principal = housePrice * getLoanToValueLimit(h.isFirstTimeBuyer(), isHome);
+
+        if (getNPayments(isHome, h.getAge()) > 0) {
+
+            /*
+             * Constraints specific to non-BTL mortgages
+             */
+
+            if (isHome) {
+                // Affordability constraint: it sets a maximum value for the monthly mortgage payment divided by the
+                // household's monthly gross employment income
+                double affordable_principal = getHardMaxAffordability() * h.getMonthlyGrossEmploymentIncome()
+                        / getMonthlyPaymentFactor(true, h.getAge());
+                if (getMonthlyPaymentFactor(true, h.getAge()) == 1.0) affordable_principal = 0.0;
+                approval.principal = Math.min(approval.principal, affordable_principal);
+                // Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
+                // annual gross employment income
+                double lti_principal = h.getAnnualGrossEmploymentIncome() * getLoanToIncomeLimit(h.isFirstTimeBuyer());
+                approval.principal = Math.min(approval.principal, lti_principal);
+
+                /*
+                 * Constraints specific to BTL mortgages
+                 */
+
+            } else {
+                // Interest Coverage Ratio (ICR) constraint: it sets a minimum value for the expected annual rental
+                // income divided by the annual interest expenses
+                double icr_principal = Model.rentalMarketStats.getExpAvFlowYield() * housePrice
+                        / (getHardMinICR() * getMortgageInterestRate());
+                approval.principal = Math.min(approval.principal, icr_principal);
+            }
+
+            // If number of payments is zero, then no principal is approved, purchase must be paid outright
+        } else {
+            approval.principal = 0.0;
+        }
+
+        /*
+         * Compute the down-payment
+         */
+
+        // Start by assuming the minimum possible down-payment, i.e., that resulting from the above maximisation of the
+        // principal available to the household, given its chosen house price
+        approval.downPayment = housePrice - approval.principal;
+        // Determine the liquid wealth of the household, with no home equity added, as home-movers always sell their
+        // homes before bidding for new ones
+        double liquidWealth = h.getBankBalance();
+        // Ensure desired down-payment is between zero and the house price, capped also by the household's liquid wealth
+        if (desiredDownPayment < 0.0) desiredDownPayment = 0.0;
+        if (desiredDownPayment > housePrice) desiredDownPayment = housePrice;
+        if (desiredDownPayment > liquidWealth) desiredDownPayment = liquidWealth;
+        // If the desired down-payment is larger than the initially assumed minimum possible down-payment, then set the
+        // down-payment to the desired value and update the principal accordingly
+        if (desiredDownPayment > approval.downPayment) {
+            approval.downPayment = desiredDownPayment;
+            approval.principal = housePrice - desiredDownPayment;
+        }
+
+        /*
+         * Set the rest of the variables of the MortgageAgreement object
+         */
+
+        if (getNPayments(isHome, h.getAge()) > 0) {
+            approval.monthlyPayment = approval.principal * getMonthlyPaymentFactor(isHome, h.getAge());
+        } else {
+            approval.monthlyPayment = 0.0;
+        }
+        approval.nPayments = getNPayments(isHome, h.getAge());
+        approval.monthlyInterestRate = getMortgageInterestRate() / config.constants.MONTHS_IN_YEAR;
+        approval.purchasePrice = approval.principal + approval.downPayment;
+        // Throw error and stop program if requested mortgage has down-payment larger than household's liquid wealth
+        if (approval.downPayment > liquidWealth) {
+            System.out.println("Error at Bank.requestApproval(), down-payment larger than household's bank balance: "
+                    + "downpayment = " + approval.downPayment + ", bank balance = " + liquidWealth);
+            System.exit(0);
+        }
+
+        return approval;
+    }
+
+    /**
+     * Find, for a given household, the maximum house price that this mortgage-lender is willing to approve a mortgage
+     * for. That is, this method assumes the household will use its total liquid wealth as deposit, thus maximising
+     * leverage. Regarding the application of the hard/soft LTI limit, there is a further assumption here that the
+     * household is always bound by the most constraining limit, whether the soft or the hard. This is due to the fact
+     * that it is impossible to know, at this point, which limit would be applied to this household once a formal
+     * mortgage is requested.
+     *
+     * @param h The household applying for the mortgage
+     * @param isHome True if household h plans to live in the house (non-BTL mortgage)
+     * @return A double with the maximum house price that this mortgage-lender is willing to approve a mortgage for
+     */
+    double getMaxMortgagePrice(Household h, boolean isHome) {
+        // First, maximise leverage by maximising the down-payment, thus using all the liquid wealth of the household
+        // (except 1 cent to avoid rounding errors), with no home equity added, as home-movers always sell their homes
+        // before bidding for new ones
+        double max_downpayment = h.getBankBalance() - 0.01;
+
+        // If number of payments is zero, then no principal is approved, purchase must be paid outright
+        if (getNPayments(isHome, h.getAge()) == 0) return max_downpayment;
+
+        /*
+         * Constraints for all mortgages
+         */
+
+        // Loan-To-Value (LTV) constraint: it sets a maximum value for the ratio of the principal divided by the house
+        // price, thus setting a maximum house price given a fixed (maximised) down-payment
+        double max_price = max_downpayment / (1.0 - getLoanToValueLimit(h.isFirstTimeBuyer(), isHome));
+
+        /*
+         * Constraints specific to non-BTL mortgages
+         */
+
+        if (isHome) {
+            // Affordability constraint: it sets a maximum value for the monthly mortgage payment divided by the
+            // household's monthly gross employment income
+            double affordable_max_price = max_downpayment + getHardMaxAffordability()
+                    * h.getMonthlyGrossEmploymentIncome() / getMonthlyPaymentFactor(true, h.getAge());
+            if (getMonthlyPaymentFactor(true, h.getAge()) == 1.0) affordable_max_price = max_downpayment;
+            max_price = Math.min(max_price, affordable_max_price);
+            // Loan-To-Income (LTI) constraint: it sets a maximum value for the principal divided by the household's
+            // annual gross employment income. The lowest LTI limit is used, since it is impossible to know yet which
+            // limit would be applied to this household once a formal mortgage is requested
+            double lti_max_price = max_downpayment + h.getAnnualGrossEmploymentIncome()
+                    * getLoanToIncomeLowestLimit(h.isFirstTimeBuyer());
+            max_price = Math.min(max_price, lti_max_price);
+
+        /*
+         * Constraints specific to BTL mortgages
+         */
+
+        } else {
+            // Interest Coverage Ratio (ICR) constraint: it sets a minimum value for the expected annual rental income
+            // divided by the annual interest expenses
+            double icr_max_price = max_downpayment / (1.0 - Model.rentalMarketStats.getExpAvFlowYield()
+                    / (getHardMinICR() * getMortgageInterestRate()));
+            // When the rental yield is larger than the interest rate times the ICR, then the ICR does never constrain
+            if (icr_max_price < 0.0) icr_max_price = Double.POSITIVE_INFINITY;
             max_price = Math.min(max_price,  icr_max_price);
         }
 
         return max_price;
-	}
+    }
 
     /**
-     * This method removes a mortgage contract by removing it from the HashSet of mortgages
+     * End a mortgage contract by removing it from the Bank's HashSet of mortgages
      *
      * @param mortgage The MortgageAgreement object to be removed
      */
@@ -273,55 +441,132 @@ public class Bank {
     //----- Mortgage policy methods -----//
 
     /**
-     * Get the Loan-To-Value ratio limit applicable by this private bank to a given household. Note that this limit is
-     * self-imposed by the private bank.
+     * Get the Loan-To-Value ratio limit currently applicable to a given type of household (first-time buyer, home mover
+     * or buy-to-let investor). Note that this limit is defined as the minimum between the private bank self-imposed
+     * internal policy limit and the central bank mandatory policy limit.
      *
      * @param isFirstTimeBuyer True if the household is a first-time buyer
      * @param isHome True if the mortgage is to buy a home for the household (non-BTL mortgage)
-     * @return The Loan-To-Value ratio limit applicable to the given household
+     * @return The Loan-To-Value ratio limit applicable to this type of household
      */
     private double getLoanToValueLimit(boolean isFirstTimeBuyer, boolean isHome) {
-        if(isHome) {
-            if(isFirstTimeBuyer) {
-                return firstTimeBuyerLTVLimit;
-            } else {
-                return ownerOccupierLTVLimit;
-            }
-        }
-        return buyToLetLTVLimit;
-    }
-
-	/**
-	 * Get the Loan-To-Income ratio limit applicable by this private bank to a given household. Note that Loan-To-Income
-     * constraints apply only to non-BTL applicants. The private bank always imposes its own (hard) limit. Apart from
-     * this, it also imposes the Central Bank regulated limit, which allows for a certain fraction of residential loans
-     * (mortgages for owner-occupying) to go over it (and thus it is considered here a soft limit).
-	 *
-	 * @param isFirstTimeBuyer true if the household is a first-time buyer
-     * @param isHome True if the mortgage is to buy a home for the household (non-BTL mortgage)
-	 * @return The Loan-To-Income ratio limit applicable to the given household
-	 */
-	private double getLoanToIncomeLimit(boolean isFirstTimeBuyer, boolean isHome) {
-	    double limit;
-	    // First compute the private bank self-imposed (hard) limit, which applies always
         if (isHome) {
             if (isFirstTimeBuyer) {
-                limit = firstTimeBuyerLTILimit;
+                return Math.min(firstTimeBuyerHardMaxLTV, centralBank.getFirstTimeBuyerHardMaxLTV());
             } else {
-                limit = ownerOccupierLTILimit;
+                return Math.min(homeMoverHardMaxLTV, centralBank.getHomeMoverHardMaxLTV());
             }
-        } else {
-            System.out.println("Strange: The bank is trying to impose a Loan-To-Income limit on a Buy-To-Let" +
-                    "investor!");
-            limit = 0.0; // Dummy limit value
         }
-        // If the fraction of non-BTL mortgages already underwritten over the Central Bank LTI limit exceeds a certain
-        // maximum (regulated also by the Central Bank)...
-        if ((nOOMortgagesOverLTI + 1.0)/(nOOMortgages + 1.0) >
-                Model.centralBank.getMaxFractionOOMortgagesOverLTILimit()) {
-            // ... then compare the Central Bank LTI (soft) limit and that of the private bank (hard) and choose the smallest
-            limit = Math.min(limit, Model.centralBank.getLoanToIncomeLimit(isFirstTimeBuyer, isHome));
-        }
-		return limit;
+        return Math.min(buyToLetHardMaxLTV, centralBank.getBuyToLetHardMaxLTV());
     }
+
+    /**
+     * Get the Loan-To-Income ratio limit currently applicable to a given type of household, whether first-time buyer or
+     * home mover (that is, this constraint is applicable only to non-BTL mortgages). The private bank always imposes
+     * its own internal hard limit. Apart from this, it also imposes the Central Bank regulated soft limit, which allows
+     * for a certain fraction of non-BTL loans to go over this soft limit. This fraction of mortgages allowed to exceed
+     * the soft limit is measure on a rolling basis with a window of (CENTRAL_BANK_LTI_MONTHS_TO_CHECK - 1) months
+     * previous to the current one plus the current one.
+     *
+     * @param isFirstTimeBuyer True if the household is a first-time buyer
+     * @return The Loan-To-Income ratio limit currently applicable to this type of household
+     */
+    private double getLoanToIncomeLimit(boolean isFirstTimeBuyer) {
+
+        // If the maximum fractions of mortgages over their soft LTI limits allowed by the Central Bank for FTBs and HMs
+        // are the same, then the quota is shared by FTBs and HMs, instead of having separate quotas
+        if (centralBank.getFirstTimeBuyerMaxFracOverSoftMaxLTI() == centralBank.getHomeMoverMaxFracOverSoftMaxLTI()) {
+            // If this mortgage could bring the fraction of mortgages (FTB + HM) underwritten over the Central Bank LTI
+            // soft limit to exceed the maximum fraction established by the Central Bank (same for FTB and HM)...
+            if ((double)(nFTBMortOverSoftMaxLTI_Acc + nFTBMortOverSoftMaxLTI_New
+                    + nHMMortOverSoftMaxLTI_Acc + nHMMortOverSoftMaxLTI_New + 1)
+                    / (nFTBMortgages_Acc + nFTBMortgages_New
+                    + nHMMortgages_Acc + nHMMortgages_New + 1)
+                    > centralBank.getFirstTimeBuyerMaxFracOverSoftMaxLTI()) {
+                // ... then use the minimum between the Central Bank soft limit and the private bank hard limit, for
+                // either first-time buyers or home movers
+                if (isFirstTimeBuyer) {
+                    return Math.min(firstTimeBuyerHardMaxLTI, centralBank.getFirstTimeBuyerSoftMaxLTI());
+                } else {
+                    return Math.min(homeMoverHardMaxLTI, centralBank.getHomeMoverSoftMaxLTI());
+                }
+            // ...otherwise...
+            } else {
+                // ...simply use the private bank self-imposed hard maximum, for either first-time buyers or home movers
+                if (isFirstTimeBuyer) {
+                    return firstTimeBuyerHardMaxLTI;
+                } else {
+                    return homeMoverHardMaxLTI;
+                }
+            }
+        // Otherwise, FTBs and HMs keep separate quotas for mortgages over their respective LTI limits
+        } else {
+            // For first-time buyers...
+            if (isFirstTimeBuyer) {
+                // ...if this mortgage could bring the fraction of mortgages underwritten over the Central Bank LTI soft
+                // limit to exceed the maximum fraction established by the Central Bank...
+                if ((double) (nFTBMortOverSoftMaxLTI_Acc + nFTBMortOverSoftMaxLTI_New + 1)
+                        / (nFTBMortgages_Acc + nFTBMortgages_New + 1)
+                        > centralBank.getFirstTimeBuyerMaxFracOverSoftMaxLTI()) {
+                    // ... then use the minimum between the Central Bank soft limit and the private bank hard limit
+                    return Math.min(firstTimeBuyerHardMaxLTI, centralBank.getFirstTimeBuyerSoftMaxLTI());
+                    // ...otherwise...
+                } else {
+                    // ...simply use the private bank self-imposed hard maximum
+                    return firstTimeBuyerHardMaxLTI;
+                }
+                // For home movers...
+            } else {
+                // ...if this mortgage could bring the fraction of mortgages underwritten over the Central Bank LTI soft
+                // limit to exceed the maximum fraction established by the Central Bank...
+                if ((double) (nHMMortOverSoftMaxLTI_Acc + nHMMortOverSoftMaxLTI_New + 1)
+                        / (nHMMortgages_Acc + nHMMortgages_New + 1)
+                        > centralBank.getHomeMoverMaxFracOverSoftMaxLTI()) {
+                    // ... then use the minimum between the Central Bank soft limit and the private bank hard limit
+                    return Math.min(homeMoverHardMaxLTI, centralBank.getHomeMoverSoftMaxLTI());
+                    // ...otherwise...
+                } else {
+                    // ...simply use the private bank self-imposed hard maximum
+                    return homeMoverHardMaxLTI;
+                }
+            }
+        }
+    }
+
+    /**
+     * Get the most constraining Loan-To-Income ratio limit potentially applicable to a given type of household, whether
+     * first-time buyer or home mover (that is, this constraint is applicable only to non-BTL mortgages). This method is
+     * used by the bank when computing the maximum mortgage price available to a given household, and the reason to use
+     * the most constraining (lowest) limit is that, at that point, it is impossible to know which limit (soft or hard)
+     * will actually apply to the given household when a formal mortgage request is done. Thus, for security, the most
+     * constraining limit is used.
+     *
+     * @param isFirstTimeBuyer True if the household is a first-time buyer
+     * @return The lowest Loan-To-Income ratio limit potentially applicable to this type of household
+     */
+    private double getLoanToIncomeLowestLimit(boolean isFirstTimeBuyer) {
+        // For first-time buyers...
+        if (isFirstTimeBuyer) {
+            // ...use the minimum between the Central Bank soft limit and the private bank hard limit
+                return Math.min(firstTimeBuyerHardMaxLTI, centralBank.getFirstTimeBuyerSoftMaxLTI());
+        // For home movers...
+        } else {
+            // ...use the minimum between the Central Bank soft limit and the private bank hard limit
+            return Math.min(homeMoverHardMaxLTI, centralBank.getHomeMoverSoftMaxLTI());
+        }
+    }
+
+    /**
+     * Get the most constraining affordability limit, between the private and the central bank policies
+     */
+    private double getHardMaxAffordability() {
+        return Math.min(hardMaxAffordability, centralBank.getHardMaxAffordability());
+    }
+
+    /**
+     * Get the most constraining Interest Coverage Ratio limit, between the private and the central bank policies
+     */
+    private double getHardMinICR() { return Math.max(hardMinICR, centralBank.getHardMinICR()); }
+
+    public double getInterestSpread() { return interestSpread; }
 }

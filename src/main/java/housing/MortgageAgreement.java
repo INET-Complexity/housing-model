@@ -13,71 +13,71 @@ public class MortgageAgreement extends PaymentAgreement {
     //----- Fields -----//
     //------------------//
 
-	public double           downPayment;
-	public double           purchasePrice;
-    private boolean         isActive;
-	public final boolean    isBuyToLet;
-	public final boolean    isFirstTimeBuyer;
-	public double           principal; // Remaining principal to be paid off
-	double                  monthlyInterestRate;
+    public double           downPayment;
+    double                  purchasePrice;
+    public final boolean    isBuyToLet;
+    public final boolean    isFirstTimeBuyer;
+    public double           principal; // Remaining principal to be paid off
+    double                  monthlyInterestRate;
 
     //------------------------//
     //----- Constructors -----//
     //------------------------//
 
-	MortgageAgreement(Household borrower, boolean isBuyToLet) {
-		this.isBuyToLet = isBuyToLet;
-		this.isFirstTimeBuyer = !isBuyToLet && borrower.isFirstTimeBuyer();
-		isActive = true;
-	}
+    MortgageAgreement(Household borrower, boolean isBuyToLet) {
+        this.isBuyToLet = isBuyToLet;
+        this.isFirstTimeBuyer = !isBuyToLet && borrower.isFirstTimeBuyer();
+    }
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
 
-	/**
-	 * This method updates the internal variables to simulate a monthly payment being made, though it does not move any
+    /**
+     * This method updates the internal variables to simulate a monthly payment being made, though it does not move any
      * assets from payer to payee!
-	 * 
-	 * @return The amount of the monthly payment
-	 */
-	@Override
+     *
+     * @return The amount of the monthly payment
+     */
+    @Override
     public double makeMonthlyPayment() {
-	    // If no more payments are due...
+        // If no more payments are due, simply return a zero payment
         if (nPayments == 0) {
-            // ...but mortgage is still active...
-            if (isActive) {
-                isActive = false; // ...then deactivate the mortgage...
-                return payoff(principal); // ...by paying off all remaining principle (this also removes mortgage from the bank's list)...
-            // ...otherwise, if mortgage is already inactive...
-            } else {
-                return 0.0; // ...simply return a zero payment
-            }
+            return 0.0;
         // If more payments are still due...
         } else {
-            nPayments -= 1; // ...then reduce number of payments due by one,
-            principal = principal*(1.0 + monthlyInterestRate) - monthlyPayment; // ...reduce amount due by amount to be paid this month
-            return monthlyPayment; // ...and return the monthly payment
+            // ...then reduce number of payments due by one
+            nPayments -= 1;
+            // ...reduce amount due by amount to be paid this month
+            principal = principal*(1.0 + monthlyInterestRate) - monthlyPayment;
+            // ...and, if this would bring the number of payments to zero, then add any principal left (zero or close to
+            // zero for capital and interest mortgages, full principal for interest-only mortgages)
+            if (nPayments == 0) {
+                return monthlyPayment + payoff(principal);
+            } else {
+                return monthlyPayment;
+            }
         }
-	}
+    }
 
-	/**
-	 * Use this method to pay off the mortgage early or make a one-off payment.
-	 * 
-	 * @param amount Desired amount to pay off
-	 * @return The amount that was actually paid off
-	 */
-	double payoff(double amount) {
-		if (amount >= principal) {
+    /**
+     * Use this method to pay off the mortgage early or make a one-off payment. Note that if the mortgage is completely
+     * paid off, then it is removed from the bank's list of mortgages.
+     *
+     * @param amount Desired amount to pay off
+     * @return The amount that was actually paid off
+     */
+    double payoff(double amount) {
+        if (amount >= principal) {
             amount = principal;
             principal = 0.0;
             monthlyPayment = 0.0;
             nPayments = 0;
             Model.bank.endMortgageContract(this);
-		} else {
-			monthlyPayment *= (principal - amount)/principal;
-			principal -= amount;
-		}
+        } else {
+            monthlyPayment *= (principal - amount) / principal;
+            principal -= amount;
+        }
         return amount;
     }
 
@@ -86,5 +86,9 @@ public class MortgageAgreement extends PaymentAgreement {
      *
      * @return The amount that was actually paid off
      */
-	double payoff() { return payoff(principal); }
+    double payoff() { return payoff(principal); }
+
+    public double getAnnualInterestRate() { return monthlyInterestRate * 12.0; }
+
+    public int getMaturity() { return nPayments; }
 }

@@ -1,4 +1,6 @@
+# Income tax bands and rates for the tax year 2011-2012
+# Document available at https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/792502/Table-a2.pdf
 # Tax bands after personal allowance, Tax rates
 0, 0.20
-32010, 0.40
-150000, 0.45
+35000, 0.40
+150000, 0.50

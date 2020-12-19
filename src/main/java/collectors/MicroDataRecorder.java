@@ -1,114 +1,241 @@
 package collectors;
 
-import housing.*;
-
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 
+import java.util.Locale;
+
 public class MicroDataRecorder {
 
-    public MicroDataRecorder(String outputFolder) {
-        outputFolderCopy = outputFolder;
+    //------------------//
+    //----- Fields -----//
+    //------------------//
+
+    private String          outputFolder;
+
+    private PrintWriter     outfileHouseholdID;
+    private PrintWriter     outfileEmploymentIncome;
+    private PrintWriter     outfileRentalIncome;
+    private PrintWriter     outfileBankBalance;
+    private PrintWriter     outfileHousingWealth;
+    private PrintWriter     outfileNHousesOwned;
+    private PrintWriter     outfileAge;
+    private PrintWriter     outfileSavingRate;
+
+    private int             timeToStartMicroPrinting = 996;
+    private int             freqOfMicroPrinting = 12;
+
+    //------------------------//
+    //----- Constructors -----//
+    //------------------------//
+
+    public MicroDataRecorder(String outputFolder) { this.outputFolder = outputFolder; }
+
+    //-------------------//
+    //----- Methods -----//
+    //-------------------//
+
+    public void openSingleRunSingleVariableFiles(int nRun, boolean recordHouseholdID, boolean recordEmploymentIncome,
+                                                 boolean recordRentalIncome, boolean recordBankBalance,
+                                                 boolean recordHousingWealth, boolean recordNHousesOwned,
+                                                 boolean recordAge, boolean recordSavingRate) {
+        if (recordHouseholdID) {
+            try {
+                outfileHouseholdID = new PrintWriter(outputFolder + "HouseholdID-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordEmploymentIncome) {
+            try {
+                outfileEmploymentIncome = new PrintWriter(outputFolder + "MonthlyGrossEmploymentIncome-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordRentalIncome) {
+            try {
+                outfileRentalIncome = new PrintWriter(outputFolder + "MonthlyGrossRentalIncome-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordBankBalance) {
+            try {
+                outfileBankBalance = new PrintWriter(outputFolder + "BankBalance-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordHousingWealth) {
+            try {
+                outfileHousingWealth = new PrintWriter(outputFolder + "HousingWealth-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordNHousesOwned) {
+            try {
+                outfileNHousesOwned = new PrintWriter(outputFolder + "NHousesOwned-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordAge) {
+            try {
+                outfileAge = new PrintWriter(outputFolder + "Age-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
+        if (recordSavingRate) {
+            try {
+                outfileSavingRate = new PrintWriter(outputFolder + "SavingRate-run" + nRun
+                        + ".csv", "UTF-8");
+            } catch (FileNotFoundException | UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-	public void start() throws FileNotFoundException, UnsupportedEncodingException {
-		openNewFile();
-	}
+    void timeStampSingleRunSingleVariableFiles(int time, boolean recordHouseholdID, boolean recordEmploymentIncome,
+                                               boolean recordRentalIncome, boolean recordBankBalance,
+                                               boolean recordHousingWealth, boolean recordNHousesOwned,
+                                               boolean recordAge, boolean recordSavingRate) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            if (recordHouseholdID) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileHouseholdID.println("");
+                }
+                outfileHouseholdID.print(time);
+            }
+            if (recordEmploymentIncome) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileEmploymentIncome.println("");
+                }
+                outfileEmploymentIncome.print(time);
+            }
+            if (recordRentalIncome) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileRentalIncome.println("");
+                }
+                outfileRentalIncome.print(time);
+            }
+            if (recordBankBalance) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileBankBalance.println("");
+                }
+                outfileBankBalance.print(time);
+            }
+            if (recordHousingWealth) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileHousingWealth.println("");
+                }
+                outfileHousingWealth.print(time);
+            }
+            if (recordNHousesOwned) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileNHousesOwned.println("");
+                }
+                outfileNHousesOwned.print(time);
+            }
+            if (recordAge) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileAge.println("");
+                }
+                outfileAge.print(time);
+            }
+            if (recordSavingRate) {
+                if (time != timeToStartMicroPrinting) {
+                    outfileSavingRate.println("");
+                }
+                outfileSavingRate.print(time);
+            }
+        }
+    }
 
-	public void openNewFile() {
-//		String simID = Integer.toHexString(UUID.randomUUID().hashCode());
-		try {
-			outfile = new PrintWriter(outputFolderCopy + "transactions-"+ Model.nSimulation+".csv", "UTF-8");
-			outfile.println(
-					"Timestamp, transactionType, houseId, houseQuality, initialListedPrice, timeFirstOffered, transactionPrice, "+
-					"buyerId, buyerAge(years), buyerHasBTLGene, buyerMonthlyPreTaxIncome, buyerMonthlyEmploymentIncome, buyerBankBalance, buyerCapGainCoeff, "+
-					"mortgageDownpayment, firstTimeBuyerMortgage, buyToLetMortgage, "+
-					"sellerId, sellerAge(years), sellerHasBTLGene, sellerMonthlyPreTaxIncome, sellerMonthlyEmploymentIncome, sellerBankBalance, sellerCapGainCoeff");
-		} catch (FileNotFoundException | UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-	
-	public void recordSale(HouseBidderRecord purchase, HouseOfferRecord sale, MortgageAgreement mortgage, HousingMarket market) {
-		if(!active) return;
-		outfile.print(
-    			Model.getTime()+", "
-    			);
-		if(market instanceof HouseSaleMarket) {
-			outfile.print("sale, ");
-		} else {
-			outfile.print("rental, ");
-		}
-		outfile.print(
-    			sale.getHouse().id+", "+
-    			sale.getHouse().getQuality()+", "+
-				sale.getInitialListedPrice() +", "+
-				sale.gettInitialListing() +", "+
-    			sale.getPrice()+", "+
-    			purchase.getBidder().id+", "+
-    			purchase.getBidder().getAge()+", "+
-    			purchase.getBidder().behaviour.isPropertyInvestor()+", "+
-    			purchase.getBidder().getMonthlyGrossTotalIncome()+", "+
-    			purchase.getBidder().getMonthlyGrossEmploymentIncome() +", "+
-    			purchase.getBidder().getBankBalance()+", "+
-    			purchase.getBidder().behaviour.getBTLCapGainCoefficient() +", "
-				);
-		if(mortgage != null) {
-			outfile.print(
-					mortgage.downPayment+", "+
-					mortgage.isFirstTimeBuyer+", "+
-					mortgage.isBuyToLet+", "
-					);			
-		} else {
-			outfile.print("-1, false, false, ");
-		}
-		if(sale.getHouse().owner instanceof Household) {
-			Household seller = (Household) sale.getHouse().owner;
-			outfile.println(
-					seller.id+", "+
-					seller.getAge()+", "+
-					seller.behaviour.isPropertyInvestor()+", "+
-					seller.getMonthlyGrossTotalIncome()+", "+
-					seller.getMonthlyGrossEmploymentIncome() +", "+
-					seller.getBankBalance()+", "+
-					seller.behaviour.getBTLCapGainCoefficient()
-					);			
-		} else {
-			// must be construction sector
-			outfile.println("-1, 0, false, 0, 0, 0, 0");
-		}
-	}
-	
-	public void finish() {
-		outfile.close();
-	}
-		
-	public void endOfSim() {
-		outfile.close();
-		openNewFile();
-	}
-	
-	public boolean isActive() {
-		return active;
-	}
+    void recordHouseholdID(int time, int householdID) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileHouseholdID.format(Locale.ROOT, "; %d", householdID);
+        }
+    }
 
-	public void setActive(boolean isActive) {
-		this.active = isActive;
-		if(isActive) {
-			try {
-				Model.housingMarketStats.setActive(true);
-				Model.rentalMarketStats.setActive(true);
-				start();
-			} catch (FileNotFoundException | UnsupportedEncodingException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-	}
+    void recordEmploymentIncome(int time, double monthlyGrossEmploymentIncome) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileEmploymentIncome.format(Locale.ROOT, "; %.2f", monthlyGrossEmploymentIncome);
+        }
+    }
 
-	PrintWriter 	outfile;
-	public boolean  active=false;
-	private String outputFolderCopy;
+    void recordRentalIncome(int time, double monthlyGrossRentalIncome) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileRentalIncome.format(Locale.ROOT, "; %.2f", monthlyGrossRentalIncome);
+        }
+    }
+
+    void recordBankBalance(int time, double bankBalance) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileBankBalance.format(Locale.ROOT, "; %.2f", bankBalance);
+        }
+    }
+
+    void recordHousingWealth(int time, double housingWealth) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileHousingWealth.format(Locale.ROOT, "; %.2f", housingWealth);
+        }
+    }
+
+    void recordNHousesOwned(int time, int nHousesOwned) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileNHousesOwned.format(Locale.ROOT, "; %d", nHousesOwned);
+        }
+    }
+
+    void recordAge(int time, double age) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileAge.format(Locale.ROOT, "; %.2f", age);
+        }
+    }
+
+    void recordSavingRate(int time, double savingRate) {
+        if (time % freqOfMicroPrinting == 0 && time >= timeToStartMicroPrinting) {
+            outfileSavingRate.format(Locale.ROOT, "; %.4f", savingRate);
+        }
+    }
+
+    public void finishRun(boolean recordHouseholdID, boolean recordEmploymentIncome, boolean recordRentalIncome,
+                          boolean recordBankBalance, boolean recordHousingWealth, boolean recordNHousesOwned,
+                          boolean recordAge, boolean recordSavingRate) {
+        if (recordHouseholdID) {
+            outfileHouseholdID.close();
+        }
+        if (recordEmploymentIncome) {
+            outfileEmploymentIncome.close();
+        }
+        if (recordRentalIncome) {
+            outfileRentalIncome.close();
+        }
+        if (recordBankBalance) {
+            outfileBankBalance.close();
+        }
+        if (recordHousingWealth) {
+            outfileHousingWealth.close();
+        }
+        if (recordNHousesOwned) {
+            outfileNHousesOwned.close();
+        }
+        if (recordAge) {
+            outfileAge.close();
+        }
+        if (recordSavingRate) {
+            outfileSavingRate.close();
+        }
+    }
 }

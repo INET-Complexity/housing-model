@@ -23,8 +23,8 @@ public abstract class HousingMarket {
     private Config                                  config = Model.config; // Passes the Model's configuration parameters object to a private field
     private MersenneTwister                         prng;
     private PriorityQueue2D<HousingMarketRecord>    offersPQ;
-
-    ArrayList<HouseBidderRecord>                     bids;
+    private ArrayList<HouseBidderRecord>            bids;
+    private int []                                  nBidUpFrequency; // Counts the frequency of the number of bid-ups. TODO: Move to a collector class
 
     //------------------------//
     //----- Constructors -----//
@@ -34,9 +34,7 @@ public abstract class HousingMarket {
         offersPQ = new PriorityQueue2D<>(new HousingMarketRecord.PQComparator()); //Priority Queue of (Price, Quality)
         // The integer passed to the ArrayList constructor is an initially declared capacity (for initial memory
         // allocation purposes), it will actually have size zero and only grow by adding elements
-        // TODO: Check if this integer is too large or small, check speed penalty for using ArrayList as opposed to
-        // TODO: normal arrays
-        bids = new ArrayList<>(config.TARGET_POPULATION/16);
+        bids = new ArrayList<>(config.TARGET_POPULATION/10);
         this.prng = prng;
     }
 
@@ -88,8 +86,8 @@ public abstract class HousingMarket {
      * @param buyer The household that is making the bid
      * @param price The price that the household is willing to pay
      */
-    public void bid(Household buyer, double price) {
-        bids.add(new HouseBidderRecord(buyer, price, false));
+    public void bid(Household buyer, double price, boolean BTLBid, double desiredDownPayment) {
+        bids.add(new HouseBidderRecord(buyer, price, BTLBid, desiredDownPayment));
     }
 
     //----- Market clearing methods -----//
@@ -98,6 +96,7 @@ public abstract class HousingMarket {
      * Main simulation step. For a number of rounds, matches bids with offers and clears the matches.
      */
     void clearMarket() {
+        nBidUpFrequency = new int[21]; // Re-start bid-up counter (while this array size is arbitrary, anything above 10 should be enough)
         // Before any use, priorities must be sorted by filling in the uncoveredElements TreeSet at the corresponding
         // PriorityQueue2D, in this case, the offersPQ object contains a Price-Quality 2D-priority queue of offers
         offersPQ.sortPriorities();
@@ -106,6 +105,10 @@ public abstract class HousingMarket {
             clearMatches(); // Step 2: iterate through offers
         }
         bids.clear();
+        // Record the frequency of bid-ups
+        if (config.recordNBidUpFrequency) {
+            Model.transactionRecorder.recordNBidUpFrequency(Model.getTime(), nBidUpFrequency);
+        }
     }
 
     /**
@@ -142,7 +145,6 @@ public abstract class HousingMarket {
         double pSuccessfulBid;
         double salePrice;
         int winningBid;
-        int enoughBids; // Upper bounded number of bids on one house
         Iterator<HousingMarketRecord> record = getOffersIterator();
         while(record.hasNext()) {
             offer = (HouseOfferRecord)record.next();
@@ -151,13 +153,23 @@ public abstract class HousingMarket {
             if(nBids > 1) {
                 // ...first bid up the price
                 if(config.BIDUP > 1.0) {
-                    // TODO: All this enough bids mechanism is not explained! The 10000/N factor, the 0.5 added, and the
-                    // TODO: topping of the function at 4 are not declared in the paper. Remove or explain!
-                    enoughBids = Math.min(4, (int)(0.5 + nBids*10000.0/config.TARGET_POPULATION));
-                    // TODO: Also, the role of MONTHS_UNDER_OFFER is not explained or declared!
-                    pSuccessfulBid = Math.exp(-enoughBids*config.derivedParams.MONTHS_UNDER_OFFER);
+                    // Bearing in mind the design of the market mechanism, which leads to an unreasonably large number
+                    // of bids per offer as bidders "trickle up" to more expensive offers, we need to take the logarithm
+                    // (base 10) of the model number of bidders to get a realistic one for computing bid-ups
+                    int rescaledNBids = Math.max((int)(Math.log10(nBids)), 1);
+                    // Assuming bids a randomly distributed throughout the month, this is the probability of two
+                    // consecutive bids having at least a week between them
+                    pSuccessfulBid = Math.pow((1.0 - config.derivedParams.MONTHS_UNDER_OFFER), (rescaledNBids - 1));
+                    if (pSuccessfulBid == 0.0) pSuccessfulBid = Float.MIN_VALUE; // Keeping the probability non-zero
+                    // Given the previous probability of success (two consecutive bids more than a week apart), find the
+                    // number of attempts before a success (number of consecutive bids less than a week apart before two
+                    // consecutive bids more than a week apart), which corresponds to a draw from a geometric
+                    // distribution
                     geomDist = new GeometricDistribution(prng, pSuccessfulBid);
-                    salePrice = offer.getPrice()*Math.pow(config.BIDUP, geomDist.sample());
+                    int nBidUps = geomDist.sample();
+                    addNBidUps(nBidUps);
+                    // Finally compute the new price
+                    salePrice = offer.getPrice()*Math.pow(config.BIDUP, nBidUps);
                 } else {
                     salePrice = offer.getPrice();                    
                 }
@@ -186,6 +198,7 @@ public abstract class HousingMarket {
                 bids.addAll(offer.getMatchedBids().subList(winningBid + 1, offer.getMatchedBids().size()));
             // If there is only one match...
             } else if (nBids == 1) {
+                addNBidUps(0);
                 // ...complete successful transaction and record it into the corresponding housingMarketStats
                 completeTransaction(offer.getMatchedBids().get(0), offer);
                 // ...remove this offer from the offers priority queue, offersPQ, underlying the record iterator (and, for HouseSaleMarket, also from the PY queue)
@@ -215,18 +228,28 @@ public abstract class HousingMarket {
      */
     public abstract void completeTransaction(HouseBidderRecord purchase, HouseOfferRecord sale);
 
+    // Add a transaction with a number nBidUps of bid-up attempts
+    private void addNBidUps(int nBidUps) {
+        if (nBidUps < nBidUpFrequency.length) {
+            nBidUpFrequency[nBidUps] += 1;
+        } else {
+            nBidUpFrequency[nBidUpFrequency.length - 1] += 1;
+        }
+    }
+
     //----- Getter/setter methods -----//
 
     public ArrayList<HouseBidderRecord> getBids() { return bids; }
 
     public PriorityQueue2D<HousingMarketRecord> getOffersPQ() { return offersPQ; }
 
-    Iterator<HousingMarketRecord> getOffersIterator() { return(offersPQ.iterator()); }
+    private Iterator<HousingMarketRecord> getOffersIterator() { return(offersPQ.iterator()); }
 
     /**
      * Get the highest quality house being offered for a price up to that of the bid (OfferPrice <= bidPrice)
      *
-     * @param bid The highest possible price the buyer is ready to pay
+     * @param bid HouseBidderRecord with the highest possible price the buyer is ready to pay
+     * @return HouseOfferRecord of the best offer available, null if the household cannot afford any offer
      */
     protected HouseOfferRecord getBestOffer(HouseBidderRecord bid) { return (HouseOfferRecord)offersPQ.peek(bid); }
 

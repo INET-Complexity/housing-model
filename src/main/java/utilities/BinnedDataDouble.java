@@ -9,14 +9,18 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
 /**
- *  Utility class to that expands BinnedData with a constructor that reads data from a source file
+ *  Utility class that expands BinnedData with a constructor that reads data from a source file
  *
  *  @author daniel, Adrian Carro
  */
 public class BinnedDataDouble extends BinnedData<Double> {
 
+	//------------------------//
+	//----- Constructors -----//
+	//------------------------//
+
 	/**
-	 * Loads data from a .csv file. The file should be in the format {bin min, min max, value}, with as many initial
+	 * Loads data from a .csv file. The file should be in the format {bin min, bin max, value}, with as many initial
 	 * rows as needed for comments but always marked with an initial "#" character
 	 *
 	 * @param filename Address of the file to read data from
@@ -43,7 +47,7 @@ public class BinnedDataDouble extends BinnedData<Double> {
 				record = records.next();
 				// Use the first record to set the first bin minimum and the bin width...
 				this.setFirstBinMin(Double.valueOf(record.get(0)));
-				this.setBinWidth(Double.valueOf(record.get(1))-firstBinMin);
+				this.setBinWidth(Double.valueOf(record.get(1)) - getSupportLowerBound());
 				// ...before actually adding it to the array
 				add(Double.valueOf(record.get(2)));
 				while(records.hasNext()) {

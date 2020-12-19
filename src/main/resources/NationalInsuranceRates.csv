@@ -1,3 +1,5 @@
+# National insurance contributions bands and rates for the tax year 2011-2012 (assuming annual bands = 52 * weekly bands)
+# Document available at https://assets.publishing.service.gov.uk/government/uploads/system/uploads/attachment_data/file/792494/Table-a4.pdf
 # National Insurance bands, National Insurance rates
-7152, 0.12
-38256, 0.02
+7228, 0.12
+42484, 0.02
