@@ -37,7 +37,7 @@ public class Government {
      * @param   fileName    String with name of file (address inside source folder)
      * @return  BandsAndRates object containing two arrays of Doubles, one with the bands and the other with the rates
      */
-    public static BandsAndRates readBandsAndRates(String fileName) {
+    private static BandsAndRates readBandsAndRates(String fileName) {
         BandsAndRates bandsAndRates = new BandsAndRates();
         List<Double> dummyBands = new ArrayList<>();
         List<Double> dummyRates = new ArrayList<>();
@@ -50,14 +50,14 @@ public class Government {
                         dummyBands.add(Double.parseDouble(line.split(",")[0]));
                     } catch (NumberFormatException nfe) {
                         System.out.println("Exception " + nfe + " while trying to parse " +
-                                line.split(",")[0] + " for an double");
+                                line.split(",")[0] + " for a double");
                         nfe.printStackTrace();
                     }
                     try {
                         dummyRates.add(Double.parseDouble(line.split(",")[1]));
                     } catch (NumberFormatException nfe) {
                         System.out.println("Exception " + nfe + " while trying to parse " +
-                                line.split(",")[0] + " for an double");
+                                line.split(",")[1] + " for a double");
                         nfe.printStackTrace();
                     }
                 }

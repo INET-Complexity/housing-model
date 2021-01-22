@@ -23,10 +23,13 @@ public class Config {
 
     /** Declaration of parameters **/
 
-    // General model control parameters
+    // USER SET PARAMETERS
+
+    // General model control
     int SEED;                                           // Seed for the random number generator
     int N_STEPS;                                        // Simulation duration in time steps
     int N_SIMS;                                         // Number of simulations to run (monte-carlo)
+    public int TARGET_POPULATION;                       // Target number of households
     public int TIME_TO_START_RECORDING_TRANSACTIONS;    // Time step to start recording transactions (to avoid too large files)
     int ROLLING_WINDOW_SIZE_FOR_CORE_INDICATORS;        // Size, in months, of the rolling window used to compute averages of core indicators
     private double CUMULATIVE_WEIGHT_BEYOND_YEAR;       // Total cumulative weight given to events older than 12 months when computing exponential moving averages
@@ -43,94 +46,7 @@ public class Config {
     public boolean recordAge;                           // True to write individual household age of the household representative person
     public boolean recordSavingRate;                    // True to write individual household saving rate data [1 - (taxExpenses + housing expenses(except deposits) + essentialConsumption + nonEssentialConsumption)/monthlyGrossTotalIncome]
 
-    // Housing market parameters
-    private double DAYS_UNDER_OFFER;            // Time (in days) that a house remains under offer
-    double BIDUP;                               // Smallest proportional increase in price that can cause a gazump
-    public double MARKET_AVERAGE_PRICE_DECAY;   // Decay constant for the exponential moving average of sale prices
-    public double HOUSE_PRICES_SCALE;           // Scale parameter for the log-normal distribution of house prices (logarithm of median house price = mean and median of logarithmic house prices)
-    public double HOUSE_PRICES_SHAPE;           // Shape parameter for the log-normal distribution of house prices (standard deviation of logarithmic house prices)
-    public double RENTAL_PRICES_SCALE;          // Scale parameter for the log-normal distribution of house rental prices (logarithm of median house rental price = mean and median of logarithmic house rental prices)
-    public double RENTAL_PRICES_SHAPE;          // Shape parameter for the log-normal distribution of house rental prices (standard deviation of logarithmic house rental prices)
-    public double RENT_GROSS_YIELD;             // Profit margin for buy-to-let investors
-
-    // Demographic parameters
-    public int TARGET_POPULATION;               // Target number of households
-    public String DATA_AGE_DISTRIBUTION;        // Address for data on the age distribution of household representative persons
-
-    // Household parameters
-    public String DATA_INCOME_GIVEN_AGE;        // Address for conditional probability of total gross non-rent income given age
-    public String DATA_WEALTH_GIVEN_INCOME;     // Address for conditional probability of liquid wealth given total gross non-rent income
-
-    // Household behaviour parameters: buy-to-let
-    String DATA_BTL_PROBABILITY;                // Probability of being a buy-to-let investor per income percentile bin
-    double BTL_PROBABILITY_MULTIPLIER;          // Multiplier for the probability of being a buy-to-let investor
-    double BTL_P_INCOME_DRIVEN;                 // Probability of a BTL investor having a rental-income-driven strategy
-    double BTL_P_CAPITAL_DRIVEN;                // Probability of a BTL investor having a capital-gains-driven strategy
-    double BTL_INCOME_DRIVEN_CAP_GAIN_COEFF;    // Weight that rental-income-driven BTL investors put on capital gains
-    double BTL_CAPITAL_DRIVEN_CAP_GAIN_COEFF;   // Weight that capital-gains-driven BTL investors put on capital gains
-    double BTL_MIX_DRIVEN_CAP_GAIN_COEFF;       // Weight that mix-driven BTL investors put on capital gains
-    double BTL_CHOICE_INTENSITY;                // Shape parameter, or intensity of choice on effective yield when deciding whether buy/sell a BTL property
-    // Household behaviour parameters: rent
-    int TENANCY_LENGTH_MIN;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
-    int TENANCY_LENGTH_MAX;                 // Rental contract lengths are drawn from a uniform (discrete) distribution between TENANCY_LENGTH_MIN and TENANCY_LENGTH_MAX
-    double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
-    double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
-    // Household behaviour parameters: general
-    double HPA_EXPECTATION_FACTOR;          // Dampening (or multiplier) factor for previous trend when computing future HPI growth expectations
-    double HPA_EXPECTATION_CONST;           // Constant to be added or subtracted from previous trend when computing future HPI growth expectations
-    public int HPA_YEARS_TO_CHECK;          // Number of years of the HPI record to check when computing the annual HPA
-    // Household behaviour parameters: consumption
-    double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
-    double MAXIMUM_CONSUMPTION_FRACTION;    // Maximum monthly consumption as a fraction of the household's gross annual income
-    // Household behaviour parameters: initial sale price
-    String DATA_INITIAL_SALE_MARKUP_DIST;   // Address for probability distribution of sale price mark-ups
-    // Household behaviour parameters: initial rent price
-    String DATA_INITIAL_RENT_MARKUP_DIST;   // Address for probability distribution of rent price mark-ups
-    // Household behaviour parameters: buyer's desired expenditure
-    double BUY_SCALE;                       // Scale, number of annual salaries (raised to the BUY_EXPONENT power) the buyer is willing to spend
-    double BUY_EXPONENT;                    // Exponent to which the annual gross employment income of the household is raised when computing its budget
-    double BUY_WEIGHT_HPA;                  // Weight given to house price appreciation when deciding how much to spend
-    double BUY_MU;                          // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
-    double BUY_SIGMA;                       // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
-    // Household behaviour parameters: renter's desired expenditure
-    double DESIRED_RENT_SCALE;              // Scale, number of annual salaries (raised to the DESIRED_RENT_EXPONENT power) the household is willing to spend on rent
-    double DESIRED_RENT_EXPONENT;           // Exponent to which the annual gross employment income of the household is raised when computing its rental budget
-    double DESIRED_RENT_MU;                 // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise for the desired rental budget
-    double DESIRED_RENT_SIGMA;              // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise for the desired rental budget
-    // Household behaviour parameters: sale price reduction
-    double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
-    double REDUCTION_MU;                    // Mean percentage log-reduction for prices of houses on the market
-    double REDUCTION_SIGMA;                 // Standard deviation of percentage log-reductions for prices of houses on the market
-    // Household behaviour parameters: rent reduction
-    double P_RENT_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
-    double RENT_REDUCTION_MU;               // Mean percentage log-reduction for prices of houses on the market
-    double RENT_REDUCTION_SIGMA;            // Standard deviation of percentage log-reductions for prices of houses on the market
-    // Household behaviour parameters: downpayment
-    double DOWNPAYMENT_BANK_BALANCE_FOR_CASH_SALE;  // If bankBalance/housePrice is above this, payment will be made fully in cash
-    double DOWNPAYMENT_FTB_SCALE;                   // Scale parameter for the log-normal distribution of downpayments by first-time-buyers
-    double DOWNPAYMENT_FTB_SHAPE;                   // Shape parameter for the log-normal distribution of downpayments by first-time-buyers
-    double DOWNPAYMENT_OO_SCALE;                    // Scale parameter for the log-normal distribution of downpayments by owner-occupiers
-    double DOWNPAYMENT_OO_SHAPE;                    // Shape parameter for the log-normal distribution of downpayments by owner-occupiers
-    double DOWNPAYMENT_BTL_MEAN;                    // Average down-payment, as a percentage of house price, for but-to-let investors
-    double DOWNPAYMENT_BTL_EPSILON;                 // Standard deviation of the noise for down-payments by buy-to-let investors
-    // Household behaviour parameters: selling decision
-    private double HOLD_PERIOD;             // Average period, in years, for which owner-occupiers hold their houses
-
-    // Bank parameters
-    int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
-    int BANK_AGE_LIMIT;                     // Maximum age to get a mortgage, non-BTL mortgages need to have been fully repaid by this age
-    double BANK_INITIAL_RATE;               // Private bank's initial interest rate
-    double BANK_INITIAL_CREDIT_SUPPLY;      // Private bank's initial supply of credit per household per month
-    double BANK_D_INTEREST_D_DEMAND;        // Rate of change of the interest rate in response to a change in the demand for credit per household per month (in points per pound per household per month)
-    double BANK_LTV_HARD_MAX_FTB;           // Internal private bank policy: Hard maximum LTV ratio for first-time buyers
-    double BANK_LTV_HARD_MAX_HM;            // Internal private bank policy: Hard maximum LTV ratio for home movers
-    double BANK_LTV_HARD_MAX_BTL;           // Internal private bank policy: Hard maximum LTV ratio for BTL investors
-    double BANK_LTI_HARD_MAX_FTB;           // Internal private bank policy: Hard maximum LTI ratio for first-time-buyers
-    double BANK_LTI_HARD_MAX_HM;            // Internal private bank policy: Hard maximum LTI ratio for home movers
-    double BANK_AFFORDABILITY_HARD_MAX;     // Internal private bank policy: Hard maximum fraction of household's income to be spent on mortgage repayments
-    double BANK_ICR_HARD_MIN;               // Internal private bank policy: Hard minimum ratio between (expected) annual rental income and annual interest payments
-
-    // Central bank parameters
+    // Central Bank policy
     double CENTRAL_BANK_INITIAL_BASE_RATE;              // Central Bank initial base rate
     double CENTRAL_BANK_LTV_HARD_MAX_FTB;               // Mandatory Central Bank policy: Hard maximum LTV ratio for first-time buyers
     double CENTRAL_BANK_LTV_HARD_MAX_HM;                // Mandatory Central Bank policy: Hard maximum LTV ratio for home movers
@@ -143,16 +59,129 @@ public class Config {
     double CENTRAL_BANK_AFFORDABILITY_HARD_MAX;         // Mandatory Central Bank policy: Hard maximum fraction of household's income to be spent on mortgage repayments
     double CENTRAL_BANK_ICR_HARD_MIN;                   // Mandatory Central Bank policy: Hard minimum ratio between (expected) annual rental income and annual interest payments
 
-    // Construction parameters
+    // INPUT CALIBRATED PARAMETERS (including design decisions with robustness analysis)
+
+    // General
     private int UK_HOUSEHOLDS;              // Number of households in the UK, used to compute core indicators and the ratio of houses per household
     private int UK_DWELLINGS;               // Number of dwellings in the UK, used to compute the ratio of houses per household
 
-    // Government parameters
+    // Household
+    public String DATA_AGE_DISTRIBUTION;    // Address for data on the age distribution of household representative persons
+    public String DATA_INCOME_GIVEN_AGE;    // Address for conditional probability of total gross non-rent income given age
+    public String DATA_WEALTH_GIVEN_INCOME; // Address for conditional probability of liquid wealth given total gross non-rent income
+
+    // Household behaviour: Consumption
+    double ESSENTIAL_CONSUMPTION_FRACTION;  // Fraction of Government support necessarily spent monthly by all households as essential consumption
+    double MAXIMUM_CONSUMPTION_FRACTION;    // Maximum monthly consumption as a fraction of the household's gross annual income
+
+    // Household behaviour: Expectations
+    double HPA_EXPECTATION_FACTOR;          // Dampening (or multiplier) factor for previous trend when computing future HPI growth expectations
+    double HPA_EXPECTATION_CONST;           // Constant to be added or subtracted from previous trend when computing future HPI growth expectations
+    public int HPA_YEARS_TO_CHECK;          // Number of years of the HPI record to check when computing the annual HPA
+
+    // Household behaviour: Purchase: Desired purchase expenditure
+    double BUY_SCALE;                       // Scale, number of annual salaries (raised to the BUY_EXPONENT power) the buyer is willing to spend
+    double BUY_EXPONENT;                    // Exponent to which the annual gross employment income of the household is raised when computing its budget
+    double BUY_MU;                          // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
+    double BUY_SIGMA;                       // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise
+
+    // Household behaviour: Purchase: Desired down-payment
+    double DOWNPAYMENT_FTB_SCALE;           // Scale parameter for the log-normal distribution of downpayments by first-time-buyers
+    double DOWNPAYMENT_FTB_SHAPE;           // Shape parameter for the log-normal distribution of downpayments by first-time-buyers
+    double DOWNPAYMENT_OO_SCALE;            // Scale parameter for the log-normal distribution of downpayments by owner-occupiers
+    double DOWNPAYMENT_OO_SHAPE;            // Shape parameter for the log-normal distribution of downpayments by owner-occupiers
+    double DOWNPAYMENT_BTL_MEAN;            // Average down-payment, as a percentage of house price, for but-to-let investors
+    double DOWNPAYMENT_BTL_EPSILON;         // Standard deviation of the noise for down-payments by buy-to-let investors
+
+    // Household behaviour: Sale: Sale decision
+    private double HOLD_PERIOD;             // Average period, in years, for which owner-occupiers hold their houses
+
+    // Household behaviour: Sale: Initial sale price
+    String DATA_INITIAL_SALE_MARKUP_DIST;   // Address for probability distribution of sale price mark-ups
+
+    // Household behaviour: Sale: Sale price reduction
+    double P_SALE_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
+    double REDUCTION_MU;                    // Mean percentage log-reduction for prices of houses on the market
+    double REDUCTION_SIGMA;                 // Standard deviation of percentage log-reductions for prices of houses on the market
+
+    // Household behaviour: Buy-to-let
+    String DATA_BTL_PROBABILITY;                // Probability of being a buy-to-let investor per income percentile bin
+    double BTL_P_INCOME_DRIVEN;                 // Probability of a BTL investor having a rental-income-driven strategy
+    double BTL_P_CAPITAL_DRIVEN;                // Probability of a BTL investor having a capital-gains-driven strategy
+    double BTL_INCOME_DRIVEN_CAP_GAIN_COEFF;    // Weight that rental-income-driven BTL investors put on capital gains
+    double BTL_CAPITAL_DRIVEN_CAP_GAIN_COEFF;   // Weight that capital-gains-driven BTL investors put on capital gains
+    double BTL_MIX_DRIVEN_CAP_GAIN_COEFF;       // Weight that mix-driven BTL investors put on capital gains
+
+    // Household behaviour: Rent: Rent Desired rental expenditure
+    double DESIRED_RENT_SCALE;              // Scale, number of annual salaries (raised to the DESIRED_RENT_EXPONENT power) the household is willing to spend on rent
+    double DESIRED_RENT_EXPONENT;           // Exponent to which the annual gross employment income of the household is raised when computing its rental budget
+
+    // Household behaviour: Rent: Rental length
+    int TENANCY_LENGTH_MIN;                 // Minimum number of months of a rental contract
+    int TENANCY_LENGTH_MAX;                 // Maximum number of months of a rental contract
+
+    // Household behaviour: Rent-out: Initial rent-out price
+    String DATA_INITIAL_RENT_MARKUP_DIST;   // Address for probability distribution of rent price mark-ups
+
+    // Household behaviour: Rent-out: Rent-out price reduction
+    double P_RENT_PRICE_REDUCE;             // Monthly probability of reducing the price of a house on the market
+    double RENT_REDUCTION_MU;               // Mean percentage log-reduction for prices of houses on the market
+    double RENT_REDUCTION_SIGMA;            // Standard deviation of percentage log-reductions for prices of houses on the market
+
+    // Housing market
+    private double DAYS_UNDER_OFFER;        // Time (in days) that a house remains under offer
+    double BIDUP;                           // Smallest proportional increase in price that can cause a gazump
+    public double HOUSE_PRICES_SCALE;       // Scale parameter for the log-normal distribution of house prices (logarithm of median house price = mean and median of logarithmic house prices)
+    public double HOUSE_PRICES_SHAPE;       // Shape parameter for the log-normal distribution of house prices (standard deviation of logarithmic house prices)
+    public double RENTAL_PRICES_SCALE;      // Scale parameter for the log-normal distribution of house rental prices (logarithm of median house rental price = mean and median of logarithmic house rental prices)
+    public double RENTAL_PRICES_SHAPE;      // Shape parameter for the log-normal distribution of house rental prices (standard deviation of logarithmic house rental prices)
+    public double RENT_GROSS_YIELD;         // Profit margin for buy-to-let investors
+
+    // Bank
+    int MORTGAGE_DURATION_YEARS;            // Mortgage duration in years
+    int BANK_AGE_LIMIT;                     // Maximum age for a household to get a mortgage and maximum age for a non-BTL household to finish repaying its mortgages
+    double BANK_INITIAL_RATE;               // Private bank's initial interest rate
+    double BANK_INITIAL_CREDIT_SUPPLY;      // Private bank's initial supply of credit per household per month
+    double BANK_D_INTEREST_D_DEMAND;        // Rate of change of the interest rate in response to a change in the demand for credit per household per month (in points per pound per household per month)
+    double BANK_LTV_HARD_MAX_FTB;           // Internal private bank policy: Hard maximum LTV ratio for first-time buyers
+    double BANK_LTV_HARD_MAX_HM;            // Internal private bank policy: Hard maximum LTV ratio for home movers
+    double BANK_LTV_HARD_MAX_BTL;           // Internal private bank policy: Hard maximum LTV ratio for BTL investors
+    double BANK_LTI_HARD_MAX_FTB;           // Internal private bank policy: Hard maximum LTI ratio for first-time-buyers
+    double BANK_LTI_HARD_MAX_HM;            // Internal private bank policy: Hard maximum LTI ratio for home movers
+    double BANK_AFFORDABILITY_HARD_MAX;     // Internal private bank policy: Hard maximum fraction of household's income to be spent on mortgage repayments
+    double BANK_ICR_HARD_MIN;               // Internal private bank policy: Hard minimum ratio between (expected) annual rental income and annual interest payments
+
+    // Government
     double GOVERNMENT_GENERAL_PERSONAL_ALLOWANCE;           // General personal allowance to be deducted when computing taxable income
     double GOVERNMENT_INCOME_LIMIT_FOR_PERSONAL_ALLOWANCE;  // Limit of income above which personal allowance starts to decrease £1 for every £2 of income above this limit
     public double GOVERNMENT_MONTHLY_INCOME_SUPPORT;        // Income support for a couple, both over 18 years old (Jobseeker's allowance)
     public String DATA_TAX_RATES;                           // Address for tax bands and rates data
     public String DATA_NATIONAL_INSURANCE_RATES;            // Address for national insurance bands and rates data
+
+    // OUTPUT CALIBRATED PARAMETERS
+
+    // Household behaviour: Rent vs purchase decision
+    double PSYCHOLOGICAL_COST_OF_RENTING;   // Annual psychological cost of renting
+    double SENSITIVITY_RENT_OR_PURCHASE;    // Sensitivity parameter of the decision between buying and renting
+
+    // Household behaviour: Buy-to-let
+    double BTL_PROBABILITY_MULTIPLIER;      // Multiplier for the probability of being a buy-to-let investor
+    double BTL_CHOICE_INTENSITY;            // Shape parameter, or intensity of choice on effective yield when deciding whether buy/sell a BTL property
+
+    // Housing market
+    public double MARKET_AVERAGE_PRICE_DECAY;   // Decay constant for the exponential moving average of sale prices
+
+    // LEGACY PARAMETERS
+
+    // Household behaviour: Purchase: Desired purchase expenditure
+    double BUY_WEIGHT_HPA;                  // Weight given to house price appreciation when deciding how much to spend
+
+    // Household behaviour: Purchase: Desired down-payment
+    double DOWNPAYMENT_BANK_BALANCE_FOR_CASH_SALE;  // If bankBalance/housePrice is above this, payment will be made fully in cash
+
+    // Household behaviour: Rent Desired rental expenditure
+    double DESIRED_RENT_MU;                 // Mean of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise for the desired rental budget
+    double DESIRED_RENT_SIGMA;              // Standard deviation of the normal noise used to create a log-normal variate, which is then used as a multiplicative noise for the desired rental budget
 
     /** Construction of objects to contain derived parameters and constants **/
 
