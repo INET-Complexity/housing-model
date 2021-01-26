@@ -15,27 +15,27 @@ public class BinnedData<D> extends ArrayList<D> {
     //----- Fields -----//
     //------------------//
 
-	private double firstBinMin;     // Minimum edge of the first bin
-	private double binWidth;        // Bin width
+    private double firstBinMin;     // Minimum edge of the first bin
+    private double binWidth;        // Bin width
 
     //------------------------//
     //----- Constructors -----//
     //------------------------//
-	
-	public BinnedData(double firstBinMin, double binWidth) {
-		this.firstBinMin = firstBinMin;
-		this.binWidth = binWidth;
-	}
+
+    public BinnedData(double firstBinMin, double binWidth) {
+        this.firstBinMin = firstBinMin;
+        this.binWidth = binWidth;
+    }
 
     //-------------------//
     //----- Methods -----//
     //-------------------//
-	
-	public double getSupportLowerBound() { return firstBinMin; }
 
-	public double getSupportUpperBound() { return firstBinMin + size()*binWidth; }
+    public double getSupportLowerBound() { return firstBinMin; }
 
-	public double getBinWidth() { return binWidth; }
+    public double getSupportUpperBound() { return firstBinMin + size()*binWidth; }
+
+    public double getBinWidth() { return binWidth; }
 
     /**
      * Returns the frequency/density/probability of the bin at which the value val falls, with security to ensure values
@@ -47,7 +47,7 @@ public class BinnedData<D> extends ArrayList<D> {
         else return get((int)((val - firstBinMin)/binWidth));
     }
 
-	public void setBinWidth(double width) { binWidth = width; }
-	
-	public void setFirstBinMin(double min) { firstBinMin = min; }
+    public void setBinWidth(double width) { binWidth = width; }
+
+    public void setFirstBinMin(double min) { firstBinMin = min; }
 }

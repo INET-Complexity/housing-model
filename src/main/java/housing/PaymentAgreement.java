@@ -14,8 +14,8 @@ public class PaymentAgreement {
     //----- Fields -----//
     //------------------//
 
-    int 		    nPayments;
-    public double 	monthlyPayment;
+    int             nPayments;
+    public double   monthlyPayment;
 
     //-------------------//
     //----- Methods -----//
@@ -27,26 +27,26 @@ public class PaymentAgreement {
      *
      * @return The amount of the monthly payment
      */
-	public double makeMonthlyPayment() {
-		if (nPayments == 0) {
-		    return 0.0;
+    public double makeMonthlyPayment() {
+        if (nPayments == 0) {
+            return 0.0;
         } else {
             nPayments -= 1;
             return monthlyPayment;
         }
-	}
+    }
 
-	/**
-	 * Use this method to return the next monthly payment without actually making any payment nor updating the
+    /**
+     * Use this method to return the next monthly payment without actually making any payment nor updating the
      * corresponding internal variables
-	 *
-	 * @return The amount of the next monthly payment
-	 */
-	double nextPayment() {
-		if (nPayments == 0) {
-		    return 0.0;
+     *
+     * @return The amount of the next monthly payment
+     */
+    double nextPayment() {
+        if (nPayments == 0) {
+            return 0.0;
         } else {
-		    return monthlyPayment;
+            return monthlyPayment;
         }
-	}
+    }
 }

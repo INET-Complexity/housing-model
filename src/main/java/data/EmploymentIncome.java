@@ -40,66 +40,66 @@ public class EmploymentIncome {
      * Read data from file Model.config.DATA_INCOME_GIVEN_AGE and return it as a binnedData pdf of gross employment
      * income conditional on household age. Note that we are dealing here with logarithmic incomes.
      */
-	static private BinnedData<Pdf> loadGrossEmploymentIncomePDFGivenAge() {
-		final int ageMinCol = 0;
-		final int ageMaxCol = 1;
-		final int incomeMinCol = 2;
-		final int incomeMaxCol = 3;
-		final int probCol = 4;
-		BinnedData<Pdf> data = new BinnedData<>(0.0, 0.0);
-		BinnedData<BinnedDataDouble> pdfData = new BinnedData<>(0.0,0.0);
-		BinnedDataDouble pdf;
-		double pdfBinMin;
-		double pdfBinWidth;
-		double lastBinMin;
-		
-		Iterator<CSVRecord> records;
-		try {
+    static private BinnedData<Pdf> loadGrossEmploymentIncomePDFGivenAge() {
+        final int ageMinCol = 0;
+        final int ageMaxCol = 1;
+        final int incomeMinCol = 2;
+        final int incomeMaxCol = 3;
+        final int probCol = 4;
+        BinnedData<Pdf> data = new BinnedData<>(0.0, 0.0);
+        BinnedData<BinnedDataDouble> pdfData = new BinnedData<>(0.0,0.0);
+        BinnedDataDouble pdf;
+        double pdfBinMin;
+        double pdfBinWidth;
+        double lastBinMin;
+
+        Iterator<CSVRecord> records;
+        try {
             // Open a file reader
-			Reader in = new FileReader(Model.config.DATA_INCOME_GIVEN_AGE);
+            Reader in = new FileReader(Model.config.DATA_INCOME_GIVEN_AGE);
             // Pass reader to CSVFormat parser, which will use first line (header) to set column names
-			records = CSVFormat.EXCEL.withHeader().parse(in).iterator();
-			CSVRecord record;
+            records = CSVFormat.EXCEL.withHeader().parse(in).iterator();
+            CSVRecord record;
             // Read through records
-			if (records.hasNext()) {
-				record = records.next();
+            if (records.hasNext()) {
+                record = records.next();
                 // Use the first record to set the first (age) bin minimum and the (age) bin width...
                 data.setFirstBinMin(Double.valueOf(record.get(ageMinCol)));
-			    data.setBinWidth(Double.valueOf(record.get(ageMaxCol)) - data.getSupportLowerBound());
-			    // ...as well as the first (income) bin minimum and the (income) bin width...
-			    pdfBinMin = Double.valueOf(record.get(incomeMinCol));
-			    pdfBinWidth = Double.valueOf(record.get(incomeMaxCol)) - pdfBinMin;
-			    // ...income bin minimum and width are used to create a BinnedDataDouble object and add it to the
+                data.setBinWidth(Double.valueOf(record.get(ageMaxCol)) - data.getSupportLowerBound());
+                // ...as well as the first (income) bin minimum and the (income) bin width...
+                pdfBinMin = Double.valueOf(record.get(incomeMinCol));
+                pdfBinWidth = Double.valueOf(record.get(incomeMaxCol)) - pdfBinMin;
+                // ...income bin minimum and width are used to create a BinnedDataDouble object and add it to the
                 // container of BinnedDataDouble objects
-			    pdf = new BinnedDataDouble(pdfBinMin, pdfBinWidth);
-			    pdfData.add(pdf);
+                pdf = new BinnedDataDouble(pdfBinMin, pdfBinWidth);
+                pdfData.add(pdf);
                 // ...then the probability is actually added to the array of values within the BinnedDataDouble object
                 pdf.add(Double.valueOf(record.get(probCol)));
-			    lastBinMin = data.getSupportLowerBound();
-			    // ...finally, iterate over the rest of the records
-			    while (records.hasNext()) {
-			    	record = records.next();
-			    	// ...whenever the age bin changes, a new BinnedDataDouble object must be opened
-			    	if (Double.valueOf(record.get(ageMinCol)) != lastBinMin) {
-					    pdf = new BinnedDataDouble(pdfBinMin, pdfBinWidth);
-					    pdfData.add(pdf);
-					    lastBinMin = Double.valueOf(record.get(ageMinCol));
-			    	}
-			    	// ...continue adding values to the previous BinnedDataDouble object
-		    		pdf.add(Double.valueOf(record.get(probCol)));
-			    }
-			    // Finally, iterate over the BinnedDataDoubles in the container...
-				for (BinnedDataDouble d: pdfData) {
-			        // ...turning them into Pdf objects and adding them to the general data container
-					data.add(new Pdf(d));
-				}
-			}
-		} catch (IOException e) {
-			System.out.println("Error loading data for income given age in data.EmploymentIncome");
-			e.printStackTrace();
-		}
-		return data;
-	}
+                lastBinMin = data.getSupportLowerBound();
+                // ...finally, iterate over the rest of the records
+                while (records.hasNext()) {
+                    record = records.next();
+                    // ...whenever the age bin changes, a new BinnedDataDouble object must be opened
+                    if (Double.valueOf(record.get(ageMinCol)) != lastBinMin) {
+                        pdf = new BinnedDataDouble(pdfBinMin, pdfBinWidth);
+                        pdfData.add(pdf);
+                        lastBinMin = Double.valueOf(record.get(ageMinCol));
+                    }
+                    // ...continue adding values to the previous BinnedDataDouble object
+                    pdf.add(Double.valueOf(record.get(probCol)));
+                }
+                // Finally, iterate over the BinnedDataDoubles in the container...
+                for (BinnedDataDouble d: pdfData) {
+                    // ...turning them into Pdf objects and adding them to the general data container
+                    data.add(new Pdf(d));
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error loading data for income given age in data.EmploymentIncome");
+            e.printStackTrace();
+        }
+        return data;
+    }
 
     /**
      * Find household annual gross income given age and income percentile

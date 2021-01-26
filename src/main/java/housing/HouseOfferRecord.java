@@ -13,9 +13,9 @@ import java.util.ArrayList;
  *************************************************************************************************/
 public class HouseOfferRecord extends HousingMarketRecord {
 
-	//------------------//
-	//----- Fields -----//
-	//------------------//
+    //------------------//
+    //----- Fields -----//
+    //------------------//
 
     private House                           house;
     private ArrayList<HouseBidderRecord>    matchedBids;
@@ -71,24 +71,24 @@ public class HouseOfferRecord extends HousingMarketRecord {
      * Quality of this property
      */
     @Override
-	public int getQuality() { return house.getQuality(); }
+    public int getQuality() { return house.getQuality(); }
 
-	/**
-	 * Expected gross yield for this particular house, based on the current average flow yield and the actual listed
+    /**
+     * Expected gross yield for this particular house, based on the current average flow yield and the actual listed
      * price for the house, and taking into account both the quality and the expected occupancy levels
-	 */
-	@Override
-	public double getYield() { return houseSpecificYield; }
+     */
+    @Override
+    public double getYield() { return houseSpecificYield; }
 
     /**
      * Set the listed price for this property
      *
      * @param newPrice The new listed price for this property
      */
-	public void setPrice(double newPrice) {
-		super.setPrice(newPrice);
+    public void setPrice(double newPrice) {
+        super.setPrice(newPrice);
         recalculateHouseSpecificYield(newPrice);
-	}
+    }
 
     public House getHouse() { return house; }
 
