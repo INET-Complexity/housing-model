@@ -146,7 +146,7 @@ public class Household implements IHouseOwner {
             double price = Model.bank.getMaxMortgagePrice(this, false);
             Model.householdStats.countBTLBidsAboveExpAvSalePrice(price);
             if (behaviour.decideToBuyInvestmentProperty(this)) {
-                double desiredDownPayment = behaviour.decideDownPayment(this, price);
+                double desiredDownPayment = behaviour.decideDownPayment(this, price, false);
                 Model.houseSaleMarket.bid(this, price, true, desiredDownPayment);
             }
         } else if (!isHomeowner()){
@@ -444,7 +444,7 @@ public class Household implements IHouseOwner {
         // Record the bid on householdStats for counting the number of bids above exponential moving average sale price
         Model.householdStats.countNonBTLBidsAboveExpAvSalePrice(price);
         // Compare costs to decide whether to buy or rent...
-        double desiredDownPayment = behaviour.decideDownPayment(this, price);
+        double desiredDownPayment = behaviour.decideDownPayment(this, price, true);
         if (behaviour.decideRentOrPurchase(this, price, desiredDownPayment, getDesiredPurchasePrice())) {
             // ... if buying, bid in the house sale market for the capped desired price
             Model.houseSaleMarket.bid(this, price, false, desiredDownPayment);

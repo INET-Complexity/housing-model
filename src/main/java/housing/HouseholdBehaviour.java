@@ -184,7 +184,7 @@ public class HouseholdBehaviour {
      * @param me the household
      * @param housePrice the price of the house
      */
-    double decideDownPayment(Household me, double housePrice) {
+    double decideDownPayment(Household me, double housePrice, boolean isHome) {
         if (me.getBankBalance() > housePrice*config.DOWNPAYMENT_BANK_BALANCE_FOR_CASH_SALE) {
             return housePrice;
         }
@@ -196,7 +196,7 @@ public class HouseholdBehaviour {
 //            TODO: In the future, remove this old FTB down-payment implementation, kept for now as legacy/alternative
 //            downpayment = housingMarketStats.getHPI()
 //                    * downpaymentDistFTB.inverseCumulativeProbability(me.incomePercentile);
-        } else if (isPropertyInvestor()) {
+        } else if (!isHome) {
             downpayment = housePrice*(Math.max(0.0,
                     config.DOWNPAYMENT_BTL_MEAN + config.DOWNPAYMENT_BTL_EPSILON * prng.nextGaussian()));
         } else {
