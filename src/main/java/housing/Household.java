@@ -41,6 +41,7 @@ public class Household implements IHouseOwner {
     private double                          savingRate; // (disposableIncome - nonEssentialConsumption)/grossTotalIncome
     private boolean                         isFirstTimeBuyer;
     private boolean                         isBankrupt;
+    private double                          persistentLTILimit; // LTI limit currently offered by the bank to this household in an approval in principle letter
 
     //------------------------//
     //----- Constructors -----//
@@ -63,6 +64,7 @@ public class Household implements IHouseOwner {
         annualGrossEmploymentIncome = data.EmploymentIncome.getAnnualGrossEmploymentIncome(age, incomePercentile);
         monthlyGrossEmploymentIncome = annualGrossEmploymentIncome/config.constants.MONTHS_IN_YEAR;
         bankBalance = data.Wealth.getDesiredBankBalance(getAnnualGrossTotalIncome(), behaviour.getPropensityToSave()); // Desired bank balance is used as initial value for actual bank balance
+        persistentLTILimit = -1; // Dummy value to catch usages before set up
     }
 
     //-------------------//
@@ -439,6 +441,8 @@ public class Household implements IHouseOwner {
      * owning. 
      ********************************************************/
     private void bidForAHome() {
+        // Before any maximum mortgage price calculation, update the persistent LTI limit for this household
+        persistentLTILimit = Model.bank.getLoanToIncomeLimit(isFirstTimeBuyer());
         // Find household's desired housing expenditure, capped to the maximum mortgage available to the household
         double price = Math.min(getDesiredPurchasePrice(), Model.bank.getMaxMortgagePrice(this, true));
         // Record the bid on householdStats for counting the number of bids above exponential moving average sale price
@@ -448,6 +452,10 @@ public class Household implements IHouseOwner {
         if (behaviour.decideRentOrPurchase(this, price, desiredDownPayment, getDesiredPurchasePrice())) {
             // ... if buying, bid in the house sale market for the capped desired price
             Model.houseSaleMarket.bid(this, price, false, desiredDownPayment);
+            // ...and notify the bank about accepting the approval in principle letter offered, for it to count it
+            // towards the relevant soft LTI limit
+            Model.bank.acceptApprovalInPrincipleLetter(getBankBalance(), price, getAnnualGrossEmploymentIncome(),
+                    isFirstTimeBuyer());
         } else {
             // ... if renting, bid in the house rental market for the desired rent price
             Model.houseRentalMarket.bid(this, behaviour.getDesiredRentPrice(annualGrossEmploymentIncome,
@@ -676,4 +684,6 @@ public class Household implements IHouseOwner {
     public double getSavingRate() { return savingRate; }
 
     public double getDesiredPurchasePrice() { return desiredPurchasePrice; }
+
+    double getPersistentLTILimit() { return persistentLTILimit; }
 }
