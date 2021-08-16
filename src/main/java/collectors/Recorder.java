@@ -115,7 +115,8 @@ public class Recorder {
                     + "Rental nSales; Rental ExpAvFlowYield; "
                     // Credit data
                     + "nStockMortgages; nNewFTBMortgages; nNewFTBMortgagesToBTL; nNewHMMortgages; "
-                    + "nNewBTLMortgages; newFTBCredit; newHMCredit; newBTLCredit; newTotalCredit; interestRate");
+                    + "nNewBTLMortgages; newFTBCredit; newHMCredit; newBTLCredit; newTotalCredit; creditStock; "
+                    + "interestRate");
         } catch (FileNotFoundException | UnsupportedEncodingException e) {
             e.printStackTrace();
         }
@@ -235,6 +236,7 @@ public class Recorder {
                 Model.creditSupply.getNewCreditToHM(),
                 Model.creditSupply.getNewCreditToBTL(),
                 Model.creditSupply.getNewCreditTotal(),
+                (Model.creditSupply.getTotalBTLCredit() + Model.creditSupply.getTotalOOCredit()),
                 Model.creditSupply.getInterestRate());
 
         // Write quality band prices to file
